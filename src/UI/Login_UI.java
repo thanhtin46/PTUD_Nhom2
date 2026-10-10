@@ -61,7 +61,7 @@ public class Login_UI extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 int w = getWidth(), h = getHeight();
-                GradientPaint gp = new GradientPaint(0, 0, new Color(15, 45, 95), 0, h, new Color(25, 90, 165));
+                GradientPaint gp = new GradientPaint(0, 0, new Color(18, 40, 58), 0, h, new Color(30, 91, 112));
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, w, h);
                 // ánh sáng mềm phía trên
@@ -183,7 +183,7 @@ public class Login_UI extends JFrame {
         center.add(txtMatKhau);
         center.add(Box.createVerticalStrut(26));
 
-        JButton btnDangNhap = UiHelper.nut("ĐĂNG NHẬP", new Color(35, 110, 200), true, e -> xuLyDangNhap());
+        JButton btnDangNhap = UiHelper.nut("ĐĂNG NHẬP", UiHelper.XANH_TRUNG, true, e -> xuLyDangNhap());
         btnDangNhap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         btnDangNhap.setAlignmentX(Component.LEFT_ALIGNMENT);
         center.add(btnDangNhap);

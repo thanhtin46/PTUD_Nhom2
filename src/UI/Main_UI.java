@@ -31,14 +31,14 @@ public class Main_UI extends JFrame {
     private static final String QUAN_LY = "Quản lý";
 
     // ==== Hằng số giao diện ====
-    private static final Color NEN_SIDE     = new Color(24, 28, 36);
-    private static final Color NEN_HOVER    = new Color(255, 255, 255, 16);
-    private static final Color MAU_CHON     = new Color(40, 96, 220);
-    private static final Color MAU_LOGO     = new Color(40, 96, 220);
+    private static final Color NEN_SIDE     = new Color(20, 35, 52);
+    private static final Color NEN_HOVER    = new Color(255, 255, 255, 14);
+    private static final Color MAU_CHON     = new Color(42, 112, 153);
+    private static final Color MAU_LOGO     = new Color(49, 145, 150);
     private static final Color CHU_CHINH    = new Color(232, 236, 244);
     private static final Color CHU_PHU      = new Color(140, 150, 168);
-    private static final Color CHU_NUT_DANG_XUAT = new Color(220, 130, 130);
-    private static final Color NEN_HOVER_DANG_XUAT = new Color(60, 30, 30);
+    private static final Color CHU_NUT_DANG_XUAT = new Color(232, 157, 157);
+    private static final Color NEN_HOVER_DANG_XUAT = new Color(65, 42, 48);
 
     private static final int W = 240;          // chiều rộng sidebar
     private static final int NUT_CAO = 38;     // chiều cao mỗi nút menu
@@ -68,7 +68,7 @@ public class Main_UI extends JFrame {
         setLayout(new BorderLayout());
 
         contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(new Color(243, 246, 250));
+        contentPanel.setBackground(UiHelper.NEN);
 
         add(taoSidebar(), BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -124,8 +124,8 @@ public class Main_UI extends JFrame {
         box.setAlignmentX(Component.LEFT_ALIGNMENT);
         box.setBorder(new EmptyBorder(18, 16, 12, 16));
 
-        // Badge "A" bo tròn
-        JLabel badge = new JLabel("A") {
+        // Badge logo bo tròn
+        JLabel badge = new JLabel("G") {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -134,7 +134,7 @@ public class Main_UI extends JFrame {
                 g2.setColor(Color.WHITE);
                 g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
                 FontMetrics fm = g2.getFontMetrics();
-                String s = "A";
+                String s = "G";
                 int tx = (getWidth()  - fm.stringWidth(s)) / 2;
                 int ty = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
                 g2.drawString(s, tx, ty);
@@ -145,8 +145,8 @@ public class Main_UI extends JFrame {
         badge.setOpaque(false);
         box.add(badge);
 
-        JLabel brand = new JLabel("<html><b style='color:#E8ECF4;font-size:14px'>Auto Service</b>"
-                + "<br><span style='color:#8C96A8;font-size:10px'>Garage Management</span></html>");
+        JLabel brand = new JLabel("<html><b style='color:#E8ECF4;font-size:14px'>Gara Ô tô The T4</b>"
+                + "<br><span style='color:#8C96A8;font-size:10px'>HỆ THỐNG QUẢN LÝ GARA</span></html>");
         brand.setOpaque(false);
         box.add(brand);
 
@@ -157,26 +157,33 @@ public class Main_UI extends JFrame {
     private JPanel taoUserCard() {
         JPanel userWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         userWrap.setOpaque(false);
-        userWrap.setMaximumSize(new Dimension(W, 56));
-        userWrap.setPreferredSize(new Dimension(W, 56));
-        userWrap.setMinimumSize(new Dimension(W, 56));
+        userWrap.setMaximumSize(new Dimension(W, 64));
+        userWrap.setPreferredSize(new Dimension(W, 64));
+        userWrap.setMinimumSize(new Dimension(W, 64));
         userWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
         userWrap.setBorder(new EmptyBorder(0, 12, 0, 12));
 
-        JPanel user = new JPanel(new BorderLayout(10, 0));
-        user.setBackground(new Color(255, 255, 255, 12));
-        user.setOpaque(true);
-        user.setPreferredSize(new Dimension(216, 44));
-        user.setMaximumSize(new Dimension(216, 44));
-        user.setMinimumSize(new Dimension(216, 44));
-        user.setBorder(new EmptyBorder(6, 10, 6, 10));
+        JPanel user = new JPanel(new BorderLayout(10, 0)) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(255, 255, 255, 12));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.dispose();
+            }
+        };
+        user.setOpaque(false);
+        user.setPreferredSize(new Dimension(216, 52));
+        user.setMaximumSize(new Dimension(216, 52));
+        user.setMinimumSize(new Dimension(216, 52));
+        user.setBorder(new EmptyBorder(8, 10, 8, 10));
 
         // Avatar
         JPanel avatar = new JPanel(new BorderLayout()) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(60, 140, 230));
+                g2.setColor(new Color(49, 145, 150));
                 g2.fillOval(0, 0, getWidth(), getHeight());
                 g2.dispose();
             }
@@ -191,12 +198,28 @@ public class Main_UI extends JFrame {
         avatar.add(lblChu, BorderLayout.CENTER);
         user.add(avatar, BorderLayout.WEST);
 
-        // Tên + vai trò
-        String tenHien = escapeHtml(ten == null ? "" : ten);
-        String vaiTroHien = escapeHtml(nhanVienHienTai.getVaiTro() == null ? "" : nhanVienHienTai.getVaiTro());
-        JLabel info = new JLabel("<html><b style='color:#E8ECF4;font-size:12px'>" + tenHien + "</b>"
-                + "<br><span style='color:#8C96A8;font-size:10px'>" + vaiTroHien + "</span></html>");
+        // Tên + vai trò — dùng 2 JLabel tách rời thay vì HTML (HTML JLabel hay bị height tính sai gây chồng text)
+        JPanel info = new JPanel();
         info.setOpaque(false);
+        info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
+        info.setAlignmentY(Component.CENTER_ALIGNMENT);
+
+        String tenHien = ten == null ? "" : ten;
+        String vaiTroHien = nhanVienHienTai.getVaiTro() == null ? "" : nhanVienHienTai.getVaiTro();
+
+        JLabel lblTen = new JLabel(tenHien);
+        lblTen.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblTen.setForeground(CHU_CHINH);
+        lblTen.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblVaiTro = new JLabel(vaiTroHien);
+        lblVaiTro.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        lblVaiTro.setForeground(CHU_PHU);
+        lblVaiTro.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        info.add(lblTen);
+        info.add(Box.createVerticalStrut(2));
+        info.add(lblVaiTro);
         user.add(info, BorderLayout.CENTER);
 
         userWrap.add(user);
@@ -383,13 +406,13 @@ public class Main_UI extends JFrame {
 
             if (nen != null) {
                 g2.setColor(nen);
-                g2.fillRect(0, 0, w, h);
+                g2.fillRoundRect(4, 1, w - 8, h - 2, 10, 10);
             }
 
             // 2. Thanh accent trái khi selected
             if (isSelected()) {
                 g2.setColor(new Color(255, 255, 255, 80));
-                g2.fillRect(0, 0, 3, h);
+                g2.fillRoundRect(4, 5, 3, h - 10, 3, 3);
             }
 
             // 3. Text — baseline đặt chính giữa dọc theo font metrics
@@ -452,7 +475,7 @@ public class Main_UI extends JFrame {
             contentPanel.add(jp, BorderLayout.CENTER);
         } else {
             JPanel wrap = new JPanel(new BorderLayout());
-            wrap.setBackground(new Color(243, 246, 250));
+            wrap.setBackground(UiHelper.NEN);
             wrap.add(noiDung, BorderLayout.CENTER);
             contentPanel.add(wrap, BorderLayout.CENTER);
         }

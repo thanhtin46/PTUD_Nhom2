@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC015: PhÃ¢n cÃ´ng viá»‡c cho ká»¹ thuáº­t viÃªn.
- * - Liá»‡t kÃª phiáº¿u sá»­a chá»¯a (chÆ°a hoÃ n thÃ nh).
- * - Chá»n KTV tá»« danh sÃ¡ch nhÃ¢n viÃªn sá»­a chá»¯a.
- * - LÆ°u vÃ o PhieuTiepNhan.kyThuatVien.
- * - Tá»± Ä‘á»™ng Ä‘á»•i tiáº¿n Ä‘á»™ "Chá» tiáº¿p nháº­n" â†’ "ÄÃ£ phÃ¢n cÃ´ng".
+ * UC015: Phân công việc cho kỹ thuật viên.
+ * - Liệt kê phiếu sửa chữa (chưa hoàn thành).
+ * - Chọn KTV từ danh sách nhân viên sửa chữa.
+ * - Lưu vào PhieuTiepNhan.kyThuatVien.
+ * - Tự động đổi tiến độ "Chờ tiếp nhận" → "Đã phân công".
  */
 public class PhanCongKyThuatVien_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -35,8 +35,8 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         JPanel north = new JPanel();
         north.setOpaque(false);
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        JLabel tde = UiHelper.tieuDeTrang("ðŸ‘· PhÃ¢n cÃ´ng ká»¹ thuáº­t viÃªn");
-        JLabel phu = new JLabel("Giao viá»‡c sá»­a chá»¯a cho tá»«ng ká»¹ thuáº­t viÃªn");
+        JLabel tde = UiHelper.tieuDeTrang("👷 Phân công kỹ thuật viên");
+        JLabel phu = new JLabel("Giao việc sửa chữa cho từng kỹ thuật viên");
         phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         phu.setForeground(new Color(110, 120, 135));
         tde.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -45,50 +45,50 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         north.add(phu);
         root.add(north, BorderLayout.NORTH);
 
-        // ==== Tháº» thá»‘ng kÃª ====
+        // ==== Thẻ thống kê ====
         int soChoPC = 0, soDaPC = 0, soDangSua = 0;
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             String td = p.getTienDo() == null ? "" : p.getTienDo();
-            if (td.contains("Chá»") || td.isEmpty() || td.contains("tiáº¿p nháº­n")) {
+            if (td.contains("Chờ") || td.isEmpty() || td.contains("tiếp nhận")) {
                 if (!p.daPhanCong()) soChoPC++;
                 else soDaPC++;
-            } else if (td.contains("Äang sá»­a") || td.contains("sá»­a")) {
+            } else if (td.contains("Đang sửa") || td.contains("sửa")) {
                 soDangSua++;
             }
         }
         JPanel grid = new JPanel(new GridLayout(1, 3, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(0, 0, 14, 0));
-        grid.add(the("ðŸ“‹", "Chá» phÃ¢n cÃ´ng", String.valueOf(soChoPC), "Cáº§n giao viá»‡c gáº¥p", new Color(220, 80, 80)));
-        grid.add(the("âœ…", "ÄÃ£ phÃ¢n cÃ´ng", String.valueOf(soDaPC), "Äang chá» KTV nháº­n", new Color(225, 150, 45)));
-        grid.add(the("ðŸ”§", "Äang sá»­a", String.valueOf(soDangSua), "KTV Ä‘ang xá»­ lÃ½", new Color(46, 160, 92)));
+        grid.add(the("📋", "Chờ phân công", String.valueOf(soChoPC), "Cần giao việc gấp", new Color(220, 80, 80)));
+        grid.add(the("✅", "Đã phân công", String.valueOf(soDaPC), "Đang chờ KTV nhận", new Color(225, 150, 45)));
+        grid.add(the("🔧", "Đang sửa", String.valueOf(soDangSua), "KTV đang xử lý", new Color(46, 160, 92)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
         wrapGrid.setPreferredSize(new Dimension(0, 100));
         wrapGrid.setOpaque(false);
         wrapGrid.add(grid, BorderLayout.CENTER);
         root.add(wrapGrid, BorderLayout.CENTER);
 
-        // ==== Báº£ng ====
-        JPanel bangPanel = UiHelper.panelBang("Danh sÃ¡ch phiáº¿u sá»­a chá»¯a");
-        model = UiHelper.model("Sá»‘ phiáº¿u", "Há» tÃªn", "Biá»ƒn sá»‘", "YÃªu cáº§u", "KTV phá»¥ trÃ¡ch", "Tiáº¿n Ä‘á»™");
+        // ==== Bảng ====
+        JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu sửa chữa");
+        model = UiHelper.model("Số phiếu", "Họ tên", "Biển số", "Yêu cầu", "KTV phụ trách", "Tiến độ");
         napBang();
         bang = UiHelper.bang(model);
-        // TÃ´ mÃ u cá»™t tiáº¿n Ä‘á»™
+        // Tô màu cột tiến độ
         bang.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 JLabel comp = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, c);
                 String td = v == null ? "" : v.toString();
                 comp.setHorizontalAlignment(SwingConstants.CENTER);
-                if (td.contains("Chá»") || td.contains("tiáº¿p nháº­n")) {
+                if (td.contains("Chờ") || td.contains("tiếp nhận")) {
                     comp.setBackground(new Color(255, 232, 232));
                     comp.setForeground(new Color(160, 30, 30));
-                } else if (td.contains("phÃ¢n cÃ´ng")) {
+                } else if (td.contains("phân công")) {
                     comp.setBackground(new Color(255, 245, 224));
                     comp.setForeground(new Color(180, 100, 0));
-                } else if (td.contains("Äang sá»­a") || td.contains("sá»­a")) {
+                } else if (td.contains("Đang sửa") || td.contains("sửa")) {
                     comp.setBackground(new Color(224, 245, 232));
                     comp.setForeground(new Color(30, 120, 60));
-                } else if (td.contains("HoÃ n")) {
+                } else if (td.contains("Hoàn")) {
                     comp.setBackground(new Color(220, 235, 250));
                     comp.setForeground(new Color(15, 35, 70));
                 }
@@ -121,19 +121,19 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         wrapBang.getViewport().setOpaque(false);
         wrapBang.setPreferredSize(new Dimension(0, 0));
 
-        // ==== Panel phÃ¢n cÃ´ng ====
+        // ==== Panel phân công ====
         JPanel pcPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
         pcPanel.setOpaque(false);
         pcPanel.setBorder(new EmptyBorder(12, 4, 0, 4));
-        JLabel lblKtv = new JLabel("Chá»n ká»¹ thuáº­t viÃªn:");
+        JLabel lblKtv = new JLabel("Chọn kỹ thuật viên:");
         lblKtv.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblKtv.setForeground(new Color(60, 70, 85));
         cboKtv = new JComboBox<>();
         napComboKtv();
         cboKtv.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboKtv.setPreferredSize(new Dimension(280, 34));
-        JButton btnPhanCong = UiHelper.nut("ðŸ‘· PhÃ¢n cÃ´ng", new Color(37, 99, 168), e -> phanCong());
-        JButton btnBoPhanCong = UiHelper.nut("ðŸ”„ Bá» phÃ¢n cÃ´ng", new Color(220, 80, 80), e -> boPhanCong());
+        JButton btnPhanCong = UiHelper.nut("👷 Phân công", new Color(37, 99, 168), e -> phanCong());
+        JButton btnBoPhanCong = UiHelper.nut("🔄 Bỏ phân công", new Color(220, 80, 80), e -> boPhanCong());
         pcPanel.add(lblKtv);
         pcPanel.add(cboKtv);
         pcPanel.add(btnPhanCong);
@@ -148,11 +148,11 @@ public class PhanCongKyThuatVien_UI extends JPanel {
 
     private void napComboKtv() {
         cboKtv.removeAllItems();
-        cboKtv.addItem("-- Chá»n KTV --");
+        cboKtv.addItem("-- Chọn KTV --");
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
-            // Chá»‰ láº¥y nhÃ¢n viÃªn sá»­a chá»¯a + Quáº£n lÃ½
-            if (nv.getVaiTro().contains("sá»­a chá»¯a") || nv.getVaiTro().contains("Quáº£n lÃ½")) {
+            // Chỉ lấy nhân viên sửa chữa + Quản lý
+            if (nv.getVaiTro().contains("sửa chữa") || nv.getVaiTro().contains("Quản lý")) {
                 cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen());
             }
         }
@@ -172,7 +172,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 NhanVien nv = kho.timNhanVienTheoMa(p.getKyThuatVien());
                 ktv = nv == null ? p.getKyThuatVien() : nv.getHoTen();
             } else {
-                ktv = "(chÆ°a phÃ¢n cÃ´ng)";
+                ktv = "(chưa phân công)";
             }
             model.addRow(new Object[]{p.getSoPhieu(), p.getHoTen(), p.getBienSo(),
                     p.getYeuCau(), ktv, td});
@@ -181,43 +181,43 @@ public class PhanCongKyThuatVien_UI extends JPanel {
 
     private void phanCong() {
         if (phieuDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Chá»n phiáº¿u cáº§n phÃ¢n cÃ´ng!");
+            JOptionPane.showMessageDialog(this, "Chọn phiếu cần phân công!");
             return;
         }
         Object sel = cboKtv.getSelectedItem();
         if (sel == null || sel.toString().startsWith("--")) {
-            UiHelper.loi(this, "Vui lÃ²ng chá»n ká»¹ thuáº­t viÃªn!", null);
+            UiHelper.loi(this, "Vui lòng chọn kỹ thuật viên!", null);
             return;
         }
         String maKtv = sel.toString().split(" - ")[0];
         phieuDangChon.setKyThuatVien(maKtv);
-        // Tá»± Ä‘á»™ng Ä‘á»•i tiáº¿n Ä‘á»™: "Chá» tiáº¿p nháº­n" â†’ "ÄÃ£ phÃ¢n cÃ´ng"
+        // Tự động đổi tiến độ: "Chờ tiếp nhận" → "Đã phân công"
         String td = phieuDangChon.getTienDo();
-        if (td == null || td.isEmpty() || td.contains("Chá»") || td.contains("tiáº¿p nháº­n")) {
-            phieuDangChon.setTienDo("ÄÃ£ phÃ¢n cÃ´ng");
+        if (td == null || td.isEmpty() || td.contains("Chờ") || td.contains("tiếp nhận")) {
+            phieuDangChon.setTienDo("Đã phân công");
         }
         JOptionPane.showMessageDialog(this,
-                "ÄÃ£ phÃ¢n cÃ´ng " + sel + " cho phiáº¿u " + phieuDangChon.getSoPhieu() + "!",
-                "PhÃ¢n cÃ´ng thÃ nh cÃ´ng",
+                "Đã phân công " + sel + " cho phiếu " + phieuDangChon.getSoPhieu() + "!",
+                "Phân công thành công",
                 JOptionPane.INFORMATION_MESSAGE);
         napBang();
     }
 
     private void boPhanCong() {
         if (phieuDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Chá»n phiáº¿u cáº§n bá» phÃ¢n cÃ´ng!");
+            JOptionPane.showMessageDialog(this, "Chọn phiếu cần bỏ phân công!");
             return;
         }
         if (!phieuDangChon.daPhanCong()) {
-            JOptionPane.showMessageDialog(this, "Phiáº¿u nÃ y chÆ°a Ä‘Æ°á»£c phÃ¢n cÃ´ng!");
+            JOptionPane.showMessageDialog(this, "Phiếu này chưa được phân công!");
             return;
         }
         if (JOptionPane.showConfirmDialog(this,
-                "Bá» phÃ¢n cÃ´ng phiáº¿u " + phieuDangChon.getSoPhieu() + "?",
-                "XÃ¡c nháº­n",
+                "Bỏ phân công phiếu " + phieuDangChon.getSoPhieu() + "?",
+                "Xác nhận",
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         phieuDangChon.setKyThuatVien("");
-        phieuDangChon.setTienDo("Chá» tiáº¿p nháº­n");
+        phieuDangChon.setTienDo("Chờ tiếp nhận");
         napBang();
     }
 

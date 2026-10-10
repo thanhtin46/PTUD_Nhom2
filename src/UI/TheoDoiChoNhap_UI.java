@@ -16,10 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC010: Theo dÃµi phá»¥ tÃ¹ng chá» nháº­p.
- * - Liá»‡t kÃª cÃ¡c phiáº¿u nháº­p cÃ³ trangThai = CHO_NHAP.
- * - Cáº£nh bÃ¡o trá»… háº¡n giao hÃ ng.
- * - Cho phÃ©p xÃ¡c nháº­n Ä‘Ã£ nháº­p / há»§y.
+ * UC010: Theo dõi phụ tùng chờ nhập.
+ * - Liệt kê các phiếu nhập có trangThai = CHO_NHAP.
+ * - Cảnh báo trễ hạn giao hàng.
+ * - Cho phép xác nhận đã nhập / hủy.
  */
 public class TheoDoiChoNhap_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -36,8 +36,8 @@ public class TheoDoiChoNhap_UI extends JPanel {
         JPanel north = new JPanel();
         north.setOpaque(false);
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        JLabel tde = UiHelper.tieuDeTrang("â³ Theo dÃµi phá»¥ tÃ¹ng chá» nháº­p");
-        JLabel phu = new JLabel("ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘áº·t tá»« nhÃ  cung cáº¥p, Ä‘ang chá» giao hÃ ng");
+        JLabel tde = UiHelper.tieuDeTrang("⏳ Theo dõi phụ tùng chờ nhập");
+        JLabel phu = new JLabel("Đơn hàng đã đặt từ nhà cung cấp, đang chờ giao hàng");
         phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         phu.setForeground(new Color(110, 120, 135));
         tde.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -47,7 +47,7 @@ public class TheoDoiChoNhap_UI extends JPanel {
         north.add(Box.createVerticalStrut(10));
         root.add(north, BorderLayout.NORTH);
 
-        // ==== Tháº» thá»‘ng kÃª ====
+        // ==== Thẻ thống kê ====
         int soChoNhap = 0, soTreHan = 0;
         long giaTriChoNhap = 0;
         LocalDate homNay = LocalDate.now();
@@ -66,19 +66,19 @@ public class TheoDoiChoNhap_UI extends JPanel {
         JPanel grid = new JPanel(new GridLayout(1, 3, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(0, 0, 14, 0));
-        grid.add(the("ðŸ“¦", "Äang chá» nháº­p", String.valueOf(soChoNhap), "Phiáº¿u tá»« NCC", new Color(37, 99, 168)));
-        grid.add(the("ðŸš¨", "Trá»… háº¡n giao", String.valueOf(soTreHan), "Cáº§n liÃªn há»‡ NCC", new Color(220, 80, 80)));
-        grid.add(the("ðŸ’°", "GiÃ¡ trá»‹ chá»", UiHelper.tien(giaTriChoNhap) + " Ä‘", "Tá»•ng Ä‘Æ¡n chÆ°a nháº­p", new Color(225, 150, 45)));
+        grid.add(the("📦", "Đang chờ nhập", String.valueOf(soChoNhap), "Phiếu từ NCC", new Color(37, 99, 168)));
+        grid.add(the("🚨", "Trễ hạn giao", String.valueOf(soTreHan), "Cần liên hệ NCC", new Color(220, 80, 80)));
+        grid.add(the("💰", "Giá trị chờ", UiHelper.tien(giaTriChoNhap) + " đ", "Tổng đơn chưa nhập", new Color(225, 150, 45)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
         wrapGrid.setPreferredSize(new Dimension(0, 100));
         wrapGrid.setOpaque(false);
         wrapGrid.add(grid, BorderLayout.CENTER);
         root.add(wrapGrid, BorderLayout.CENTER);
 
-        // ==== Báº£ng ====
-        JPanel bangPanel = UiHelper.panelBang("Danh sÃ¡ch phiáº¿u chá» nháº­p");
-        model = UiHelper.model("Sá»‘ phiáº¿u", "NgÃ y Ä‘áº·t", "NhÃ  cung cáº¥p", "Dá»± kiáº¿n giao",
-                "Sá»‘ máº·t hÃ ng", "Tá»•ng tiá»n", "Tráº¡ng thÃ¡i", "Cáº£nh bÃ¡o");
+        // ==== Bảng ====
+        JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu chờ nhập");
+        model = UiHelper.model("Số phiếu", "Ngày đặt", "Nhà cung cấp", "Dự kiến giao",
+                "Số mặt hàng", "Tổng tiền", "Trạng thái", "Cảnh báo");
         napBang();
         bang = UiHelper.bang(model);
         bang.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
@@ -87,13 +87,13 @@ public class TheoDoiChoNhap_UI extends JPanel {
                 String cb = v == null ? "" : v.toString();
                 comp.setHorizontalAlignment(SwingConstants.CENTER);
                 comp.setFont(comp.getFont().deriveFont(Font.BOLD));
-                if (cb.contains("TRá»„")) {
+                if (cb.contains("TRỄ")) {
                     comp.setBackground(new Color(220, 80, 80));
                     comp.setForeground(Color.WHITE);
-                } else if (cb.contains("Sáº®P")) {
+                } else if (cb.contains("SẮP")) {
                     comp.setBackground(new Color(225, 150, 45));
                     comp.setForeground(Color.WHITE);
-                } else if (cb.contains("ÄÃšNG")) {
+                } else if (cb.contains("ĐÚNG")) {
                     comp.setBackground(new Color(46, 160, 92));
                     comp.setForeground(Color.WHITE);
                 } else {
@@ -126,13 +126,13 @@ public class TheoDoiChoNhap_UI extends JPanel {
         wrapBang.getViewport().setOpaque(false);
         wrapBang.setPreferredSize(new Dimension(0, 0));
 
-        // ==== NÃºt hÃ nh Ä‘á»™ng ====
+        // ==== Nút hành động ====
         JPanel nutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         nutPanel.setOpaque(false);
         nutPanel.setBorder(new EmptyBorder(12, 0, 0, 0));
-        JButton btnXem = UiHelper.nut("ðŸ‘ Xem chi tiáº¿t", new Color(37, 99, 168), e -> xemChiTiet());
-        JButton btnNhap = UiHelper.nut("âœ… XÃ¡c nháº­n Ä‘Ã£ nháº­p", new Color(46, 160, 92), e -> xacNhanNhap());
-        JButton btnHuy = UiHelper.nut("âŒ Há»§y phiáº¿u", new Color(220, 80, 80), e -> huyPhieu());
+        JButton btnXem = UiHelper.nut("👁 Xem chi tiết", new Color(37, 99, 168), e -> xemChiTiet());
+        JButton btnNhap = UiHelper.nut("✅ Xác nhận đã nhập", new Color(46, 160, 92), e -> xacNhanNhap());
+        JButton btnHuy = UiHelper.nut("❌ Hủy phiếu", new Color(220, 80, 80), e -> huyPhieu());
         nutPanel.add(btnXem);
         nutPanel.add(btnNhap);
         nutPanel.add(btnHuy);
@@ -155,10 +155,10 @@ public class TheoDoiChoNhap_UI extends JPanel {
                     LocalDate d = LocalDate.parse(pk.getNgayDuKienGiao(),
                             DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                     long ngay = ChronoUnit.DAYS.between(d, homNay);
-                    if (ngay > 0)      canhBao = "TRá»„ " + ngay + " ngÃ y";
-                    else if (ngay == 0) canhBao = "ÄÃšNG háº¹n";
-                    else if (ngay >= -3) canhBao = "Sáº®P Ä‘áº¿n (" + (-ngay) + " ngÃ y)";
-                    else canhBao = "CÃ²n " + (-ngay) + " ngÃ y";
+                    if (ngay > 0)      canhBao = "TRỄ " + ngay + " ngày";
+                    else if (ngay == 0) canhBao = "ĐÚNG hẹn";
+                    else if (ngay >= -3) canhBao = "SẮP đến (" + (-ngay) + " ngày)";
+                    else canhBao = "Còn " + (-ngay) + " ngày";
                 } catch (Exception ex) {
                     canhBao = "?";
                 }
@@ -171,60 +171,60 @@ public class TheoDoiChoNhap_UI extends JPanel {
 
     private void xemChiTiet() {
         if (phieuDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Chá»n phiáº¿u cáº§n xem!");
+            JOptionPane.showMessageDialog(this, "Chọn phiếu cần xem!");
             return;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("Sá»‘ phiáº¿u: ").append(phieuDangChon.getSoPhieu()).append("\n");
-        sb.append("NgÃ y Ä‘áº·t: ").append(phieuDangChon.getNgay()).append("\n");
-        sb.append("NhÃ  cung cáº¥p: ").append(phieuDangChon.getNhaCungCap()).append("\n");
-        sb.append("Dá»± kiáº¿n giao: ").append(phieuDangChon.getNgayDuKienGiao()).append("\n");
-        sb.append("NgÆ°á»i láº­p: ").append(phieuDangChon.getNguoiLap()).append("\n");
-        sb.append("Ghi chÃº: ").append(phieuDangChon.getGhiChu()).append("\n\n");
-        sb.append("Chi tiáº¿t:\n");
+        sb.append("Số phiếu: ").append(phieuDangChon.getSoPhieu()).append("\n");
+        sb.append("Ngày đặt: ").append(phieuDangChon.getNgay()).append("\n");
+        sb.append("Nhà cung cấp: ").append(phieuDangChon.getNhaCungCap()).append("\n");
+        sb.append("Dự kiến giao: ").append(phieuDangChon.getNgayDuKienGiao()).append("\n");
+        sb.append("Người lập: ").append(phieuDangChon.getNguoiLap()).append("\n");
+        sb.append("Ghi chú: ").append(phieuDangChon.getGhiChu()).append("\n\n");
+        sb.append("Chi tiết:\n");
         for (ChiTietKho ct : phieuDangChon.getChiTiet()) {
             sb.append("  - ").append(ct.getTenPT())
                     .append("  x").append(ct.getSoLuong())
-                    .append("  = ").append(UiHelper.tien(ct.getThanhTien())).append("Ä‘\n");
+                    .append("  = ").append(UiHelper.tien(ct.getThanhTien())).append("đ\n");
         }
-        sb.append("\nTá»•ng: ").append(UiHelper.tien(phieuDangChon.getTongTien())).append("Ä‘");
+        sb.append("\nTổng: ").append(UiHelper.tien(phieuDangChon.getTongTien())).append("đ");
         JTextArea ta = new JTextArea(sb.toString());
         ta.setEditable(false);
         ta.setFont(new Font("Consolas", Font.PLAIN, 13));
         JScrollPane sp = new JScrollPane(ta);
         sp.setPreferredSize(new Dimension(500, 360));
-        JOptionPane.showMessageDialog(this, sp, "Chi tiáº¿t phiáº¿u " + phieuDangChon.getSoPhieu(),
+        JOptionPane.showMessageDialog(this, sp, "Chi tiết phiếu " + phieuDangChon.getSoPhieu(),
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void xacNhanNhap() {
         if (phieuDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Chá»n phiáº¿u cáº§n xÃ¡c nháº­n!");
+            JOptionPane.showMessageDialog(this, "Chọn phiếu cần xác nhận!");
             return;
         }
         if (JOptionPane.showConfirmDialog(this,
-                "XÃ¡c nháº­n Ä‘Ã£ nháº­p hÃ ng cho phiáº¿u " + phieuDangChon.getSoPhieu() + "?\n" +
-                "Sá»‘ lÆ°á»£ng sáº½ Ä‘Æ°á»£c cá»™ng vÃ o tá»“n kho.",
-                "XÃ¡c nháº­n nháº­p hÃ ng",
+                "Xác nhận đã nhập hàng cho phiếu " + phieuDangChon.getSoPhieu() + "?\n" +
+                "Số lượng sẽ được cộng vào tồn kho.",
+                "Xác nhận nhập hàng",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) return;
         boolean ok = kho.xacNhanNhap(phieuDangChon);
         if (ok) {
-            JOptionPane.showMessageDialog(this, "ÄÃ£ cáº­p nháº­t tá»“n kho thÃ nh cÃ´ng!");
+            JOptionPane.showMessageDialog(this, "Đã cập nhật tồn kho thành công!");
             napBang();
             phieuDangChon = null;
         } else {
-            UiHelper.loi(this, "KhÃ´ng thá»ƒ xÃ¡c nháº­n phiáº¿u nÃ y!", null);
+            UiHelper.loi(this, "Không thể xác nhận phiếu này!", null);
         }
     }
 
     private void huyPhieu() {
         if (phieuDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Chá»n phiáº¿u cáº§n há»§y!");
+            JOptionPane.showMessageDialog(this, "Chọn phiếu cần hủy!");
             return;
         }
         if (JOptionPane.showConfirmDialog(this,
-                "Há»§y phiáº¿u chá» nháº­p " + phieuDangChon.getSoPhieu() + "?",
-                "XÃ¡c nháº­n há»§y",
+                "Hủy phiếu chờ nhập " + phieuDangChon.getSoPhieu() + "?",
+                "Xác nhận hủy",
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         boolean ok = kho.huyPhieuChoNhap(phieuDangChon);
         if (ok) {

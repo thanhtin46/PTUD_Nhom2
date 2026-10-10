@@ -15,17 +15,17 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 
-/** Helper giao diện chung: màu, font, nút gradient, bảng, border đổ bóng. */
+/** Helper giao diện chung: màu, font, nút, bảng và các thành phần Swing dùng lại. */
 public final class UiHelper {
 
     // Bảng màu giao diện
-    public static final Color XANH_DAM = new Color(21, 58, 110);
-    public static final Color XANH_TRUNG = new Color(37, 99, 168);
-    public static final Color XANH_NHAT = new Color(80, 144, 220);
-    public static final Color XANH_SIDE = new Color(18, 50, 95);
-    public static final Color NEN = new Color(243, 246, 250);
+    public static final Color XANH_DAM = new Color(25, 48, 70);
+    public static final Color XANH_TRUNG = new Color(42, 112, 153);
+    public static final Color XANH_NHAT = new Color(67, 151, 190);
+    public static final Color XANH_SIDE = new Color(20, 35, 52);
+    public static final Color NEN = new Color(243, 247, 250);
     public static final Color NEN_CARD = Color.WHITE;
-    public static final Color VIEN = new Color(220, 228, 240);
+    public static final Color VIEN = new Color(222, 231, 238);
     public static final Color CHU_CHAY = new Color(232, 60, 60);
     public static final Color XANH_LA = new Color(46, 160, 92);
     public static final Color CAM = new Color(225, 150, 45);
@@ -34,7 +34,7 @@ public final class UiHelper {
 
     public static final Font FONT_BT = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font FONT_NHAN = new Font("Segoe UI", Font.BOLD, 13);
-    public static final Font FONT_TIEU_DE = new Font("Segoe UI", Font.BOLD, 20);
+    public static final Font FONT_TIEU_DE = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font FONT_TIEU_DE_PHU = new Font("Segoe UI", Font.BOLD, 16);
 
     private UiHelper() {}
@@ -42,17 +42,14 @@ public final class UiHelper {
     public static JPanel nen() {
         JPanel p = new JPanel(new BorderLayout(20, 20));
         p.setBackground(NEN);
-        p.setBorder(new EmptyBorder(20, 20, 20, 20));
+        p.setBorder(new EmptyBorder(24, 26, 24, 26));
         return p;
     }
 
     public static JPanel panelForm(String tieuDe, int rong) {
-        JPanel panel = new JPanel(new BorderLayout(0, 14));
+        JPanel panel = taoThe(new BorderLayout(0, 14));
         panel.setPreferredSize(new Dimension(rong, 0));
-        panel.setBackground(NEN_CARD);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                new ShadowBorder(8, new Color(0, 0, 0, 20)),
-                new EmptyBorder(18, 20, 20, 20)));
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel tde = new JLabel(tieuDe);
         tde.setFont(FONT_TIEU_DE_PHU);
@@ -63,17 +60,30 @@ public final class UiHelper {
     }
 
     public static JPanel panelBang(String tieuDe) {
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        panel.setBackground(NEN_CARD);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                new ShadowBorder(8, new Color(0, 0, 0, 20)),
-                new EmptyBorder(14, 16, 16, 16)));
+        JPanel panel = taoThe(new BorderLayout(0, 10));
+        panel.setBorder(new EmptyBorder(18, 18, 18, 18));
 
         JLabel tde = new JLabel(tieuDe);
         tde.setFont(FONT_TIEU_DE_PHU);
         tde.setForeground(XANH_DAM);
         tde.setBorder(new EmptyBorder(0, 4, 4, 0));
         panel.add(tde, BorderLayout.NORTH);
+        return panel;
+    }
+
+    private static JPanel taoThe(LayoutManager layout) {
+        JPanel panel = new JPanel(layout) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(VIEN);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(NEN_CARD);
+                g2.fillRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 15, 15);
+                g2.dispose();
+            }
+        };
+        panel.setOpaque(false);
         return panel;
     }
 
@@ -103,21 +113,21 @@ public final class UiHelper {
     public static void trangTriInput(JComponent o) {
         o.setFont(FONT_BT);
         if (o instanceof JTextField tf) {
-            tf.setPreferredSize(new Dimension(190, 38));
+            tf.setPreferredSize(new Dimension(190, 40));
             tf.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(VIEN, 1, true),
-                    new EmptyBorder(6, 10, 6, 10)));
-            tf.setBackground(new Color(252, 253, 255));
+                    new EmptyBorder(7, 11, 7, 11)));
+            tf.setBackground(new Color(250, 252, 253));
         } else if (o instanceof JComboBox cb) {
-            cb.setPreferredSize(new Dimension(190, 38));
+            cb.setPreferredSize(new Dimension(190, 40));
             cb.setBackground(Color.WHITE);
             cb.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
         } else if (o instanceof JScrollPane sp) {
             sp.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
             if (sp.getViewport().getView() instanceof JTextArea ta) {
                 ta.setFont(FONT_BT);
-                ta.setBackground(new Color(252, 253, 255));
-                ta.setBorder(new EmptyBorder(6, 8, 6, 8));
+                ta.setBackground(new Color(250, 252, 253));
+                ta.setBorder(new EmptyBorder(8, 10, 8, 10));
             }
         }
     }
@@ -141,12 +151,9 @@ public final class UiHelper {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 int w = getWidth(), h = getHeight();
-                Color top = mau;
-                Color bot = darken(mau, 0.18f);
-                if (pressed) { top = darken(mau, 0.22f); bot = darken(mau, 0.30f); }
-                else if (hover) { top = lighten(mau, 0.10f); bot = mau; }
-                g2.setPaint(new GradientPaint(0, 0, top, 0, h, bot));
-                g2.fillRoundRect(0, 0, w, h, 14, 14);
+                Color nenNut = pressed ? darken(mau, 0.16f) : (hover ? lighten(mau, 0.08f) : mau);
+                g2.setColor(nenNut);
+                g2.fillRoundRect(0, 0, w, h, 12, 12);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -156,7 +163,7 @@ public final class UiHelper {
         b.setContentAreaFilled(false);
         b.setOpaque(false);
         b.setFocusPainted(false);
-        b.setBorder(new EmptyBorder(9, 14, 9, 14));
+        b.setBorder(new EmptyBorder(9, 16, 9, 16));
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setHorizontalAlignment(SwingConstants.CENTER);
         if (full) {
@@ -185,40 +192,40 @@ public final class UiHelper {
             @Override public Component prepareRenderer(javax.swing.table.TableCellRenderer r, int row, int col) {
                 Component c = super.prepareRenderer(r, row, col);
                 if (!isRowSelected(row)) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(247, 250, 254));
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 253));
                     c.setForeground(new Color(40, 50, 65));
                 } else {
-                    c.setBackground(new Color(220, 235, 250));
-                    c.setForeground(new Color(15, 35, 70));
+                    c.setBackground(new Color(226, 241, 247));
+                    c.setForeground(XANH_DAM);
                 }
                 return c;
             }
         };
-        table.setRowHeight(32);
+        table.setRowHeight(36);
         table.setFont(FONT_BT);
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setGridColor(new Color(232, 238, 248));
+        table.setGridColor(new Color(233, 239, 243));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(220, 235, 250));
-        table.setSelectionForeground(new Color(15, 35, 70));
+        table.setSelectionBackground(new Color(226, 241, 247));
+        table.setSelectionForeground(XANH_DAM);
         table.setFillsViewportHeight(true);
         table.setBackground(Color.WHITE);
         table.setBorder(new EmptyBorder(0, 0, 0, 0));
         JTableHeader h = table.getTableHeader();
         h.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        h.setForeground(Color.WHITE);
-        h.setBackground(XANH_TRUNG);
+        h.setForeground(XANH_DAM);
+        h.setBackground(new Color(239, 245, 248));
         h.setReorderingAllowed(false);
         h.setDefaultRenderer(new javax.swing.table.DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, c);
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
-                lbl.setBackground(XANH_TRUNG);
-                lbl.setForeground(Color.WHITE);
+                lbl.setBackground(new Color(239, 245, 248));
+                lbl.setForeground(XANH_DAM);
                 lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-                lbl.setBorder(new EmptyBorder(8, 6, 8, 6));
+                lbl.setBorder(new EmptyBorder(10, 8, 10, 8));
                 return lbl;
             }
         });
@@ -280,9 +287,7 @@ public final class UiHelper {
 
     public static void danhSachBong(JComponent o) {
         if (o instanceof JScrollPane sp) {
-            sp.setBorder(BorderFactory.createCompoundBorder(
-                    new ShadowBorder(6, new Color(0, 0, 0, 15)),
-                    new EmptyBorder(0, 0, 0, 0)));
+            sp.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
             sp.getViewport().setBackground(Color.WHITE);
         }
     }

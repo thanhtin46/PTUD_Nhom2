@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC009: BÃ¡o cÃ¡o tá»“n kho vá»›i cáº£nh bÃ¡o real-time.
- * - Cá»™t "Cáº£nh bÃ¡o" hiá»ƒn thá»‹ "Háº¾T HÃ€NG" (Ä‘á») / "Sáº®P Háº¾T" (cam) / "BÃŒNH THÆ¯á»œNG" (xanh).
- * - Panel trÃªn cÃ¹ng: sá»‘ máº·t hÃ ng háº¿t, sáº¯p háº¿t, tá»•ng giÃ¡ trá»‹.
+ * UC009: Báo cáo tồn kho với cảnh báo real-time.
+ * - Cột "Cảnh báo" hiển thị "HẾT HÀNG" (đỏ) / "SẮP HẾT" (cam) / "BÌNH THƯỜNG" (xanh).
+ * - Panel trên cùng: số mặt hàng hết, sắp hết, tổng giá trị.
  */
 public class BaoCaoTonKho_UI extends JPanel {
     public BaoCaoTonKho_UI() {
@@ -26,12 +26,12 @@ public class BaoCaoTonKho_UI extends JPanel {
         JPanel north = new JPanel();
         north.setOpaque(false);
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        JLabel tde = UiHelper.tieuDeTrang("ðŸ“Š BÃ¡o cÃ¡o tá»“n kho");
+        JLabel tde = UiHelper.tieuDeTrang("📊 Báo cáo tồn kho");
         tde.setAlignmentX(Component.LEFT_ALIGNMENT);
         north.add(tde);
         root.add(north, BorderLayout.NORTH);
 
-        // ==== Thá»‘ng kÃª nhanh ====
+        // ==== Thống kê nhanh ====
         KhoDuLieu kho = KhoDuLieu.get();
         int soHet = 0, soSapHet = 0, soBinhThuong = 0;
         long tongGiaTri = 0;
@@ -39,8 +39,8 @@ public class BaoCaoTonKho_UI extends JPanel {
             long gt = pt.getSoLuongTon() * pt.getDonGia();
             tongGiaTri += gt;
             switch (pt.getMucCanhBao()) {
-                case "Háº¾T HÃ€NG":   soHet++; break;
-                case "Sáº®P Háº¾T":    soSapHet++; break;
+                case "HẾT HÀNG":   soHet++; break;
+                case "SẮP HẾT":    soSapHet++; break;
                 default:           soBinhThuong++;
             }
         }
@@ -48,14 +48,14 @@ public class BaoCaoTonKho_UI extends JPanel {
         JPanel grid = new JPanel(new GridLayout(1, 4, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(8, 0, 14, 0));
-        grid.add(theCanhBao("ðŸš¨", "Háº¿t hÃ ng", String.valueOf(soHet),
-                "Cáº§n nháº­p gáº¥p", new Color(220, 80, 80)));
-        grid.add(theCanhBao("âš ", "Sáº¯p háº¿t", String.valueOf(soSapHet),
-                "â‰¤ má»©c tá»‘i thiá»ƒu", new Color(225, 150, 45)));
-        grid.add(theCanhBao("âœ…", "BÃ¬nh thÆ°á»ng", String.valueOf(soBinhThuong),
-                "CÃ²n Ä‘á»§ dÃ¹ng", new Color(46, 160, 92)));
-        grid.add(theCanhBao("ðŸ’°", "Tá»•ng giÃ¡ trá»‹ tá»“n",
-                UiHelper.tien(tongGiaTri) + " Ä‘", "Qua " + kho.getPhuTungs().size() + " máº·t hÃ ng",
+        grid.add(theCanhBao("🚨", "Hết hàng", String.valueOf(soHet),
+                "Cần nhập gấp", new Color(220, 80, 80)));
+        grid.add(theCanhBao("⚠", "Sắp hết", String.valueOf(soSapHet),
+                "≤ mức tối thiểu", new Color(225, 150, 45)));
+        grid.add(theCanhBao("✅", "Bình thường", String.valueOf(soBinhThuong),
+                "Còn đủ dùng", new Color(46, 160, 92)));
+        grid.add(theCanhBao("💰", "Tổng giá trị tồn",
+                UiHelper.tien(tongGiaTri) + " đ", "Qua " + kho.getPhuTungs().size() + " mặt hàng",
                 new Color(37, 99, 168)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
         wrapGrid.setPreferredSize(new Dimension(0, 100));
@@ -63,10 +63,10 @@ public class BaoCaoTonKho_UI extends JPanel {
         wrapGrid.add(grid, BorderLayout.CENTER);
         root.add(wrapGrid, BorderLayout.CENTER);
 
-        // ==== Báº£ng chi tiáº¿t ====
-        JPanel bangPanel = UiHelper.panelBang("BÃ¡o cÃ¡o chi tiáº¿t (cáº£nh bÃ¡o real-time)");
-        DefaultTableModel model = UiHelper.model("MÃ£ PT", "TÃªn phá»¥ tÃ¹ng", "ÄVT",
-                "Tá»“n kho", "Tá»‘i thiá»ƒu", "Cáº£nh bÃ¡o", "ÄÆ¡n giÃ¡", "GiÃ¡ trá»‹ tá»“n");
+        // ==== Bảng chi tiết ====
+        JPanel bangPanel = UiHelper.panelBang("Báo cáo chi tiết (cảnh báo real-time)");
+        DefaultTableModel model = UiHelper.model("Mã PT", "Tên phụ tùng", "ĐVT",
+                "Tồn kho", "Tối thiểu", "Cảnh báo", "Đơn giá", "Giá trị tồn");
         for (PhuTung pt : kho.getPhuTungs()) {
             model.addRow(new Object[]{pt.getMaPT(), pt.getTen(), pt.getDonVi(),
                     pt.getSoLuongTon(), pt.getSoLuongToiThieu(), pt.getMucCanhBao(),
@@ -74,7 +74,7 @@ public class BaoCaoTonKho_UI extends JPanel {
                     UiHelper.tien(pt.getSoLuongTon() * pt.getDonGia())});
         }
         JTable bang = UiHelper.bang(model);
-        // TÃ´ mÃ u cá»™t cáº£nh bÃ¡o
+        // Tô màu cột cảnh báo
         bang.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 JLabel comp = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, c);
@@ -82,9 +82,9 @@ public class BaoCaoTonKho_UI extends JPanel {
                 comp.setForeground(Color.WHITE);
                 comp.setFont(comp.getFont().deriveFont(Font.BOLD));
                 comp.setHorizontalAlignment(SwingConstants.CENTER);
-                if (cb.contains("Háº¾T")) {
+                if (cb.contains("HẾT")) {
                     comp.setBackground(new Color(220, 80, 80));
-                } else if (cb.contains("Sáº®P")) {
+                } else if (cb.contains("SẮP")) {
                     comp.setBackground(new Color(225, 150, 45));
                 } else {
                     comp.setBackground(new Color(46, 160, 92));
@@ -92,18 +92,18 @@ public class BaoCaoTonKho_UI extends JPanel {
                 return comp;
             }
         });
-        // TÃ´ ná»n dÃ²ng cÃ³ cáº£nh bÃ¡o
+        // Tô nền dòng có cảnh báo
         final List<Integer> rowsCanhBao = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
             String cb = model.getValueAt(i, 5).toString();
-            if (cb.contains("Háº¾T") || cb.contains("Sáº®P")) rowsCanhBao.add(i);
+            if (cb.contains("HẾT") || cb.contains("SẮP")) rowsCanhBao.add(i);
         }
         bang.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
                 Component c = super.getTableCellRendererComponent(t, v, s, f, r, col);
                 if (!s && rowsCanhBao.contains(r)) {
                     String cb = model.getValueAt(r, 5).toString();
-                    if (cb.contains("Háº¾T")) c.setBackground(new Color(255, 232, 232));
+                    if (cb.contains("HẾT")) c.setBackground(new Color(255, 232, 232));
                     else c.setBackground(new Color(255, 245, 224));
                     c.setForeground(new Color(120, 30, 30));
                 } else if (!s) {
@@ -140,17 +140,17 @@ public class BaoCaoTonKho_UI extends JPanel {
         tongPanel.setOpaque(false);
         tongPanel.setBorder(new EmptyBorder(12, 18, 12, 18));
         tongPanel.setLayout(new BorderLayout());
-        JLabel tTrai = new JLabel("Sá»‘ máº·t hÃ ng: " + kho.getPhuTungs().size()
-                + "   |   Äang háº¿t/sáº¯p háº¿t: " + (soHet + soSapHet));
+        JLabel tTrai = new JLabel("Số mặt hàng: " + kho.getPhuTungs().size()
+                + "   |   Đang hết/sắp hết: " + (soHet + soSapHet));
         tTrai.setForeground(Color.WHITE);
         tTrai.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        JLabel tPhai = new JLabel("Tá»•ng giÃ¡ trá»‹ tá»“n: " + UiHelper.tien(tongGiaTri) + " VNÄ");
+        JLabel tPhai = new JLabel("Tổng giá trị tồn: " + UiHelper.tien(tongGiaTri) + " VNĐ");
         tPhai.setForeground(Color.WHITE);
         tPhai.setFont(new Font("Segoe UI", Font.BOLD, 16));
         tongPanel.add(tTrai, BorderLayout.WEST);
         tongPanel.add(tPhai, BorderLayout.EAST);
 
-        // Gá»™p báº£ng + footer
+        // Gộp bảng + footer
         JPanel south = new JPanel(new BorderLayout());
         south.setOpaque(false);
         south.setBorder(new EmptyBorder(14, 0, 0, 0));
