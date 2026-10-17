@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class RunApp_UI {
     public static void main(String[] args) {
-        // Ép dùng LAF Windows để title bar + nút ✕ của JFrame hiển thị đúng kích thước
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}

@@ -23,22 +23,11 @@ public class QuanLyKhachHang_UI extends JPanel {
         setBackground(UiHelper.NEN);
         add(root, BorderLayout.CENTER);
 
-        JLabel tde = UiHelper.tieuDeTrang("👥 Quản lý khách hàng");
-        JLabel phu = new JLabel("Thêm, sửa, xóa thông tin khách hàng");
-        phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        phu.setForeground(new Color(110, 120, 135));
-        JPanel north = new JPanel();
-        north.setOpaque(false);
-        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        tde.setAlignmentX(Component.LEFT_ALIGNMENT);
-        phu.setAlignmentX(Component.LEFT_ALIGNMENT);
-        north.add(tde);
-        north.add(phu);
-        root.add(north, BorderLayout.NORTH);
+        root.add(UiHelper.tieuDeTrang("Quản lý khách hàng"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
         split.setResizeWeight(0);
-        split.setDividerLocation(420);
+        split.setDividerLocation(440);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -46,7 +35,7 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng", 420);
+        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng", 440);
 
         txtMa = new JTextField();
         txtTen = new JTextField();
@@ -54,7 +43,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtCccd = new JTextField();
         txtDiaChi = new JTextField();
         txtEmail = new JTextField();
-        txtGhiChu = new JTextArea(4, 20);
+        txtGhiChu = new JTextArea(3, 20);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
 
@@ -70,21 +59,17 @@ public class QuanLyKhachHang_UI extends JPanel {
 
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
-        nut.setBorder(new EmptyBorder(10, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", new Color(46, 160, 92), e -> them()));
-        nut.add(UiHelper.nut("Sửa", new Color(37, 99, 168), e -> sua()));
-        nut.add(UiHelper.nut("Xóa", new Color(220, 80, 80), e -> xoa()));
-        nut.add(UiHelper.nut("Làm mới", new Color(120, 130, 150), e -> lamMoi()));
+        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
+        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
+        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+        nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
-        JPanel body = new JPanel(new BorderLayout());
-        body.setOpaque(false);
-        body.add(form, BorderLayout.CENTER);
-        body.add(nut, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
+        UiHelper.ganNoiDungForm(formPanel, form, nut);
         return formPanel;
     }
 
-    private JScrollPane taoBang() {
+    private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách khách hàng");
         model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
         table = UiHelper.bang(model);
@@ -94,11 +79,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrap = new JScrollPane(bangPanel);
-        wrap.setBorder(null);
-        wrap.setOpaque(false);
-        wrap.getViewport().setOpaque(false);
-        return wrap;
+        return bangPanel;
     }
 
     private void napBang() {

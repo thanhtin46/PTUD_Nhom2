@@ -7,6 +7,7 @@ import Entity.PhieuTiepNhan;
 import Entity.PhuongTien;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
@@ -32,13 +33,23 @@ public class LapPhieuSuaChua_UI extends JPanel {
         setBackground(UiHelper.NEN);
         add(root, BorderLayout.CENTER);
 
-        root.add(UiHelper.tieuDeTrang("🔧 Lập phiếu sửa chữa / tiếp nhận"), BorderLayout.NORTH);
+        root.add(UiHelper.tieuDeTrang("Lập phiếu sửa chữa / tiếp nhận"), BorderLayout.NORTH);
 
         txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         txtSdt.addActionListener(e -> doSdt());
         txtBienSo.addActionListener(e -> doBienSo());
 
-        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng & xe", 420);
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
+        split.setResizeWeight(0);
+        split.setDividerLocation(450);
+        split.setBorder(null);
+        split.setOpaque(false);
+        root.add(split, BorderLayout.CENTER);
+        napBang();
+    }
+
+    private JPanel taoForm() {
+        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng & xe", 450);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Số điện thoại *", txtSdt);
@@ -52,28 +63,22 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         JPanel nut = new JPanel(new BorderLayout());
         nut.setOpaque(false);
-        nut.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        JButton btn = UiHelper.nut("✓  Tạo phiếu tiếp nhận", new Color(46, 160, 92), true, e -> tao());
+        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
+        JButton btn = UiHelper.nut("Tạo phiếu tiếp nhận", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_LA, true, e -> tao());
         nut.add(btn, BorderLayout.CENTER);
-        JPanel body = new JPanel(new BorderLayout());
-        body.setOpaque(false);
-        body.add(form, BorderLayout.NORTH);
-        body.add(nut, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
 
+        UiHelper.ganNoiDungForm(formPanel, form, nut);
+        return formPanel;
+    }
+
+    private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu sửa chữa");
         model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Loại", "Ngày", "Yêu cầu", "Tiến độ", "Thành tiền");
-        JScrollPane sp = new JScrollPane(UiHelper.bang(model));
+        JTable table = UiHelper.bang(model);
+        JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, formPanel, bangPanel);
-        split.setResizeWeight(0);
-        split.setDividerLocation(440);
-        split.setBorder(null);
-        split.setOpaque(false);
-        root.add(split, BorderLayout.CENTER);
-        napBang();
+        return bangPanel;
     }
 
     private void doSdt() {

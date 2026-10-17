@@ -12,11 +12,13 @@ public class KhoDuLieu {
     private final ArrayList<PhieuTiepNhan> phieuTiepNhans = new ArrayList<>();
     private final ArrayList<PhieuBaoHanh> phieuBaoHanhs = new ArrayList<>();
     private final ArrayList<PhieuKho> phieuKhos = new ArrayList<>();
+    private final ArrayList<HoaDon> hoaDons = new ArrayList<>();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
     private int demNhap = 1;
     private int demXuat = 1;
+    private int demHoaDon = 2;
 
     private KhoDuLieu() {
         seed();
@@ -38,6 +40,11 @@ public class KhoDuLieu {
     public ArrayList<PhieuTiepNhan> getPhieuTiepNhans() { return phieuTiepNhans; }
     public ArrayList<PhieuBaoHanh> getPhieuBaoHanhs() { return phieuBaoHanhs; }
     public ArrayList<PhieuKho> getPhieuKhos() { return phieuKhos; }
+    public ArrayList<HoaDon> getHoaDons() { return hoaDons; }
+
+    public String maHoaDonMoi() {
+        return String.format("HD%03d", demHoaDon++);
+    }
 
     public KhachHang timKhachHangTheoMa(String ma) {
         for (KhachHang kh : khachHangs) if (kh.getMaKH().equalsIgnoreCase(ma)) return kh;
@@ -172,5 +179,9 @@ public class KhoDuLieu {
                 "Nguyễn Văn Tiếp Tân", "Còn hạn", "Bảo hành sau bảo dưỡng"));
         phieuBaoHanhs.add(new PhieuBaoHanh("BH002", "59C-678.90", "23/01/2024", "23/07/2024",
                 "Nguyễn Văn Tiếp Tân", "Hết hạn", "Bảo hành má phanh"));
+
+        hoaDons.add(new HoaDon("HD001", "TN001", "KH001", "Nguyễn Văn A", "0901234567",
+                "51A-123.45", "22/01/2024", 800000, 700000, 0, 1500000,
+                "Chuyển khoản", "Nguyễn Văn Tiếp Tân", "Khách thanh toán chuyển khoản Vietcombank", HoaDon.DA_THANH_TOAN));
     }
 }

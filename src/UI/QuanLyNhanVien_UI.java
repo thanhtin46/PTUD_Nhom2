@@ -4,6 +4,7 @@ import Entity.KhoDuLieu;
 import Entity.NhanVien;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -28,22 +29,11 @@ public class QuanLyNhanVien_UI extends JPanel {
         setBackground(UiHelper.NEN);
         add(root, BorderLayout.CENTER);
 
-        JLabel tde = UiHelper.tieuDeTrang("👨‍💼 Quản lý nhân viên");
-        JLabel phu = new JLabel("Thêm, sửa, vô hiệu hóa & phân quyền nhân viên");
-        phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        phu.setForeground(new Color(110, 120, 135));
-        JPanel north = new JPanel();
-        north.setOpaque(false);
-        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        tde.setAlignmentX(Component.LEFT_ALIGNMENT);
-        phu.setAlignmentX(Component.LEFT_ALIGNMENT);
-        north.add(tde);
-        north.add(phu);
-        root.add(north, BorderLayout.NORTH);
+        root.add(UiHelper.tieuDeTrang("Quản lý nhân viên"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
         split.setResizeWeight(0);
-        split.setDividerLocation(400);
+        split.setDividerLocation(430);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -51,7 +41,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin nhân viên", 400);
+        JPanel formPanel = UiHelper.panelForm("Thông tin nhân viên", 430);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Mã NV *", txtMa);
@@ -61,23 +51,19 @@ public class QuanLyNhanVien_UI extends JPanel {
         UiHelper.themDong(form, 4, "Vai trò", cboVt);
         UiHelper.themDong(form, 5, "Trạng thái", cboTrangThai);
 
-        JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
+        JPanel nut = new JPanel(new GridLayout(2, 2, 8, 8));
         nut.setOpaque(false);
-        nut.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", new Color(46, 160, 92), e -> them()));
-        nut.add(UiHelper.nut("Sửa", new Color(37, 99, 168), e -> sua()));
-        nut.add(UiHelper.nut("Vô hiệu hóa", new Color(220, 80, 80), e -> voHieuHoa()));
-        nut.add(UiHelper.nut("Làm mới", new Color(120, 130, 150), e -> lamMoi()));
+        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
+        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
+        nut.add(UiHelper.nut("Khóa / Kích hoạt", UiHelper.CHU_CHAY, e -> voHieuHoa()));
+        nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
-        JPanel body = new JPanel(new BorderLayout());
-        body.setOpaque(false);
-        body.add(form, BorderLayout.CENTER);
-        body.add(nut, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
+        UiHelper.ganNoiDungForm(formPanel, form, nut);
         return formPanel;
     }
 
-    private JScrollPane taoBang() {
+    private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách nhân viên");
         model = UiHelper.model("Mã NV", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái");
         table = UiHelper.bang(model);
@@ -87,11 +73,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrap = new JScrollPane(bangPanel);
-        wrap.setBorder(null);
-        wrap.setOpaque(false);
-        wrap.getViewport().setOpaque(false);
-        return wrap;
+        return bangPanel;
     }
 
     private void napBang() {
@@ -121,10 +103,6 @@ public class QuanLyNhanVien_UI extends JPanel {
         JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công!");
     }
 
-    /**
-     * UC013: "Xóa" nhân viên = vô hiệu hóa (giữ lại lịch sử).
-     * Nếu đang NGUNG thì chuyển lại DANG_LAM.
-     */
     private void voHieuHoa() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
@@ -134,7 +112,6 @@ public class QuanLyNhanVien_UI extends JPanel {
         String ma = model.getValueAt(dong, 0).toString();
         NhanVien nv = kho.timNhanVienTheoMa(ma);
         if (nv == null) return;
-        // Không cho vô hiệu hóa nếu chỉ còn 1 người đang hoạt động
         long soDangLam = kho.getNhanViens().stream().filter(NhanVien::dangHoatDong).count();
         if (nv.dangHoatDong() && soDangLam <= 1) {
             UiHelper.loi(this, "Không thể vô hiệu hóa người dùng cuối cùng đang hoạt động!", txtMa);

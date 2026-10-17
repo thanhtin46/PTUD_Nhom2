@@ -26,8 +26,11 @@ public final class HinhAnh {
         // 2) thử thư mục dự án: src/images/<ten> và src/<ten>
         for (String p : new String[]{
                 "src/images/" + ten,
+                "PTUD_Nhom2/src/images/" + ten,
                 "src/" + ten,
+                "PTUD_Nhom2/src/" + ten,
                 "images/" + ten,
+                "PTUD_Nhom2/images/" + ten,
                 ten}) {
             File f = new File(p);
             if (f.exists()) {

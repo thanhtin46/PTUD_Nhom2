@@ -48,13 +48,13 @@ public class BaoCaoTonKho_UI extends JPanel {
         JPanel grid = new JPanel(new GridLayout(1, 4, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(8, 0, 14, 0));
-        grid.add(theCanhBao("🚨", "Hết hàng", String.valueOf(soHet),
+        grid.add(theCanhBao(UiIcon.of(UiIcon.CLOSE, 22, Color.WHITE), "Hết hàng", String.valueOf(soHet),
                 "Cần nhập gấp", new Color(220, 80, 80)));
-        grid.add(theCanhBao("⚠", "Sắp hết", String.valueOf(soSapHet),
+        grid.add(theCanhBao(UiIcon.of(UiIcon.CLOCK, 22, Color.WHITE), "Sắp hết", String.valueOf(soSapHet),
                 "≤ mức tối thiểu", new Color(225, 150, 45)));
-        grid.add(theCanhBao("✅", "Bình thường", String.valueOf(soBinhThuong),
+        grid.add(theCanhBao(UiIcon.of(UiIcon.CHECK, 22, Color.WHITE), "Bình thường", String.valueOf(soBinhThuong),
                 "Còn đủ dùng", new Color(46, 160, 92)));
-        grid.add(theCanhBao("💰", "Tổng giá trị tồn",
+        grid.add(theCanhBao(UiIcon.of(UiIcon.BILL, 22, Color.WHITE), "Tổng giá trị tồn",
                 UiHelper.tien(tongGiaTri) + " đ", "Qua " + kho.getPhuTungs().size() + " mặt hàng",
                 new Color(37, 99, 168)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
@@ -159,7 +159,7 @@ public class BaoCaoTonKho_UI extends JPanel {
         root.add(south, BorderLayout.SOUTH);
     }
 
-    private JPanel theCanhBao(String icon, String ten, String so, String phuDe, Color mau) {
+    private JPanel theCanhBao(Icon icon, String ten, String so, String phuDe, Color mau) {
         JPanel p = new JPanel(new BorderLayout(12, 0)) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -187,8 +187,6 @@ public class BaoCaoTonKho_UI extends JPanel {
                 super.paintComponent(g);
             }
         };
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
-        lblIcon.setForeground(Color.WHITE);
         lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
         lblIcon.setPreferredSize(new Dimension(48, 48));
 
