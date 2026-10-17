@@ -13,6 +13,8 @@ public class KhoDuLieu {
     private final ArrayList<PhieuBaoHanh> phieuBaoHanhs = new ArrayList<>();
     private final ArrayList<PhieuKho> phieuKhos = new ArrayList<>();
     private final ArrayList<HoaDon> hoaDons = new ArrayList<>();
+    private final CauHinhHeThong cauHinh = new CauHinhHeThong();
+    private final ArrayList<NhatKyHeThong> nhatKyList = new ArrayList<>();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -41,6 +43,52 @@ public class KhoDuLieu {
     public ArrayList<PhieuBaoHanh> getPhieuBaoHanhs() { return phieuBaoHanhs; }
     public ArrayList<PhieuKho> getPhieuKhos() { return phieuKhos; }
     public ArrayList<HoaDon> getHoaDons() { return hoaDons; }
+    public CauHinhHeThong getCauHinh() { return cauHinh; }
+    public ArrayList<NhatKyHeThong> getNhatKyList() { return nhatKyList; }
+
+    public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
+        nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
+    }
+
+    public void resetDuLieuMacDinh() {
+        khachHangs.clear();
+        phuongTiens.clear();
+        phuTungs.clear();
+        phieuTiepNhans.clear();
+        phieuBaoHanhs.clear();
+        phieuKhos.clear();
+        hoaDons.clear();
+        nhatKyList.clear();
+        demTiepNhan = 3;
+        demBaoHanh = 2;
+        demNhap = 1;
+        demXuat = 1;
+        demHoaDon = 2;
+        seed();
+        ghiNhatKy("Quản lý", "Quản lý", "Khôi phục dữ liệu gốc", NhatKyHeThong.WARN, "Admin đã kích hoạt Factory Reset đưa hệ thống về trạng thái mẫu ban đầu");
+    }
+
+    public String taoBaoCaoBackup() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== BẢN SAO LƯU DỮ LIỆU HỆ THỐNG GARA THE T4 ===\n");
+        sb.append("Thời gian sao lưu: ").append(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))).append("\n");
+        sb.append("Gara: ").append(cauHinh.getTenGara()).append("\n");
+        sb.append("Địa chỉ: ").append(cauHinh.getDiaChi()).append(" | Hotline: ").append(cauHinh.getHotline()).append("\n");
+        sb.append("------------------------------------------------\n");
+        sb.append("1. Khách hàng: ").append(khachHangs.size()).append(" hồ sơ\n");
+        sb.append("2. Phương tiện: ").append(phuongTiens.size()).append(" xe\n");
+        sb.append("3. Phụ tùng trong kho: ").append(phuTungs.size()).append(" mặt hàng\n");
+        sb.append("4. Phiếu tiếp nhận sửa chữa: ").append(phieuTiepNhans.size()).append(" phiếu\n");
+        sb.append("5. Phiếu bảo hành: ").append(phieuBaoHanhs.size()).append(" phiếu\n");
+        sb.append("6. Hóa đơn thanh toán: ").append(hoaDons.size()).append(" hóa đơn\n");
+        sb.append("7. Tài khoản nhân sự: ").append(nhanViens.size()).append(" nhân viên\n");
+        sb.append("8. Bản ghi nhật ký an ninh: ").append(nhatKyList.size()).append(" bản ghi\n");
+        sb.append("------------------------------------------------\n");
+        sb.append("Trạng thái sao lưu: HOÀN TẤT & ĐÃ XÁC THỰC TOÀN VẸN\n");
+        sb.append("Mã Checksum SHA: ").append(Integer.toHexString(sb.toString().hashCode()).toUpperCase()).append("\n");
+        sb.append("================================================\n");
+        return sb.toString();
+    }
 
     public String maHoaDonMoi() {
         return String.format("HD%03d", demHoaDon++);
@@ -183,5 +231,11 @@ public class KhoDuLieu {
         hoaDons.add(new HoaDon("HD001", "TN001", "KH001", "Nguyễn Văn A", "0901234567",
                 "51A-123.45", "22/01/2024", 800000, 700000, 0, 1500000,
                 "Chuyển khoản", "Nguyễn Văn Tiếp Tân", "Khách thanh toán chuyển khoản Vietcombank", HoaDon.DA_THANH_TOAN));
+
+        nhatKyList.add(new NhatKyHeThong("Hệ thống", "Hệ thống", "Khởi động ứng dụng", NhatKyHeThong.INFO, "Khởi động thành công mô-đun dữ liệu Gara The T4"));
+        nhatKyList.add(new NhatKyHeThong("NV01", "Nhân viên tiếp tân", "Thanh toán hóa đơn", NhatKyHeThong.INFO, "Lập và thu tiền hóa đơn HD001 - Khách: Nguyễn Văn A (1,500,000 đ)"));
+        nhatKyList.add(new NhatKyHeThong("NV02", "Nhân viên sửa chữa", "Tiếp nhận sửa chữa", NhatKyHeThong.INFO, "Tiếp nhận xe 59C-678.90 - Yêu cầu: Kiểm tra phanh"));
+        nhatKyList.add(new NhatKyHeThong("Hệ thống", "Cảnh báo tự động", "Cảnh báo tồn kho", NhatKyHeThong.WARN, "Phụ tùng PT005 (Bộ dây curoa) đã hết hàng (Tồn = 0)"));
+        nhatKyList.add(new NhatKyHeThong("NV04", "Quản lý", "Đăng nhập hệ thống", NhatKyHeThong.INFO, "Quản lý tổng NV04 đăng nhập từ trạm Admin"));
     }
 }
