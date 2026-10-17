@@ -81,9 +81,11 @@ public class NhanVien {
     /** Khởi tạo quyền mặc định theo vai trò (gọi 1 lần khi cần). */
     public void khoiTaoQuyenMacDinh() {
         if ("Quản lý".equals(vaiTro)) {
-            cacQuyen = new String[]{"KH","PT","BH","SC","TD","PHUTUNG","NHAPKHO","XUATKHO","TONKHO","NV","PQ","BCDT"};
+            cacQuyen = new String[]{"KH","PT","BH","SC","TD","PHUTUNG","NHAPKHO","XUATKHO","TONKHO","NV","PQ","HD","BCDT"};
         } else if ("Nhân viên tiếp tân".equals(vaiTro)) {
-            cacQuyen = new String[]{"KH","PT","BH"};
+            cacQuyen = new String[]{"KH","PT","BH","HD"};
+        } else if ("Nhân viên thu ngân".equals(vaiTro)) {
+            cacQuyen = new String[]{"HD","BCDT","KH","PT"};
         } else if ("Nhân viên sửa chữa".equals(vaiTro)) {
             cacQuyen = new String[]{"SC","TD","TONKHO"};
         } else if ("Nhân viên kho".equals(vaiTro)) {

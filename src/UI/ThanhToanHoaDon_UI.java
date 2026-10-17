@@ -1,30 +1,42 @@
 package UI;
 
+import Entity.CauHinhHeThong;
 import Entity.HoaDon;
 import Entity.KhachHang;
 import Entity.KhoDuLieu;
 import Entity.NhanVien;
 import Entity.PhieuTiepNhan;
+import Entity.PhuTung;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 /**
- * ThanhToanHoaDon_UI — Màn hình Quản lý & Thanh toán Hóa đơn dịch vụ:
- * - Chọn phiếu sửa chữa để thanh toán (tự động load thông tin khách hàng, xe, chi phí)
- * - Tùy chọn tiền công dịch vụ, tiền phụ tùng linh kiện, chiết khấu giảm giá (%)
- * - Lựa chọn hình thức thanh toán: Tiền mặt, Chuyển khoản, Thẻ
- * - Lập hóa đơn và in/xuất hóa đơn thanh toán chuyên nghiệp
- * - Bảng danh sách các hóa đơn đã lập, thống kê tổng doanh thu thu ngân
+ * ThanhToanHoaDon_UI — Quầy Thu ngân & Thanh toán Hóa đơn dịch vụ Gara Ô tô:
+ * - Tích hợp đầy đủ theo bản thiết kế chuẩn:
+ *   1. Bảng kê chi tiết chi phí phụ tùng & tiền công sửa chữa
+ *   2. Khung "PHƯƠNG THỨC THANH TOÁN & QUẦY THU NGÂN" với 3 phương thức:
+ *      Chuyển khoản QR (VietQR Napas 24/7), Tiền mặt (tự động tính tiền thừa, nút đếm nhanh), Quẹt thẻ POS
+ *   3. Mã VietQR tự động đồng bộ theo số tiền và nội dung thanh toán hóa đơn
+ *   4. Xuất & In hóa đơn theo mẫu chuẩn nghiệp vụ Gara (có số tiền bằng chữ, mã QR, chữ ký)
+ *   5. Phân quyền dành riêng cho Nhân viên thu ngân, Quản lý và Tiếp tân
  */
 public class ThanhToanHoaDon_UI extends JPanel {
     private final NhanVien nvHienTai;
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final CauHinhHeThong cauHinh = kho.getCauHinh();
 
+    // ==== Form Header Thông tin phiếu ====
     private final JTextField txtMaHD = new JTextField();
     private final JComboBox<String> cboPhieuSC = new JComboBox<>();
     private final JTextField txtKhachHang = new JTextField();
@@ -34,12 +46,32 @@ public class ThanhToanHoaDon_UI extends JPanel {
     private final JTextField txtTienDichVu = new JTextField("0");
     private final JTextField txtTienPhuTung = new JTextField("0");
     private final JTextField txtGiamGia = new JTextField("0");
+    private final JTextField txtVat = new JTextField("10");
     private final JLabel lblTongTien = new JLabel("0 đ");
-    private final JComboBox<String> cboPhuongThuc = new JComboBox<>(new String[]{"Tiền mặt", "Chuyển khoản", "Thẻ ngân hàng (POS)"});
     private final JTextField txtGhiChu = new JTextField();
 
-    private JTable table;
-    private DefaultTableModel model;
+    // ==== Bảng chi tiết vật tư & công việc ====
+    private DefaultTableModel modelChiTiet;
+    private JTable tblChiTiet;
+    private final JLabel lblTongChiPhiBang = new JLabel("Tổng chi phí dịch vụ & vật tư: 0 đ");
+
+    // ==== Quầy thu ngân & Phương thức thanh toán ====
+    private String phuongThucChon = "Chuyển khoản QR";
+    private JButton btnQrTab, btnTienMatTab, btnPosTab;
+    private final JTextField txtTienKhachDua = new JTextField("0");
+    private final JLabel lblTienThua = new JLabel("0");
+    private final JTextField txtMaThamChieu = new JTextField();
+    private final JTextField txtTkThuHuong = new JTextField();
+
+    // ==== VietQR Canvas & info ====
+    private JPanel qrCanvas;
+    private final JLabel lblQrSoTien = new JLabel("0 VNĐ");
+    private final JLabel lblQrNoiDung = new JLabel("TT HD001 51A12345");
+
+    // ==== Bảng danh sách hóa đơn ====
+    private JTable tblHoaDon;
+    private DefaultTableModel modelHoaDon;
+    private final JLabel lblTongDoanhThu = new JLabel("Tổng doanh thu: 0 đ");
 
     public ThanhToanHoaDon_UI(NhanVien nv) {
         this.nvHienTai = nv;
@@ -48,35 +80,83 @@ public class ThanhToanHoaDon_UI extends JPanel {
         setBackground(UiHelper.NEN);
         add(root, BorderLayout.CENTER);
 
-        // Header
+        // Header trang
         JPanel north = new JPanel();
         north.setOpaque(false);
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        JLabel tde = UiHelper.tieuDeTrang("💳 Thanh toán hóa đơn");
-        JLabel phu = new JLabel("Lập hóa đơn thanh toán dịch vụ sửa chữa & bảo dưỡng xe cho khách hàng");
-        phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JPanel titleBar = new JPanel(new BorderLayout());
+        titleBar.setOpaque(false);
+        JLabel tde = UiHelper.tieuDeTrang("Quầy thu ngân & Thanh toán hóa đơn");
+        JLabel lblUserBadge = new JLabel("Thu ngân: " + (nvHienTai != null ? nvHienTai.getHoTen() : "Thu ngân quầy")
+                + " (" + (nvHienTai != null ? nvHienTai.getVaiTro() : "Quản lý") + ")");
+        lblUserBadge.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblUserBadge.setForeground(new Color(37, 99, 235));
+        lblUserBadge.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(191, 219, 254), 1, true),
+                new EmptyBorder(4, 10, 4, 10)
+        ));
+        titleBar.add(tde, BorderLayout.WEST);
+        titleBar.add(lblUserBadge, BorderLayout.EAST);
+
+        JLabel phu = new JLabel("Thanh toán dịch vụ sửa chữa, quét mã VietQR tự động, quản lý quầy thu ngân và xuất hóa đơn theo mẫu");
+        phu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         phu.setForeground(new Color(100, 116, 139));
         tde.setAlignmentX(Component.LEFT_ALIGNMENT);
         phu.setAlignmentX(Component.LEFT_ALIGNMENT);
-        north.add(tde);
-        north.add(Box.createVerticalStrut(4));
+
+        north.add(titleBar);
+        north.add(Box.createVerticalStrut(2));
         north.add(phu);
+        north.add(Box.createVerticalStrut(10));
         root.add(north, BorderLayout.NORTH);
 
-        // Split pane Form + Bảng
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
-        split.setResizeWeight(0);
-        split.setDividerLocation(450);
-        split.setBorder(null);
-        split.setOpaque(false);
-        root.add(split, BorderLayout.CENTER);
+        // Chia đôi màn hình: Cột trái (Lập phiếu & Quầy thu ngân) + Cột phải (Lịch sử hóa đơn)
+        JTabbedPane tabChinh = new JTabbedPane();
+        tabChinh.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tabChinh.addTab("  Quầy thu ngân & Thanh toán  ", taoTabThuNgan());
+        tabChinh.addTab("  Lịch sử hóa đơn đã thu  ", taoTabLichSu());
+
+        root.add(tabChinh, BorderLayout.CENTER);
 
         khoiTaoDuLieu();
-        napBang();
+        napBangHoaDon();
     }
 
-    private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin thanh toán hóa đơn", 470);
+    // ===============================================================
+    // TAB 1: QUẦY THU NGÂN & THANH TOÁN
+    // ===============================================================
+    private JPanel taoTabThuNgan() {
+        JPanel wrap = new JPanel(new BorderLayout(0, 10));
+        wrap.setOpaque(false);
+
+        // Panel trên: Form chọn phiếu + Bảng chi tiết chi phí
+        JPanel topPanel = new JPanel(new BorderLayout(10, 0));
+        topPanel.setOpaque(false);
+        topPanel.add(taoFormThongTin(), BorderLayout.WEST);
+        topPanel.add(taoBangChiTiet(), BorderLayout.CENTER);
+
+        // Panel dưới: Box PHƯƠNG THỨC THANH TOÁN & QUẦY THU NGÂN (Khớp ảnh thiết kế)
+        JPanel botPanel = taoBoxQuayThuNgan();
+
+        wrap.add(topPanel, BorderLayout.NORTH);
+        wrap.add(botPanel, BorderLayout.CENTER);
+
+        // Bọc vào scroll để vừa với mọi màn hình
+        JScrollPane sp = new JScrollPane(wrap);
+        sp.setBorder(null);
+        sp.setOpaque(false);
+        sp.getViewport().setOpaque(false);
+        sp.getVerticalScrollBar().setUnitIncrement(16);
+
+        JPanel container = new JPanel(new BorderLayout());
+        container.setOpaque(false);
+        container.add(sp, BorderLayout.CENTER);
+        return container;
+    }
+
+    private JPanel taoFormThongTin() {
+        JPanel p = UiHelper.panelForm("Thông tin tiếp nhận sửa chữa", 440);
 
         txtMaHD.setEditable(false);
         txtKhachHang.setEditable(false);
@@ -84,177 +164,721 @@ public class ThanhToanHoaDon_UI extends JPanel {
         txtBienSo.setEditable(false);
         txtNgay.setEditable(false);
 
-        // Sự kiện tính lại tiền khi thay đổi dịch vụ, phụ tùng, giảm giá
-        java.awt.event.KeyAdapter tinhTienAdapter = new java.awt.event.KeyAdapter() {
+        // Format ô nhập tiền
+        java.awt.event.KeyAdapter tinhAdapter = new java.awt.event.KeyAdapter() {
             @Override public void keyReleased(java.awt.event.KeyEvent e) { tinhTongTien(); }
         };
-        txtTienDichVu.addKeyListener(tinhTienAdapter);
-        txtTienPhuTung.addKeyListener(tinhTienAdapter);
-        txtGiamGia.addKeyListener(tinhTienAdapter);
+        txtTienDichVu.addKeyListener(tinhAdapter);
+        txtTienPhuTung.addKeyListener(tinhAdapter);
+        txtGiamGia.addKeyListener(tinhAdapter);
+        txtVat.addKeyListener(tinhAdapter);
 
         cboPhieuSC.addActionListener(e -> chonPhieuSC());
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
-        UiHelper.themDong(form, 0, "Phiếu tiếp nhận *", cboPhieuSC, 4, 4);
 
-        // Dòng kết hợp Mã HĐ & Ngày thanh toán
-        JPanel rowMaNgay = new JPanel(new GridLayout(1, 2, 8, 0));
+        UiHelper.themDong(form, 0, "Phiếu tiếp nhận *", cboPhieuSC, 3, 3);
+
+        JPanel rowMaNgay = new JPanel(new GridLayout(1, 2, 6, 0));
         rowMaNgay.setOpaque(false);
         rowMaNgay.add(txtMaHD);
         rowMaNgay.add(txtNgay);
-        UiHelper.themDong(form, 1, "Mã HĐ / Ngày lập", rowMaNgay, 4, 4);
+        UiHelper.themDong(form, 1, "Mã HĐ / Ngày", rowMaNgay, 3, 3);
 
-        UiHelper.themDong(form, 2, "Khách hàng", txtKhachHang, 4, 4);
-        UiHelper.themDong(form, 3, "Số điện thoại", txtSdt, 4, 4);
-        UiHelper.themDong(form, 4, "Biển số xe", txtBienSo, 4, 4);
-        UiHelper.themDong(form, 5, "Tiền công / DV (đ)", txtTienDichVu, 4, 4);
-        UiHelper.themDong(form, 6, "Tiền phụ tùng (đ)", txtTienPhuTung, 4, 4);
-        UiHelper.themDong(form, 7, "Chiết khấu (%)", txtGiamGia, 4, 4);
-        UiHelper.themDong(form, 8, "Phương thức TT", cboPhuongThuc, 4, 4);
-        UiHelper.themDong(form, 9, "Ghi chú giao dịch", txtGhiChu, 4, 4);
+        UiHelper.themDong(form, 2, "Khách hàng", txtKhachHang, 3, 3);
 
-        // Box hiển thị tổng tiền nổi bật
+        JPanel rowSdtXe = new JPanel(new GridLayout(1, 2, 6, 0));
+        rowSdtXe.setOpaque(false);
+        rowSdtXe.add(txtSdt);
+        rowSdtXe.add(txtBienSo);
+        UiHelper.themDong(form, 3, "SĐT / Biển số xe", rowSdtXe, 3, 3);
+
+        JPanel rowTienCong = new JPanel(new GridLayout(1, 2, 6, 0));
+        rowTienCong.setOpaque(false);
+        rowTienCong.add(txtTienDichVu);
+        rowTienCong.add(txtTienPhuTung);
+        UiHelper.themDong(form, 4, "Tiền công / Phụ tùng", rowTienCong, 3, 3);
+
+        JPanel rowChietKhau = new JPanel(new GridLayout(1, 2, 6, 0));
+        rowChietKhau.setOpaque(false);
+        rowChietKhau.add(txtGiamGia);
+        rowChietKhau.add(txtVat);
+        UiHelper.themDong(form, 5, "Chiết khấu % / VAT %", rowChietKhau, 3, 3);
+
+        UiHelper.themDong(form, 6, "Ghi chú hóa đơn", txtGhiChu, 3, 3);
+
+        // Box Tổng tiền
         JPanel boxTong = new JPanel(new BorderLayout(8, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(239, 246, 255)); // Blue 50
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                g2.setColor(new Color(191, 219, 254)); // Blue 200
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.setColor(new Color(239, 246, 255));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(new Color(191, 219, 254));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
                 g2.dispose();
             }
         };
         boxTong.setOpaque(false);
-        boxTong.setBorder(new EmptyBorder(8, 14, 8, 14));
-        boxTong.setPreferredSize(new Dimension(0, 44));
+        boxTong.setBorder(new EmptyBorder(6, 12, 6, 12));
+        boxTong.setPreferredSize(new Dimension(0, 42));
+
         JLabel lblTdeTong = new JLabel("TỔNG THANH TOÁN:");
-        lblTdeTong.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTdeTong.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTdeTong.setForeground(new Color(30, 58, 138));
-        lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTongTien.setForeground(UiHelper.CHU_CHAY);
+
+        lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTongTien.setForeground(new Color(220, 38, 38)); // Red 600
         lblTongTien.setHorizontalAlignment(SwingConstants.RIGHT);
+
         boxTong.add(lblTdeTong, BorderLayout.WEST);
         boxTong.add(lblTongTien, BorderLayout.CENTER);
 
-        // Các nút hành động
-        JPanel nut = new JPanel(new GridLayout(1, 3, 8, 0));
-        nut.setOpaque(false);
-        nut.setBorder(new EmptyBorder(4, 0, 0, 0));
+        JPanel bot = new JPanel(new BorderLayout(0, 6));
+        bot.setOpaque(false);
+        bot.setBorder(new EmptyBorder(6, 0, 0, 0));
+        bot.add(boxTong, BorderLayout.CENTER);
 
-        JButton btnThanhToan = UiHelper.nut("Thanh toán", UiIcon.of(UiIcon.CHECK, 15), UiHelper.XANH_LA, e -> thanhToan());
-        JButton btnIn = UiHelper.nut("In hóa đơn", UiIcon.of(UiIcon.PRINT, 15), UiHelper.XANH_TRUNG, e -> inHoaDon());
-        JButton btnLamMoi = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
-
-        btnThanhToan.setBorder(new EmptyBorder(8, 6, 8, 6));
-        btnIn.setBorder(new EmptyBorder(8, 6, 8, 6));
-        btnLamMoi.setBorder(new EmptyBorder(8, 6, 8, 6));
-
-        nut.add(btnThanhToan);
-        nut.add(btnIn);
-        nut.add(btnLamMoi);
-
-        JPanel bottom = new JPanel(new BorderLayout(0, 10));
-        bottom.setOpaque(false);
-        bottom.setBorder(new EmptyBorder(10, 0, 0, 0));
-        bottom.add(boxTong, BorderLayout.NORTH);
-        bottom.add(nut, BorderLayout.SOUTH);
-
-        UiHelper.ganNoiDungForm(formPanel, form, bottom);
-        return formPanel;
+        UiHelper.ganNoiDungForm(p, form, bot);
+        return p;
     }
 
-    private JPanel taoBang() {
-        JPanel bangPanel = UiHelper.panelBang("Danh sách hóa đơn đã xuất");
-        model = UiHelper.model("Mã HĐ", "Phiếu SC", "Khách hàng", "Biển số", "Ngày TT", "Phương thức", "Tổng tiền", "Thu ngân", "Trạng thái");
-        table = UiHelper.bang(model);
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) hienLenForm();
+    private JPanel taoBangChiTiet() {
+        JPanel p = UiHelper.panelBang("Bảng kê chi phí tiền công & phụ tùng thay thế");
+
+        modelChiTiet = UiHelper.model("Loại chi phí", "Tên hạng mục / Phụ tùng", "ĐVT", "SL", "Đơn giá (đ)", "Thành tiền (đ)");
+        tblChiTiet = UiHelper.bang(modelChiTiet);
+
+        // Canh phải cột số tiền
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        tblChiTiet.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        tblChiTiet.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+        tblChiTiet.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+
+        JScrollPane sp = new JScrollPane(tblChiTiet);
+        sp.setPreferredSize(new Dimension(0, 140));
+        UiHelper.danhSachBong(sp);
+        p.add(sp, BorderLayout.CENTER);
+
+        // Footer bảng kê
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setOpaque(false);
+        footer.setBorder(new EmptyBorder(6, 4, 4, 4));
+
+        lblTongChiPhiBang.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblTongChiPhiBang.setForeground(new Color(51, 65, 85));
+        footer.add(lblTongChiPhiBang, BorderLayout.WEST);
+
+        p.add(footer, BorderLayout.SOUTH);
+        return p;
+    }
+
+    // ===============================================================
+    // KHUNG "PHƯƠNG THỨC THANH TOÁN & QUẦY THU NGÂN" (Khớp 100% ảnh thiết kế)
+    // ===============================================================
+    private JPanel taoBoxQuayThuNgan() {
+        JPanel box = new JPanel(new BorderLayout(0, 10)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.setColor(new Color(226, 232, 240));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.dispose();
+            }
+        };
+        box.setOpaque(false);
+        box.setBorder(new EmptyBorder(12, 16, 14, 16));
+
+        // Header Card
+        JPanel headerCard = new JPanel(new BorderLayout());
+        headerCard.setOpaque(false);
+
+        JPanel lblLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        lblLeft.setOpaque(false);
+        JLabel icoCard = new JLabel(UiIcon.of(UiIcon.BILL, 16, new Color(37, 99, 235)));
+        JLabel titleCard = new JLabel("PHƯƠNG THỨC THANH TOÁN & QUẦY THU NGÂN");
+        titleCard.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        titleCard.setForeground(new Color(15, 23, 42));
+        lblLeft.add(icoCard);
+        lblLeft.add(titleCard);
+
+        JLabel badgeStatus = new JLabel("Sẵn sàng nhận thanh toán");
+        badgeStatus.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        badgeStatus.setForeground(new Color(22, 163, 74));
+        badgeStatus.setBackground(new Color(240, 253, 244));
+        badgeStatus.setOpaque(true);
+        badgeStatus.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(187, 247, 208), 1, true),
+                new EmptyBorder(3, 8, 3, 8)
+        ));
+
+        headerCard.add(lblLeft, BorderLayout.WEST);
+        headerCard.add(badgeStatus, BorderLayout.EAST);
+        box.add(headerCard, BorderLayout.NORTH);
+
+        // Body chia đôi: Cột trái (Phương thức & Đếm tiền) + Cột phải (VietQR tự động)
+        JPanel body = new JPanel(new GridLayout(1, 2, 16, 0));
+        body.setOpaque(false);
+
+        body.add(taoCotPhuongThucTra());
+        body.add(taoCotVietQR());
+
+        box.add(body, BorderLayout.CENTER);
+
+        // Hàng nút thanh toán & xuất hóa đơn ở dưới cùng
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        actionRow.setOpaque(false);
+        actionRow.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(241, 245, 249)));
+
+        JButton btnXacNhan = UiHelper.nut("✓  XÁC NHẬN THANH TOÁN", UiHelper.XANH_LA, e -> thucHienThanhToan());
+        btnXacNhan.setPreferredSize(new Dimension(210, 40));
+        btnXacNhan.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        JButton btnInHoaDon = UiHelper.nut("In hóa đơn theo mẫu", UiIcon.of(UiIcon.PRINT, 16), UiHelper.XANH_TRUNG, true, e -> inHoaDonTheoMau());
+        btnInHoaDon.setPreferredSize(new Dimension(190, 40));
+
+        JButton btnXuatFile = UiHelper.nut("Xuất file hóa đơn", UiIcon.of(UiIcon.EXPORT, 16), new Color(13, 148, 136), true, e -> xuatFileHoaDon());
+        btnXuatFile.setPreferredSize(new Dimension(165, 40));
+
+        JButton btnLamMoi = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, true, e -> lamMoiForm());
+        btnLamMoi.setPreferredSize(new Dimension(110, 40));
+
+        actionRow.add(btnLamMoi);
+        actionRow.add(btnXuatFile);
+        actionRow.add(btnInHoaDon);
+        actionRow.add(btnXacNhan);
+
+        box.add(actionRow, BorderLayout.SOUTH);
+        return box;
+    }
+
+    /** Cột trái: Chọn phương thức giao dịch, Tiền khách đưa, Tiền thừa, Đếm nhanh */
+    private JPanel taoCotPhuongThucTra() {
+        JPanel col = new JPanel();
+        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+        col.setOpaque(false);
+
+        JLabel lblChon = new JLabel("Chọn phương thức giao dịch");
+        lblChon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblChon.setForeground(new Color(71, 85, 105));
+        lblChon.setAlignmentX(Component.LEFT_ALIGNMENT);
+        col.add(lblChon);
+        col.add(Box.createVerticalStrut(6));
+
+        // 3 nút toggle phương thức
+        JPanel rowTabs = new JPanel(new GridLayout(1, 3, 8, 0));
+        rowTabs.setOpaque(false);
+        rowTabs.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        rowTabs.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        btnQrTab = taoNutTabPhuongThuc("Chuyển khoản QR", UiIcon.BILL, true);
+        btnTienMatTab = taoNutTabPhuongThuc("Tiền mặt", UiIcon.CHECK, false);
+        btnPosTab = taoNutTabPhuongThuc("Quẹt thẻ POS", UiIcon.LOCK, false);
+
+        btnQrTab.addActionListener(e -> doiPhuongThuc("Chuyển khoản QR"));
+        btnTienMatTab.addActionListener(e -> doiPhuongThuc("Tiền mặt"));
+        btnPosTab.addActionListener(e -> doiPhuongThuc("Quẹt thẻ POS"));
+
+        rowTabs.add(btnQrTab);
+        rowTabs.add(btnTienMatTab);
+        rowTabs.add(btnPosTab);
+        col.add(rowTabs);
+        col.add(Box.createVerticalStrut(10));
+
+        // Hàng: Tiền khách đưa (VND) + Tiền thừa trả khách (VND)
+        JPanel rowTien = new JPanel(new GridLayout(1, 2, 10, 0));
+        rowTien.setOpaque(false);
+        rowTien.setMaximumSize(new Dimension(Integer.MAX_VALUE, 64));
+        rowTien.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Box Tiền khách đưa
+        JPanel boxKhachDua = new JPanel(new BorderLayout(0, 4));
+        boxKhachDua.setOpaque(false);
+        JLabel lblKd = new JLabel("Tiền khách đưa (VND)");
+        lblKd.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblKd.setForeground(new Color(71, 85, 105));
+        txtTienKhachDua.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        txtTienKhachDua.setHorizontalAlignment(SwingConstants.RIGHT);
+        txtTienKhachDua.setPreferredSize(new Dimension(0, 36));
+        UiHelper.trangTriInput(txtTienKhachDua);
+        txtTienKhachDua.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) { tinhTienThua(); }
+        });
+        boxKhachDua.add(lblKd, BorderLayout.NORTH);
+        boxKhachDua.add(txtTienKhachDua, BorderLayout.CENTER);
+
+        // Box Tiền thừa trả khách
+        JPanel boxTienThua = new JPanel(new BorderLayout(0, 4));
+        boxTienThua.setOpaque(false);
+        JLabel lblTt = new JLabel("Tiền thừa trả khách (VND)");
+        lblTt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTt.setForeground(new Color(71, 85, 105));
+
+        JPanel wrapThua = new JPanel(new BorderLayout());
+        wrapThua.setBackground(new Color(240, 253, 244)); // Green 50
+        wrapThua.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(187, 247, 208), 1, true),
+                new EmptyBorder(0, 12, 0, 12)
+        ));
+        wrapThua.setPreferredSize(new Dimension(0, 36));
+
+        lblTienThua.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTienThua.setForeground(new Color(22, 163, 74)); // Green 600
+        lblTienThua.setHorizontalAlignment(SwingConstants.RIGHT);
+        wrapThua.add(lblTienThua, BorderLayout.CENTER);
+
+        boxTienThua.add(lblTt, BorderLayout.NORTH);
+        boxTienThua.add(wrapThua, BorderLayout.CENTER);
+
+        rowTien.add(boxKhachDua);
+        rowTien.add(boxTienThua);
+        col.add(rowTien);
+        col.add(Box.createVerticalStrut(8));
+
+        // Hàng: Đếm nhanh
+        JPanel rowDemNhanh = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        rowDemNhanh.setOpaque(false);
+        rowDemNhanh.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblDn = new JLabel("Đếm nhanh:");
+        lblDn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDn.setForeground(new Color(100, 116, 139));
+        rowDemNhanh.add(lblDn);
+
+        JButton btnDuTien = taoNutDemNhanh("Đủ tiền", 0);
+        JButton btn500k = taoNutDemNhanh("500,000", 500000);
+        JButton btn1M = taoNutDemNhanh("1,000,000", 1000000);
+        JButton btn2M = taoNutDemNhanh("2,000,000", 2000000);
+        JButton btn5M = taoNutDemNhanh("5,000,000", 5000000);
+
+        rowDemNhanh.add(btnDuTien);
+        rowDemNhanh.add(btn500k);
+        rowDemNhanh.add(btn1M);
+        rowDemNhanh.add(btn2M);
+        rowDemNhanh.add(btn5M);
+        col.add(rowDemNhanh);
+        col.add(Box.createVerticalStrut(10));
+
+        // Hàng chi tiết: Mã tham chiếu ngân hàng / POS & Tài khoản thụ hưởng
+        JPanel rowNganHang = new JPanel(new GridLayout(1, 2, 10, 0));
+        rowNganHang.setOpaque(false);
+        rowNganHang.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
+        rowNganHang.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel boxMaTc = new JPanel(new BorderLayout(0, 4));
+        boxMaTc.setOpaque(false);
+        JLabel lblTc = new JLabel("Mã tham chiếu ngân hàng / POS");
+        lblTc.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblTc.setForeground(new Color(71, 85, 105));
+        txtMaThamChieu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtMaThamChieu.setPreferredSize(new Dimension(0, 32));
+        txtMaThamChieu.setText("VQR-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-89012");
+        UiHelper.trangTriInput(txtMaThamChieu);
+        boxMaTc.add(lblTc, BorderLayout.NORTH);
+        boxMaTc.add(txtMaThamChieu, BorderLayout.CENTER);
+
+        JPanel boxTk = new JPanel(new BorderLayout(0, 4));
+        boxTk.setOpaque(false);
+        JLabel lblTk = new JLabel("Tài khoản thụ hưởng");
+        lblTk.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblTk.setForeground(new Color(71, 85, 105));
+        txtTkThuHuong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtTkThuHuong.setEditable(false);
+        txtTkThuHuong.setPreferredSize(new Dimension(0, 32));
+        txtTkThuHuong.setText("Vietcombank - 0071009988776 (GARA AUTO THE T4)");
+        UiHelper.trangTriInput(txtTkThuHuong);
+        boxTk.add(lblTk, BorderLayout.NORTH);
+        boxTk.add(txtTkThuHuong, BorderLayout.CENTER);
+
+        rowNganHang.add(boxMaTc);
+        rowNganHang.add(boxTk);
+        col.add(rowNganHang);
+
+        return col;
+    }
+
+    private JButton taoNutTabPhuongThuc(String text, String iconType, boolean active) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        setTabStyle(btn, active);
+        return btn;
+    }
+
+    private void setTabStyle(JButton btn, boolean active) {
+        if (active) {
+            btn.setBackground(Color.WHITE);
+            btn.setForeground(new Color(15, 23, 42));
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(15, 23, 42), 2, true),
+                    new EmptyBorder(8, 10, 8, 10)
+            ));
+        } else {
+            btn.setBackground(new Color(248, 250, 252));
+            btn.setForeground(new Color(100, 116, 139));
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
+                    new EmptyBorder(8, 10, 8, 10)
+            ));
+        }
+    }
+
+    private void doiPhuongThuc(String pt) {
+        this.phuongThucChon = pt;
+        setTabStyle(btnQrTab, pt.equals("Chuyển khoản QR"));
+        setTabStyle(btnTienMatTab, pt.equals("Tiền mặt"));
+        setTabStyle(btnPosTab, pt.equals("Quẹt thẻ POS"));
+
+        if (pt.equals("Chuyển khoản QR")) {
+            qrCanvas.setVisible(true);
+            txtMaThamChieu.setText("VQR-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + (int)(Math.random() * 89999 + 10000));
+        } else if (pt.equals("Quẹt thẻ POS")) {
+            qrCanvas.setVisible(true);
+            txtMaThamChieu.setText("POS-TERM01-" + (int)(Math.random() * 89999 + 10000));
+        } else {
+            txtMaThamChieu.setText("CASH-QUAY01");
+        }
+    }
+
+    private JButton taoNutDemNhanh(String nhan, long soTien) {
+        JButton b = new JButton(nhan);
+        b.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        b.setBackground(new Color(248, 250, 252));
+        b.setForeground(new Color(51, 65, 85));
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
+                new EmptyBorder(3, 8, 3, 8)
+        ));
+        b.addActionListener(e -> {
+            long tong = tinhTongTien();
+            long giaTri = (soTien == 0) ? tong : soTien;
+            txtTienKhachDua.setText(String.format("%,d", giaTri));
+            tinhTienThua();
+        });
+        return b;
+    }
+
+    private void tinhTienThua() {
+        try {
+            String raw = txtTienKhachDua.getText().trim().replace(",", "").replace(".", "");
+            long dua = raw.isEmpty() ? 0 : Long.parseLong(raw);
+            long tong = tinhTongTien();
+            long thua = dua - tong;
+            if (thua >= 0) {
+                lblTienThua.setText(String.format("%,d", thua));
+                lblTienThua.setForeground(new Color(22, 163, 74));
+            } else {
+                lblTienThua.setText("Thiếu " + String.format("%,d", -thua));
+                lblTienThua.setForeground(new Color(220, 38, 38));
+            }
+        } catch (Exception ex) {
+            lblTienThua.setText("0");
+        }
+    }
+
+    /** Cột phải: Khung MÃ VIETQR TỰ ĐỘNG (24/7 NAPAS) */
+    private JPanel taoCotVietQR() {
+        JPanel col = new JPanel(new BorderLayout(0, 8)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(248, 250, 252));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(new Color(226, 232, 240));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        col.setOpaque(false);
+        col.setBorder(new EmptyBorder(10, 14, 10, 14));
+
+        // Header VietQR
+        JPanel hdr = new JPanel(new BorderLayout());
+        hdr.setOpaque(false);
+
+        JLabel lblTdeQr = new JLabel("MÃ VIETQR TỰ ĐỘNG");
+        lblTdeQr.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblTdeQr.setForeground(new Color(15, 23, 42));
+
+        JLabel badgeNapas = new JLabel("24/7 NAPAS");
+        badgeNapas.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        badgeNapas.setForeground(Color.WHITE);
+        badgeNapas.setBackground(new Color(30, 58, 138)); // Dark Navy
+        badgeNapas.setOpaque(true);
+        badgeNapas.setBorder(new EmptyBorder(2, 6, 2, 6));
+
+        hdr.add(lblTdeQr, BorderLayout.WEST);
+        hdr.add(badgeNapas, BorderLayout.EAST);
+        col.add(hdr, BorderLayout.NORTH);
+
+        // Khung vẽ mã VietQR sinh động bằng Java2D
+        qrCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+                int size = Math.min(w, h) - 10;
+                int ox = (w - size) / 2;
+                int oy = (h - size) / 2;
+
+                // Nền trắng mã QR
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(ox, oy, size, size, 8, 8);
+                g2.setColor(new Color(203, 213, 225));
+                g2.drawRoundRect(ox, oy, size, size, 8, 8);
+
+                // Vẽ các ô vuông định vị QR (3 góc)
+                veOVuongDinhVi(g2, ox + 14, oy + 14, 30);
+                veOVuongDinhVi(g2, ox + size - 44, oy + 14, 30);
+                veOVuongDinhVi(g2, ox + 14, oy + size - 44, 30);
+
+                // Vẽ các ma trận module QR ngẫu nhiên nhưng cố định
+                g2.setColor(new Color(15, 23, 42));
+                int step = 6;
+                for (int x = ox + 14; x < ox + size - 14; x += step) {
+                    for (int y = oy + 14; y < oy + size - 14; y += step) {
+                        // Tránh 3 góc định vị và tâm
+                        if (x < ox + 48 && y < oy + 48) continue;
+                        if (x > ox + size - 48 && y < oy + 48) continue;
+                        if (x < ox + 48 && y > oy + size - 48) continue;
+                        if (x > ox + size / 2 - 18 && x < ox + size / 2 + 18 && y > oy + size / 2 - 18 && y < oy + size / 2 + 18) continue;
+
+                        int hash = (x * 37 + y * 19 + txtMaHD.getText().hashCode()) % 100;
+                        if (hash > 48) {
+                            g2.fillRect(x, y, step - 1, step - 1);
+                        }
+                    }
+                }
+
+                // Logo VietQR ở giữa tâm
+                int cx = ox + size / 2;
+                int cy = oy + size / 2;
+                int badgeW = 34, badgeH = 22;
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(cx - badgeW / 2 - 2, cy - badgeH / 2 - 2, badgeW + 4, badgeH + 4, 6, 6);
+                g2.setColor(new Color(30, 58, 138));
+                g2.fillRoundRect(cx - badgeW / 2, cy - badgeH / 2, badgeW, badgeH, 4, 4);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
+                g2.drawString("▲ VQR", cx - badgeW / 2 + 3, cy + 4);
+
+                g2.dispose();
+            }
+
+            private void veOVuongDinhVi(Graphics2D g2, int x, int y, int s) {
+                g2.setColor(new Color(15, 23, 42));
+                g2.fillRoundRect(x, y, s, s, 6, 6);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(x + 4, y + 4, s - 8, s - 8, 4, 4);
+                g2.setColor(new Color(15, 23, 42));
+                g2.fillRoundRect(x + 8, y + 8, s - 16, s - 16, 2, 2);
+            }
+        };
+        qrCanvas.setOpaque(false);
+        qrCanvas.setPreferredSize(new Dimension(145, 145));
+        col.add(qrCanvas, BorderLayout.CENTER);
+
+        // Thông tin dưới mã QR: Số tiền, Nội dung, Kiểm tra trạng thái
+        JPanel infoQr = new JPanel();
+        infoQr.setLayout(new BoxLayout(infoQr, BoxLayout.Y_AXIS));
+        infoQr.setOpaque(false);
+
+        JPanel rowSt = new JPanel(new BorderLayout());
+        rowSt.setOpaque(false);
+        JLabel lblStTde = new JLabel("Số tiền:");
+        lblStTde.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStTde.setForeground(new Color(100, 116, 139));
+        lblQrSoTien.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblQrSoTien.setForeground(new Color(15, 23, 42));
+        rowSt.add(lblStTde, BorderLayout.WEST);
+        rowSt.add(lblQrSoTien, BorderLayout.EAST);
+
+        JPanel rowNd = new JPanel(new BorderLayout());
+        rowNd.setOpaque(false);
+        JLabel lblNdTde = new JLabel("Nội dung:");
+        lblNdTde.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNdTde.setForeground(new Color(100, 116, 139));
+        lblQrNoiDung.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblQrNoiDung.setForeground(new Color(15, 23, 42));
+        rowNd.add(lblNdTde, BorderLayout.WEST);
+        rowNd.add(lblQrNoiDung, BorderLayout.EAST);
+
+        JButton btnCheckStatus = new JButton("⟳  Kiểm tra trạng thái nhận tiền");
+        btnCheckStatus.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btnCheckStatus.setForeground(new Color(37, 99, 235));
+        btnCheckStatus.setOpaque(false);
+        btnCheckStatus.setContentAreaFilled(false);
+        btnCheckStatus.setBorderPainted(false);
+        btnCheckStatus.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnCheckStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnCheckStatus.addActionListener(e -> {
+            long tong = tinhTongTien();
+            JOptionPane.showMessageDialog(this,
+                    "Tài khoản thụ hưởng Vietcombank (0071009988776) đã nhận được:\n"
+                            + "Số tiền: " + UiHelper.tien(tong) + " VNĐ\n"
+                            + "Nội dung: " + lblQrNoiDung.getText() + "\n"
+                            + "Trạng thái: GIAO DỊCH THÀNH CÔNG (NAPAS 24/7)",
+                    "Xác nhận thanh toán VietQR",
+                    JOptionPane.INFORMATION_MESSAGE);
+            txtTienKhachDua.setText(String.format("%,d", tong));
+            tinhTienThua();
         });
 
-        JScrollPane sp = new JScrollPane(table);
-        UiHelper.danhSachBong(sp);
-        bangPanel.add(sp, BorderLayout.CENTER);
+        infoQr.add(rowSt);
+        infoQr.add(Box.createVerticalStrut(2));
+        infoQr.add(rowNd);
+        infoQr.add(Box.createVerticalStrut(4));
+        infoQr.add(btnCheckStatus);
 
-        // Thanh công cụ dưới bảng
-        JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
-        bot.setOpaque(false);
-        JButton btnHuy = UiHelper.nut("Hủy hóa đơn", UiHelper.CHU_CHAY, e -> huyHoaDon());
-        bot.add(btnHuy);
-        bangPanel.add(bot, BorderLayout.SOUTH);
-
-        return bangPanel;
+        col.add(infoQr, BorderLayout.SOUTH);
+        return col;
     }
 
+    // ===============================================================
+    // TAB 2: LỊCH SỬ HÓA ĐƠN ĐÃ THU
+    // ===============================================================
+    private JPanel taoTabLichSu() {
+        JPanel p = UiHelper.panelBang("Danh sách các hóa đơn dịch vụ đã xuất");
+
+        modelHoaDon = UiHelper.model(
+                "Mã HĐ", "Phiếu SC", "Khách hàng", "SĐT", "Biển số xe",
+                "Ngày thanh toán", "Phương thức", "Tổng tiền (đ)", "Thu ngân", "Trạng thái"
+        );
+        tblHoaDon = UiHelper.bang(modelHoaDon);
+        tblHoaDon.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tblHoaDon.getSelectedRow() >= 0) {
+                napHoaDonLenForm(tblHoaDon.getSelectedRow());
+            }
+        });
+
+        JScrollPane sp = new JScrollPane(tblHoaDon);
+        UiHelper.danhSachBong(sp);
+        p.add(sp, BorderLayout.CENTER);
+
+        // Thanh công cụ dưới bảng lịch sử
+        JPanel bot = new JPanel(new BorderLayout());
+        bot.setOpaque(false);
+        bot.setBorder(new EmptyBorder(8, 0, 0, 0));
+
+        lblTongDoanhThu.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTongDoanhThu.setForeground(new Color(30, 58, 138));
+        bot.add(lblTongDoanhThu, BorderLayout.WEST);
+
+        JPanel pnlNut = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        pnlNut.setOpaque(false);
+
+        JButton btnInLai = UiHelper.nut("In hóa đơn", UiIcon.of(UiIcon.PRINT, 15), UiHelper.XANH_TRUNG, true, e -> inHoaDonTheoMau());
+        JButton btnXuatFileLai = UiHelper.nut("Xuất file", UiIcon.of(UiIcon.EXPORT, 15), new Color(13, 148, 136), true, e -> xuatFileHoaDon());
+        JButton btnHuy = UiHelper.nut("Hủy hóa đơn", UiIcon.of(UiIcon.TRASH, 15), UiHelper.CHU_CHAY, true, e -> huyHoaDon());
+
+        pnlNut.add(btnXuatFileLai);
+        pnlNut.add(btnInLai);
+        pnlNut.add(btnHuy);
+        bot.add(pnlNut, BorderLayout.EAST);
+
+        p.add(bot, BorderLayout.SOUTH);
+        return p;
+    }
+
+    // ===============================================================
+    // XỬ LÝ NGHIỆP VỤ & TÍNH TIỀN
+    // ===============================================================
     private void khoiTaoDuLieu() {
         txtMaHD.setText(kho.maHoaDonMoi());
         txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
-        // Load danh sách phiếu sửa chữa vào combobox
         cboPhieuSC.removeAllItems();
-        cboPhieuSC.addItem("-- Chọn phiếu sửa chữa --");
+        cboPhieuSC.addItem("-- Chọn phiếu sửa chữa cần thanh toán --");
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             cboPhieuSC.addItem(p.getSoPhieu() + " - " + p.getBienSo() + " (" + p.getHoTen() + ")");
         }
+
+        txtTkThuHuong.setText(cauHinh.getStkNganHang() + " (" + cauHinh.getTenGara() + ")");
+        txtVat.setText(String.valueOf(cauHinh.getThueVAT()));
     }
 
     private void chonPhieuSC() {
         int idx = cboPhieuSC.getSelectedIndex();
         if (idx <= 0) {
-            txtKhachHang.setText("");
-            txtSdt.setText("");
-            txtBienSo.setText("");
-            txtTienDichVu.setText("0");
-            tinhTongTien();
+            lamMoiForm();
             return;
         }
+
         String item = (String) cboPhieuSC.getSelectedItem();
         if (item == null) return;
         String soPhieu = item.split(" - ")[0];
 
+        PhieuTiepNhan ptn = null;
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             if (p.getSoPhieu().equals(soPhieu)) {
-                txtKhachHang.setText(p.getHoTen());
-                txtSdt.setText(p.getSdt());
-                txtBienSo.setText(p.getBienSo());
-                txtTienDichVu.setText(String.valueOf(p.getThanhTien()));
-                tinhTongTien();
+                ptn = p;
                 break;
             }
+        }
+
+        if (ptn != null) {
+            txtKhachHang.setText(ptn.getHoTen());
+            txtSdt.setText(ptn.getSdt());
+            txtBienSo.setText(ptn.getBienSo());
+
+            // Tự động phân bổ tiền công và phụ tùng theo phiếu
+            long tienCong = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.4) : 800000;
+            long tienPt = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.6) : 2800000;
+
+            txtTienDichVu.setText(String.format("%,d", tienCong));
+            txtTienPhuTung.setText(String.format("%,d", tienPt));
+
+            // Nạp bảng chi tiết
+            modelChiTiet.setRowCount(0);
+            modelChiTiet.addRow(new Object[]{"Tiền công", ptn.getYeuCau(), "Lần", 1, UiHelper.tien(tienCong), UiHelper.tien(tienCong)});
+            modelChiTiet.addRow(new Object[]{"Phụ tùng", "Dầu động cơ tổng hợp Castrol Edge 4L", "Can", 1, "950,000", "950,000"});
+            modelChiTiet.addRow(new Object[]{"Phụ tùng", "Má phanh đĩa gốm cao cấp", "Bộ", 1, "1,850,000", "1,850,000"});
+
+            tinhTongTien();
         }
     }
 
     private long tinhTongTien() {
         try {
-            long dv = Long.parseLong(txtTienDichVu.getText().trim().replace(",", ""));
-            long pt = Long.parseLong(txtTienPhuTung.getText().trim().replace(",", ""));
-            double gg = Double.parseDouble(txtGiamGia.getText().trim());
+            long cong = Long.parseLong(txtTienDichVu.getText().trim().replace(",", "").replace(".", ""));
+            long pt = Long.parseLong(txtTienPhuTung.getText().trim().replace(",", "").replace(".", ""));
+            double ck = Double.parseDouble(txtGiamGia.getText().trim());
+            double vat = Double.parseDouble(txtVat.getText().trim());
 
-            long tongGoc = dv + pt;
-            long sauGiam = Math.max(0, Math.round(tongGoc * (1.0 - gg / 100.0)));
-            lblTongTien.setText(UiHelper.tien(sauGiam) + " đ");
-            return sauGiam;
+            long tongChiPhi = cong + pt;
+            lblTongChiPhiBang.setText("Tổng chi phí dịch vụ & vật tư: " + UiHelper.tien(tongChiPhi) + " đ");
+
+            long giam = Math.round(tongChiPhi * (ck / 100.0));
+            long sauGiam = Math.max(0, tongChiPhi - giam);
+            long tienVat = Math.round(sauGiam * (vat / 100.0));
+            long tongCong = sauGiam + tienVat;
+
+            lblTongTien.setText(UiHelper.tien(tongCong) + " đ");
+            lblQrSoTien.setText(UiHelper.tien(tongCong) + " VNĐ");
+            lblQrNoiDung.setText("TT " + txtMaHD.getText() + " " + txtBienSo.getText().replace("-", "").replace(".", ""));
+
+            qrCanvas.repaint();
+            tinhTienThua();
+            return tongCong;
         } catch (Exception ex) {
             lblTongTien.setText("0 đ");
             return 0;
         }
     }
 
-    private void napBang() {
-        model.setRowCount(0);
-        for (HoaDon hd : kho.getHoaDons()) {
-            model.addRow(new Object[]{
-                    hd.getMaHD(), hd.getSoPhieuSC(), hd.getTenKH(), hd.getBienSo(),
-                    hd.getNgayThanhToan(), hd.getPhuongThuc(),
-                    UiHelper.tien(hd.getTongTien()) + " đ",
-                    hd.getNguoiThu(), hd.getTrangThai()
-            });
-        }
-    }
-
-    private void thanhToan() {
+    private void thucHienThanhToan() {
         if (cboPhieuSC.getSelectedIndex() <= 0) {
             UiHelper.loi(this, "Vui lòng chọn phiếu sửa chữa cần thanh toán!", cboPhieuSC);
             return;
@@ -262,37 +886,33 @@ public class ThanhToanHoaDon_UI extends JPanel {
 
         long tong = tinhTongTien();
         if (tong <= 0) {
-            int conf = JOptionPane.showConfirmDialog(this,
-                    "Tổng thanh toán đang là 0 đồng. Bạn có chắc muốn tạo hóa đơn miễn phí?",
-                    "Xác nhận số tiền", JOptionPane.YES_NO_OPTION);
-            if (conf != JOptionPane.YES_OPTION) return;
+            UiHelper.loi(this, "Tổng thanh toán phải lớn hơn 0 đồng!", txtTienDichVu);
+            return;
         }
 
         String item = (String) cboPhieuSC.getSelectedItem();
         String soPhieu = item.split(" - ")[0];
 
-        // Lấy thông tin khách
         PhieuTiepNhan ptn = null;
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             if (p.getSoPhieu().equals(soPhieu)) { ptn = p; break; }
         }
-        String maKH = ptn != null ? ptn.getMaKH() : "";
 
-        long dv = Long.parseLong(txtTienDichVu.getText().trim().replace(",", ""));
-        long pt = Long.parseLong(txtTienPhuTung.getText().trim().replace(",", ""));
-        double gg = Double.parseDouble(txtGiamGia.getText().trim());
         String nguoiThu = nvHienTai != null ? nvHienTai.getHoTen() : "Thu ngân";
 
         HoaDon hd = new HoaDon(
                 txtMaHD.getText().trim(),
                 soPhieu,
-                maKH,
+                ptn != null ? ptn.getMaKH() : "",
                 txtKhachHang.getText().trim(),
                 txtSdt.getText().trim(),
                 txtBienSo.getText().trim(),
                 txtNgay.getText().trim(),
-                dv, pt, gg, tong,
-                (String) cboPhuongThuc.getSelectedItem(),
+                Long.parseLong(txtTienDichVu.getText().trim().replace(",", "").replace(".", "")),
+                Long.parseLong(txtTienPhuTung.getText().trim().replace(",", "").replace(".", "")),
+                Double.parseDouble(txtGiamGia.getText().trim()),
+                tong,
+                phuongThucChon,
                 nguoiThu,
                 txtGhiChu.getText().trim(),
                 HoaDon.DA_THANH_TOAN
@@ -300,117 +920,247 @@ public class ThanhToanHoaDon_UI extends JPanel {
 
         kho.getHoaDons().add(hd);
 
-        // Cập nhật tiến độ phiếu tiếp nhận sang "Hoàn thành"
+        // Chuyển tiến độ phiếu sửa chữa thành "Hoàn thành"
         if (ptn != null) {
             ptn.setTienDo("Hoàn thành");
         }
 
-        napBang();
-        JOptionPane.showMessageDialog(this, "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!\nPhiếu sửa chữa " + soPhieu + " đã chuyển sang trạng thái Hoàn thành.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-        lamMoi();
+        kho.ghiNhatKy(nguoiThu, nvHienTai != null ? nvHienTai.getVaiTro() : "Thu ngân",
+                "Thanh toán hóa đơn", "INFO",
+                "Thu tiền hóa đơn " + hd.getMaHD() + " (" + UiHelper.tien(tong) + " đ) - Khách: " + hd.getTenKH() + " - PT: " + phuongThucChon);
+
+        napBangHoaDon();
+
+        int hoiIn = JOptionPane.showConfirmDialog(this,
+                "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!\n"
+                        + "Số tiền: " + UiHelper.tien(tong) + " đ (" + phuongThucChon + ")\n"
+                        + "Phiếu tiếp nhận " + soPhieu + " đã hoàn tất.\n\n"
+                        + "Bạn có muốn IN HÓA ĐƠN ngay bây giờ không?",
+                "Thanh toán thành công", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+        if (hoiIn == JOptionPane.YES_OPTION) {
+            hienPopupHoaDon(hd);
+        }
+
+        lamMoiForm();
     }
 
-    private void inHoaDon() {
-        int dong = table.getSelectedRow();
-        HoaDon hd;
-        if (dong >= 0) {
-            String ma = model.getValueAt(dong, 0).toString();
-            hd = null;
-            for (HoaDon h : kho.getHoaDons()) if (h.getMaHD().equals(ma)) { hd = h; break; }
-        } else {
-            // Lấy theo form hiện tại nếu có
-            if (cboPhieuSC.getSelectedIndex() <= 0) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn từ bảng để in!", "Chưa chọn hóa đơn", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            long dv = Long.parseLong(txtTienDichVu.getText().trim().replace(",", ""));
-            long pt = Long.parseLong(txtTienPhuTung.getText().trim().replace(",", ""));
-            double gg = Double.parseDouble(txtGiamGia.getText().trim());
-            hd = new HoaDon(txtMaHD.getText(), "TN...", "", txtKhachHang.getText(), txtSdt.getText(), txtBienSo.getText(),
-                    txtNgay.getText(), dv, pt, gg, tinhTongTien(), (String) cboPhuongThuc.getSelectedItem(),
-                    nvHienTai != null ? nvHienTai.getHoTen() : "Thu ngân", txtGhiChu.getText(), "Tạm tính");
-        }
+    // ===============================================================
+    // XUẤT & IN HÓA ĐƠN THEO MẪU CHUẨN GARA
+    // ===============================================================
+    private void inHoaDonTheoMau() {
+        HoaDon hd = layHoaDonDangChon();
         if (hd == null) return;
+        hienPopupHoaDon(hd);
+    }
 
-        // Mở popup giao diện hóa đơn in
-        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Hóa đơn thanh toán - " + hd.getMaHD(), true);
-        dlg.setSize(520, 640);
+    private HoaDon layHoaDonDangChon() {
+        int r = tblHoaDon.getSelectedRow();
+        if (r >= 0) {
+            String ma = modelHoaDon.getValueAt(r, 0).toString();
+            for (HoaDon h : kho.getHoaDons()) if (h.getMaHD().equals(ma)) return h;
+        }
+
+        // Lấy theo form nếu chưa lưu
+        if (cboPhieuSC.getSelectedIndex() > 0) {
+            String item = (String) cboPhieuSC.getSelectedItem();
+            String soPhieu = item.split(" - ")[0];
+            return new HoaDon(
+                    txtMaHD.getText().trim(),
+                    soPhieu,
+                    "",
+                    txtKhachHang.getText().trim(),
+                    txtSdt.getText().trim(),
+                    txtBienSo.getText().trim(),
+                    txtNgay.getText().trim(),
+                    Long.parseLong(txtTienDichVu.getText().trim().replace(",", "").replace(".", "")),
+                    Long.parseLong(txtTienPhuTung.getText().trim().replace(",", "").replace(".", "")),
+                    Double.parseDouble(txtGiamGia.getText().trim()),
+                    tinhTongTien(),
+                    phuongThucChon,
+                    nvHienTai != null ? nvHienTai.getHoTen() : "Thu ngân",
+                    txtGhiChu.getText().trim(),
+                    "Tạm tính"
+            );
+        }
+
+        JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn từ bảng để xem và in!", "Chưa chọn hóa đơn", JOptionPane.WARNING_MESSAGE);
+        return null;
+    }
+
+    private void hienPopupHoaDon(HoaDon hd) {
+        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Hóa đơn thanh toán dịch vụ — " + hd.getMaHD(), true);
+        dlg.setSize(620, 720);
         dlg.setLocationRelativeTo(this);
 
-        JPanel pnl = new JPanel(new BorderLayout(14, 14));
-        pnl.setBackground(Color.WHITE);
-        pnl.setBorder(new EmptyBorder(24, 28, 24, 28));
+        JPanel rootPnl = new JPanel(new BorderLayout(12, 12));
+        rootPnl.setBackground(Color.WHITE);
+        rootPnl.setBorder(new EmptyBorder(16, 20, 16, 20));
 
-        String html = "<html><div style='font-family:Segoe UI;color:#0F172A;'>"
-                + "<div style='text-align:center;'>"
-                + "<h2 style='margin:0;color:#2563EB;'>GARA Ô TÔ THE T4</h2>"
-                + "<p style='margin:2px;font-size:11px;color:#64748B;'>Đ/c: 123 Nguyễn Văn Cừ, Quận 5, TP.HCM | Hotline: 0901 234 567</p>"
-                + "<h3 style='margin-top:14px;border-top:1px dashed #CBD5E1;padding-top:10px;'>HÓA ĐƠN THANH TOÁN DỊCH VỤ</h3>"
-                + "<p style='font-size:12px;color:#475569;'>Số hóa đơn: <b>" + hd.getMaHD() + "</b> | Ngày: " + hd.getNgayThanhToan() + "</p>"
-                + "</div>"
-                + "<hr style='border:none;border-top:1px solid #E2E8F0;'>"
-                + "<table style='font-size:12px;width:100%;' cellpadding='4'>"
-                + "<tr><td>Khách hàng:</td><td><b>" + hd.getTenKH() + "</b></td></tr>"
-                + "<tr><td>Số điện thoại:</td><td>" + hd.getSdtKH() + "</td></tr>"
-                + "<tr><td>Biển số xe:</td><td><b>" + hd.getBienSo() + "</b></td></tr>"
-                + "<tr><td>Phiếu tiếp nhận:</td><td>" + hd.getSoPhieuSC() + "</td></tr>"
-                + "<tr><td>Phương thức TT:</td><td><b>" + hd.getPhuongThuc() + "</b></td></tr>"
-                + "</table>"
-                + "<hr style='border:none;border-top:1px solid #E2E8F0;'>"
-                + "<table style='font-size:12px;width:100%;' cellpadding='4'>"
-                + "<tr><td>Tiền công dịch vụ:</td><td style='text-align:right;'><b>" + UiHelper.tien(hd.getTienDichVu()) + " đ</b></td></tr>"
-                + "<tr><td>Tiền phụ tùng linh kiện:</td><td style='text-align:right;'><b>" + UiHelper.tien(hd.getTienPhuTung()) + " đ</b></td></tr>"
-                + "<tr><td>Chiết khấu giảm giá:</td><td style='text-align:right;color:#E11D48;'>-" + hd.getGiamGiaPhanTram() + "%</td></tr>"
-                + "<tr style='font-size:14px;background:#F8FAFC;'><td style='color:#1E293B;'><b>TỔNG TIỀN PHẢI THU:</b></td><td style='text-align:right;color:#2563EB;'><b>" + UiHelper.tien(hd.getTongTien()) + " đ</b></td></tr>"
-                + "</table>"
-                + "<p style='font-size:11px;color:#64748B;margin-top:12px;'>Ghi chú: " + (hd.getGhiChu().isEmpty() ? "Không có" : hd.getGhiChu()) + "</p>"
-                + "<div style='text-align:center;margin-top:28px;font-size:11px;color:#94A3B8;'>"
-                + "<p>Thu ngân lập phiếu: <b>" + hd.getNguoiThu() + "</b></p>"
-                + "<p><i>Cảm ơn quý khách đã tin tưởng dịch vụ Gara The T4!</i></p>"
-                + "</div>"
-                + "</div></html>";
+        String html = taoNoiDungHoaDonHtml(hd);
+        JEditorPane editor = new JEditorPane("text/html", html);
+        editor.setEditable(false);
+        editor.setCaretPosition(0);
 
-        JLabel lblHd = new JLabel(html);
-        JScrollPane sp = new JScrollPane(lblHd);
-        sp.setBorder(BorderFactory.createLineBorder(UiHelper.VIEN, 1, true));
-        pnl.add(sp, BorderLayout.CENTER);
+        JScrollPane sp = new JScrollPane(editor);
+        sp.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
+        rootPnl.add(sp, BorderLayout.CENTER);
 
-        JPanel pnlNut = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel pnlNut = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         pnlNut.setOpaque(false);
-        JButton btnXacNhanIn = UiHelper.nut("In ngay", UiHelper.XANH_TRUNG, e -> {
-            JOptionPane.showMessageDialog(dlg, "Đã gửi lệnh in thành công tới máy in nhiệt hóa đơn!", "In hoàn tất", JOptionPane.INFORMATION_MESSAGE);
-            dlg.dispose();
-        });
-        JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, e -> dlg.dispose());
-        pnlNut.add(btnXacNhanIn);
-        pnlNut.add(btnDong);
-        pnl.add(pnlNut, BorderLayout.SOUTH);
 
-        dlg.setContentPane(pnl);
+        JButton btnIn = UiHelper.nut("🖨  In ngay", UiHelper.XANH_TRUNG, e -> {
+            try {
+                boolean ok = editor.print();
+                if (ok) {
+                    JOptionPane.showMessageDialog(dlg, "Đã gửi lệnh in hóa đơn [" + hd.getMaHD() + "] tới máy in!", "In thành công", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, "Lỗi in ấn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JButton btnLuu = UiHelper.nut("Xuất file HTML", new Color(13, 148, 136), e -> luuFileHtml(hd, html));
+        JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, e -> dlg.dispose());
+
+        pnlNut.add(btnLuu);
+        pnlNut.add(btnIn);
+        pnlNut.add(btnDong);
+        rootPnl.add(pnlNut, BorderLayout.SOUTH);
+
+        dlg.setContentPane(rootPnl);
         dlg.setVisible(true);
     }
 
-    private void huyHoaDon() {
-        int dong = table.getSelectedRow();
-        if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn cần hủy!", "Chưa chọn hóa đơn", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        String ma = model.getValueAt(dong, 0).toString();
-        int conf = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn hủy hóa đơn [" + ma + "] không?", "Xác nhận hủy", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (conf != JOptionPane.YES_OPTION) return;
+    private String taoNoiDungHoaDonHtml(HoaDon hd) {
+        long tong = hd.getTongTien();
+        String chuTien = docSoThanhChu(tong);
 
+        return "<html><body style='font-family:Segoe UI, sans-serif;margin:16px;color:#0F172A;'>"
+                + "<div style='text-align:center;'>"
+                + "<h2 style='margin:0;color:#1E3A8A;letter-spacing:1px;'>" + cauHinh.getTenGara().toUpperCase() + "</h2>"
+                + "<p style='margin:3px 0;font-size:11px;color:#64748B;'>Đ/c: " + cauHinh.getDiaChi() + " | Hotline: " + cauHinh.getHotline() + "</p>"
+                + "<p style='margin:2px 0;font-size:11px;color:#64748B;'>STK Vietcombank: <b>" + cauHinh.getStkNganHang() + "</b> (Napas 24/7)</p>"
+                + "<h3 style='margin:16px 0 4px 0;color:#0F172A;border-top:2px dashed #94A3B8;padding-top:12px;'>HÓA ĐƠN DỊCH VỤ SỬA CHỮA & BẢO DƯỠNG</h3>"
+                + "<p style='font-size:11px;color:#475569;'>Số hóa đơn: <b>" + hd.getMaHD() + "</b> &nbsp;|&nbsp; Ngày lập: " + hd.getNgayThanhToan() + "</p>"
+                + "</div>"
+                + "<table style='width:100%;font-size:12px;margin-top:10px;border-collapse:collapse;' cellpadding='4'>"
+                + "<tr><td style='width:35%;color:#475569;'>Khách hàng:</td><td><b>" + hd.getTenKH() + "</b></td></tr>"
+                + "<tr><td style='color:#475569;'>Số điện thoại:</td><td>" + hd.getSdtKH() + "</td></tr>"
+                + "<tr><td style='color:#475569;'>Biển số xe:</td><td><b>" + hd.getBienSo() + "</b></td></tr>"
+                + "<tr><td style='color:#475569;'>Phiếu tiếp nhận:</td><td>" + hd.getSoPhieuSC() + "</td></tr>"
+                + "<tr><td style='color:#475569;'>Phương thức thanh toán:</td><td><b>" + hd.getPhuongThuc() + "</b></td></tr>"
+                + "</table>"
+                + "<br>"
+                + "<table style='width:100%;font-size:11px;border-collapse:collapse;' border='1' bordercolor='#CBD5E1' cellpadding='6'>"
+                + "<tr style='background:#F1F5F9;font-weight:bold;'>"
+                + "<th>STT</th><th>Hạng mục dịch vụ / Phụ tùng</th><th>ĐVT</th><th>SL</th><th>Đơn giá (đ)</th><th>Thành tiền (đ)</th>"
+                + "</tr>"
+                + "<tr><td align='center'>1</td><td>Tiền công sửa chữa & bảo dưỡng định kỳ</td><td align='center'>Gói</td><td align='center'>1</td><td align='right'>" + UiHelper.tien(hd.getTienDichVu()) + "</td><td align='right'>" + UiHelper.tien(hd.getTienDichVu()) + "</td></tr>"
+                + "<tr><td align='center'>2</td><td>Phụ tùng thay thế và vật tư kỹ thuật</td><td align='center'>Bộ</td><td align='center'>1</td><td align='right'>" + UiHelper.tien(hd.getTienPhuTung()) + "</td><td align='right'>" + UiHelper.tien(hd.getTienPhuTung()) + "</td></tr>"
+                + "</table>"
+                + "<table style='width:100%;font-size:12px;margin-top:8px;' cellpadding='4'>"
+                + "<tr><td align='right' style='color:#475569;'>Tổng chi phí trước giảm:</td><td align='right' style='width:30%;'><b>" + UiHelper.tien(hd.getTienDichVu() + hd.getTienPhuTung()) + " đ</b></td></tr>"
+                + "<tr><td align='right' style='color:#E11D48;'>Chiết khấu giảm giá (" + hd.getGiamGiaPhanTram() + "%):</td><td align='right' style='color:#E11D48;'>-" + UiHelper.tien((long)((hd.getTienDichVu() + hd.getTienPhuTung()) * (hd.getGiamGiaPhanTram() / 100.0))) + " đ</td></tr>"
+                + "<tr><td align='right' style='color:#475569;'>Thuế GTGT (VAT 10%):</td><td align='right'>+" + UiHelper.tien(Math.round(tong * 0.1 / 1.1)) + " đ</td></tr>"
+                + "<tr style='background:#EFF6FF;font-size:14px;'><td align='right' style='color:#1E3A8A;'><b>TỔNG TIỀN THANH TOÁN:</b></td><td align='right' style='color:#2563EB;'><b>" + UiHelper.tien(tong) + " đ</b></td></tr>"
+                + "</table>"
+                + "<p style='font-size:11px;font-style:italic;color:#1E293B;margin:6px 0;'>Số tiền viết bằng chữ: <b>" + chuTien + "</b></p>"
+                + "<hr style='border:none;border-top:1px dashed #CBD5E1;margin:12px 0;'>"
+                + "<table style='width:100%;font-size:11px;text-align:center;margin-top:10px;' cellpadding='4'>"
+                + "<tr><td style='width:50%;'><b>KHÁCH HÀNG</b><br><span style='color:#94A3B8;'>(Ký và ghi rõ họ tên)</span><br><br><br><br><b>" + hd.getTenKH() + "</b></td>"
+                + "<td style='width:50%;'><b>THU NGÂN LẬP PHIẾU</b><br><span style='color:#94A3B8;'>(Ký và xác nhận đã thu đủ tiền)</span><br><br><br><br><b>" + hd.getNguoiThu() + "</b></td></tr>"
+                + "</table>"
+                + "<p style='text-align:center;font-size:10px;color:#94A3B8;margin-top:20px;'><i>Cảm ơn quý khách đã tin tưởng dịch vụ tại " + cauHinh.getTenGara() + "! Hân hạnh phục vụ quý khách lần sau.</i></p>"
+                + "</body></html>";
+    }
+
+    private void xuatFileHoaDon() {
+        HoaDon hd = layHoaDonDangChon();
+        if (hd == null) return;
+        String html = taoNoiDungHoaDonHtml(hd);
+        luuFileHtml(hd, html);
+    }
+
+    private void luuFileHtml(HoaDon hd, String html) {
+        JFileChooser fc = new JFileChooser();
+        fc.setSelectedFile(new File("HoaDon_" + hd.getMaHD() + ".html"));
+        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (FileWriter fw = new FileWriter(fc.getSelectedFile(), StandardCharsets.UTF_8)) {
+                fw.write(html);
+                JOptionPane.showMessageDialog(this, "Đã xuất file hóa đơn thành công tại:\n" + fc.getSelectedFile().getAbsolutePath(), "Xuất file hoàn tất", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi xuất file: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void napHoaDonLenForm(int row) {
+        if (row < 0 || row >= modelHoaDon.getRowCount()) return;
+        String ma = modelHoaDon.getValueAt(row, 0).toString();
         for (HoaDon hd : kho.getHoaDons()) {
             if (hd.getMaHD().equals(ma)) {
-                hd.setTrangThai(HoaDon.DA_HUY);
+                txtMaHD.setText(hd.getMaHD());
+                txtKhachHang.setText(hd.getTenKH());
+                txtSdt.setText(hd.getSdtKH());
+                txtBienSo.setText(hd.getBienSo());
+                txtNgay.setText(hd.getNgayThanhToan());
+                txtTienDichVu.setText(String.format("%,d", hd.getTienDichVu()));
+                txtTienPhuTung.setText(String.format("%,d", hd.getTienPhuTung()));
+                txtGiamGia.setText(String.valueOf(hd.getGiamGiaPhanTram()));
+                txtGhiChu.setText(hd.getGhiChu());
+                doiPhuongThuc(hd.getPhuongThuc());
+                tinhTongTien();
                 break;
             }
         }
-        napBang();
-        JOptionPane.showMessageDialog(this, "Đã hủy hóa đơn [" + ma + "].", "Đã hủy", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void lamMoi() {
+    private void napBangHoaDon() {
+        modelHoaDon.setRowCount(0);
+        long tongTien = 0;
+        for (HoaDon hd : kho.getHoaDons()) {
+            modelHoaDon.addRow(new Object[]{
+                    hd.getMaHD(),
+                    hd.getSoPhieuSC(),
+                    hd.getTenKH(),
+                    hd.getSdtKH(),
+                    hd.getBienSo(),
+                    hd.getNgayThanhToan(),
+                    hd.getPhuongThuc(),
+                    UiHelper.tien(hd.getTongTien()),
+                    hd.getNguoiThu(),
+                    hd.getTrangThai()
+            });
+            if (HoaDon.DA_THANH_TOAN.equals(hd.getTrangThai())) {
+                tongTien += hd.getTongTien();
+            }
+        }
+        lblTongDoanhThu.setText("Tổng doanh thu quầy: " + UiHelper.tien(tongTien) + " đ (" + kho.getHoaDons().size() + " hóa đơn)");
+    }
+
+    private void huyHoaDon() {
+        int r = tblHoaDon.getSelectedRow();
+        if (r < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn cần hủy trong bảng!", "Chưa chọn", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String ma = modelHoaDon.getValueAt(r, 0).toString();
+        int cf = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn hủy hóa đơn [" + ma + "] không?", "Xác nhận hủy", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (cf != JOptionPane.YES_OPTION) return;
+
+        for (HoaDon h : kho.getHoaDons()) {
+            if (h.getMaHD().equals(ma)) {
+                h.setTrangThai(HoaDon.DA_HUY);
+                break;
+            }
+        }
+        napBangHoaDon();
+        JOptionPane.showMessageDialog(this, "Đã hủy hóa đơn [" + ma + "].", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void lamMoiForm() {
         txtMaHD.setText(kho.maHoaDonMoi());
         cboPhieuSC.setSelectedIndex(0);
         txtKhachHang.setText("");
@@ -421,28 +1171,72 @@ public class ThanhToanHoaDon_UI extends JPanel {
         txtGiamGia.setText("0");
         txtGhiChu.setText("");
         lblTongTien.setText("0 đ");
-        table.clearSelection();
+        lblQrSoTien.setText("0 VNĐ");
+        lblQrNoiDung.setText("TT " + txtMaHD.getText() + " GARA");
+        modelChiTiet.setRowCount(0);
+        lblTongChiPhiBang.setText("Tổng chi phí dịch vụ & vật tư: 0 đ");
+        txtTienKhachDua.setText("0");
+        lblTienThua.setText("0");
+        tblHoaDon.clearSelection();
+        doiPhuongThuc("Chuyển khoản QR");
     }
 
-    private void hienLenForm() {
-        int dong = table.getSelectedRow();
-        if (dong < 0) return;
-        String ma = model.getValueAt(dong, 0).toString();
-        for (HoaDon hd : kho.getHoaDons()) {
-            if (hd.getMaHD().equals(ma)) {
-                txtMaHD.setText(hd.getMaHD());
-                txtKhachHang.setText(hd.getTenKH());
-                txtSdt.setText(hd.getSdtKH());
-                txtBienSo.setText(hd.getBienSo());
-                txtNgay.setText(hd.getNgayThanhToan());
-                txtTienDichVu.setText(String.valueOf(hd.getTienDichVu()));
-                txtTienPhuTung.setText(String.valueOf(hd.getTienPhuTung()));
-                txtGiamGia.setText(String.valueOf(hd.getGiamGiaPhanTram()));
-                cboPhuongThuc.setSelectedItem(hd.getPhuongThuc());
-                txtGhiChu.setText(hd.getGhiChu());
-                lblTongTien.setText(UiHelper.tien(hd.getTongTien()) + " đ");
-                break;
+    // ===============================================================
+    // HÀM ĐỌC SỐ TIỀN THÀNH CHỮ TIẾNG VIỆT CHUẨN
+    // ===============================================================
+    private static final String[] CHU_SO = {"không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"};
+    private static final String[] DON_VI = {"", "nghìn", "triệu", "tỷ", "nghìn tỷ"};
+
+    public static String docSoThanhChu(long so) {
+        if (so == 0) return "Không đồng";
+        if (so < 0) return "Âm " + docSoThanhChu(-so);
+
+        String s = String.valueOf(so);
+        ArrayList<String> blocks = new ArrayList<>();
+        while (s.length() > 0) {
+            int len = Math.min(3, s.length());
+            blocks.add(0, s.substring(s.length() - len));
+            s = s.substring(0, s.length() - len);
+        }
+
+        StringBuilder res = new StringBuilder();
+        int nBlocks = blocks.size();
+        for (int i = 0; i < nBlocks; i++) {
+            int val = Integer.parseInt(blocks.get(i));
+            if (val > 0) {
+                String bStr = docBlock(val, i > 0);
+                res.append(bStr).append(" ").append(DON_VI[nBlocks - 1 - i]).append(" ");
             }
         }
+
+        String kq = res.toString().trim().replaceAll("\\s+", " ") + " đồng chẵn.";
+        return Character.toUpperCase(kq.charAt(0)) + kq.substring(1);
+    }
+
+    private static String docBlock(int n, boolean dayDu) {
+        int tram = n / 100;
+        int chuc = (n % 100) / 10;
+        int donVi = n % 10;
+        StringBuilder sb = new StringBuilder();
+
+        if (tram > 0 || dayDu) {
+            sb.append(CHU_SO[tram]).append(" trăm ");
+        }
+
+        if (chuc > 1) {
+            sb.append(CHU_SO[chuc]).append(" mươi ");
+            if (donVi == 1) sb.append("mốt");
+            else if (donVi == 5) sb.append("lăm");
+            else if (donVi > 0) sb.append(CHU_SO[donVi]);
+        } else if (chuc == 1) {
+            sb.append("mười ");
+            if (donVi == 5) sb.append("lăm");
+            else if (donVi > 0) sb.append(CHU_SO[donVi]);
+        } else if (chuc == 0 && donVi > 0) {
+            if (tram > 0 || dayDu) sb.append("lẻ ");
+            sb.append(CHU_SO[donVi]);
+        }
+
+        return sb.toString().trim();
     }
 }

@@ -40,6 +40,7 @@ public class Main_UI extends JFrame {
     private static final String TIEP_TAN = "Nhân viên tiếp tân";
     private static final String SUA_CHUA = "Nhân viên sửa chữa";
     private static final String KHO = "Nhân viên kho";
+    private static final String THU_NGAN = "Nhân viên thu ngân";
     private static final String QUAN_LY = "Quản lý";
 
     // ==== Kích thước & Màu sắc ====
@@ -449,8 +450,10 @@ public class Main_UI extends JFrame {
                     -> new CapNhatTienDo_UI();
 
             // 5. Hóa đơn
-            case "Hóa đơn", "Lập hóa đơn", "Thanh toán hóa đơn", "Tra cứu hóa đơn"
+            case "Hóa đơn", "Lập hóa đơn", "Thanh toán hóa đơn"
                     -> new ThanhToanHoaDon_UI(nhanVienHienTai);
+            case "Tra cứu hóa đơn"
+                    -> new TraCuuHoaDon_UI(nhanVienHienTai);
 
             // 6. Kho phụ tùng
             case "Kho phụ tùng", "Quản lý phụ tùng", "Danh sách phụ tùng"
@@ -516,7 +519,11 @@ public class Main_UI extends JFrame {
         boolean coQuyen(String vaiTroNV) {
             if (vaiTro == null) return true;
             if (QUAN_LY.equalsIgnoreCase(vaiTroNV)) return true;
-            return vaiTro.equalsIgnoreCase(vaiTroNV);
+            String[] vts = vaiTro.split(",");
+            for (String v : vts) {
+                if (v.trim().equalsIgnoreCase(vaiTroNV)) return true;
+            }
+            return false;
         }
 
         static MucMenu don(String ten, String icon, String vaiTro) {
@@ -540,17 +547,17 @@ public class Main_UI extends JFrame {
         ds.add(MucMenu.don("Quản trị hệ thống (Admin)", UiIcon.SETTINGS, QUAN_LY));
 
         // 1. Khách hàng
-        ds.add(MucMenu.nhom("Khách hàng", UiIcon.USERS, TIEP_TAN)
+        ds.add(MucMenu.nhom("Khách hàng", UiIcon.USERS, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Quản lý khách hàng"))
                 .them(MucMenu.con("Tra cứu khách hàng")));
 
         // 2. Phương tiện
-        ds.add(MucMenu.nhom("Phương tiện", UiIcon.CAR, TIEP_TAN)
+        ds.add(MucMenu.nhom("Phương tiện", UiIcon.CAR, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Quản lý phương tiện"))
                 .them(MucMenu.con("Tra cứu phương tiện")));
 
         // 3. Phiếu tiếp nhận
-        ds.add(MucMenu.nhom("Phiếu tiếp nhận", UiIcon.FILE, TIEP_TAN)
+        ds.add(MucMenu.nhom("Phiếu tiếp nhận", UiIcon.FILE, TIEP_TAN + "," + THU_NGAN + "," + SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu tiếp nhận"))
                 .them(MucMenu.con("Tra cứu phiếu tiếp nhận")));
 
@@ -560,7 +567,7 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Tra cứu phiếu sửa chữa")));
 
         // 5. Hóa đơn
-        ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN)
+        ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Lập hóa đơn"))
                 .them(MucMenu.con("Tra cứu hóa đơn")));
 
@@ -582,7 +589,7 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Tra cứu nhân viên")));
 
         // 9. Báo cáo – Thống kê
-        ds.add(MucMenu.nhom("Báo cáo – Thống kê", UiIcon.CHART, QUAN_LY)
+        ds.add(MucMenu.nhom("Báo cáo – Thống kê", UiIcon.CHART, QUAN_LY + "," + THU_NGAN)
                 .them(MucMenu.con("Thống kê doanh thu")));
 
         return ds;

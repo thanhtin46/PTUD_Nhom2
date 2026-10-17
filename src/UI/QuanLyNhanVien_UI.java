@@ -10,7 +10,7 @@ import java.awt.*;
 
 public class QuanLyNhanVien_UI extends JPanel {
     private static final String[] VAI_TRO = {
-            "Nhân viên tiếp tân", "Nhân viên sửa chữa", "Nhân viên kho", "Quản lý"};
+            "Nhân viên tiếp tân", "Nhân viên thu ngân", "Nhân viên sửa chữa", "Nhân viên kho", "Quản lý"};
 
     private final JTextField txtMa = new JTextField();
     private final JTextField txtTen = new JTextField();

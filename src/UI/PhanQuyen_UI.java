@@ -37,6 +37,7 @@ public class PhanQuyen_UI extends JPanel {
     private static final String[][] QUYEN_MAC_DINH = {
             {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,TONKHO,NV,PQ,HD,BCDT"},
             {"Nhân viên tiếp tân", "KH,PT,BH,HD"},
+            {"Nhân viên thu ngân", "HD,BCDT,KH,PT"},
             {"Nhân viên sửa chữa", "SC,TD,TONKHO"},
             {"Nhân viên kho",      "PHUTUNG,NHAPKHO,XUATKHO,TONKHO"},
     };
