@@ -7,11 +7,12 @@ import java.awt.*;
 import java.util.ArrayList;
 
 /**
- * Main_UI — Cửa sổ chính của ứng dụng.
- * Bố cục: WEST = sidebar (logo, user, menu, đăng xuất), CENTER = nội dung.
- *
- * Menu dùng BoxLayout Y_AXIS trong JScrollPane — cách chuẩn của Swing.
- * Mỗi mục = 1 dòng cố định 224×32 nên KHÔNG thể overlap.
+ * Main_UI — Cửa sổ chính hiện đại của ứng dụng theo bản thiết kế Figma:
+ * - Sidebar Tone Slate 900 đậm chất công nghệ, logo badge bo tròn có độ chuyển màu
+ * - Thẻ tài khoản (User Card) hiệu ứng kính thủy tinh (Glassmorphism) mờ ảo
+ * - Thanh menu phân nhóm trực quan, nút được chọn có dải sáng Accent Blue
+ * - Nút đăng xuất cảnh báo đỏ tinh tế
+ * - Content Panel mượt mà, phân cấp khoảng cách thoáng đãng
  */
 public class Main_UI extends JFrame {
 
@@ -21,7 +22,7 @@ public class Main_UI extends JFrame {
 
     // ==== UI ====
     private JPanel contentPanel;   // CENTER: chứa các panel nội dung
-    private MenuRow nutDangChon;   // nút menu đang được chọn (tô xanh)
+    private MenuRow nutDangChon;   // nút menu đang được chọn
     private MenuRow nutDauTien;    // nút đầu tiên để auto-click khi mở app
 
     // ==== Hằng số phân quyền ====
@@ -30,25 +31,25 @@ public class Main_UI extends JFrame {
     private static final String KHO = "Nhân viên kho";
     private static final String QUAN_LY = "Quản lý";
 
-    // ==== Hằng số giao diện ====
-    private static final Color NEN_SIDE     = new Color(20, 35, 52);
-    private static final Color NEN_HOVER    = new Color(255, 255, 255, 14);
-    private static final Color MAU_CHON     = new Color(42, 112, 153);
-    private static final Color MAU_LOGO     = new Color(49, 145, 150);
-    private static final Color CHU_CHINH    = new Color(232, 236, 244);
-    private static final Color CHU_PHU      = new Color(140, 150, 168);
-    private static final Color CHU_NUT_DANG_XUAT = new Color(232, 157, 157);
-    private static final Color NEN_HOVER_DANG_XUAT = new Color(65, 42, 48);
+    // ==== Hằng số giao diện đồng bộ Figma ====
+    private static final Color NEN_SIDE             = new Color(15, 23, 42);       // Slate 900
+    private static final Color NEN_HOVER            = new Color(30, 41, 59);       // Slate 800
+    private static final Color MAU_CHON             = new Color(37, 99, 235);      // Blue 600
+    private static final Color MAU_LOGO_START       = new Color(37, 99, 235);      // Gradient Blue
+    private static final Color MAU_LOGO_END         = new Color(14, 165, 233);     // Sky Blue
+    private static final Color CHU_CHINH            = new Color(248, 250, 252);    // Slate 50
+    private static final Color CHU_PHU              = new Color(148, 163, 184);    // Slate 400
+    private static final Color CHU_NUT_DANG_XUAT    = new Color(248, 113, 113);    // Red 400
+    private static final Color NEN_HOVER_DANG_XUAT  = new Color(69, 10, 10, 150);  // Dark Red
 
-    private static final int W = 240;          // chiều rộng sidebar
-    private static final int NUT_CAO = 38;     // chiều cao mỗi nút menu
-    private static final int NUT_RONG = 224;   // chiều rộng mỗi nút menu (trừ border 8+8)
+    private static final int W = 250;          // Chiều rộng sidebar chuẩn
+    private static final int NUT_CAO = 42;     // Chiều cao nút menu thoải mái, chuẩn UX
+    private static final int NUT_RONG = 230;   // Chiều rộng mỗi nút menu
 
     public Main_UI(NhanVien nv, ArrayList<NhanVien> danhSachNhanVien) {
         this.nhanVienHienTai = nv;
         this.danhSachNhanVien = danhSachNhanVien;
 
-        // Ép LAF Windows cho title bar + nút ✕
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
@@ -57,12 +58,12 @@ public class Main_UI extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Hệ thống quản lý Gara ô tô");
+        setTitle("Hệ thống quản lý Gara ô tô — The T4 Auto");
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        int w = Math.min(1440, screen.width  - 40);
-        int h = Math.min(800,  screen.height - 120);
+        int w = Math.min(1480, screen.width - 40);
+        int h = Math.min(840, screen.height - 80);
         setSize(w, h);
-        setMinimumSize(new Dimension(1100, 640));
+        setMinimumSize(new Dimension(1150, 680));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -80,7 +81,7 @@ public class Main_UI extends JFrame {
     }
 
     // ===============================================================
-    //                       SIDEBAR
+    //                       SIDEBAR HIỆN ĐẠI
     // ===============================================================
     private JPanel taoSidebar() {
         JPanel sidebar = new JPanel();
@@ -91,14 +92,14 @@ public class Main_UI extends JFrame {
 
         // === 1. Logo + brand ===
         sidebar.add(taoLogo());
-        sidebar.add(filler(12, W));
+        sidebar.add(filler(10, W));
 
         // === 2. User card ===
         sidebar.add(taoUserCard());
-        sidebar.add(filler(12, W));
+        sidebar.add(filler(14, W));
 
         // === 3. Nhãn MENU ===
-        sidebar.add(nhan("MENU", 4));
+        sidebar.add(nhan("DANH MỤC QUẢN LÝ", 6));
         sidebar.add(filler(4, W));
 
         // === 4. Danh sách menu (cuộn được) ===
@@ -109,96 +110,102 @@ public class Main_UI extends JFrame {
 
         // === 6. Nút đăng xuất ===
         sidebar.add(taoNutDangXuat());
-        sidebar.add(filler(10, W));
+        sidebar.add(filler(12, W));
 
         return sidebar;
     }
 
-    /** Tạo header logo + brand "Auto Service" */
+    /** Tạo header logo + brand với gradient */
     private JPanel taoLogo() {
         JPanel box = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         box.setOpaque(false);
-        box.setMaximumSize(new Dimension(W, 60));
-        box.setPreferredSize(new Dimension(W, 60));
-        box.setMinimumSize(new Dimension(W, 60));
+        box.setMaximumSize(new Dimension(W, 68));
+        box.setPreferredSize(new Dimension(W, 68));
+        box.setMinimumSize(new Dimension(W, 68));
         box.setAlignmentX(Component.LEFT_ALIGNMENT);
         box.setBorder(new EmptyBorder(18, 16, 12, 16));
 
-        // Badge logo bo tròn
-        JLabel badge = new JLabel("G") {
-            @Override protected void paintComponent(Graphics g) {
+        // Badge logo gradient nổi bật
+        JLabel badge = new JLabel("T4") {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(MAU_LOGO);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                GradientPaint gp = new GradientPaint(0, 0, MAU_LOGO_START, getWidth(), getHeight(), MAU_LOGO_END);
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
                 g2.setColor(Color.WHITE);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
                 FontMetrics fm = g2.getFontMetrics();
-                String s = "G";
-                int tx = (getWidth()  - fm.stringWidth(s)) / 2;
+                String s = "T4";
+                int tx = (getWidth() - fm.stringWidth(s)) / 2;
                 int ty = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
                 g2.drawString(s, tx, ty);
                 g2.dispose();
             }
         };
-        badge.setPreferredSize(new Dimension(28, 28));
+        badge.setPreferredSize(new Dimension(36, 36));
         badge.setOpaque(false);
         box.add(badge);
 
-        JLabel brand = new JLabel("<html><b style='color:#E8ECF4;font-size:14px'>Gara Ô tô The T4</b>"
-                + "<br><span style='color:#8C96A8;font-size:10px'>HỆ THỐNG QUẢN LÝ GARA</span></html>");
+        JLabel brand = new JLabel("<html><b style='color:#F8FAFC;font-size:14px'>Gara Ô tô The T4</b>"
+                + "<br><span style='color:#94A3B8;font-size:10px;letter-spacing:1px'>HỆ THỐNG QUẢN LÝ GARA</span></html>");
         brand.setOpaque(false);
         box.add(brand);
 
         return box;
     }
 
-    /** Thẻ hiển thị nhân viên đang đăng nhập */
+    /** Thẻ hiển thị nhân viên đang đăng nhập với avatar tròn gradient */
     private JPanel taoUserCard() {
         JPanel userWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         userWrap.setOpaque(false);
-        userWrap.setMaximumSize(new Dimension(W, 64));
-        userWrap.setPreferredSize(new Dimension(W, 64));
-        userWrap.setMinimumSize(new Dimension(W, 64));
+        userWrap.setMaximumSize(new Dimension(W, 68));
+        userWrap.setPreferredSize(new Dimension(W, 68));
+        userWrap.setMinimumSize(new Dimension(W, 68));
         userWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
         userWrap.setBorder(new EmptyBorder(0, 12, 0, 12));
 
-        JPanel user = new JPanel(new BorderLayout(10, 0)) {
-            @Override protected void paintComponent(Graphics g) {
+        JPanel user = new JPanel(new BorderLayout(12, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(255, 255, 255, 12));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.setColor(new Color(30, 41, 59, 180)); // Glass effect
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                g2.setColor(new Color(255, 255, 255, 15));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
                 g2.dispose();
             }
         };
         user.setOpaque(false);
-        user.setPreferredSize(new Dimension(216, 52));
-        user.setMaximumSize(new Dimension(216, 52));
-        user.setMinimumSize(new Dimension(216, 52));
-        user.setBorder(new EmptyBorder(8, 10, 8, 10));
+        user.setPreferredSize(new Dimension(226, 56));
+        user.setMaximumSize(new Dimension(226, 56));
+        user.setMinimumSize(new Dimension(226, 56));
+        user.setBorder(new EmptyBorder(8, 12, 8, 12));
 
-        // Avatar
+        // Avatar gradient
         JPanel avatar = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(49, 145, 150));
+                GradientPaint gp = new GradientPaint(0, 0, new Color(59, 130, 246), getWidth(), getHeight(), new Color(147, 51, 234));
+                g2.setPaint(gp);
                 g2.fillOval(0, 0, getWidth(), getHeight());
                 g2.dispose();
             }
         };
         avatar.setOpaque(false);
-        avatar.setPreferredSize(new Dimension(32, 32));
+        avatar.setPreferredSize(new Dimension(36, 36));
         String ten = nhanVienHienTai.getHoTen();
         String chuCaiDau = ten == null || ten.isEmpty() ? "?" : ten.substring(0, 1).toUpperCase();
         JLabel lblChu = new JLabel(chuCaiDau, SwingConstants.CENTER);
-        lblChu.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblChu.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblChu.setForeground(Color.WHITE);
         avatar.add(lblChu, BorderLayout.CENTER);
         user.add(avatar, BorderLayout.WEST);
 
-        // Tên + vai trò — dùng 2 JLabel tách rời thay vì HTML (HTML JLabel hay bị height tính sai gây chồng text)
         JPanel info = new JPanel();
         info.setOpaque(false);
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
@@ -208,12 +215,12 @@ public class Main_UI extends JFrame {
         String vaiTroHien = nhanVienHienTai.getVaiTro() == null ? "" : nhanVienHienTai.getVaiTro();
 
         JLabel lblTen = new JLabel(tenHien);
-        lblTen.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblTen.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblTen.setForeground(CHU_CHINH);
         lblTen.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblVaiTro = new JLabel(vaiTroHien);
-        lblVaiTro.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        lblVaiTro.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblVaiTro.setForeground(CHU_PHU);
         lblVaiTro.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -226,11 +233,10 @@ public class Main_UI extends JFrame {
         return userWrap;
     }
 
-    /** Nhãn đơn giản (MENU, ...) */
     private JLabel nhan(String text, int bottomPad) {
         JLabel l = new JLabel(text);
         l.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        l.setForeground(new Color(110, 120, 140));
+        l.setForeground(new Color(100, 116, 139));
         l.setOpaque(false);
         l.setBorder(new EmptyBorder(0, 20, bottomPad, 0));
         l.setMaximumSize(new Dimension(W, 22));
@@ -241,7 +247,6 @@ public class Main_UI extends JFrame {
         return l;
     }
 
-    /** Khoảng trống cố định (strut) trong BoxLayout Y_AXIS */
     private Component filler(int h, int w) {
         Dimension d = new Dimension(w, h);
         Box.Filler f = new Box.Filler(d, d, d);
@@ -250,10 +255,6 @@ public class Main_UI extends JFrame {
         return f;
     }
 
-    /**
-     * Tạo JScrollPane chứa menuPanel (BoxLayout Y_AXIS).
-     * Mỗi nút có kích thước cứng 224×32 → không bao giờ overlap.
-     */
     private JScrollPane taoMenuCuon() {
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
@@ -263,7 +264,6 @@ public class Main_UI extends JFrame {
         menuPanel.setAlignmentY(Component.TOP_ALIGNMENT);
         menuPanel.setBorder(new EmptyBorder(0, 8, 0, 8));
 
-        // Thêm các mục menu
         for (MucMenu muc : taoDanhSachMenu()) {
             if (muc.coQuyen(nhanVienHienTai.getVaiTro())) {
                 themMucMenu(menuPanel, muc);
@@ -277,12 +277,12 @@ public class Main_UI extends JFrame {
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         sp.getVerticalScrollBar().setUnitIncrement(14);
-        sp.getVerticalScrollBar().setPreferredSize(new Dimension(6, 0));
+        sp.getVerticalScrollBar().setPreferredSize(new Dimension(5, 0));
         sp.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
             @Override protected JButton createDecreaseButton(int orientation) { return zeroButton(); }
             @Override protected JButton createIncreaseButton(int orientation) { return zeroButton(); }
             @Override protected void configureScrollBarColors() {
-                this.thumbColor = new Color(120, 130, 150);
+                this.thumbColor = new Color(51, 65, 85);
                 this.trackColor = new Color(0, 0, 0, 0);
             }
             private JButton zeroButton() { JButton b = new JButton(); b.setPreferredSize(new Dimension(0,0)); b.setOpaque(false); return b; }
@@ -294,46 +294,34 @@ public class Main_UI extends JFrame {
         return sp;
     }
 
-    /**
-     * Thêm 1 mục menu (có thể là item đơn hoặc nhóm có mục con).
-     * Mỗi nút = 1 JButton 224×32 cứng → BoxLayout xếp tuyệt đối.
-     */
     private void themMucMenu(JPanel menuPanel, MucMenu muc) {
-        // Khoảng cách giữa các nhóm
         if (menuPanel.getComponentCount() > 0) {
-            menuPanel.add(filler(8, NUT_RONG));
+            menuPanel.add(filler(6, NUT_RONG));
         }
         if (!muc.laNhom()) {
-            MenuRow nut = taoNutMenu(muc.ten, muc.icon, 0, false);
+            MenuRow nut = taoNutMenu(muc.ten, 0, false);
             nut.addActionListener(e -> chonMenu(nut, muc.ten));
             menuPanel.add(nut);
             if (nutDauTien == null) nutDauTien = nut;
             return;
         }
-        // Mục cha
-        MenuRow nutCha = taoNutMenu(muc.ten, muc.icon, 0, true);
+        // Nhóm cha
+        MenuRow nutCha = taoNutMenu(muc.ten, 0, true);
         nutCha.addActionListener(e -> chonMenu(nutCha, muc.ten));
         menuPanel.add(nutCha);
         if (nutDauTien == null) nutDauTien = nutCha;
-        // Mục con — dải phân cách 2px giữa tiêu đề nhóm và item con đầu tiên
-        boolean dau = true;
+
+        // Các mục con
         for (MucMenu con : muc.danhSachCon) {
-            if (dau) {
-                menuPanel.add(filler(2, NUT_RONG));
-                dau = false;
-            }
-            MenuRow nutCon = taoNutMenu("•  " + con.ten, con.icon, 1, false);
+            menuPanel.add(filler(2, NUT_RONG));
+            MenuRow nutCon = taoNutMenu("   •  " + con.ten, 1, false);
             nutCon.addActionListener(e -> chonMenu(nutCon, con.ten));
             menuPanel.add(nutCon);
         }
     }
 
-    /**
-     * Tạo 1 dòng menu = JPanel tùy chỉnh. Vẽ nền + text thủ công, không dùng JButton
-     * (JButton có margin/inset nội bộ gây ra text bị lệch/clip khó đoán).
-     */
-    private MenuRow taoNutMenu(String text, String icon, int capDo, boolean laNhom) {
-        int trai = (laNhom || capDo == 0) ? 14 : 30;
+    private MenuRow taoNutMenu(String text, int capDo, boolean laNhom) {
+        int trai = (laNhom || capDo == 0) ? 14 : 26;
         MenuRow row = new MenuRow(text, trai, laNhom);
         row.setPreferredSize(new Dimension(NUT_RONG, NUT_CAO));
         row.setMinimumSize(new Dimension(NUT_RONG, NUT_CAO));
@@ -344,14 +332,14 @@ public class Main_UI extends JFrame {
     }
 
     // ===============================================================
-    // MenuRow — JPanel vẽ 1 dòng menu (nền hover/select + text)
+    // MenuRow — Dòng menu tương tác bóng bẩy, bo góc 10px
     // ===============================================================
     private class MenuRow extends JPanel {
         private final String text;
         private final int paddingLeft;
         private final boolean laNhom;
-        private Color bgHien = null;          // null = không có nền
-        private Color fgHien = new Color(200, 208, 220);
+        private Color bgHien = null;
+        private Color fgHien = new Color(203, 213, 225); // Slate 300
         private boolean dangHover = false;
         private final java.util.List<java.awt.event.ActionListener> listeners = new java.util.ArrayList<>();
 
@@ -373,6 +361,7 @@ public class Main_UI extends JFrame {
                 }
             });
         }
+
         void setSelected(boolean sel) {
             if (sel) {
                 bgHien = MAU_CHON;
@@ -380,14 +369,17 @@ public class Main_UI extends JFrame {
                 dangHover = false;
             } else {
                 bgHien = null;
-                fgHien = new Color(200, 208, 220);
+                fgHien = new Color(203, 213, 225);
             }
             repaint();
         }
+
         boolean isSelected() {
             return bgHien == MAU_CHON;
         }
+
         void addActionListener(java.awt.event.ActionListener l) { listeners.add(l); }
+
         private void fire() {
             for (java.awt.event.ActionListener l : listeners) l.actionPerformed(null);
         }
@@ -396,26 +388,23 @@ public class Main_UI extends JFrame {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             int w = getWidth(), h = getHeight();
-            // 1. Nền
-            Color nen;
-            if (bgHien != null) nen = bgHien;
-            else if (dangHover) nen = NEN_HOVER;
-            else nen = null;
+
+            Color nen = bgHien != null ? bgHien : (dangHover ? NEN_HOVER : null);
 
             if (nen != null) {
                 g2.setColor(nen);
-                g2.fillRoundRect(4, 1, w - 8, h - 2, 10, 10);
+                g2.fillRoundRect(2, 2, w - 4, h - 4, 10, 10);
             }
 
-            // 2. Thanh accent trái khi selected
+            // Thanh accent trắng ở mép trái khi được chọn
             if (isSelected()) {
-                g2.setColor(new Color(255, 255, 255, 80));
-                g2.fillRoundRect(4, 5, 3, h - 10, 3, 3);
+                g2.setColor(new Color(255, 255, 255, 230));
+                g2.fillRoundRect(4, 8, 4, h - 16, 4, 4);
             }
 
-            // 3. Text — baseline đặt chính giữa dọc theo font metrics
             g2.setColor(fgHien);
             g2.setFont(new Font("Segoe UI", laNhom ? Font.BOLD : Font.PLAIN, 13));
             FontMetrics fm = g2.getFontMetrics();
@@ -426,17 +415,19 @@ public class Main_UI extends JFrame {
         }
     }
 
-    /** Nút đăng xuất ở đáy sidebar */
+    /** Nút đăng xuất hiện đại có icon biểu tượng */
     private JButton taoNutDangXuat() {
         JButton nut = new JButton("Đăng xuất");
+        nut.setIcon(UiIcon.of(UiIcon.LOGOUT, 16, CHU_NUT_DANG_XUAT));
+        nut.setIconTextGap(10);
         nut.setFocusPainted(false);
         nut.setForeground(CHU_NUT_DANG_XUAT);
-        nut.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        nut.setFont(new Font("Segoe UI", Font.BOLD, 13));
         nut.setHorizontalAlignment(SwingConstants.LEFT);
         nut.setBorder(new EmptyBorder(8, 20, 8, 8));
-        nut.setMaximumSize(new Dimension(W, 36));
-        nut.setPreferredSize(new Dimension(W, 36));
-        nut.setMinimumSize(new Dimension(W, 36));
+        nut.setMaximumSize(new Dimension(W, 40));
+        nut.setPreferredSize(new Dimension(W, 40));
+        nut.setMinimumSize(new Dimension(W, 40));
         nut.setAlignmentX(Component.LEFT_ALIGNMENT);
         nut.setAlignmentY(Component.TOP_ALIGNMENT);
         nut.setContentAreaFilled(false);
@@ -483,6 +474,14 @@ public class Main_UI extends JFrame {
         contentPanel.repaint();
     }
 
+    public void chuyenTrang(String tenMenu) {
+        JComponent noiDung = taoNoiDung(tenMenu);
+        contentPanel.removeAll();
+        contentPanel.add(noiDung, BorderLayout.CENTER);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
     /** Map tên menu → panel nội dung tương ứng */
     private JComponent taoNoiDung(String tenMenu) {
         return switch (tenMenu) {
@@ -494,6 +493,7 @@ public class Main_UI extends JFrame {
             case "Tra cứu bảo hành"        -> new TraCuuBaoHanh_UI();
             case "Lập phiếu bảo hành"      -> new LapPhieuBaoHanh_UI(nhanVienHienTai);
             case "Lập phiếu sửa chữa"      -> new LapPhieuSuaChua_UI(nhanVienHienTai);
+            case "Thanh toán hóa đơn"      -> new ThanhToanHoaDon_UI(nhanVienHienTai);
             case "Cập nhật tiến độ"        -> new CapNhatTienDo_UI();
             case "Danh sách phụ tùng"      -> new DanhSachPhuTung_UI();
             case "Nhập kho"                -> new NhapKho_UI(nhanVienHienTai);
@@ -505,7 +505,6 @@ public class Main_UI extends JFrame {
             case "Phân quyền"              -> new PhanQuyen_UI();
             case "Theo tháng"              -> new BaoCaoDoanhThu_UI(false);
             case "Theo năm"                -> new BaoCaoDoanhThu_UI(true);
-            // Mục cha → mở mục con đầu tiên
             case "Quản lý khách hàng"     -> new QuanLyKhachHang_UI();
             case "Quản lý phương tiện"     -> new QuanLyPhuongTien_UI();
             case "Quản lý bảo hành"        -> new TraCuuBaoHanh_UI();
@@ -514,7 +513,7 @@ public class Main_UI extends JFrame {
             default -> {
                 JLabel lbl = new JLabel("Chức năng đang phát triển: " + tenMenu, SwingConstants.CENTER);
                 lbl.setFont(new Font("Segoe UI", Font.BOLD, 18));
-                lbl.setForeground(new Color(21, 58, 110));
+                lbl.setForeground(UiHelper.XANH_DAM);
                 yield lbl;
             }
         };
@@ -523,81 +522,65 @@ public class Main_UI extends JFrame {
     // ===============================================================
     //                       DỮ LIỆU MENU
     // ===============================================================
-
-    /** Một mục trong cây menu. Có thể là item đơn hoặc nhóm có mục con. */
     private static class MucMenu {
         final String ten;
-        final String icon;
-        final String vaiTro;          // null = ai cũng thấy
+        final String vaiTro;
         final ArrayList<MucMenu> danhSachCon = new ArrayList<>();
 
-        MucMenu(String ten, String icon, String vaiTro) {
-            this.ten = ten; this.icon = icon; this.vaiTro = vaiTro;
+        MucMenu(String ten, String vaiTro) {
+            this.ten = ten; this.vaiTro = vaiTro;
         }
         MucMenu them(MucMenu con) { danhSachCon.add(con); return this; }
         boolean laNhom() { return !danhSachCon.isEmpty(); }
         boolean coQuyen(String vaiTroNV) {
-            // null = mục chung cho mọi vai trò
             if (vaiTro == null) return true;
-            // Quản lý thấy tất cả
             if (QUAN_LY.equals(vaiTroNV)) return true;
-            // Vai trò đúng mới thấy
             return vaiTro.equals(vaiTroNV);
         }
-        static MucMenu item(String ten, String icon) {
-            return new MucMenu(ten, icon, null);
+        static MucMenu item(String ten) {
+            return new MucMenu(ten, null);
         }
-        static MucMenu item(String ten, String icon, String vaiTro) {
-            return new MucMenu(ten, icon, vaiTro);
+        static MucMenu item(String ten, String vaiTro) {
+            return new MucMenu(ten, vaiTro);
         }
-        static MucMenu nhom(String ten, String icon, String vaiTro) {
-            return new MucMenu(ten, icon, vaiTro);
+        static MucMenu nhom(String ten, String vaiTro) {
+            return new MucMenu(ten, vaiTro);
         }
     }
 
-    /** Cây menu đầy đủ của ứng dụng */
     private ArrayList<MucMenu> taoDanhSachMenu() {
         ArrayList<MucMenu> ds = new ArrayList<>();
-        ds.add(MucMenu.item("Trang chủ", "🏠"));
+        ds.add(MucMenu.item("Trang chủ"));
 
-        ds.add(MucMenu.nhom("Quản lý khách hàng", "👥", TIEP_TAN)
-                .them(MucMenu.item("Danh sách khách hàng", "•"))
-                .them(MucMenu.item("Tra cứu khách hàng", "•")));
+        ds.add(MucMenu.nhom("Quản lý khách hàng", TIEP_TAN)
+                .them(MucMenu.item("Danh sách khách hàng"))
+                .them(MucMenu.item("Tra cứu khách hàng")));
 
-        ds.add(MucMenu.nhom("Quản lý phương tiện", "🚗", TIEP_TAN)
-                .them(MucMenu.item("Danh sách phương tiện", "•"))
-                .them(MucMenu.item("Tra cứu phương tiện", "•")));
+        ds.add(MucMenu.nhom("Quản lý phương tiện", TIEP_TAN)
+                .them(MucMenu.item("Danh sách phương tiện"))
+                .them(MucMenu.item("Tra cứu phương tiện")));
 
-        ds.add(MucMenu.nhom("Quản lý bảo hành", "🛡", TIEP_TAN)
-                .them(MucMenu.item("Tra cứu bảo hành", "•"))
-                .them(MucMenu.item("Lập phiếu bảo hành", "•")));
+        ds.add(MucMenu.nhom("Quản lý bảo hành", TIEP_TAN)
+                .them(MucMenu.item("Tra cứu bảo hành"))
+                .them(MucMenu.item("Lập phiếu bảo hành")));
 
-        ds.add(MucMenu.item("Lập phiếu sửa chữa", "🔧", SUA_CHUA));
-        ds.add(MucMenu.item("Cập nhật tiến độ",     "📈", SUA_CHUA));
+        ds.add(MucMenu.item("Lập phiếu sửa chữa", SUA_CHUA));
+        ds.add(MucMenu.item("Thanh toán hóa đơn"));
+        ds.add(MucMenu.item("Phân công KTV", SUA_CHUA));
+        ds.add(MucMenu.item("Cập nhật tiến độ", SUA_CHUA));
 
-        ds.add(MucMenu.nhom("Quản lý phụ tùng", "📦", KHO)
-                .them(MucMenu.item("Danh sách phụ tùng", "•"))
-                .them(MucMenu.item("Nhập kho", "•"))
-                .them(MucMenu.item("Xuất kho", "•"))
-                .them(MucMenu.item("Theo dõi chờ nhập", "•")));    // UC010
-        ds.add(MucMenu.item("Báo cáo tồn kho", "📊", KHO));
+        ds.add(MucMenu.nhom("Quản lý phụ tùng", KHO)
+                .them(MucMenu.item("Danh sách phụ tùng"))
+                .them(MucMenu.item("Nhập kho"))
+                .them(MucMenu.item("Xuất kho"))
+                .them(MucMenu.item("Theo dõi chờ nhập")));
+        ds.add(MucMenu.item("Báo cáo tồn kho", KHO));
 
-        ds.add(MucMenu.item("Phân công KTV", "👷", SUA_CHUA));      // UC015
-        ds.add(MucMenu.item("Cập nhật tiến độ", "📈", SUA_CHUA));
-
-        ds.add(MucMenu.item("Quản lý nhân viên", "👨‍💼", QUAN_LY));
-        ds.add(MucMenu.item("Phân quyền", "🔐", QUAN_LY));            // UC014
-        ds.add(MucMenu.nhom("Báo cáo doanh thu", "📑", QUAN_LY)
-                .them(MucMenu.item("Theo tháng", "•"))
-                .them(MucMenu.item("Theo năm", "•")));
+        ds.add(MucMenu.item("Quản lý nhân viên", QUAN_LY));
+        ds.add(MucMenu.item("Phân quyền", QUAN_LY));
+        ds.add(MucMenu.nhom("Báo cáo doanh thu", QUAN_LY)
+                .them(MucMenu.item("Theo tháng"))
+                .them(MucMenu.item("Theo năm")));
         return ds;
-    }
-
-    // ===============================================================
-    //                       TIỆN ÍCH
-    // ===============================================================
-    private static String escapeHtml(String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

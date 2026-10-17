@@ -66,9 +66,9 @@ public class TheoDoiChoNhap_UI extends JPanel {
         JPanel grid = new JPanel(new GridLayout(1, 3, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(0, 0, 14, 0));
-        grid.add(the("📦", "Đang chờ nhập", String.valueOf(soChoNhap), "Phiếu từ NCC", new Color(37, 99, 168)));
-        grid.add(the("🚨", "Trễ hạn giao", String.valueOf(soTreHan), "Cần liên hệ NCC", new Color(220, 80, 80)));
-        grid.add(the("💰", "Giá trị chờ", UiHelper.tien(giaTriChoNhap) + " đ", "Tổng đơn chưa nhập", new Color(225, 150, 45)));
+        grid.add(the(UiIcon.of(UiIcon.CLOCK, 22, Color.WHITE), "Đang chờ nhập", String.valueOf(soChoNhap), "Phiếu từ NCC", new Color(37, 99, 168)));
+        grid.add(the(UiIcon.of(UiIcon.CLOSE, 22, Color.WHITE), "Trễ hạn giao", String.valueOf(soTreHan), "Cần liên hệ NCC", new Color(220, 80, 80)));
+        grid.add(the(UiIcon.of(UiIcon.BILL, 22, Color.WHITE), "Giá trị chờ", UiHelper.tien(giaTriChoNhap) + " đ", "Tổng đơn chưa nhập", new Color(225, 150, 45)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
         wrapGrid.setPreferredSize(new Dimension(0, 100));
         wrapGrid.setOpaque(false);
@@ -130,9 +130,9 @@ public class TheoDoiChoNhap_UI extends JPanel {
         JPanel nutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         nutPanel.setOpaque(false);
         nutPanel.setBorder(new EmptyBorder(12, 0, 0, 0));
-        JButton btnXem = UiHelper.nut("👁 Xem chi tiết", new Color(37, 99, 168), e -> xemChiTiet());
-        JButton btnNhap = UiHelper.nut("✅ Xác nhận đã nhập", new Color(46, 160, 92), e -> xacNhanNhap());
-        JButton btnHuy = UiHelper.nut("❌ Hủy phiếu", new Color(220, 80, 80), e -> huyPhieu());
+        JButton btnXem = UiHelper.nut("Xem chi tiết", UiIcon.of(UiIcon.SEARCH, 15), new Color(37, 99, 168), e -> xemChiTiet());
+        JButton btnNhap = UiHelper.nut("Xác nhận đã nhập", UiIcon.of(UiIcon.CHECK, 15), new Color(46, 160, 92), e -> xacNhanNhap());
+        JButton btnHuy = UiHelper.nut("Hủy phiếu", UiIcon.of(UiIcon.TRASH, 15), new Color(220, 80, 80), e -> huyPhieu());
         nutPanel.add(btnXem);
         nutPanel.add(btnNhap);
         nutPanel.add(btnHuy);
@@ -233,7 +233,7 @@ public class TheoDoiChoNhap_UI extends JPanel {
         }
     }
 
-    private JPanel the(String icon, String ten, String so, String phuDe, Color mau) {
+    private JPanel the(Icon icon, String ten, String so, String phuDe, Color mau) {
         JPanel p = new JPanel(new BorderLayout(12, 0)) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -261,8 +261,6 @@ public class TheoDoiChoNhap_UI extends JPanel {
                 super.paintComponent(g);
             }
         };
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
-        lblIcon.setForeground(Color.WHITE);
         lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
         lblIcon.setPreferredSize(new Dimension(48, 48));
 

@@ -84,20 +84,20 @@ public class NhapKho_UI extends JPanel {
         nut.setOpaque(false);
         nut.setLayout(new BoxLayout(nut, BoxLayout.Y_AXIS));
         nut.setBorder(new EmptyBorder(10, 0, 0, 0));
-        JButton bt1 = UiHelper.nut("➕  Thêm dòng", new Color(46, 160, 92), true, e -> themDong());
-        JButton bt2 = UiHelper.nut("🗑  Xóa dòng cuối", new Color(220, 80, 80), true, e -> xoaDong());
+        JButton bt1 = UiHelper.nut("Thêm dòng", UiIcon.of(UiIcon.PLUS, 16), new Color(46, 160, 92), true, e -> themDong());
+        JButton bt2 = UiHelper.nut("Xóa dòng cuối", UiIcon.of(UiIcon.TRASH, 16), new Color(220, 80, 80), true, e -> xoaDong());
         nut.add(bt1);
         nut.add(Box.createVerticalStrut(8));
         nut.add(bt2);
         if (!xuat) {
-            JButton btChoNhap = UiHelper.nut("⏳  Lưu chờ nhập (đặt NCC)", new Color(225, 150, 45), true, e -> luuChoNhap());
-            JButton btNhapNgay = UiHelper.nut("📥  Nhập kho ngay", new Color(37, 99, 168), true, e -> taoPhieu());
+            JButton btChoNhap = UiHelper.nut("Lưu chờ nhập (đặt NCC)", UiIcon.of(UiIcon.CLOCK, 16), new Color(225, 150, 45), true, e -> luuChoNhap());
+            JButton btNhapNgay = UiHelper.nut("Nhập kho ngay", UiIcon.of(UiIcon.IMPORT, 16), new Color(37, 99, 168), true, e -> taoPhieu());
             nut.add(Box.createVerticalStrut(8));
             nut.add(btChoNhap);
             nut.add(Box.createVerticalStrut(8));
             nut.add(btNhapNgay);
         } else {
-            JButton bt3 = UiHelper.nut("📤  Tạo phiếu xuất kho",
+            JButton bt3 = UiHelper.nut("Tạo phiếu xuất kho", UiIcon.of(UiIcon.EXPORT, 16),
                     new Color(37, 99, 168), true, e -> taoPhieu());
             nut.add(Box.createVerticalStrut(8));
             nut.add(bt3);
@@ -109,11 +109,7 @@ public class NhapKho_UI extends JPanel {
             }
         }
 
-        JPanel body = new JPanel(new BorderLayout(0, 8));
-        body.setOpaque(false);
-        body.add(form, BorderLayout.CENTER);
-        body.add(nut, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
+        UiHelper.ganNoiDungForm(formPanel, form, nut);
 
         JPanel bangPanel = UiHelper.panelBang("Chi tiết phiếu");
         modelDong = UiHelper.model("Mã PT", "Tên", "SL", "Đơn giá", "Thành tiền");

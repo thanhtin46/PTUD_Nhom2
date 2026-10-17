@@ -59,9 +59,9 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         JPanel grid = new JPanel(new GridLayout(1, 3, 14, 0));
         grid.setOpaque(false);
         grid.setBorder(new EmptyBorder(0, 0, 14, 0));
-        grid.add(the("📋", "Chờ phân công", String.valueOf(soChoPC), "Cần giao việc gấp", new Color(220, 80, 80)));
-        grid.add(the("✅", "Đã phân công", String.valueOf(soDaPC), "Đang chờ KTV nhận", new Color(225, 150, 45)));
-        grid.add(the("🔧", "Đang sửa", String.valueOf(soDangSua), "KTV đang xử lý", new Color(46, 160, 92)));
+        grid.add(the(UiIcon.of(UiIcon.CLOCK, 22, Color.WHITE), "Chờ phân công", String.valueOf(soChoPC), "Cần giao việc gấp", new Color(220, 80, 80)));
+        grid.add(the(UiIcon.of(UiIcon.CHECK, 22, Color.WHITE), "Đã phân công", String.valueOf(soDaPC), "Đang chờ KTV nhận", new Color(225, 150, 45)));
+        grid.add(the(UiIcon.of(UiIcon.WRENCH, 22, Color.WHITE), "Đang sửa", String.valueOf(soDangSua), "KTV đang xử lý", new Color(46, 160, 92)));
         JPanel wrapGrid = new JPanel(new BorderLayout());
         wrapGrid.setPreferredSize(new Dimension(0, 100));
         wrapGrid.setOpaque(false);
@@ -131,9 +131,8 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         cboKtv = new JComboBox<>();
         napComboKtv();
         cboKtv.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        cboKtv.setPreferredSize(new Dimension(280, 34));
-        JButton btnPhanCong = UiHelper.nut("👷 Phân công", new Color(37, 99, 168), e -> phanCong());
-        JButton btnBoPhanCong = UiHelper.nut("🔄 Bỏ phân công", new Color(220, 80, 80), e -> boPhanCong());
+        JButton btnPhanCong = UiHelper.nut("Phân công", UiIcon.of(UiIcon.CHECK, 15), new Color(37, 99, 168), e -> phanCong());
+        JButton btnBoPhanCong = UiHelper.nut("Bỏ phân công", UiIcon.of(UiIcon.TRASH, 15), new Color(220, 80, 80), e -> boPhanCong());
         pcPanel.add(lblKtv);
         pcPanel.add(cboKtv);
         pcPanel.add(btnPhanCong);
@@ -221,7 +220,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         napBang();
     }
 
-    private JPanel the(String icon, String ten, String so, String phuDe, Color mau) {
+    private JPanel the(Icon icon, String ten, String so, String phuDe, Color mau) {
         JPanel p = new JPanel(new BorderLayout(12, 0)) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -249,8 +248,6 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 super.paintComponent(g);
             }
         };
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
-        lblIcon.setForeground(Color.WHITE);
         lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
         lblIcon.setPreferredSize(new Dimension(48, 48));
 

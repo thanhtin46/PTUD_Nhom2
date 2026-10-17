@@ -4,6 +4,7 @@ import Entity.KhoDuLieu;
 import Entity.PhuTung;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -23,11 +24,11 @@ public class DanhSachPhuTung_UI extends JPanel {
         setBackground(UiHelper.NEN);
         add(root, BorderLayout.CENTER);
 
-        root.add(UiHelper.tieuDeTrang("📦 Quản lý phụ tùng"), BorderLayout.NORTH);
+        root.add(UiHelper.tieuDeTrang("Quản lý phụ tùng"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
         split.setResizeWeight(0);
-        split.setDividerLocation(380);
+        split.setDividerLocation(430);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -35,7 +36,7 @@ public class DanhSachPhuTung_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 380);
+        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 430);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
@@ -46,21 +47,17 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
-        nut.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", new Color(46, 160, 92), e -> them()));
-        nut.add(UiHelper.nut("Sửa", new Color(37, 99, 168), e -> sua()));
-        nut.add(UiHelper.nut("Xóa", new Color(220, 80, 80), e -> xoa()));
-        nut.add(UiHelper.nut("Làm mới", new Color(120, 130, 150), e -> lamMoi()));
+        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
+        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
+        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+        nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
-        JPanel body = new JPanel(new BorderLayout());
-        body.setOpaque(false);
-        body.add(form, BorderLayout.CENTER);
-        body.add(nut, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
+        UiHelper.ganNoiDungForm(formPanel, form, nut);
         return formPanel;
     }
 
-    private JScrollPane taoBang() {
+    private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phụ tùng");
         model = UiHelper.model("Mã PT", "Tên phụ tùng", "ĐVT", "Tồn kho", "Đơn giá");
         table = UiHelper.bang(model);
@@ -70,11 +67,7 @@ public class DanhSachPhuTung_UI extends JPanel {
         JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrap = new JScrollPane(bangPanel);
-        wrap.setBorder(null);
-        wrap.setOpaque(false);
-        wrap.getViewport().setOpaque(false);
-        return wrap;
+        return bangPanel;
     }
 
     private void napBang() {

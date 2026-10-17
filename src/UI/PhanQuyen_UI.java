@@ -29,13 +29,14 @@ public class PhanQuyen_UI extends JPanel {
             {"TONKHO",   "Báo cáo tồn kho"},
             {"NV",       "Quản lý nhân viên"},
             {"PQ",       "Phân quyền"},
+            {"HD",       "Thanh toán hóa đơn"},
             {"BCDT",     "Báo cáo doanh thu"},
     };
 
     /** Quyền mặc định theo vai trò */
     private static final String[][] QUYEN_MAC_DINH = {
-            {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,TONKHO,NV,PQ,BCDT"},
-            {"Nhân viên tiếp tân", "KH,PT,BH"},
+            {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,TONKHO,NV,PQ,HD,BCDT"},
+            {"Nhân viên tiếp tân", "KH,PT,BH,HD"},
             {"Nhân viên sửa chữa", "SC,TD,TONKHO"},
             {"Nhân viên kho",      "PHUTUNG,NHAPKHO,XUATKHO,TONKHO"},
     };
@@ -77,7 +78,7 @@ public class PhanQuyen_UI extends JPanel {
         napBang();
     }
 
-    private JScrollPane taoBang() {
+    private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách tài khoản");
         model = UiHelper.model("Mã NV", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái", "Số quyền");
         table = UiHelper.bang(model);
@@ -87,11 +88,7 @@ public class PhanQuyen_UI extends JPanel {
         JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrap = new JScrollPane(bangPanel);
-        wrap.setBorder(null);
-        wrap.setOpaque(false);
-        wrap.getViewport().setOpaque(false);
-        return wrap;
+        return bangPanel;
     }
 
     private JPanel taoForm() {
@@ -125,15 +122,21 @@ public class PhanQuyen_UI extends JPanel {
                 new javax.swing.border.LineBorder(new Color(220, 228, 240)),
                 "Quyền truy cập các module",
                 0, 0, new Font("Segoe UI", Font.BOLD, 12), new Color(37, 99, 168)));
-        spQuyen.setPreferredSize(new Dimension(0, 280));
+        spQuyen.setPreferredSize(new Dimension(0, 260));
 
         // Nút hành động
         JPanel nutPanel = new JPanel(new GridLayout(1, 3, 8, 0));
         nutPanel.setOpaque(false);
         nutPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
-        nutPanel.add(UiHelper.nut("Mặc định theo vai trò", new Color(37, 99, 168), e -> apDungMacDinh()));
-        nutPanel.add(UiHelper.nut("Chọn tất cả", new Color(46, 160, 92), e -> chonTatCa()));
-        nutPanel.add(UiHelper.nut("Lưu thay đổi", new Color(225, 150, 45), e -> luuQuyen()));
+        JButton btnMacDinh = UiHelper.nut("Mặc định vai trò", UiIcon.of(UiIcon.REFRESH, 15), new Color(37, 99, 168), e -> apDungMacDinh());
+        JButton btnTatCa = UiHelper.nut("Chọn tất cả", UiIcon.of(UiIcon.PLUS, 15), new Color(46, 160, 92), e -> chonTatCa());
+        JButton btnLuu = UiHelper.nut("Lưu thay đổi", UiIcon.of(UiIcon.CHECK, 15), new Color(225, 150, 45), e -> luuQuyen());
+        btnMacDinh.setBorder(new EmptyBorder(8, 4, 8, 4));
+        btnTatCa.setBorder(new EmptyBorder(8, 4, 8, 4));
+        btnLuu.setBorder(new EmptyBorder(8, 4, 8, 4));
+        nutPanel.add(btnMacDinh);
+        nutPanel.add(btnTatCa);
+        nutPanel.add(btnLuu);
 
         JPanel body = new JPanel(new BorderLayout(0, 8));
         body.setOpaque(false);
@@ -141,6 +144,7 @@ public class PhanQuyen_UI extends JPanel {
         body.add(spQuyen, BorderLayout.CENTER);
         body.add(nutPanel, BorderLayout.SOUTH);
         formPanel.add(body, BorderLayout.CENTER);
+
         return formPanel;
     }
 
