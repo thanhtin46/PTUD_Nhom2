@@ -329,7 +329,14 @@ public final class UiHelper {
         if (full) {
             b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         } else {
-            b.setPreferredSize(new Dimension(92, 38));
+            int calcW = 92;
+            if (bText != null && !bText.isEmpty()) {
+                FontMetrics fm = b.getFontMetrics(b.getFont());
+                int textW = fm.stringWidth(bText);
+                int iconW = bIcon != null ? (bIcon.getIconWidth() + 10) : 0;
+                calcW = Math.max(92, textW + iconW + 24);
+            }
+            b.setPreferredSize(new Dimension(calcW, 38));
         }
         if (hanhDong != null) b.addActionListener(hanhDong);
         return b;

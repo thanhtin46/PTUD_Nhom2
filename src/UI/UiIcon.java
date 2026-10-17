@@ -31,6 +31,10 @@ public class UiIcon implements Icon {
     public static final String BOX = "box";
     public static final String BILL = "bill";
     public static final String CLOSE = "close";
+    public static final String SETTINGS = "settings";
+    public static final String HOME = "home";
+    public static final String CHART = "chart";
+    public static final String FILE = "file";
 
     private final String type;
     private final int size;
@@ -319,6 +323,58 @@ public class UiIcon implements Icon {
                 g2.setStroke(new BasicStroke(2.0f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g2.draw(new Line2D.Float(4.0f * s, 4.0f * s, 12.0f * s, 12.0f * s));
                 g2.draw(new Line2D.Float(12.0f * s, 4.0f * s, 4.0f * s, 12.0f * s));
+            }
+            case SETTINGS, "cog" -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.draw(new Ellipse2D.Float(5.5f * s, 5.5f * s, 5.0f * s, 5.0f * s));
+                for (int i = 0; i < 8; i++) {
+                    double rad = Math.toRadians(i * 45);
+                    float x1 = 8.0f * s + (float)(Math.cos(rad) * 3.8f * s);
+                    float y1 = 8.0f * s + (float)(Math.sin(rad) * 3.8f * s);
+                    float x2 = 8.0f * s + (float)(Math.cos(rad) * 6.5f * s);
+                    float y2 = 8.0f * s + (float)(Math.sin(rad) * 6.5f * s);
+                    g2.draw(new Line2D.Float(x1, y1, x2, y2));
+                }
+            }
+            case HOME -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                Path2D.Float mai = new Path2D.Float();
+                mai.moveTo(2.0f * s, 7.5f * s);
+                mai.lineTo(8.0f * s, 2.5f * s);
+                mai.lineTo(14.0f * s, 7.5f * s);
+                g2.draw(mai);
+                Path2D.Float nha = new Path2D.Float();
+                nha.moveTo(3.8f * s, 7.2f * s);
+                nha.lineTo(3.8f * s, 13.5f * s);
+                nha.lineTo(12.2f * s, 13.5f * s);
+                nha.lineTo(12.2f * s, 7.2f * s);
+                g2.draw(nha);
+                g2.draw(new Line2D.Float(6.5f * s, 13.5f * s, 6.5f * s, 9.5f * s));
+                g2.draw(new Line2D.Float(6.5f * s, 9.5f * s, 9.5f * s, 9.5f * s));
+                g2.draw(new Line2D.Float(9.5f * s, 9.5f * s, 9.5f * s, 13.5f * s));
+            }
+            case FILE, "document" -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                Path2D.Float to = new Path2D.Float();
+                to.moveTo(3.2f * s, 2.2f * s);
+                to.lineTo(9.5f * s, 2.2f * s);
+                to.lineTo(12.8f * s, 5.5f * s);
+                to.lineTo(12.8f * s, 13.8f * s);
+                to.lineTo(3.2f * s, 13.8f * s);
+                to.closePath();
+                g2.draw(to);
+                g2.draw(new Line2D.Float(9.5f * s, 2.2f * s, 9.5f * s, 5.5f * s));
+                g2.draw(new Line2D.Float(9.5f * s, 5.5f * s, 12.8f * s, 5.5f * s));
+                g2.draw(new Line2D.Float(5.5f * s, 8.2f * s, 10.5f * s, 8.2f * s));
+                g2.draw(new Line2D.Float(5.5f * s, 10.8f * s, 9.2f * s, 10.8f * s));
+            }
+            case CHART, "barchart" -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.draw(new Line2D.Float(2.5f * s, 13.8f * s, 13.5f * s, 13.8f * s));
+                g2.draw(new Line2D.Float(2.5f * s, 2.5f * s, 2.5f * s, 13.8f * s));
+                g2.fill(new RoundRectangle2D.Float(4.5f * s, 9.0f * s, 2.0f * s, 4.8f * s, 1.0f * s, 1.0f * s));
+                g2.fill(new RoundRectangle2D.Float(7.5f * s, 5.5f * s, 2.0f * s, 8.3f * s, 1.0f * s, 1.0f * s));
+                g2.fill(new RoundRectangle2D.Float(10.5f * s, 3.2f * s, 2.0f * s, 10.6f * s, 1.0f * s, 1.0f * s));
             }
             default -> {
                 g2.setStroke(new BasicStroke(2.0f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
