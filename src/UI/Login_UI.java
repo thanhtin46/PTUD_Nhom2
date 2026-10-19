@@ -334,22 +334,36 @@ public class Login_UI extends JFrame {
         String tk = txtTaiKhoan.getText().trim();
         String mk = new String(txtMatKhau.getPassword()).trim();
 
-        NhanVien nv = null;
-        for (NhanVien n : danhSachNhanVien) {
-            if (!n.getTaiKhoan().equals(tk)) continue;
-            if (!n.getMatKhau().equals(mk)) continue;
-            if (!n.dangHoatDong()) {
+        if (tk.isEmpty() || mk.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!",
+                    "Chưa nhập thông tin",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 1. Kiểm tra xác thực trực tiếp qua CSDL SQL Server bằng ConnectDB
+        DAO.NhanVien_DAO nvDao = new DAO.NhanVien_DAO();
+        NhanVien nv = nvDao.kiemTraDangNhap(tk, mk);
+
+        // 2. Dự phòng nếu danh sách trong bộ nhớ có tài khoản
+        if (nv == null && danhSachNhanVien != null) {
+            for (NhanVien n : danhSachNhanVien) {
+                if (n.getTaiKhoan() != null && n.getTaiKhoan().equals(tk) && n.getMatKhau() != null && n.getMatKhau().equals(mk)) {
+                    nv = n;
+                    break;
+                }
+            }
+        }
+
+        if (nv != null) {
+            if (!nv.dangHoatDong()) {
                 JOptionPane.showMessageDialog(this,
                         "Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ quản lý!",
                         "Không thể đăng nhập",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            nv = n;
-            break;
-        }
-
-        if (nv != null) {
             dispose();
             new Main_UI(nv, danhSachNhanVien).setVisible(true);
         } else {
