@@ -153,7 +153,7 @@ public class DuLieu_DAO {
                      "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
-                     "ISNULL(SUM(ct.thanhTien), 0) AS tongTien " +
+                     "ISNULL(SUM(ct.soLuong * ct.donGia), 0) AS tongTien " +
                      "FROM HoaDon hd " +
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
