@@ -192,50 +192,34 @@ public class KhoDuLieu {
         return ds;
     }
 
+    public void dongBoTuSQLServer() {
+        khachHangs.clear();
+        phuongTiens.clear();
+        phuTungs.clear();
+        phieuTiepNhans.clear();
+        phieuBaoHanhs.clear();
+        hoaDons.clear();
+
+        DAO.DuLieu_DAO dao = new DAO.DuLieu_DAO();
+
+        // Nạp dữ liệu chuẩn từ SQL Server
+        khachHangs.addAll(dao.layTatCaKhachHang());
+        phuongTiens.addAll(dao.layTatCaPhuongTien());
+        phuTungs.addAll(dao.layTatCaPhuTung());
+        phieuTiepNhans.addAll(dao.layTatCaPhieuTiepNhan());
+        phieuBaoHanhs.addAll(dao.layTatCaPhieuBaoHanh());
+        hoaDons.addAll(dao.layTatCaHoaDon());
+
+        demTiepNhan = phieuTiepNhans.size();
+        demBaoHanh = phieuBaoHanhs.size();
+        demHoaDon = hoaDons.size();
+
+        ghiNhatKy("Hệ thống", "Hệ thống", "Đồng bộ CSDL SQL Server", NhatKyHeThong.INFO,
+                "Đã đồng bộ thành công " + khachHangs.size() + " khách hàng, " +
+                phuongTiens.size() + " xe, " + phuTungs.size() + " phụ tùng từ SQL Server");
+    }
+
     private void seed() {
-        khachHangs.add(new KhachHang("KH001", "Nguyễn Văn A", "0901234567", "079090012345",
-                "123 Lê Lợi, Q.1, TP.HCM", "nguyenvana@example.com", "Khách VIP, Thân thiết", "01/01/2023"));
-        khachHangs.add(new KhachHang("KH002", "Trần Thị B", "0909676543", "080090012456",
-                "456 Nguyễn Trãi, Q.5, TP.HCM", "tranthib@example.com", "", "15/02/2023"));
-        khachHangs.add(new KhachHang("KH003", "Lê Văn C", "0912345678", "070090234567",
-                "789 Cách Mạng Tháng 8, Q.3, TP.HCM", "levanc@example.com", "", "20/03/2023"));
-
-        phuongTiens.add(new PhuongTien("51A-123.45", "Toyota", "Vios 2021", "WBA3A5C5EF0MVIK91",
-                "EN123456", "Trắng", "2021", "45000", "KH001", "22/01/2024"));
-        phuongTiens.add(new PhuongTien("59C-678.90", "Honda", "City", "RLHRE1820LY000123",
-                "L15Z1234", "Đen", "2020", "62000", "KH002", "23/01/2024"));
-        phuongTiens.add(new PhuongTien("60A-111.22", "Hyundai", "Accent", "MALBB51BLLM123456",
-                "G4LC7890", "Bạc", "2019", "80000", "KH003", "15/11/2023"));
-
-        phuTungs.add(new PhuTung("PT001", "Dầu nhớt 4L", "Chai", 20, 350000, 5));
-        phuTungs.add(new PhuTung("PT002", "Lọc gió động cơ", "Cái", 35, 180000, 10));
-        phuTungs.add(new PhuTung("PT003", "Má phanh trước", "Bộ", 3, 850000, 5));    // SẮP HẾT
-        phuTungs.add(new PhuTung("PT004", "Bugi iridium", "Cái", 40, 220000, 8));
-        phuTungs.add(new PhuTung("PT005", "Bộ dây curoa", "Bộ", 0, 1200000, 2));   // HẾT HÀNG
-
-        phieuTiepNhans.add(new PhieuTiepNhan("TN001", "KH001", "Nguyễn Văn A", "0901234567",
-                "51A-123.45", "Toyota", "Vios 2021", "22/01/2024",
-                "Bảo dưỡng định kỳ", "Hoàn thành", "Nguyễn Văn Tiếp Tân", 1500000));
-        phieuTiepNhans.add(new PhieuTiepNhan("TN002", "KH002", "Trần Thị B", "0909676543",
-                "59C-678.90", "Honda", "City", "23/01/2024",
-                "Kiểm tra phanh", "Đang sửa", "Nguyễn Văn Tiếp Tân", 0));
-        phieuTiepNhans.add(new PhieuTiepNhan("TN003", "KH003", "Lê Văn C", "0912345678",
-                "60A-111.22", "Hyundai", "Accent", "15/11/2023",
-                "Thay dầu nhớt", "Chờ tiếp nhận", "Nguyễn Văn Tiếp Tân", 0));
-
-        phieuBaoHanhs.add(new PhieuBaoHanh("BH001", "51A-123.45", "22/01/2024", "22/01/2025",
-                "Nguyễn Văn Tiếp Tân", "Còn hạn", "Bảo hành sau bảo dưỡng"));
-        phieuBaoHanhs.add(new PhieuBaoHanh("BH002", "59C-678.90", "23/01/2024", "23/07/2024",
-                "Nguyễn Văn Tiếp Tân", "Hết hạn", "Bảo hành má phanh"));
-
-        hoaDons.add(new HoaDon("HD001", "TN001", "KH001", "Nguyễn Văn A", "0901234567",
-                "51A-123.45", "22/01/2024", 800000, 700000, 0, 1500000,
-                "Chuyển khoản", "Nguyễn Văn Tiếp Tân", "Khách thanh toán chuyển khoản Vietcombank", HoaDon.DA_THANH_TOAN));
-
-        nhatKyList.add(new NhatKyHeThong("Hệ thống", "Hệ thống", "Khởi động ứng dụng", NhatKyHeThong.INFO, "Khởi động thành công mô-đun dữ liệu Gara The T4"));
-        nhatKyList.add(new NhatKyHeThong("NV01", "Nhân viên tiếp tân", "Thanh toán hóa đơn", NhatKyHeThong.INFO, "Lập và thu tiền hóa đơn HD001 - Khách: Nguyễn Văn A (1,500,000 đ)"));
-        nhatKyList.add(new NhatKyHeThong("NV02", "Nhân viên sửa chữa", "Tiếp nhận sửa chữa", NhatKyHeThong.INFO, "Tiếp nhận xe 59C-678.90 - Yêu cầu: Kiểm tra phanh"));
-        nhatKyList.add(new NhatKyHeThong("Hệ thống", "Cảnh báo tự động", "Cảnh báo tồn kho", NhatKyHeThong.WARN, "Phụ tùng PT005 (Bộ dây curoa) đã hết hàng (Tồn = 0)"));
-        nhatKyList.add(new NhatKyHeThong("NV04", "Quản lý", "Đăng nhập hệ thống", NhatKyHeThong.INFO, "Quản lý tổng NV04 đăng nhập từ trạm Admin"));
+        dongBoTuSQLServer();
     }
 }

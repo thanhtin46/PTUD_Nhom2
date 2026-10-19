@@ -273,7 +273,7 @@ public class Login_UI extends JFrame {
         boxGoiY.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
         boxGoiY.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblTdeGoiY = new JLabel("Tài khoản demo (bấm để chọn nhanh):");
+        JLabel lblTdeGoiY = new JLabel("Tài khoản hệ thống (bấm để chọn nhanh):");
         lblTdeGoiY.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTdeGoiY.setForeground(new Color(51, 65, 85));
 
