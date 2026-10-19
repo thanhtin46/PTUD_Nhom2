@@ -8,18 +8,8 @@ public class ConnectDB {
     private static ConnectDB instance = new ConnectDB();
     private Connection connection = null;
 
-    // Chuỗi kết nối tới cơ sở dữ liệu QuanLySuaChuaXe trên SQL Server qua cổng 1433
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;integratedSecurity=true;encrypt=true;trustServerCertificate=true;";
-
-    static {
-        try {
-            String libPath = new java.io.File("lib").getAbsolutePath();
-            String cur = System.getProperty("java.library.path");
-            if (cur == null || !cur.contains(libPath)) {
-                System.setProperty("java.library.path", libPath + java.io.File.pathSeparator + (cur != null ? cur : ""));
-            }
-        } catch (Exception ignored) {}
-    }
+    // Chuỗi kết nối trực tiếp qua tài khoản sa chuẩn SQL Server (không phụ thuộc vào file DLL của Windows)
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;user=sa;password=sapassword123@;encrypt=true;trustServerCertificate=true;";
 
     public static ConnectDB getInstance() {
         return instance;
