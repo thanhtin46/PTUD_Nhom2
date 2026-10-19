@@ -30,7 +30,17 @@ public class CapNhatTienDo_UI extends JPanel {
                 cboTienDo.setSelectedItem(model.getValueAt(table.getSelectedRow(), 4).toString());
             }
         });
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
+        table.getColumnModel().getColumn(1).setPreferredWidth(110);  // Biển số
+        table.getColumnModel().getColumn(2).setPreferredWidth(160);  // Khách
+        table.getColumnModel().getColumn(3).setPreferredWidth(220);  // Yêu cầu
+        table.getColumnModel().getColumn(4).setPreferredWidth(130);  // Tiến độ
+        table.getColumnModel().getColumn(5).setPreferredWidth(120);  // Thành tiền
+
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
 

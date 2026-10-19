@@ -34,7 +34,19 @@ public class TraCuuBaoHanh_UI extends JPanel {
         txtTuKhoa.addActionListener(e -> napBang());
         bangPanel.add(tim, BorderLayout.NORTH);
 
-        JScrollPane sp = new JScrollPane(UiHelper.bang(model));
+        JTable table = UiHelper.bang(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
+        table.getColumnModel().getColumn(1).setPreferredWidth(110);  // Biển số
+        table.getColumnModel().getColumn(2).setPreferredWidth(110);  // Ngày BĐ
+        table.getColumnModel().getColumn(3).setPreferredWidth(110);  // Ngày KT
+        table.getColumnModel().getColumn(4).setPreferredWidth(160);  // Người lập
+        table.getColumnModel().getColumn(5).setPreferredWidth(120);  // Tình trạng
+        table.getColumnModel().getColumn(6).setPreferredWidth(250);  // Nội dung
+
+        JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
 

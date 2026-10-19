@@ -112,7 +112,17 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 }
             }
         });
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
+        bang.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
+        bang.getColumnModel().getColumn(2).setPreferredWidth(110);  // Biển số
+        bang.getColumnModel().getColumn(3).setPreferredWidth(250);  // Yêu cầu
+        bang.getColumnModel().getColumn(4).setPreferredWidth(160);  // KTV phụ trách
+        bang.getColumnModel().getColumn(5).setPreferredWidth(130);  // Tiến độ
+
         JScrollPane sp = new JScrollPane(bang);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
         JScrollPane wrapBang = new JScrollPane(bangPanel);

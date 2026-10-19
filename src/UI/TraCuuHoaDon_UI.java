@@ -140,7 +140,24 @@ public class TraCuuHoaDon_UI extends JPanel {
             }
         });
 
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã HĐ
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Số phiếu SC
+        table.getColumnModel().getColumn(2).setPreferredWidth(160);  // Khách hàng
+        table.getColumnModel().getColumn(3).setPreferredWidth(110);  // SĐT
+        table.getColumnModel().getColumn(4).setPreferredWidth(110);  // Biển số xe
+        table.getColumnModel().getColumn(5).setPreferredWidth(120);  // Ngày thanh toán
+        table.getColumnModel().getColumn(6).setPreferredWidth(130);  // Phương thức TT
+        table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Tiền công
+        table.getColumnModel().getColumn(8).setPreferredWidth(120);  // Tiền phụ tùng
+        table.getColumnModel().getColumn(9).setPreferredWidth(90);   // Giảm giá
+        table.getColumnModel().getColumn(10).setPreferredWidth(120); // Tổng tiền
+        table.getColumnModel().getColumn(11).setPreferredWidth(150); // Thu ngân lập
+        table.getColumnModel().getColumn(12).setPreferredWidth(120); // Trạng thái
+
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
 

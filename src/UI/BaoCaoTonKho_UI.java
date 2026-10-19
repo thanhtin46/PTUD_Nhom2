@@ -116,7 +116,19 @@ public class BaoCaoTonKho_UI extends JPanel {
                 return c;
             }
         });
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã PT
+        bang.getColumnModel().getColumn(1).setPreferredWidth(200);  // Tên phụ tùng
+        bang.getColumnModel().getColumn(2).setPreferredWidth(70);   // ĐVT
+        bang.getColumnModel().getColumn(3).setPreferredWidth(90);   // Tồn kho
+        bang.getColumnModel().getColumn(4).setPreferredWidth(90);   // Tối thiểu
+        bang.getColumnModel().getColumn(5).setPreferredWidth(120);  // Cảnh báo
+        bang.getColumnModel().getColumn(6).setPreferredWidth(120);  // Đơn giá
+        bang.getColumnModel().getColumn(7).setPreferredWidth(140);  // Giá trị tồn
+
         JScrollPane sp = new JScrollPane(bang);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
         JScrollPane wrapBang = new JScrollPane(bangPanel);

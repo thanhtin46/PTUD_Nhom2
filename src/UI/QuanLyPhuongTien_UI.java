@@ -106,10 +106,26 @@ public class QuanLyPhuongTien_UI extends JPanel {
         model = UiHelper.model("Biển số", "Hãng", "Dòng xe", "VIN", "Màu", "Năm", "ODO (km)",
                 "Mã chủ", "Tên chủ", "SĐT", "Tiếp nhận gần nhất");
         table = UiHelper.bang(model);
+
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(110);  // Biển số
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Hãng
+        table.getColumnModel().getColumn(2).setPreferredWidth(120);  // Dòng xe
+        table.getColumnModel().getColumn(3).setPreferredWidth(170);  // VIN
+        table.getColumnModel().getColumn(4).setPreferredWidth(80);   // Màu
+        table.getColumnModel().getColumn(5).setPreferredWidth(70);   // Năm
+        table.getColumnModel().getColumn(6).setPreferredWidth(90);   // ODO
+        table.getColumnModel().getColumn(7).setPreferredWidth(90);   // Mã chủ
+        table.getColumnModel().getColumn(8).setPreferredWidth(160);  // Tên chủ
+        table.getColumnModel().getColumn(9).setPreferredWidth(110);  // SĐT
+        table.getColumnModel().getColumn(10).setPreferredWidth(140); // Tiếp nhận gần nhất
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
         });
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
         return bangPanel;

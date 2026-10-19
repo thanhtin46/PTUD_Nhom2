@@ -74,7 +74,19 @@ public class TraCuuKhachHang_UI extends JPanel {
 
         // Bảng danh sách
         table = UiHelper.bang(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã KH
+        table.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
+        table.getColumnModel().getColumn(2).setPreferredWidth(110);  // SĐT
+        table.getColumnModel().getColumn(3).setPreferredWidth(130);  // CCCD
+        table.getColumnModel().getColumn(4).setPreferredWidth(220);  // Địa chỉ
+        table.getColumnModel().getColumn(5).setPreferredWidth(180);  // Email
+        table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Ghi chú
+        table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Ngày ĐK
+
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
 

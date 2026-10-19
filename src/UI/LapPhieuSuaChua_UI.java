@@ -75,7 +75,22 @@ public class LapPhieuSuaChua_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu sửa chữa");
         model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Loại", "Ngày", "Yêu cầu", "Tiến độ", "Thành tiền");
         JTable table = UiHelper.bang(model);
+
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
+        table.getColumnModel().getColumn(1).setPreferredWidth(110);  // SĐT
+        table.getColumnModel().getColumn(2).setPreferredWidth(160);  // Họ tên
+        table.getColumnModel().getColumn(3).setPreferredWidth(110);  // Biển số
+        table.getColumnModel().getColumn(4).setPreferredWidth(90);   // Hãng
+        table.getColumnModel().getColumn(5).setPreferredWidth(110);  // Loại
+        table.getColumnModel().getColumn(6).setPreferredWidth(100);  // Ngày
+        table.getColumnModel().getColumn(7).setPreferredWidth(200);  // Yêu cầu
+        table.getColumnModel().getColumn(8).setPreferredWidth(120);  // Tiến độ
+        table.getColumnModel().getColumn(9).setPreferredWidth(120);  // Thành tiền
+
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
         return bangPanel;
