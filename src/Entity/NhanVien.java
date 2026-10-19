@@ -13,16 +13,23 @@ import java.util.Set;
  * - UC014: cacQuyen = danh sách mã module được phép truy cập.
  */
 public class NhanVien {
-    public static final String DANG_LAM = "DANG_LAM";
-    public static final String NGUNG    = "NGUNG";
+    public static final String DANG_LAM  = "DANG_LAM";
+    public static final String NGHI_PHEP = "NGHI_PHEP";
+    public static final String THU_VIEC  = "THU_VIEC";
+    public static final String NGUNG     = "NGUNG";
 
     private String maNV;
     private String hoTen;
     private String taiKhoan;
     private String matKhau;
     private String vaiTro;
-    private String trangThai;        // DANG_LAM | NGUNG
+    private String trangThai;        // DANG_LAM | NGHI_PHEP | THU_VIEC | NGUNG
     private String[] cacQuyen;       // UC014: mã module, vd {"KH","PT","BH"}
+    private String soDT;
+    private String email;
+    private String bacNghe;          // Bậc 4/7, Kỹ sư Ô tô ĐHBK, Cử nhân...
+    private String boPhan;           // Ban Cố Vấn Dịch Vụ, Xưởng Sửa Chữa...
+    private String ngayVaoLam;
 
     public NhanVien(String maNV, String hoTen,
                     String taiKhoan, String matKhau,
@@ -39,6 +46,13 @@ public class NhanVien {
     public NhanVien(String maNV, String hoTen,
                     String taiKhoan, String matKhau,
                     String vaiTro, String trangThai, String[] cacQuyen) {
+        this(maNV, hoTen, taiKhoan, matKhau, vaiTro, trangThai, cacQuyen, null, null, null, null, null);
+    }
+
+    public NhanVien(String maNV, String hoTen,
+                    String taiKhoan, String matKhau,
+                    String vaiTro, String trangThai, String[] cacQuyen,
+                    String soDT, String email, String bacNghe, String boPhan, String ngayVaoLam) {
         this.maNV = maNV;
         this.hoTen = hoTen;
         this.taiKhoan = taiKhoan;
@@ -46,6 +60,11 @@ public class NhanVien {
         this.vaiTro = vaiTro;
         this.trangThai = trangThai == null ? DANG_LAM : trangThai;
         this.cacQuyen = cacQuyen;
+        this.soDT = soDT;
+        this.email = email;
+        this.bacNghe = bacNghe;
+        this.boPhan = boPhan;
+        this.ngayVaoLam = ngayVaoLam;
     }
 
     public String getMaNV() { return maNV; }
@@ -70,6 +89,63 @@ public class NhanVien {
 
     public String[] getCacQuyen() { return cacQuyen; }
     public void setCacQuyen(String[] cacQuyen) { this.cacQuyen = cacQuyen; }
+
+    public String getSoDT() {
+        if (soDT == null || soDT.trim().isEmpty()) {
+            return "09" + String.format("%08d", Math.abs((maNV != null ? maNV.hashCode() : 12345678) % 100000000));
+        }
+        return soDT;
+    }
+    public void setSoDT(String soDT) { this.soDT = soDT; }
+
+    public String getEmail() {
+        if (email == null || email.trim().isEmpty()) {
+            String uname = taiKhoan != null && !taiKhoan.isEmpty() ? taiKhoan.toLowerCase() : (maNV != null ? maNV.toLowerCase() : "nv");
+            return uname + "@garaauto.vn";
+        }
+        return email;
+    }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getBacNghe() {
+        if (bacNghe == null || bacNghe.trim().isEmpty()) {
+            if (vaiTro == null) return "Thợ bậc 3/7";
+            String vt = vaiTro.toLowerCase();
+            if (vt.contains("quản lý") || vt.contains("admin")) return "Kỹ sư Ô tô ĐHBK";
+            if (vt.contains("tiếp tân") || vt.contains("cố vấn")) return "Cử nhân Quản trị";
+            if (vt.contains("thu ngân") || vt.contains("kế toán")) return "Cử nhân Kế toán";
+            if (vt.contains("kho")) return "Trung cấp Vật tư";
+            if (vt.contains("học việc") || vt.contains("thử việc")) return "Trung cấp Nghề";
+            if (vt.contains("trưởng tổ") || vt.contains("ktv trưởng")) return "Thợ bậc 5/7";
+            return "Thợ bậc 4/7";
+        }
+        return bacNghe;
+    }
+    public void setBacNghe(String bacNghe) { this.bacNghe = bacNghe; }
+
+    public String getBoPhan() {
+        if (boPhan == null || boPhan.trim().isEmpty()) {
+            if (vaiTro == null) return "Xưởng Sửa Chữa";
+            String vt = vaiTro.toLowerCase();
+            if (vt.contains("quản lý") || vt.contains("admin")) return "Ban Điều Hành Gara";
+            if (vt.contains("tiếp tân") || vt.contains("cố vấn")) return "Ban Cố Vấn Dịch Vụ";
+            if (vt.contains("thu ngân") || vt.contains("kế toán")) return "Phòng Tài Chính - Kế Toán";
+            if (vt.contains("kho")) return "Kho Vật Tư & Phụ Tùng";
+            if (vt.contains("học việc") || vt.contains("thử việc")) return "Tổ Học Việc Kỹ Thuật";
+            if (vt.contains("điện") || vt.contains("lạnh")) return "Tổ Điện - Điện Tử";
+            return "Xưởng Sửa Chữa Lớn";
+        }
+        return boPhan;
+    }
+    public void setBoPhan(String boPhan) { this.boPhan = boPhan; }
+
+    public String getNgayVaoLam() {
+        if (ngayVaoLam == null || ngayVaoLam.trim().isEmpty()) {
+            return "15/06/2021";
+        }
+        return ngayVaoLam;
+    }
+    public void setNgayVaoLam(String ngayVaoLam) { this.ngayVaoLam = ngayVaoLam; }
 
     /** Kiểm tra có quyền truy cập 1 module không. */
     public boolean coQuyen(String maModule) {

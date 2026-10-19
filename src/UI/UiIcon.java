@@ -30,6 +30,8 @@ public class UiIcon implements Icon {
     public static final String SHIELD = "shield";
     public static final String BOX = "box";
     public static final String BILL = "bill";
+    public static final String EYE = "eye";
+    public static final String KEY = "key";
     public static final String CLOSE = "close";
     public static final String SETTINGS = "settings";
     public static final String HOME = "home";
@@ -318,6 +320,24 @@ public class UiIcon implements Icon {
                 g2.draw(new Line2D.Float(5.0f * s, 5.5f * s, 11.0f * s, 5.5f * s));
                 g2.draw(new Line2D.Float(5.0f * s, 8.5f * s, 11.0f * s, 8.5f * s));
                 g2.draw(new Line2D.Float(5.0f * s, 11.5f * s, 9.0f * s, 11.5f * s));
+            }
+            case EYE -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                Path2D.Float eye = new Path2D.Float();
+                eye.moveTo(2.0f * s, 8.0f * s);
+                eye.curveTo(4.5f * s, 3.5f * s, 11.5f * s, 3.5f * s, 14.0f * s, 8.0f * s);
+                eye.curveTo(11.5f * s, 12.5f * s, 4.5f * s, 12.5f * s, 2.0f * s, 8.0f * s);
+                eye.closePath();
+                g2.draw(eye);
+                g2.draw(new Ellipse2D.Float(6.2f * s, 6.2f * s, 3.6f * s, 3.6f * s));
+                g2.fill(new Ellipse2D.Float(7.3f * s, 7.3f * s, 1.4f * s, 1.4f * s));
+            }
+            case KEY -> {
+                g2.setStroke(new BasicStroke(1.5f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.draw(new Ellipse2D.Float(2.5f * s, 2.5f * s, 5.5f * s, 5.5f * s));
+                g2.draw(new Line2D.Float(6.8f * s, 6.8f * s, 13.5f * s, 13.5f * s));
+                g2.draw(new Line2D.Float(11.0f * s, 11.0f * s, 12.5f * s, 9.5f * s));
+                g2.draw(new Line2D.Float(12.5f * s, 12.5f * s, 14.0f * s, 11.0f * s));
             }
             case CLOSE -> {
                 g2.setStroke(new BasicStroke(2.0f * s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));

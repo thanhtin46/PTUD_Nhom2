@@ -918,21 +918,17 @@ public class ThanhToanHoaDon_UI extends JPanel {
                 HoaDon.DA_THANH_TOAN
         );
 
-        kho.getHoaDons().add(hd);
+        boolean ok = kho.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05");
 
-        // Chuyển tiến độ phiếu sửa chữa thành "Hoàn thành"
+        // Chuyển tiến độ phiếu sửa chữa thành "Hoàn thành" và đồng bộ CSDL
         if (ptn != null) {
-            ptn.setTienDo("Hoàn thành");
+            kho.capNhatTienDoPhieuTiepNhan(soPhieu, "Hoàn thành", null);
         }
-
-        kho.ghiNhatKy(nguoiThu, nvHienTai != null ? nvHienTai.getVaiTro() : "Thu ngân",
-                "Thanh toán hóa đơn", "INFO",
-                "Thu tiền hóa đơn " + hd.getMaHD() + " (" + UiHelper.tien(tong) + " đ) - Khách: " + hd.getTenKH() + " - PT: " + phuongThucChon);
 
         napBangHoaDon();
 
         int hoiIn = JOptionPane.showConfirmDialog(this,
-                "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!\n"
+                "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!" + (ok ? " (Đã lưu CSDL SQL Server)\n" : "\n")
                         + "Số tiền: " + UiHelper.tien(tong) + " đ (" + phuongThucChon + ")\n"
                         + "Phiếu tiếp nhận " + soPhieu + " đã hoàn tất.\n\n"
                         + "Bạn có muốn IN HÓA ĐƠN ngay bây giờ không?",

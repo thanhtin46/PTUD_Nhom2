@@ -74,13 +74,9 @@ public class CapNhatTienDo_UI extends JPanel {
             return;
         }
         String so = model.getValueAt(dong, 0).toString();
-        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            if (p.getSoPhieu().equals(so)) {
-                p.setTienDo(String.valueOf(cboTienDo.getSelectedItem()));
-                break;
-            }
-        }
+        String tienDoMoi = String.valueOf(cboTienDo.getSelectedItem());
+        boolean ok = kho.capNhatTienDoPhieuTiepNhan(so, tienDoMoi, null);
         napBang();
-        JOptionPane.showMessageDialog(this, "Đã cập nhật tiến độ!");
+        JOptionPane.showMessageDialog(this, ok ? "Đã cập nhật tiến độ và đồng bộ CSDL SQL Server!" : "Đã cập nhật tiến độ!");
     }
 }

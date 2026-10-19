@@ -107,7 +107,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
                 "Mã chủ", "Tên chủ", "SĐT", "Tiếp nhận gần nhất");
         table = UiHelper.bang(model);
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
         table.getColumnModel().getColumn(0).setPreferredWidth(110);  // Biển số
         table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Hãng
         table.getColumnModel().getColumn(2).setPreferredWidth(120);  // Dòng xe
@@ -151,15 +151,16 @@ public class QuanLyPhuongTien_UI extends JPanel {
             return;
         }
         String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        kho.getPhuongTiens().add(new PhuongTien(
+        PhuongTien xe = new PhuongTien(
                 txtBienSo.getText().trim(),
                 String.valueOf(cboHang.getSelectedItem()),
                 String.valueOf(cboDong.getSelectedItem()),
                 txtSoKhung.getText().trim(), txtSoMay.getText().trim(), txtMauSon.getText().trim(),
-                txtNamSX.getText().trim(), txtOdo.getText().trim(), maChu, ngayHomNay));
+                txtNamSX.getText().trim(), txtOdo.getText().trim(), maChu, ngayHomNay);
+        boolean ok = kho.themPhuongTien(xe);
         napBang();
         lamMoi();
-        JOptionPane.showMessageDialog(this, "Thêm xe thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Thêm xe và lưu CSDL SQL Server thành công!" : "Thêm xe thành công!");
     }
 
     private void xoa() {
@@ -171,9 +172,10 @@ public class QuanLyPhuongTien_UI extends JPanel {
         if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa xe này?",
                 "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         String bienSo = model.getValueAt(dong, 0).toString();
-        kho.getPhuongTiens().removeIf(xe -> xe.getBienSo().equals(bienSo));
+        boolean ok = kho.xoaPhuongTien(bienSo);
         napBang();
         lamMoi();
+        JOptionPane.showMessageDialog(this, ok ? "Đã xóa xe khỏi CSDL SQL Server!" : "Đã xóa xe!");
     }
 
     private void sua() {
@@ -193,8 +195,9 @@ public class QuanLyPhuongTien_UI extends JPanel {
         xe.setNamSX(txtNamSX.getText().trim());
         xe.setOdo(txtOdo.getText().trim());
         xe.setMaChuXe(maChuDangChon());
+        boolean ok = kho.capNhatPhuongTien(xe);
         napBang();
-        JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
     }
 
     private void lamMoi() {

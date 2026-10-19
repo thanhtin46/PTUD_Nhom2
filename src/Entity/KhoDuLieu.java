@@ -1,6 +1,10 @@
 package Entity;
 
+import DAO.DuLieu_DAO;
+import DAO.NhanVien_DAO;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class KhoDuLieu {
     private static KhoDuLieu instance;
@@ -15,6 +19,9 @@ public class KhoDuLieu {
     private final ArrayList<HoaDon> hoaDons = new ArrayList<>();
     private final CauHinhHeThong cauHinh = new CauHinhHeThong();
     private final ArrayList<NhatKyHeThong> nhatKyList = new ArrayList<>();
+
+    private final DuLieu_DAO duLieuDAO = new DuLieu_DAO();
+    private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -49,6 +56,178 @@ public class KhoDuLieu {
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
     }
+
+    // ===============================================================
+    // CÁC HÀM NGHIỆP VỤ ĐỒNG BỘ CSDL SQL SERVER MỖI LẦN THAO TÁC
+    // ===============================================================
+
+    // 1. KHÁCH HÀNG
+    public boolean themKhachHang(KhachHang kh) {
+        khachHangs.add(kh);
+        boolean dbOk = duLieuDAO.themKhachHang(kh);
+        ghiNhatKy("Người dùng", "Thao tác", "Thêm khách hàng", NhatKyHeThong.INFO,
+                "Đã thêm KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatKhachHang(KhachHang kh) {
+        boolean dbOk = duLieuDAO.capNhatKhachHang(kh);
+        ghiNhatKy("Người dùng", "Thao tác", "Cập nhật khách hàng", NhatKyHeThong.INFO,
+                "Đã cập nhật KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean xoaKhachHang(String maKH) {
+        khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
+        boolean dbOk = duLieuDAO.xoaKhachHang(maKH);
+        ghiNhatKy("Người dùng", "Thao tác", "Xóa khách hàng", NhatKyHeThong.WARN,
+                "Đã xóa KH [" + maKH + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 2. PHƯƠNG TIỆN
+    public boolean themPhuongTien(PhuongTien pt) {
+        phuongTiens.add(pt);
+        boolean dbOk = duLieuDAO.themPhuongTien(pt);
+        ghiNhatKy("Người dùng", "Thao tác", "Thêm phương tiện", NhatKyHeThong.INFO,
+                "Đã thêm xe [" + pt.getBienSo() + "] " + pt.getHangXe() + " " + pt.getDongXe() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatPhuongTien(PhuongTien pt) {
+        boolean dbOk = duLieuDAO.capNhatPhuongTien(pt);
+        ghiNhatKy("Người dùng", "Thao tác", "Cập nhật phương tiện", NhatKyHeThong.INFO,
+                "Đã cập nhật xe [" + pt.getBienSo() + "]" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean xoaPhuongTien(String bienSo) {
+        phuongTiens.removeIf(xe -> xe.getBienSo().equalsIgnoreCase(bienSo));
+        boolean dbOk = duLieuDAO.xoaPhuongTien(bienSo);
+        ghiNhatKy("Người dùng", "Thao tác", "Xóa phương tiện", NhatKyHeThong.WARN,
+                "Đã xóa xe [" + bienSo + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 3. PHỤ TÙNG
+    public boolean themPhuTung(PhuTung pt) {
+        phuTungs.add(pt);
+        boolean dbOk = duLieuDAO.themPhuTung(pt);
+        ghiNhatKy("Người dùng", "Thao tác", "Thêm phụ tùng", NhatKyHeThong.INFO,
+                "Đã thêm phụ tùng [" + pt.getMaPT() + "] " + pt.getTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatPhuTung(PhuTung pt) {
+        boolean dbOk = duLieuDAO.capNhatPhuTung(pt);
+        ghiNhatKy("Người dùng", "Thao tác", "Cập nhật phụ tùng", NhatKyHeThong.INFO,
+                "Đã cập nhật phụ tùng [" + pt.getMaPT() + "] " + pt.getTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean xoaPhuTung(String maPT) {
+        phuTungs.removeIf(pt -> pt.getMaPT().equalsIgnoreCase(maPT));
+        boolean dbOk = duLieuDAO.xoaPhuTung(maPT);
+        ghiNhatKy("Người dùng", "Thao tác", "Xóa phụ tùng", NhatKyHeThong.WARN,
+                "Đã xóa phụ tùng [" + maPT + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 4. PHIẾU TIẾP NHẬN & TIẾN ĐỘ
+    public boolean themPhieuTiepNhan(PhieuTiepNhan ptn, String maNV) {
+        phieuTiepNhans.add(ptn);
+        boolean dbOk = duLieuDAO.themPhieuTiepNhan(ptn, maNV);
+        ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu tiếp nhận", NhatKyHeThong.INFO,
+                "Lập phiếu tiếp nhận [" + ptn.getSoPhieu() + "] cho xe " + ptn.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatTienDoPhieuTiepNhan(String soPhieu, String tienDo, String maKtv) {
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (p.getSoPhieu().equalsIgnoreCase(soPhieu)) {
+                p.setTienDo(tienDo);
+                if (maKtv != null && !maKtv.isEmpty()) {
+                    p.setKyThuatVien(maKtv);
+                }
+                break;
+            }
+        }
+        boolean dbOk = duLieuDAO.capNhatTienDoPhieuTiepNhan(soPhieu, tienDo, maKtv);
+        ghiNhatKy("Kỹ thuật", "Kỹ thuật", "Cập nhật tiến độ / KTV", NhatKyHeThong.INFO,
+                "Cập nhật phiếu [" + soPhieu + "] -> " + tienDo + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 5. HÓA ĐƠN
+    public boolean themHoaDon(HoaDon hd, String maNV) {
+        hoaDons.add(hd);
+        boolean dbOk = duLieuDAO.themHoaDon(hd, maNV);
+        ghiNhatKy("Thu ngân", "Thu ngân", "Lập hóa đơn", NhatKyHeThong.INFO,
+                "Lập & thanh toán hóa đơn [" + hd.getMaHD() + "] tổng " + hd.getTongTien() + " đ" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean huyHoaDon(String maHD) {
+        hoaDons.removeIf(h -> h.getMaHD().equalsIgnoreCase(maHD));
+        boolean dbOk = duLieuDAO.huyHoaDon(maHD);
+        ghiNhatKy("Thu ngân", "Thu ngân", "Hủy hóa đơn", NhatKyHeThong.WARN,
+                "Hủy hóa đơn [" + maHD + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 6. PHIẾU BẢO HÀNH
+    public boolean themPhieuBaoHanh(PhieuBaoHanh pbh) {
+        phieuBaoHanhs.add(pbh);
+        boolean dbOk = duLieuDAO.themPhieuBaoHanh(pbh, null, null);
+        ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu bảo hành", NhatKyHeThong.INFO,
+                "Lập phiếu bảo hành [" + pbh.getSoPhieu() + "] cho xe " + pbh.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    // 7. NHÂN VIÊN & TÀI KHOẢN
+    public boolean themNhanVien(NhanVien nv, String sdt) {
+        nhanViens.add(nv);
+        boolean dbOk = nhanVienDAO.themNhanVien(nv, sdt);
+        ghiNhatKy("Quản lý", "Quản lý", "Thêm nhân viên", NhatKyHeThong.INFO,
+                "Thêm nhân sự [" + nv.getMaNV() + "] " + nv.getHoTen() + " - " + nv.getVaiTro() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatNhanVien(NhanVien nv) {
+        boolean dbOk = nhanVienDAO.capNhatNhanVien(nv);
+        ghiNhatKy("Quản lý", "Quản lý", "Cập nhật nhân viên", NhatKyHeThong.INFO,
+                "Cập nhật nhân sự [" + nv.getMaNV() + "] " + nv.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean doiTrangThaiNhanVien(String maNV, String trangThaiMoi) {
+        NhanVien nv = timNhanVienTheoMa(maNV);
+        if (nv != null) nv.setTrangThai(trangThaiMoi);
+        boolean dbOk = nhanVienDAO.capNhatTrangThaiTaiKhoan(maNV, trangThaiMoi);
+        ghiNhatKy("Quản lý", "Quản lý", "Đổi trạng thái tài khoản", NhatKyHeThong.WARN,
+                "Đổi trạng thái [" + maNV + "] -> " + trangThaiMoi + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean xoaNhanVien(String maNV) {
+        NhanVien nv = timNhanVienTheoMa(maNV);
+        String ten = nv != null ? nv.getHoTen() : maNV;
+        boolean dbOk = nhanVienDAO.xoaNhanVien(maNV);
+        // Nếu xóa cứng được trong DB thì bỏ khỏi list, nếu DB chuyển sang thôi việc thì cập nhật lại trạng thái
+        if (dbOk) {
+            NhanVien nvSau = timNhanVienTheoMa(maNV);
+            if (nvSau != null) {
+                nvSau.setTrangThai(NhanVien.NGUNG);
+            }
+        }
+        ghiNhatKy("Quản lý", "Quản lý", "Xóa/Ngưng nhân sự", NhatKyHeThong.WARN,
+                "Xử lý thôi việc/xóa hồ sơ [" + maNV + "] " + ten + (dbOk ? " (Đã cập nhật SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    // ===============================================================
+    // CÁC HÀM TIỆN ÍCH & TÌM KIẾM
+    // ===============================================================
 
     public void resetDuLieuMacDinh() {
         khachHangs.clear();
@@ -91,7 +270,8 @@ public class KhoDuLieu {
     }
 
     public String maHoaDonMoi() {
-        return String.format("HD%03d", demHoaDon++);
+        demHoaDon++;
+        return String.format("HD%03d", demHoaDon);
     }
 
     public KhachHang timKhachHangTheoMa(String ma) {
@@ -157,6 +337,13 @@ public class KhoDuLieu {
         }
         phieu.setTrangThai(PhieuKho.DA_NHAP);
         phieuKhos.add(phieu);
+
+        // Lưu trực tiếp vào CSDL SQL Server
+        if (PhieuKho.NHAP.equals(phieu.getLoai())) {
+            duLieuDAO.themPhieuNhapKho(phieu, null);
+        } else {
+            duLieuDAO.themPhieuXuatKho(phieu, null);
+        }
         return true;
     }
 
@@ -175,6 +362,7 @@ public class KhoDuLieu {
             pt.setSoLuongTon(pt.getSoLuongTon() + ct.getSoLuong());
         }
         phieu.setTrangThai(PhieuKho.DA_NHAP);
+        duLieuDAO.themPhieuNhapKho(phieu, null);
         return true;
     }
 
@@ -200,15 +388,19 @@ public class KhoDuLieu {
         phieuBaoHanhs.clear();
         hoaDons.clear();
 
-        DAO.DuLieu_DAO dao = new DAO.DuLieu_DAO();
-
         // Nạp dữ liệu chuẩn từ SQL Server
-        khachHangs.addAll(dao.layTatCaKhachHang());
-        phuongTiens.addAll(dao.layTatCaPhuongTien());
-        phuTungs.addAll(dao.layTatCaPhuTung());
-        phieuTiepNhans.addAll(dao.layTatCaPhieuTiepNhan());
-        phieuBaoHanhs.addAll(dao.layTatCaPhieuBaoHanh());
-        hoaDons.addAll(dao.layTatCaHoaDon());
+        khachHangs.addAll(duLieuDAO.layTatCaKhachHang());
+        phuongTiens.addAll(duLieuDAO.layTatCaPhuongTien());
+        phuTungs.addAll(duLieuDAO.layTatCaPhuTung());
+        phieuTiepNhans.addAll(duLieuDAO.layTatCaPhieuTiepNhan());
+        phieuBaoHanhs.addAll(duLieuDAO.layTatCaPhieuBaoHanh());
+        hoaDons.addAll(duLieuDAO.layTatCaHoaDon());
+
+        // Nạp danh sách nhân sự từ SQL Server nếu có
+        ArrayList<NhanVien> dsNV = nhanVienDAO.layTatCaNhanVien();
+        if (dsNV != null && !dsNV.isEmpty()) {
+            nhanViens = dsNV;
+        }
 
         demTiepNhan = phieuTiepNhans.size();
         demBaoHanh = phieuBaoHanhs.size();
@@ -216,7 +408,8 @@ public class KhoDuLieu {
 
         ghiNhatKy("Hệ thống", "Hệ thống", "Đồng bộ CSDL SQL Server", NhatKyHeThong.INFO,
                 "Đã đồng bộ thành công " + khachHangs.size() + " khách hàng, " +
-                phuongTiens.size() + " xe, " + phuTungs.size() + " phụ tùng từ SQL Server");
+                phuongTiens.size() + " xe, " + phuTungs.size() + " phụ tùng, " +
+                hoaDons.size() + " hóa đơn từ SQL Server");
     }
 
     private void seed() {

@@ -79,12 +79,13 @@ public class DanhSachPhuTung_UI extends JPanel {
 
     private void them() {
         if (!kiemTra(true)) return;
-        kho.getPhuTungs().add(new PhuTung(txtMa.getText().trim(), txtTen.getText().trim(),
+        PhuTung pt = new PhuTung(txtMa.getText().trim(), txtTen.getText().trim(),
                 txtDonVi.getText().trim(), Integer.parseInt(txtTon.getText().trim()),
-                Long.parseLong(txtGia.getText().trim().replace(",", ""))));
+                Long.parseLong(txtGia.getText().trim().replace(",", "")));
+        boolean ok = kho.themPhuTung(pt);
         napBang();
         lamMoi();
-        JOptionPane.showMessageDialog(this, "Thêm phụ tùng thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Thêm phụ tùng và lưu CSDL SQL Server thành công!" : "Thêm phụ tùng thành công!");
     }
 
     private void xoa() {
@@ -96,9 +97,10 @@ public class DanhSachPhuTung_UI extends JPanel {
         if (JOptionPane.showConfirmDialog(this, "Xóa phụ tùng này?", "Xác nhận",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
         String ma = model.getValueAt(dong, 0).toString();
-        kho.getPhuTungs().removeIf(pt -> pt.getMaPT().equals(ma));
+        boolean ok = kho.xoaPhuTung(ma);
         napBang();
         lamMoi();
+        JOptionPane.showMessageDialog(this, ok ? "Đã xóa phụ tùng khỏi CSDL SQL Server!" : "Đã xóa phụ tùng!");
     }
 
     private void sua() {
@@ -114,8 +116,9 @@ public class DanhSachPhuTung_UI extends JPanel {
         pt.setDonVi(txtDonVi.getText().trim());
         pt.setSoLuongTon(Integer.parseInt(txtTon.getText().trim()));
         pt.setDonGia(Long.parseLong(txtGia.getText().trim().replace(",", "")));
+        boolean ok = kho.capNhatPhuTung(pt);
         napBang();
-        JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
     }
 
     private void lamMoi() {

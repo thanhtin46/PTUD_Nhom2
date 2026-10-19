@@ -73,6 +73,7 @@ public class Main_UI extends JFrame {
         int h = Math.min(840, screen.height - 80);
         setSize(w, h);
         setMinimumSize(new Dimension(1150, 680));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -439,12 +440,14 @@ public class Main_UI extends JFrame {
 
             // 3. Phiếu tiếp nhận
             case "Phiếu tiếp nhận", "Lập phiếu tiếp nhận"
-                    -> new LapPhieuSuaChua_UI(nhanVienHienTai);
+                    -> new LapPhieuTiepNhan_UI(nhanVienHienTai);
             case "Tra cứu phiếu tiếp nhận"
                     -> new TraCuuPhieuTiepNhan_UI();
 
             // 4. Sửa chữa
-            case "Sửa chữa", "Lập phiếu sửa chữa", "Phân công KTV"
+            case "Sửa chữa", "Lập phiếu sửa chữa"
+                    -> new LapPhieuSuaChua_UI(nhanVienHienTai);
+            case "Phân công KTV"
                     -> new PhanCongKyThuatVien_UI();
             case "Tra cứu phiếu sửa chữa", "Cập nhật tiến độ"
                     -> new CapNhatTienDo_UI();
@@ -481,7 +484,13 @@ public class Main_UI extends JFrame {
 
             // 9. Báo cáo – Thống kê
             case "Báo cáo – Thống kê", "Báo cáo thống kê", "Thống kê doanh thu", "Báo cáo doanh thu", "Theo tháng", "Theo năm"
-                    -> new BaoCaoDoanhThu_UI(false);
+                    -> new BaoCaoDoanhThu_UI();
+            case "Xu hướng doanh thu (Đường)", "Biểu đồ đường xu hướng"
+                    -> {
+                        BaoCaoDoanhThu_UI ui = new BaoCaoDoanhThu_UI();
+                        ui.datCheDoBieuDo(1);
+                        yield ui;
+                    }
 
             default -> {
                 JLabel lbl = new JLabel("Chức năng đang mở: " + tenMenu, SwingConstants.CENTER);
@@ -518,10 +527,44 @@ public class Main_UI extends JFrame {
 
         boolean coQuyen(String vaiTroNV) {
             if (vaiTro == null) return true;
-            if (QUAN_LY.equalsIgnoreCase(vaiTroNV)) return true;
+            if (vaiTroNV == null || vaiTroNV.trim().isEmpty()) return false;
+
+            String vt = vaiTroNV.trim().toLowerCase();
+
+            // 1. Quản lý / Admin / Điều hành có TOÀN QUYỀN tất cả các chức năng
+            if (vt.contains("quản lý") || vt.contains("admin") || vt.contains("điều hành") || vt.contains("giám đốc") || vt.contains("chủ xưởng")) {
+                return true;
+            }
+
+            // 2. Kiểm tra khớp theo danh sách quyền của từng mục menu
             String[] vts = vaiTro.split(",");
             for (String v : vts) {
-                if (v.trim().equalsIgnoreCase(vaiTroNV)) return true;
+                String req = v.trim().toLowerCase();
+
+                // Khớp chính xác hoặc chứa nhau
+                if (vt.equalsIgnoreCase(req) || vt.contains(req) || req.contains(vt)) {
+                    return true;
+                }
+
+                // Nhóm Tiếp tân / Cố vấn dịch vụ / Khách hàng
+                if (req.contains("tiếp tân") && (vt.contains("tiếp tân") || vt.contains("cố vấn") || vt.contains("lễ tân") || vt.contains("tiếp nhận") || vt.contains("dịch vụ"))) {
+                    return true;
+                }
+
+                // Nhóm Kỹ thuật viên / Sửa chữa
+                if (req.contains("sửa chữa") && (vt.contains("sửa chữa") || vt.contains("ktv") || vt.contains("kỹ thuật") || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện") || vt.contains("sơn") || vt.contains("bảo dưỡng"))) {
+                    return true;
+                }
+
+                // Nhóm Kho / Vật tư / Phụ tùng
+                if (req.contains("kho") && (vt.contains("kho") || vt.contains("vật tư") || vt.contains("phụ tùng") || vt.contains("thủ kho"))) {
+                    return true;
+                }
+
+                // Nhóm Thu ngân / Kế toán
+                if (req.contains("thu ngân") && (vt.contains("thu ngân") || vt.contains("kế toán") || vt.contains("thanh toán") || vt.contains("tài chính"))) {
+                    return true;
+                }
             }
             return false;
         }
@@ -590,7 +633,8 @@ public class Main_UI extends JFrame {
 
         // 9. Báo cáo – Thống kê
         ds.add(MucMenu.nhom("Báo cáo – Thống kê", UiIcon.CHART, QUAN_LY + "," + THU_NGAN)
-                .them(MucMenu.con("Thống kê doanh thu")));
+                .them(MucMenu.con("Thống kê doanh thu"))
+                .them(MucMenu.con("Xu hướng doanh thu (Đường)")));
 
         return ds;
     }

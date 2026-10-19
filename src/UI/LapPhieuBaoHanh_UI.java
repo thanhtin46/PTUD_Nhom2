@@ -103,17 +103,18 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             UiHelper.loi(this, "Chưa có xe để lập bảo hành!", cboBienSo);
             return;
         }
-        kho.getPhieuBaoHanhs().add(new PhieuBaoHanh(
+        PhieuBaoHanh pbh = new PhieuBaoHanh(
                 kho.maPhieuBaoHanhMoi(),
                 cboBienSo.getSelectedItem().toString(),
                 txtNgayBd.getText().trim(),
                 txtNgayKt.getText().trim(),
-                nv.getHoTen(),
+                nv != null ? nv.getHoTen() : "Tiếp tân",
                 String.valueOf(cboTinhTrang.getSelectedItem()),
-                txtNoiDung.getText().trim()));
+                txtNoiDung.getText().trim());
+        boolean ok = kho.themPhieuBaoHanh(pbh);
         napBang();
         txtSoPhieu.setText(String.format("BH%03d", kho.getPhieuBaoHanhs().size() + 1));
         txtNoiDung.setText("");
-        JOptionPane.showMessageDialog(this, "Đã tạo phiếu bảo hành!");
+        JOptionPane.showMessageDialog(this, ok ? "Đã tạo phiếu bảo hành và lưu CSDL SQL Server!" : "Đã tạo phiếu bảo hành!");
     }
 }

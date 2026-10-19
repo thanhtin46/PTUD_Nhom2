@@ -160,8 +160,10 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         cboKtv.addItem("-- Chọn KTV --");
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
-            // Chỉ lấy nhân viên sửa chữa + Quản lý
-            if (nv.getVaiTro().contains("sửa chữa") || nv.getVaiTro().contains("Quản lý")) {
+            String vt = nv.getVaiTro() == null ? "" : nv.getVaiTro().toLowerCase();
+            // Lấy tất cả KTV kỹ thuật xưởng hoặc Quản lý điều hành
+            if (vt.contains("sửa chữa") || vt.contains("quản lý") || vt.contains("ktv") || vt.contains("kỹ thuật")
+                    || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện") || vt.contains("sơn") || vt.contains("bảo dưỡng")) {
                 cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen());
             }
         }
@@ -199,14 +201,15 @@ public class PhanCongKyThuatVien_UI extends JPanel {
             return;
         }
         String maKtv = sel.toString().split(" - ")[0];
-        phieuDangChon.setKyThuatVien(maKtv);
         // Tự động đổi tiến độ: "Chờ tiếp nhận" → "Đã phân công"
         String td = phieuDangChon.getTienDo();
         if (td == null || td.isEmpty() || td.contains("Chờ") || td.contains("tiếp nhận")) {
-            phieuDangChon.setTienDo("Đã phân công");
+            td = "Đã phân công";
         }
+        boolean ok = kho.capNhatTienDoPhieuTiepNhan(phieuDangChon.getSoPhieu(), td, maKtv);
         JOptionPane.showMessageDialog(this,
-                "Đã phân công " + sel + " cho phiếu " + phieuDangChon.getSoPhieu() + "!",
+                "Đã phân công " + sel + " cho phiếu " + phieuDangChon.getSoPhieu() + "!"
+                        + (ok ? " (Đã lưu CSDL SQL Server)" : ""),
                 "Phân công thành công",
                 JOptionPane.INFORMATION_MESSAGE);
         napBang();
@@ -225,8 +228,8 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 "Bỏ phân công phiếu " + phieuDangChon.getSoPhieu() + "?",
                 "Xác nhận",
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
-        phieuDangChon.setKyThuatVien("");
-        phieuDangChon.setTienDo("Chờ tiếp nhận");
+        boolean ok = kho.capNhatTienDoPhieuTiepNhan(phieuDangChon.getSoPhieu(), "Chờ tiếp nhận", "");
+        JOptionPane.showMessageDialog(this, ok ? "Đã hủy phân công và đồng bộ CSDL SQL Server!" : "Đã hủy phân công!");
         napBang();
     }
 

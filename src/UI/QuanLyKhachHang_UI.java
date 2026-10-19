@@ -78,8 +78,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
         table = UiHelper.bang(model);
 
-        // Tắt chế độ tự động ép nhỏ cột để thanh cuộn ngang hoạt động khi dữ liệu dài
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        // Chế độ tự động dãn đều 100% khi phóng to và cuộn ngang khi thu nhỏ
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
         // Đặt độ rộng tối thiểu và phù hợp cho từng cột để hiện đầy đủ thông tin
         table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã KH
@@ -114,13 +114,14 @@ public class QuanLyKhachHang_UI extends JPanel {
     private void them() {
         if (!kiemTraForm(true)) return;
         String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        kho.getKhachHangs().add(new KhachHang(
+        KhachHang kh = new KhachHang(
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
                 txtCccd.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(),
-                txtGhiChu.getText().trim(), ngayHomNay));
+                txtGhiChu.getText().trim(), ngayHomNay);
+        boolean ok = kho.themKhachHang(kh);
         napBang();
         lamMoi();
-        JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Thêm khách hàng và lưu CSDL SQL Server thành công!" : "Thêm khách hàng thành công!");
     }
 
     private void xoa() {
@@ -132,9 +133,10 @@ public class QuanLyKhachHang_UI extends JPanel {
         if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa khách hàng này?",
                 "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         String ma = model.getValueAt(dong, 0).toString();
-        kho.getKhachHangs().removeIf(kh -> kh.getMaKH().equals(ma));
+        boolean ok = kho.xoaKhachHang(ma);
         napBang();
         lamMoi();
+        JOptionPane.showMessageDialog(this, ok ? "Đã xóa khách hàng khỏi CSDL SQL Server!" : "Đã xóa khách hàng!");
     }
 
     private void sua() {
@@ -152,8 +154,9 @@ public class QuanLyKhachHang_UI extends JPanel {
         kh.setDiaChi(txtDiaChi.getText().trim());
         kh.setEmail(txtEmail.getText().trim());
         kh.setGhiChu(txtGhiChu.getText().trim());
+        boolean ok = kho.capNhatKhachHang(kh);
         napBang();
-        JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
     }
 
     private void lamMoi() {

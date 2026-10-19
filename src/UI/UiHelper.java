@@ -369,7 +369,13 @@ public final class UiHelper {
                 }
                 return c;
             }
+
+            @Override
+            public boolean getScrollableTracksViewportWidth() {
+                return getPreferredSize().width <= getParent().getWidth();
+            }
         };
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
         table.setRowHeight(40);
         table.setFont(FONT_BT);
         table.setShowVerticalLines(false);
