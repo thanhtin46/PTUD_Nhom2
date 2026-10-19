@@ -1,6 +1,6 @@
 package UI;
 
-import ConnectDB.ConnectDB;
+import DAO.PhieuSuaChua_DAO;
 import Entity.*;
 
 import javax.swing.*;
@@ -11,9 +11,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -26,6 +23,22 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     private final NhanVien nvHienTai;
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final PhieuSuaChua_DAO dao = new PhieuSuaChua_DAO();
+
+    private void napDanhSachPhieuTiepNhan() {
+        cboPhieuTN.removeAllItems();
+
+        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
+            String item = p.getSoPhieu()
+                    + " - " + p.getHoTen()
+                    + " - " + p.getBienSo();
+
+            cboPhieuTN.addItem(item);
+        }
+
+        System.out.println("Số phiếu tiếp nhận đã nạp: "
+                + cboPhieuTN.getItemCount());
+    }
 
     // Dữ liệu mã phiếu
     private static int demPSC = 42;
@@ -275,6 +288,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         cboPhieuTN.setPreferredSize(new Dimension(0, 32));
         pnlPtn.add(lblPtn, BorderLayout.NORTH);
         pnlPtn.add(cboPhieuTN, BorderLayout.CENTER);
+        napDanhSachPhieuTiepNhan();
 
         JPanel pnlCoVan = new JPanel(new BorderLayout(0, 4));
         pnlCoVan.setOpaque(false);
@@ -395,6 +409,8 @@ public class LapPhieuSuaChua_UI extends JPanel {
         card.add(body, BorderLayout.CENTER);
         return card;
     }
+
+
 
     /** KHỐI 2: PHÂN CÔNG KỸ THUẬT VIÊN */
     private JPanel taoKhoi2() {
@@ -1101,7 +1117,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
     private void khoiTaoDuLieuMau() {
         // Nạp ComboBox Phiếu Tiếp Nhận từ KhoDuLieu
         cboPhieuTN.removeAllItems();
-        cboPhieuTN.addItem("PTN00025 - Trần Minh Tuấn (60A-12345)");
+        cboPhieuTN.addItem("PTN00025 - KH001 - Trần Minh Tuấn (60A-12345)");
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             cboPhieuTN.addItem(p.getSoPhieu() + " - " + p.getHoTen() + " (" + p.getBienSo() + ")");
         }
@@ -1333,98 +1349,162 @@ public class LapPhieuSuaChua_UI extends JPanel {
     // ===============================================================
     // XÁC NHẬN LƯU & BÀN GIAO PHIẾU SỬA CHỮA (ĐỒNG BỘ CSDL)
     // ===============================================================
+
+
     private void xacNhanLuuPhieu() {
-        if (modelCongViec.getRowCount() == 0 && modelPhuTung.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng thêm ít nhất một hạng mục công việc hoặc phụ tùng!");
+        if (modelCongViec.getRowCount() == 0
+                && modelPhuTung.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng thêm ít nhất một hạng mục công việc hoặc phụ tùng!");
             return;
         }
 
-        String ktvTr = (String) cboKtvTruong.getSelectedItem();
-        String bienSo = lblBienSo.getText();
+        if (cboKtvTruong.getSelectedItem() == null
+                || cboPhieuTN.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng chọn phiếu tiếp nhận và kỹ thuật viên trưởng.");
+            return;
+        }
 
-        // 1. Cập nhật tiến độ tiếp nhận xe
-        String selPTN = (String) cboPhieuTN.getSelectedItem();
-        String soPTN = selPTN != null ? selPTN.split(" - ")[0] : "TN001";
-        kho.capNhatTienDoPhieuTiepNhan(soPTN, trangThaiChon, ktvTr);
+        String ktvTr = cboKtvTruong.getSelectedItem().toString();
+        String selPTN = cboPhieuTN.getSelectedItem().toString();
+        String soPTN = selPTN.split(" - ")[0].trim();
 
-        // 2. Lưu trực tiếp vào CSDL SQL Server (bảng PhieuSuaChua & ChiTietSuaChua)
-        Connection con = ConnectDB.getInstance().getConnection();
-        boolean dbOk = false;
-        if (con != null) {
-            try {
-                // Insert/Update PhieuSuaChua
-                String sqlPSC = "IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = ?) " +
-                                "INSERT INTO PhieuSuaChua (maPSC, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) " +
-                                "VALUES (?, ?, 'KH001', (SELECT TOP 1 soVIN FROM PhuongTien WHERE bienSoXe = ?), SYSDATETIME(), DATEADD(day, 1, CAST(GETDATE() AS DATE)), ?) " +
-                                "ELSE " +
-                                "UPDATE PhieuSuaChua SET trangThai = ?, maNV = ? WHERE maPSC = ?";
-                try (PreparedStatement stmt = con.prepareStatement(sqlPSC)) {
-                    stmt.setString(1, maPSC);
-                    stmt.setString(2, maPSC);
-                    stmt.setString(3, nvHienTai != null ? nvHienTai.getMaNV() : "NV02");
-                    stmt.setString(4, bienSo);
-                    stmt.setString(5, "Đang xử lý".equals(trangThaiChon) ? "DANG_SUA" : ("Hoàn thành".equals(trangThaiChon) ? "DA_HOAN_THANH" : "CHO_SUA"));
-                    stmt.setString(6, trangThaiChon);
-                    stmt.setString(7, nvHienTai != null ? nvHienTai.getMaNV() : "NV02");
-                    stmt.setString(8, maPSC);
-                    stmt.executeUpdate();
-                }
+        // Lấy đối tượng phiếu tiếp nhận được chọn
+        PhieuTiepNhan ptn = null;
 
-                // Xóa chi tiết cũ và insert các chi tiết mới
-                try (PreparedStatement del = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC = ?")) {
-                    del.setString(1, maPSC);
-                    del.executeUpdate();
-                }
-
-                String sqlCT = "INSERT INTO ChiTietSuaChua (maPSC, maPT, noiDungSC, tenPhuTung, soLuong, donGia, trangThai) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
-                    for (int i = 0; i < modelPhuTung.getRowCount(); i++) {
-                        String maPT = modelPhuTung.getValueAt(i, 1).toString();
-                        String tenPT = modelPhuTung.getValueAt(i, 2).toString();
-                        int sl = Integer.parseInt(modelPhuTung.getValueAt(i, 4).toString());
-                        long gia = Long.parseLong(modelPhuTung.getValueAt(i, 5).toString().replace(",", ""));
-                        stmt.setString(1, maPSC);
-                        stmt.setString(2, maPT);
-                        stmt.setString(3, "Thay thế linh kiện: " + tenPT);
-                        stmt.setString(4, tenPT);
-                        stmt.setInt(5, sl);
-                        stmt.setDouble(6, (double) gia);
-                        stmt.setString(7, "CHO_THUC_HIEN");
-                        stmt.executeUpdate();
-                    }
-                }
-                dbOk = true;
-            } catch (SQLException e) {
-                System.err.println("Lỗi lưu PhieuSuaChua DB: " + e.getMessage());
+        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
+            if (p.getSoPhieu().equals(soPTN)) {
+                ptn = p;
+                break;
             }
         }
 
-        // Ghi Audit Log
-        kho.ghiNhatKy(nvHienTai != null ? nvHienTai.getHoTen() : "Quản lý xưởng",
-                "Quản lý xưởng", "Lập lệnh sửa chữa", "INFO",
-                "Lập lệnh sửa chữa " + maPSC + " cho xe " + bienSo + " - KTV trưởng: " + ktvTr + " - Tổng: " + lblTongDuKien.getText());
+        if (ptn == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm thấy dữ liệu phiếu tiếp nhận: " + soPTN);
+            return;
+        }
 
-        int hoiIn = JOptionPane.showConfirmDialog(this,
-                "Lập lệnh sửa chữa [" + maPSC + "] thành công!" + (dbOk ? " (Đã lưu CSDL SQL Server)\n" : "\n")
-                        + "Xe: " + bienSo + " • KTV trưởng: " + ktvTr + "\n"
-                        + "Tổng chi phí dự kiến: " + lblTongDuKien.getText() + "\n\n"
-                        + "Bạn có muốn IN LỆNH SỬA CHỮA bàn giao cho kỹ thuật viên không?",
+        // Lấy mã khách hàng và biển số trực tiếp từ phiếu tiếp nhận
+        String maKH = ptn.getMaKH();
+        String bienSo = ptn.getBienSo();
+
+        if (maKH == null || maKH.isBlank()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phiếu tiếp nhận " + soPTN
+                            + " chưa có mã khách hàng.",
+                    "Thiếu mã khách hàng",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (bienSo == null || bienSo.isBlank()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phiếu tiếp nhận chưa có biển số xe.");
+            return;
+        }
+
+        String maNV = nvHienTai != null
+                ? nvHienTai.getMaNV()
+                : "NV02";
+
+        System.out.println("===== KIỂM TRA DỮ LIỆU =====");
+        System.out.println("Phiếu tiếp nhận: " + soPTN);
+        System.out.println("Mã khách hàng: [" + maKH + "]");
+        System.out.println("Biển số xe: [" + bienSo + "]");
+
+        boolean dbOk = dao.luuPhieu(
+                maPSC,
+                maNV,
+                maKH,
+                bienSo,
+                trangThaiChon,
+                txtNgayLap.getText().trim(),
+                txtNgayDuKien.getText().trim(),
+                txtGhiChu.getText(),
+                modelCongViec,
+                modelPhuTung
+        );
+
+        if (!dbOk) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể lưu phiếu vào CSDL.\n"
+                            + "Vui lòng kiểm tra lỗi trong Console.",
+                    "Lỗi lưu phiếu",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        kho.capNhatTienDoPhieuTiepNhan(
+                soPTN, trangThaiChon, ktvTr);
+
+        kho.ghiNhatKy(
+                nvHienTai != null
+                        ? nvHienTai.getHoTen()
+                        : "Quản lý xưởng",
+                "Quản lý xưởng",
+                "Lập lệnh sửa chữa",
+                "INFO",
+                "Lập lệnh sửa chữa " + maPSC
+                        + " cho xe " + bienSo
+                        + " - KTV trưởng: " + ktvTr
+                        + " - Tổng: " + lblTongDuKien.getText());
+
+        int hoiIn = JOptionPane.showConfirmDialog(
+                this,
+                "Lập lệnh sửa chữa [" + maPSC
+                        + "] thành công và đã lưu CSDL.\n"
+                        + "Xe: " + bienSo
+                        + " • KTV trưởng: " + ktvTr
+                        + "\nTổng chi phí dự kiến: "
+                        + lblTongDuKien.getText()
+                        + "\n\nBạn có muốn in lệnh sửa chữa "
+                        + "bàn giao cho kỹ thuật viên không?",
                 "Bàn giao sửa chữa thành công",
-                JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE);
 
         if (hoiIn == JOptionPane.YES_OPTION) {
             inPhieuSuaChua();
         }
     }
 
+
+    private String layMaKHTuPhieuTiepNhan(String noiDung) {
+        if (noiDung == null) {
+            return null;
+        }
+
+        java.util.regex.Matcher matcher =
+                java.util.regex.Pattern
+                        .compile("\\bKH\\d+\\b")
+                        .matcher(noiDung);
+
+        return matcher.find() ? matcher.group() : null;
+    }
+
+
     private void luuTamDraft() {
-        JOptionPane.showMessageDialog(this, "Đã lưu tạm (Draft) bản ghi " + maPSC + " vào bộ nhớ hệ thống!");
+        dao.luuDraft(maPSC, txtGhiChu.getText(), txtNgayLap.getText(), txtNgayDuKien.getText());
+        JOptionPane.showMessageDialog(this, "Đã lưu tạm (Draft) " + maPSC + " trong bộ nhớ ứng dụng.");
     }
 
     private void lamMoiToanBo() {
         this.maPSC = String.format("PSC%05d", demPSC++);
         txtNgayLap.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         txtNgayDuKien.setText(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + " (3 giờ)");
+        dsThoPhu.clear();
+        dsThoPhu.add("Hoàng Đình Kha (KTV 2/7)");
+        dsThoPhu.add("Đặng Quốc Bảo (Học việc)");
+        capNhatChipsThoPhu();
+        chonTrangThai("Đang xử lý");
         khoiTaoDuLieuMau();
         tinhToanTaiChinh();
         JOptionPane.showMessageDialog(this, "Đã làm mới form sửa chữa phương tiện!");

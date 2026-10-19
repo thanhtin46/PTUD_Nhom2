@@ -73,35 +73,43 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu tiếp nhận chờ xử lý");
-        model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Loại", "Ngày", "Yêu cầu", "Tiến độ", "Tạm tính");
-        JTable table = UiHelper.bang(model);
 
+        model = UiHelper.model(
+                "Số phiếu", "Mã khách hàng", "SĐT", "Họ tên",
+                "Biển số", "Hãng", "Loại", "Ngày",
+                "Yêu cầu", "Tiến độ", "Tạm tính"
+        );
+
+        JTable table = UiHelper.bang(model);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
-        table.getColumnModel().getColumn(1).setPreferredWidth(110);  // SĐT
-        table.getColumnModel().getColumn(2).setPreferredWidth(160);  // Họ tên
-        table.getColumnModel().getColumn(3).setPreferredWidth(110);  // Biển số
-        table.getColumnModel().getColumn(4).setPreferredWidth(90);   // Hãng
-        table.getColumnModel().getColumn(5).setPreferredWidth(110);  // Loại
-        table.getColumnModel().getColumn(6).setPreferredWidth(100);  // Ngày
-        table.getColumnModel().getColumn(7).setPreferredWidth(200);  // Yêu cầu
-        table.getColumnModel().getColumn(8).setPreferredWidth(120);  // Tiến độ
-        table.getColumnModel().getColumn(9).setPreferredWidth(120);  // Tạm tính
+
+        int[] widths = {90, 110, 110, 160, 110, 90, 110, 100, 200, 120, 120};
+        for (int i = 0; i < widths.length; i++) {
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        }
 
         JScrollPane sp = new JScrollPane(table);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
+
         return bangPanel;
     }
 
     private void doSdt() {
         KhachHang kh = kho.timKhachHangTheoSdt(txtSdt.getText().trim());
-        if (kh == null) return;
+
+        if (kh == null) {
+            txtHoTen.setText("");
+            return;
+        }
+
         txtHoTen.setText(kh.getHoTen());
+
         for (PhuongTien xe : kho.getPhuongTiens()) {
-            if (xe.getMaChuXe().equals(kh.getMaKH())) {
+            if (kh.getMaKH().equals(xe.getMaChuXe())) {
                 txtBienSo.setText(xe.getBienSo());
                 txtHang.setText(xe.getHangXe());
                 txtLoai.setText(xe.getDongXe());
@@ -112,10 +120,18 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private void doBienSo() {
         PhuongTien xe = kho.timXeTheoBienSo(txtBienSo.getText().trim());
-        if (xe == null) return;
+
+        if (xe == null) {
+            txtHang.setText("");
+            txtLoai.setText("");
+            return;
+        }
+
         txtHang.setText(xe.getHangXe());
         txtLoai.setText(xe.getDongXe());
+
         KhachHang kh = kho.timKhachHangTheoMa(xe.getMaChuXe());
+
         if (kh != null) {
             txtSdt.setText(kh.getSdt());
             txtHoTen.setText(kh.getHoTen());
@@ -124,9 +140,21 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private void napBang() {
         model.setRowCount(0);
+
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            model.addRow(new Object[]{p.getSoPhieu(), p.getSdt(), p.getHoTen(), p.getBienSo(), p.getHangXe(),
-                    p.getLoaiXe(), p.getNgayTiepNhan(), p.getYeuCau(), p.getTienDo(), UiHelper.tien(p.getThanhTien())});
+            model.addRow(new Object[]{
+                    p.getSoPhieu(),
+                    p.getMaKH(),
+                    p.getSdt(),
+                    p.getHoTen(),
+                    p.getBienSo(),
+                    p.getHangXe(),
+                    p.getLoaiXe(),
+                    p.getNgayTiepNhan(),
+                    p.getYeuCau(),
+                    p.getTienDo(),
+                    UiHelper.tien(p.getThanhTien())
+            });
         }
     }
 
@@ -145,12 +173,30 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             tien = Long.parseLong(tienStr);
         }
         KhachHang kh = kho.timKhachHangTheoSdt(txtSdt.getText().trim());
-        String maKH = kh != null ? kh.getMaKH() : "";
+
+        if (kh == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm thấy khách hàng theo số điện thoại. Vui lòng kiểm tra lại!"
+            );
+            return;
+        }
+
+        String maKH = kh.getMaKH();
         PhieuTiepNhan ptn = new PhieuTiepNhan(
-                kho.maPhieuTiepNhanMoi(), maKH, txtHoTen.getText().trim(), txtSdt.getText().trim(),
-                txtBienSo.getText().trim(), txtHang.getText().trim(), txtLoai.getText().trim(),
-                txtNgay.getText().trim(), txtYeuCau.getText().trim(), "Chờ tiếp nhận",
-                nv != null ? nv.getHoTen() : "Tiếp tân", tien);
+                kho.maPhieuTiepNhanMoi(),
+                maKH,
+                txtHoTen.getText().trim(),
+                txtSdt.getText().trim(),
+                txtBienSo.getText().trim(),
+                txtHang.getText().trim(),
+                txtLoai.getText().trim(),
+                txtNgay.getText().trim(),
+                txtYeuCau.getText().trim(),
+                "Chờ tiếp nhận",
+                nv != null ? nv.getHoTen() : "Tiếp tân",
+                tien
+        );
         boolean ok = kho.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
         PhuongTien xe = kho.timXeTheoBienSo(txtBienSo.getText().trim());
         if (xe != null) xe.setNgayTiepNhanGanNhat(txtNgay.getText().trim());
