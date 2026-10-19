@@ -279,7 +279,7 @@ public class Login_UI extends JFrame {
 
         JPanel chipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         chipPanel.setOpaque(false);
-        String[] accs = {"tiepTan", "suaChua", "kho", "quanLy"};
+        String[] accs = {"tiepTan", "suaChua", "kho", "thuNgan", "quanLy"};
         for (String acc : accs) {
             JButton chip = new JButton(acc);
             chip.setFont(new Font("Segoe UI", Font.BOLD, 11));

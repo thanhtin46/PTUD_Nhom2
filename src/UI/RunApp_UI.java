@@ -17,6 +17,7 @@ public class RunApp_UI {
         danhSach.add(new NhanVien("NV02", "Trần Văn Sửa Chữa", "suaChua", "123", "Nhân viên sửa chữa"));
         danhSach.add(new NhanVien("NV03", "Nguyễn Văn Kho", "kho", "123", "Nhân viên kho"));
         danhSach.add(new NhanVien("NV04", "Quản Lý Tổng", "quanLy", "123", "Quản lý"));
+        danhSach.add(new NhanVien("NV05", "Trần Thị Thu Ngân", "thuNgan", "123", "Nhân viên thu ngân"));
         KhoDuLieu.get().setNhanViens(danhSach);
 
         SwingUtilities.invokeLater(() -> new Login_UI(danhSach).setVisible(true));
