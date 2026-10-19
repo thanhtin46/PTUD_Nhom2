@@ -46,6 +46,10 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtGhiChu = new JTextArea(3, 20);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
+        JScrollPane spGhiChu = new JScrollPane(txtGhiChu);
+        spGhiChu.setPreferredSize(new Dimension(190, 75));
+        spGhiChu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        spGhiChu.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -55,7 +59,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         UiHelper.themDong(form, 3, "CCCD/CMND", txtCccd);
         UiHelper.themDong(form, 4, "Địa chỉ", txtDiaChi);
         UiHelper.themDong(form, 5, "Email", txtEmail);
-        UiHelper.themDong(form, 6, "Ghi chú / Nhóm KH", new JScrollPane(txtGhiChu));
+        UiHelper.themDong(form, 6, "Ghi chú / Nhóm KH", spGhiChu);
 
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
@@ -73,10 +77,27 @@ public class QuanLyKhachHang_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Danh sách khách hàng");
         model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
         table = UiHelper.bang(model);
+
+        // Tắt chế độ tự động ép nhỏ cột để thanh cuộn ngang hoạt động khi dữ liệu dài
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        // Đặt độ rộng tối thiểu và phù hợp cho từng cột để hiện đầy đủ thông tin
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã KH
+        table.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
+        table.getColumnModel().getColumn(2).setPreferredWidth(110);  // SĐT
+        table.getColumnModel().getColumn(3).setPreferredWidth(130);  // CCCD
+        table.getColumnModel().getColumn(4).setPreferredWidth(220);  // Địa chỉ
+        table.getColumnModel().getColumn(5).setPreferredWidth(180);  // Email
+        table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Ghi chú
+        table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Ngày ĐK
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
         });
+
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
         return bangPanel;
