@@ -572,6 +572,22 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 }
             }
         }
+
+        // Tự động nạp chi tiết công việc và phụ tùng nếu đã có
+        modelCongViec.setRowCount(0);
+        modelPhuTung.setRowCount(0);
+        java.util.List<ChiTietDichVu> ds = kho.layChiTietTheoPhieu(soPhieu);
+        for (ChiTietDichVu ct : ds) {
+            if ("Tiền công".equalsIgnoreCase(ct.getLoai())) {
+                int stt = modelCongViec.getRowCount() + 1;
+                String ktv = (p.getKyThuatVien() != null && !p.getKyThuatVien().isEmpty()) ? p.getKyThuatVien() : "KTV Xưởng";
+                modelCongViec.addRow(new Object[]{stt, ct.getTenHangMuc(), ktv, UiHelper.tien(ct.getDonGia()), "✕"});
+            } else {
+                int stt = modelPhuTung.getRowCount() + 1;
+                modelPhuTung.addRow(new Object[]{stt, ct.getMaPT(), ct.getTenHangMuc(), ct.getDonVi(), ct.getSoLuong(), UiHelper.tien(ct.getDonGia()), UiHelper.tien(ct.getThanhTien()), "✕"});
+            }
+        }
+        tinhToanTaiChinh();
     }
 
     private void napPhieuMauDauTien() {
@@ -753,6 +769,30 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         // 1. Cập nhật vào bộ nhớ hệ thống (KhoDuLieu)
         boolean dbOk = kho.capNhatPhieuSuaChua(soPTN, tienDo, ktv, tongTatCa);
+
+        // Lưu danh sách hạng mục công việc và phụ tùng đồng bộ
+        java.util.List<ChiTietDichVu> dsLuu = new java.util.ArrayList<>();
+        for (int i = 0; i < modelCongViec.getRowCount(); i++) {
+            String ten = modelCongViec.getValueAt(i, 1).toString();
+            long gia = 0;
+            try {
+                gia = Long.parseLong(modelCongViec.getValueAt(i, 3).toString().replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
+            dsLuu.add(new ChiTietDichVu("Tiền công", "", ten, "Lần", 1, gia));
+        }
+        for (int i = 0; i < modelPhuTung.getRowCount(); i++) {
+            String maPT = modelPhuTung.getValueAt(i, 1).toString();
+            String ten = modelPhuTung.getValueAt(i, 2).toString();
+            String dvt = modelPhuTung.getValueAt(i, 3).toString();
+            int sl = 1;
+            long gia = 0;
+            try {
+                sl = Integer.parseInt(modelPhuTung.getValueAt(i, 4).toString());
+                gia = Long.parseLong(modelPhuTung.getValueAt(i, 5).toString().replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
+            dsLuu.add(new ChiTietDichVu("Phụ tùng", maPT, ten, dvt, sl, gia));
+        }
+        kho.luuChiTietPhieu(soPTN, dsLuu);
 
         // 2. Cập nhật chi tiết vào SQL Server (nếu kết nối sẵn sàng)
         Connection con = ConnectDB.getInstance().getConnection();

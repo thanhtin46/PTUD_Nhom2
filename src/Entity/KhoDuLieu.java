@@ -20,6 +20,10 @@ public class KhoDuLieu {
     private final CauHinhHeThong cauHinh = new CauHinhHeThong();
     private final ArrayList<NhatKyHeThong> nhatKyList = new ArrayList<>();
 
+    // Bản đồ lưu chi tiết công việc & phụ tùng theo mã phiếu và theo mã hóa đơn
+    private final java.util.Map<String, java.util.List<ChiTietDichVu>> chiTietTheoPhieu = new java.util.HashMap<>();
+    private final java.util.Map<String, java.util.List<ChiTietDichVu>> chiTietTheoHoaDon = new java.util.HashMap<>();
+
     private final DuLieu_DAO duLieuDAO = new DuLieu_DAO();
     private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
 
@@ -187,18 +191,120 @@ public class KhoDuLieu {
 
     // 5. HÓA ĐƠN
     public boolean themHoaDon(HoaDon hd, String maNV) {
+        return themHoaDon(hd, maNV, null);
+    }
+
+    public boolean themHoaDon(HoaDon hd, String maNV, java.util.List<ChiTietDichVu> dsChiTiet) {
         hoaDons.add(hd);
-        boolean dbOk = duLieuDAO.themHoaDon(hd, maNV);
+        if (dsChiTiet != null && !dsChiTiet.isEmpty()) {
+            chiTietTheoHoaDon.put(hd.getMaHD(), new java.util.ArrayList<>(dsChiTiet));
+            // Trừ tồn kho phụ tùng tương ứng
+            for (ChiTietDichVu ct : dsChiTiet) {
+                if ("Phụ tùng".equalsIgnoreCase(ct.getLoai()) || (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng"))) {
+                    PhuTung pt = timPhuTungPhuHop(ct.getMaPT(), ct.getTenHangMuc());
+                    if (pt != null) {
+                        ct.setMaPT(pt.getMaPT());
+                        truTonKho(pt.getMaPT(), ct.getSoLuong());
+                    }
+                }
+            }
+        }
+        boolean dbOk = duLieuDAO.themHoaDon(hd, maNV, dsChiTiet);
         ghiNhatKy("Thu ngân", "Thu ngân", "Lập hóa đơn", NhatKyHeThong.INFO,
-                "Lập & thanh toán hóa đơn [" + hd.getMaHD() + "] tổng " + hd.getTongTien() + " đ" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+                "Lập & thanh toán hóa đơn [" + hd.getMaHD() + "] tổng " + String.format("%,d", hd.getTongTien()) + " đ" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
+    public boolean truTonKho(String maPT, int soLuong) {
+        PhuTung pt = timPhuTung(maPT);
+        if (pt == null) {
+            pt = timPhuTungPhuHop(maPT, "");
+        }
+        if (pt != null) {
+            int tonMoi = Math.max(0, pt.getSoLuongTon() - soLuong);
+            pt.setSoLuongTon(tonMoi);
+            duLieuDAO.capNhatTonKho(pt.getMaPT(), tonMoi);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean congTonKho(String maPT, int soLuong) {
+        PhuTung pt = timPhuTung(maPT);
+        if (pt == null) {
+            pt = timPhuTungPhuHop(maPT, "");
+        }
+        if (pt != null) {
+            int tonMoi = pt.getSoLuongTon() + soLuong;
+            pt.setSoLuongTon(tonMoi);
+            duLieuDAO.capNhatTonKho(pt.getMaPT(), tonMoi);
+            return true;
+        }
+        return false;
+    }
+
+    public java.util.List<ChiTietDichVu> layChiTietTheoPhieu(String soPhieu) {
+        if (soPhieu == null) return new java.util.ArrayList<>();
+        String key = soPhieu.trim();
+        if (chiTietTheoPhieu.containsKey(key)) {
+            return chiTietTheoPhieu.get(key);
+        }
+        // Thử tìm theo CSDL
+        java.util.List<ChiTietDichVu> fromDB = duLieuDAO.layChiTietTheoPhieu(key);
+        if (!fromDB.isEmpty()) {
+            chiTietTheoPhieu.put(key, fromDB);
+            return fromDB;
+        }
+        return new java.util.ArrayList<>();
+    }
+
+    public void luuChiTietPhieu(String soPhieu, java.util.List<ChiTietDichVu> list) {
+        if (soPhieu == null || list == null) return;
+        chiTietTheoPhieu.put(soPhieu.trim(), new java.util.ArrayList<>(list));
+        String maPSC = soPhieu.startsWith("SC") ? soPhieu : ("SC" + soPhieu.replaceAll("[^0-9]", ""));
+        duLieuDAO.luuChiTietSuaChua(maPSC, list);
+    }
+
+    public java.util.List<ChiTietDichVu> layChiTietTheoHoaDon(String maHD) {
+        if (maHD == null) return new java.util.ArrayList<>();
+        String key = maHD.trim();
+        if (chiTietTheoHoaDon.containsKey(key)) {
+            return chiTietTheoHoaDon.get(key);
+        }
+        java.util.List<ChiTietDichVu> fromDB = duLieuDAO.layChiTietTheoHoaDon(key);
+        if (!fromDB.isEmpty()) {
+            chiTietTheoHoaDon.put(key, fromDB);
+            return fromDB;
+        }
+        return new java.util.ArrayList<>();
+    }
+
+    public void luuChiTietHoaDon(String maHD, java.util.List<ChiTietDichVu> list) {
+        if (maHD == null || list == null) return;
+        chiTietTheoHoaDon.put(maHD.trim(), new java.util.ArrayList<>(list));
+    }
+
     public boolean huyHoaDon(String maHD) {
-        hoaDons.removeIf(h -> h.getMaHD().equalsIgnoreCase(maHD));
+        // Hoàn lại số lượng tồn kho trong bộ nhớ cho các phụ tùng của hóa đơn này
+        java.util.List<ChiTietDichVu> chiTiet = chiTietTheoHoaDon.get(maHD);
+        if (chiTiet != null) {
+            for (ChiTietDichVu ct : chiTiet) {
+                if ("Phụ tùng".equalsIgnoreCase(ct.getLoai()) || (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng"))) {
+                    if (ct.getMaPT() != null && !ct.getMaPT().isEmpty()) {
+                        congTonKho(ct.getMaPT(), ct.getSoLuong());
+                    }
+                }
+            }
+        }
+        for (HoaDon h : hoaDons) {
+            if (h.getMaHD().equalsIgnoreCase(maHD)) {
+                h.setTrangThai(HoaDon.DA_HUY);
+                break;
+            }
+        }
         boolean dbOk = duLieuDAO.huyHoaDon(maHD);
         ghiNhatKy("Thu ngân", "Thu ngân", "Hủy hóa đơn", NhatKyHeThong.WARN,
-                "Hủy hóa đơn [" + maHD + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
+                "Hủy hóa đơn [" + maHD + "]" + (dbOk ? " (Đã hoàn kho & cập nhật SQL Server)" : " (Đã hoàn kho bộ nhớ)"));
         return dbOk;
     }
 
@@ -357,8 +463,49 @@ public class KhoDuLieu {
     }
 
     public PhuTung timPhuTung(String ma) {
-        for (PhuTung pt : phuTungs) if (pt.getMaPT().equalsIgnoreCase(ma)) return pt;
+        if (ma == null) return null;
+        for (PhuTung pt : phuTungs) if (pt.getMaPT().equalsIgnoreCase(ma.trim())) return pt;
         return null;
+    }
+
+    public PhuTung timPhuTungPhuHop(String maPT, String ten) {
+        if (maPT != null && !maPT.trim().isEmpty() && !"—".equals(maPT.trim()) && !"-".equals(maPT.trim())) {
+            PhuTung pt = timPhuTung(maPT.trim());
+            if (pt != null) return pt;
+        }
+        if (ten == null || ten.trim().isEmpty()) {
+            return !phuTungs.isEmpty() ? phuTungs.get(0) : null;
+        }
+        String tenTrim = ten.trim();
+        // 1. So sánh chính xác tên không phân biệt hoa thường
+        for (PhuTung pt : phuTungs) {
+            if (pt.getTen().equalsIgnoreCase(tenTrim)) return pt;
+        }
+        // 2. So sánh chứa chuỗi
+        String tenLower = tenTrim.toLowerCase();
+        for (PhuTung pt : phuTungs) {
+            String ptTen = pt.getTen().toLowerCase();
+            if (ptTen.contains(tenLower) || tenLower.contains(ptTen)) return pt;
+        }
+        // 3. So sánh theo từ khóa gara thông dụng
+        String[] tuKhoa = new String[]{"castrol", "dầu", "nhớt", "lọc dầu", "lọc nhớt", "lọc gió", "má phanh", "bố thắng", "ắc quy", "ắc-quy", "bugi", "bu-gi", "gạt mưa", "lốp", "bóng đèn", "nước làm mát", "dây curoa"};
+        for (String tk : tuKhoa) {
+            if (tenLower.contains(tk)) {
+                for (PhuTung pt : phuTungs) {
+                    if (pt.getTen().toLowerCase().contains(tk)) return pt;
+                }
+            }
+        }
+        // 4. Fallback: trả về phụ tùng đầu tiên trong kho
+        return !phuTungs.isEmpty() ? phuTungs.get(0) : null;
+    }
+
+    public void dongBoPhuTungTuDB() {
+        java.util.ArrayList<PhuTung> listDB = duLieuDAO.layTatCaPhuTung();
+        if (listDB != null && !listDB.isEmpty()) {
+            phuTungs.clear();
+            phuTungs.addAll(listDB);
+        }
     }
 
     public NhanVien timNhanVienTheoMa(String ma) {
@@ -399,8 +546,9 @@ public class KhoDuLieu {
             if (PhieuKho.NHAP.equals(phieu.getLoai())) {
                 pt.setSoLuongTon(pt.getSoLuongTon() + ct.getSoLuong());
             } else {
-                pt.setSoLuongTon(pt.getSoLuongTon() - ct.getSoLuong());
+                pt.setSoLuongTon(Math.max(0, pt.getSoLuongTon() - ct.getSoLuong()));
             }
+            duLieuDAO.capNhatTonKho(pt.getMaPT(), pt.getSoLuongTon());
         }
         phieu.setTrangThai(PhieuKho.DA_NHAP);
         phieuKhos.add(phieu);
@@ -426,7 +574,9 @@ public class KhoDuLieu {
         for (ChiTietKho ct : phieu.getChiTiet()) {
             PhuTung pt = timPhuTung(ct.getMaPT());
             if (pt == null) continue;
-            pt.setSoLuongTon(pt.getSoLuongTon() + ct.getSoLuong());
+            int tonMoi = pt.getSoLuongTon() + ct.getSoLuong();
+            pt.setSoLuongTon(tonMoi);
+            duLieuDAO.capNhatTonKho(pt.getMaPT(), tonMoi);
         }
         phieu.setTrangThai(PhieuKho.DA_NHAP);
         duLieuDAO.themPhieuNhapKho(phieu, null);
@@ -467,6 +617,22 @@ public class KhoDuLieu {
         ArrayList<NhanVien> dsNV = nhanVienDAO.layTatCaNhanVien();
         if (dsNV != null && !dsNV.isEmpty()) {
             nhanViens = dsNV;
+        }
+
+        // Tải chi tiết hạng mục sửa chữa và hóa đơn vào bộ nhớ
+        chiTietTheoPhieu.clear();
+        chiTietTheoHoaDon.clear();
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            java.util.List<ChiTietDichVu> cts = duLieuDAO.layChiTietTheoPhieu(p.getSoPhieu());
+            if (!cts.isEmpty()) {
+                chiTietTheoPhieu.put(p.getSoPhieu(), cts);
+            }
+        }
+        for (HoaDon hd : hoaDons) {
+            java.util.List<ChiTietDichVu> cts = duLieuDAO.layChiTietTheoHoaDon(hd.getMaHD());
+            if (!cts.isEmpty()) {
+                chiTietTheoHoaDon.put(hd.getMaHD(), cts);
+            }
         }
 
         demTiepNhan = phieuTiepNhans.size();

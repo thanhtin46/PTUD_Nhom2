@@ -600,23 +600,29 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
+        String sql = "SELECT hd.maHD, hd.soPhieuSC, hd.maKH, kh.hoTen, kh.soDT, " +
                      "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
-                     "ISNULL(SUM(ct.soLuong * ct.donGia), 0) AS tongTien " +
+                     "hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, " +
+                     "ISNULL(hd.ghiChu, '') AS ghiChu, " +
+                     "ISNULL(hd.trangThai, N'Đã thanh toán') AS trangThai " +
                      "FROM HoaDon hd " +
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
-                     "LEFT JOIN PhuongTien pt ON pt.maKH = kh.maKH " +
-                     "LEFT JOIN ChiTietHoaDon ct ON hd.maHD = ct.maHD " +
-                     "GROUP BY hd.maHD, hd.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, hd.ngayLap, hd.hinhThucThanhToan, nv.hoTen " +
+                     "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
+                     "LEFT JOIN PhuongTien pt ON (pt.soVIN = ptn.soVIN OR pt.maKH = hd.maKH) " +
                      "ORDER BY hd.maHD ASC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+            java.util.HashSet<String> daXem = new java.util.HashSet<>();
             while (rs.next()) {
                 String maHD = rs.getString("maHD");
+                if (daXem.contains(maHD)) continue;
+                daXem.add(maHD);
+
+                String soPhieuSC = rs.getString("soPhieuSC");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
@@ -624,13 +630,18 @@ public class DuLieu_DAO {
                 String ngay = rs.getString("ngayLapStr");
                 String httt = rs.getString("hinhThucThanhToan");
                 String tenNV = rs.getString("tenNV");
+                long tienDV = (long) rs.getDouble("tienDichVu");
+                long tienPT = (long) rs.getDouble("tienPhuTung");
+                double giamGia = rs.getDouble("giamGia");
                 long tong = (long) rs.getDouble("tongTien");
+                String ghiChu = rs.getString("ghiChu");
+                String tt = rs.getString("trangThai");
 
                 String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                               ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
 
-                list.add(new HoaDon(maHD, "SC001", maKH, tenKH, sdt, bienSo, ngay,
-                        tong / 2, tong / 2, 0, tong, ptTT, tenNV != null ? tenNV : "Thu ngân", "", HoaDon.DA_THANH_TOAN));
+                list.add(new HoaDon(maHD, soPhieuSC != null ? soPhieuSC : "TN001", maKH, tenKH, sdt, bienSo, ngay,
+                        tienDV, tienPT, giamGia, tong, ptTT, tenNV != null ? tenNV : "Thu ngân", ghiChu, tt));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi layTatCaHoaDon: " + e.getMessage());
@@ -639,6 +650,10 @@ public class DuLieu_DAO {
     }
 
     public boolean themHoaDon(HoaDon hd, String maNV) {
+        return themHoaDon(hd, maNV, null);
+    }
+
+    public boolean themHoaDon(HoaDon hd, String maNV, java.util.List<ChiTietDichVu> dsChiTiet) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
@@ -674,35 +689,63 @@ public class DuLieu_DAO {
                 stmt.setString(2, maKH);
                 stmt.setString(3, nvLap);
                 stmt.setString(4, httt);
-                stmt.setString(5, hd.getSoPhieuSC() != null ? hd.getSoPhieuSC() : "SC001");
+                stmt.setString(5, hd.getSoPhieuSC() != null ? hd.getSoPhieuSC() : "TN001");
                 stmt.setDouble(6, (double) hd.getTienDichVu());
                 stmt.setDouble(7, (double) hd.getTienPhuTung());
                 stmt.setDouble(8, hd.getGiamGiaPhanTram());
                 stmt.setDouble(9, (double) hd.getTongTien());
                 stmt.setString(10, hd.getGhiChu() != null ? hd.getGhiChu() : "");
-                stmt.setString(11, hd.getTrangThai() != null ? hd.getTrangThai() : "DA_THANH_TOAN");
+                stmt.setString(11, hd.getTrangThai() != null ? hd.getTrangThai() : "Đã thanh toán");
                 stmt.executeUpdate();
             }
 
             // 5. Insert ChiTietHoaDon
             String sqlCT = "INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
-                // Chi tiết phụ tùng
-                stmt.setString(1, hd.getMaHD());
-                stmt.setString(2, "PT001");
-                stmt.setString(3, "Chi phí phụ tùng & vật tư sửa chữa");
-                stmt.setInt(4, 1);
-                stmt.setDouble(5, (double) hd.getTienPhuTung());
-                stmt.executeUpdate();
+                if (dsChiTiet != null && !dsChiTiet.isEmpty()) {
+                    java.util.HashSet<String> daCoPT = new java.util.HashSet<>();
+                    int ptCount = 1;
+                    for (ChiTietDichVu ct : dsChiTiet) {
+                        String rawPT = ct.getMaPT() != null ? ct.getMaPT().trim() : "";
+                        String maPT = rawPT;
+                        boolean laPhuTungThat = ("Phụ tùng".equalsIgnoreCase(ct.getLoai()) || (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng")))
+                                && maPT.toUpperCase().startsWith("PT");
 
-                // Chi tiết tiền công dịch vụ
-                if (hd.getTienDichVu() > 0) {
+                        if (!maPT.toUpperCase().startsWith("PT") || daCoPT.contains(maPT)) {
+                            while (ptCount <= 20 && daCoPT.contains(String.format("PT%03d", ptCount))) {
+                                ptCount++;
+                            }
+                            maPT = String.format("PT%03d", Math.min(20, ptCount++));
+                        }
+                        daCoPT.add(maPT);
+
+                        stmt.setString(1, hd.getMaHD());
+                        stmt.setString(2, maPT);
+                        stmt.setString(3, ct.getTenHangMuc());
+                        stmt.setInt(4, ct.getSoLuong());
+                        stmt.setDouble(5, (double) ct.getDonGia());
+                        stmt.executeUpdate();
+                    }
+                } else {
                     stmt.setString(1, hd.getMaHD());
-                    stmt.setString(2, "PT004");
-                    stmt.setString(3, "Chi phí tiền công bảo dưỡng / sửa chữa");
+                    stmt.setString(2, "PT001");
+                    stmt.setString(3, "Chi phí phụ tùng & vật tư sửa chữa");
                     stmt.setInt(4, 1);
-                    stmt.setDouble(5, (double) hd.getTienDichVu());
+                    stmt.setDouble(5, (double) hd.getTienPhuTung());
                     stmt.executeUpdate();
+
+                    if (hd.getTienPhuTung() > 0) {
+                        capNhatTonKhoTru("PT001", 1);
+                    }
+
+                    if (hd.getTienDichVu() > 0) {
+                        stmt.setString(1, hd.getMaHD());
+                        stmt.setString(2, "PT002");
+                        stmt.setString(3, "Chi phí tiền công bảo dưỡng / sửa chữa");
+                        stmt.setInt(4, 1);
+                        stmt.setDouble(5, (double) hd.getTienDichVu());
+                        stmt.executeUpdate();
+                    }
                 }
             }
             return true;
@@ -712,11 +755,126 @@ public class DuLieu_DAO {
         }
     }
 
+    public ArrayList<ChiTietDichVu> layChiTietTheoPhieu(String soPhieu) {
+        ArrayList<ChiTietDichVu> list = new ArrayList<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null || soPhieu == null) return list;
+
+        String maPSC = soPhieu.startsWith("SC") ? soPhieu : ("SC" + soPhieu.replaceAll("[^0-9]", ""));
+        String sql = "SELECT ct.maPT, ct.noiDungSC, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(pt.donViTinh, N'Cái') AS donViTinh " +
+                     "FROM ChiTietSuaChua ct " +
+                     "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
+                     "WHERE ct.maPSC = ?";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, maPSC);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String maPT = rs.getString("maPT");
+                    String noiDung = rs.getString("noiDungSC");
+                    String tenPT = rs.getString("tenPhuTung");
+                    int sl = rs.getInt("soLuong");
+                    long donGia = (long) rs.getDouble("donGia");
+                    String dvt = rs.getString("donViTinh");
+
+                    boolean laCong = (noiDung != null && noiDung.toLowerCase().contains("công")) ||
+                                     (tenPT != null && tenPT.toLowerCase().contains("công"));
+                    String loai = laCong ? "Tiền công" : "Phụ tùng";
+                    String ten = (tenPT != null && !tenPT.isEmpty()) ? tenPT : noiDung;
+                    list.add(new ChiTietDichVu(loai, maPT, ten, dvt, sl, donGia));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi layChiTietTheoPhieu: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public ArrayList<ChiTietDichVu> layChiTietTheoHoaDon(String maHD) {
+        ArrayList<ChiTietDichVu> list = new ArrayList<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null || maHD == null) return list;
+
+        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(pt.donViTinh, N'Cái') AS donViTinh " +
+                     "FROM ChiTietHoaDon ct " +
+                     "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
+                     "WHERE ct.maHD = ?";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, maHD);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String maPT = rs.getString("maPT");
+                    String tenPT = rs.getString("tenPhuTung");
+                    int sl = rs.getInt("soLuong");
+                    long donGia = (long) rs.getDouble("donGia");
+                    String dvt = rs.getString("donViTinh");
+
+                    boolean laCong = tenPT != null && tenPT.toLowerCase().contains("công");
+                    String loai = laCong ? "Tiền công" : "Phụ tùng";
+                    list.add(new ChiTietDichVu(loai, maPT, tenPT, dvt, sl, donGia));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi layChiTietTheoHoaDon: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public boolean luuChiTietSuaChua(String maPSC, java.util.List<ChiTietDichVu> list) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null || maPSC == null || list == null) return false;
+
+        try {
+            try (PreparedStatement del = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC = ?")) {
+                del.setString(1, maPSC);
+                del.executeUpdate();
+            }
+
+            String sql = "INSERT INTO ChiTietSuaChua (maPSC, maPT, noiDungSC, tenPhuTung, soLuong, donGia, trangThai) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement ins = con.prepareStatement(sql)) {
+                java.util.HashSet<String> daCoPT = new java.util.HashSet<>();
+                int ptCount = 1;
+                for (ChiTietDichVu ct : list) {
+                    String maPT = ct.getMaPT();
+                    if (maPT == null || maPT.trim().isEmpty() || daCoPT.contains(maPT)) {
+                        maPT = String.format("PT%03d", Math.min(20, ptCount++));
+                    }
+                    daCoPT.add(maPT);
+
+                    ins.setString(1, maPSC);
+                    ins.setString(2, maPT);
+                    ins.setString(3, ct.getTenHangMuc());
+                    ins.setString(4, ct.getTenHangMuc());
+                    ins.setInt(5, ct.getSoLuong());
+                    ins.setDouble(6, (double) ct.getDonGia());
+                    ins.setString(7, "Hoàn thành");
+                    ins.executeUpdate();
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi luuChiTietSuaChua: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean huyHoaDon(String maHD) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
         try {
+            // Hoàn lại tồn kho cho các phụ tùng trong hóa đơn bị hủy
+            try (PreparedStatement psRead = con.prepareStatement("SELECT maPT, soLuong FROM ChiTietHoaDon WHERE maHD = ?")) {
+                psRead.setString(1, maHD);
+                try (ResultSet rs = psRead.executeQuery()) {
+                    while (rs.next()) {
+                        String maPT = rs.getString("maPT");
+                        int sl = rs.getInt("soLuong");
+                        if (maPT != null && !maPT.isEmpty()) {
+                            capNhatTonKhoCong(maPT, sl);
+                        }
+                    }
+                }
+            }
             try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHD = ?")) {
                 ps.setString(1, maHD);
                 ps.executeUpdate();
@@ -878,7 +1036,7 @@ public class DuLieu_DAO {
         }
     }
 
-    private void capNhatTonKhoCong(String maPT, int soLuong) {
+    public void capNhatTonKhoCong(String maPT, int soLuong) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return;
         try (PreparedStatement ps = con.prepareStatement("UPDATE Kho SET soLuongTon = soLuongTon + ? WHERE maPT = ?")) {
@@ -888,7 +1046,7 @@ public class DuLieu_DAO {
         } catch (SQLException ignored) {}
     }
 
-    private void capNhatTonKhoTru(String maPT, int soLuong) {
+    public void capNhatTonKhoTru(String maPT, int soLuong) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return;
         try (PreparedStatement ps = con.prepareStatement("UPDATE Kho SET soLuongTon = CASE WHEN soLuongTon >= ? THEN soLuongTon - ? ELSE 0 END WHERE maPT = ?")) {

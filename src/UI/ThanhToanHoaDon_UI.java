@@ -156,7 +156,8 @@ public class ThanhToanHoaDon_UI extends JPanel {
     }
 
     private JPanel taoFormThongTin() {
-        JPanel p = UiHelper.panelForm("Thông tin tiếp nhận sửa chữa", 440);
+        JPanel p = UiHelper.panelForm("Thông tin tiếp nhận sửa chữa", 460);
+        p.setPreferredSize(new Dimension(460, 415));
 
         txtMaHD.setEditable(false);
         txtKhachHang.setEditable(false);
@@ -555,7 +556,10 @@ public class ThanhToanHoaDon_UI extends JPanel {
                 new EmptyBorder(3, 8, 3, 8)
         ));
         b.addActionListener(e -> {
-            long tong = tinhTongTien();
+            long tong = 0;
+            try {
+                tong = Long.parseLong(lblTongTien.getText().replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
             long giaTri = (soTien == 0) ? tong : soTien;
             txtTienKhachDua.setText(String.format("%,d", giaTri));
             tinhTienThua();
@@ -567,7 +571,10 @@ public class ThanhToanHoaDon_UI extends JPanel {
         try {
             String raw = txtTienKhachDua.getText().trim().replace(",", "").replace(".", "");
             long dua = raw.isEmpty() ? 0 : Long.parseLong(raw);
-            long tong = tinhTongTien();
+            long tong = 0;
+            try {
+                tong = Long.parseLong(lblTongTien.getText().replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
             long thua = dua - tong;
             if (thua >= 0) {
                 lblTienThua.setText(String.format("%,d", thua));
@@ -720,7 +727,10 @@ public class ThanhToanHoaDon_UI extends JPanel {
         btnCheckStatus.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnCheckStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnCheckStatus.addActionListener(e -> {
-            long tong = tinhTongTien();
+            long tong = 0;
+            try {
+                tong = Long.parseLong(lblTongTien.getText().replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
             JOptionPane.showMessageDialog(this,
                     "Tài khoản thụ hưởng Vietcombank (0071009988776) đã nhận được:\n"
                             + "Số tiền: " + UiHelper.tien(tong) + " VNĐ\n"
@@ -827,19 +837,36 @@ public class ThanhToanHoaDon_UI extends JPanel {
             txtSdt.setText(ptn.getSdt());
             txtBienSo.setText(ptn.getBienSo());
 
-            // Tự động phân bổ tiền công và phụ tùng theo phiếu
-            long tienCong = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.4) : 800000;
-            long tienPt = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.6) : 2800000;
-
-            txtTienDichVu.setText(String.format("%,d", tienCong));
-            txtTienPhuTung.setText(String.format("%,d", tienPt));
-
-            // Nạp bảng chi tiết
+            // Đọc danh mục chi tiết công việc & phụ tùng thực tế của phiếu
+            java.util.List<Entity.ChiTietDichVu> ds = kho.layChiTietTheoPhieu(soPhieu);
             modelChiTiet.setRowCount(0);
-            modelChiTiet.addRow(new Object[]{"Tiền công", ptn.getYeuCau(), "Lần", 1, UiHelper.tien(tienCong), UiHelper.tien(tienCong)});
-            modelChiTiet.addRow(new Object[]{"Phụ tùng", "Dầu động cơ tổng hợp Castrol Edge 4L", "Can", 1, "950,000", "950,000"});
-            modelChiTiet.addRow(new Object[]{"Phụ tùng", "Má phanh đĩa gốm cao cấp", "Bộ", 1, "1,850,000", "1,850,000"});
-
+            long tongCong = 0, tongPT = 0;
+            if (ds != null && !ds.isEmpty()) {
+                for (Entity.ChiTietDichVu ct : ds) {
+                    modelChiTiet.addRow(new Object[]{
+                            ct.getLoai(),
+                            ct.getTenHangMuc(),
+                            ct.getDonVi(),
+                            ct.getSoLuong(),
+                            UiHelper.tien(ct.getDonGia()),
+                            UiHelper.tien(ct.getThanhTien())
+                    });
+                    if ("Tiền công".equalsIgnoreCase(ct.getLoai())) {
+                        tongCong += ct.getThanhTien();
+                    } else {
+                        tongPT += ct.getThanhTien();
+                    }
+                }
+            } else {
+                tongCong = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.4) : 300000;
+                tongPT = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.6) : 650000;
+                Entity.PhuTung ptMacDinh = kho.timPhuTung("PT001");
+                String tenPTMacDinh = ptMacDinh != null ? ptMacDinh.getTen() : "Dầu nhớt tổng hợp Castrol Magnatec 4L";
+                modelChiTiet.addRow(new Object[]{"Tiền công", ptn.getYeuCau(), "Lần", 1, UiHelper.tien(tongCong), UiHelper.tien(tongCong)});
+                modelChiTiet.addRow(new Object[]{"Phụ tùng", tenPTMacDinh, "Can", 1, UiHelper.tien(tongPT), UiHelper.tien(tongPT)});
+            }
+            txtTienDichVu.setText(String.format("%,d", tongCong));
+            txtTienPhuTung.setText(String.format("%,d", tongPT));
             tinhTongTien();
         }
     }
@@ -912,7 +939,25 @@ public class ThanhToanHoaDon_UI extends JPanel {
                 HoaDon.DA_THANH_TOAN
         );
 
-        boolean ok = kho.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05");
+        java.util.List<Entity.ChiTietDichVu> dsItems = new java.util.ArrayList<>();
+        for (int i = 0; i < modelChiTiet.getRowCount(); i++) {
+            String loai = String.valueOf(modelChiTiet.getValueAt(i, 0));
+            String ten = String.valueOf(modelChiTiet.getValueAt(i, 1));
+            String dvt = String.valueOf(modelChiTiet.getValueAt(i, 2));
+            int sl = 1;
+            long gia = 0;
+            try {
+                sl = Integer.parseInt(String.valueOf(modelChiTiet.getValueAt(i, 3)));
+                gia = Long.parseLong(String.valueOf(modelChiTiet.getValueAt(i, 4)).replaceAll("[^0-9]", ""));
+            } catch (Exception ignored) {}
+            String maPT = "";
+            Entity.PhuTung ptFound = kho.timPhuTungPhuHop("", ten);
+            if (ptFound != null) {
+                maPT = ptFound.getMaPT();
+            }
+            dsItems.add(new Entity.ChiTietDichVu(loai, maPT, ten, dvt, sl, gia));
+        }
+        boolean ok = kho.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05", dsItems);
 
         // Chuyển tiến độ phiếu sửa chữa thành "Hoàn thành" và đồng bộ CSDL
         if (ptn != null) {
