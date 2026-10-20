@@ -371,11 +371,31 @@ public final class UiHelper {
             }
 
             @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                int prefW = 0;
+                for (int i = 0; i < getColumnCount(); i++) {
+                    prefW += getColumnModel().getColumn(i).getPreferredWidth();
+                }
+                if (prefW > 0) {
+                    d.width = Math.max(d.width, prefW);
+                }
+                return d;
+            }
+
+            @Override
             public boolean getScrollableTracksViewportWidth() {
-                return getPreferredSize().width <= getParent().getWidth();
+                if (getParent() instanceof JViewport vp) {
+                    int prefW = 0;
+                    for (int i = 0; i < getColumnCount(); i++) {
+                        prefW += getColumnModel().getColumn(i).getPreferredWidth();
+                    }
+                    return vp.getWidth() >= prefW;
+                }
+                return false;
             }
         };
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.setRowHeight(40);
         table.setFont(FONT_BT);
         table.setShowVerticalLines(false);
@@ -411,7 +431,40 @@ public final class UiHelper {
             }
         });
         ((DefaultTableCellRenderer) table.getDefaultRenderer(Object.class)).setHorizontalAlignment(SwingConstants.CENTER);
+        if (table.getDefaultRenderer(String.class) instanceof DefaultTableCellRenderer sr) {
+            sr.setHorizontalAlignment(SwingConstants.CENTER);
+        }
         return table;
+    }
+
+    public static void canGiua(JTable table, int... cot) {
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer();
+        r.setHorizontalAlignment(SwingConstants.CENTER);
+        for (int c : cot) {
+            if (c >= 0 && c < table.getColumnCount()) {
+                table.getColumnModel().getColumn(c).setCellRenderer(r);
+            }
+        }
+    }
+
+    public static void canPhai(JTable table, int... cot) {
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer();
+        r.setHorizontalAlignment(SwingConstants.RIGHT);
+        for (int c : cot) {
+            if (c >= 0 && c < table.getColumnCount()) {
+                table.getColumnModel().getColumn(c).setCellRenderer(r);
+            }
+        }
+    }
+
+    public static void canTrai(JTable table, int... cot) {
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer();
+        r.setHorizontalAlignment(SwingConstants.LEFT);
+        for (int c : cot) {
+            if (c >= 0 && c < table.getColumnCount()) {
+                table.getColumnModel().getColumn(c).setCellRenderer(r);
+            }
+        }
     }
 
     public static DefaultTableModel model(String... cot) {
@@ -478,7 +531,7 @@ public final class UiHelper {
                 else if (cleanTitle.contains("kho") || cleanTitle.contains("nhập") || cleanTitle.contains("xuất")) finalIcon = UiIcon.of(UiIcon.IMPORT, 22, XANH_TRUNG);
                 else if (cleanTitle.contains("quyền")) finalIcon = UiIcon.of(UiIcon.LOCK, 22, XANH_TRUNG);
             }
-            cleanTitle = cleanTitle.replaceAll("^[💳📦📋🛡️👨‍🔧👥🚗⚙️🔍]+\\s*", "");
+            cleanTitle = cleanTitle.replaceAll("^[\\p{So}\\p{Sk}\\p{Sm}\\p{Sc}\\u23F3\\u23F1\\u23F0\\u231A\\u231B\\u2600-\\u27BF💳📦📋🛡️👨‍🔧👥🚗⚙️🔍⏳⏱📊]+", "").trim();
             cleanTitle = cleanTitle.replaceAll("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]", "").trim();
         }
         JLabel lbl = new JLabel(cleanTitle);
@@ -496,6 +549,10 @@ public final class UiHelper {
         if (o instanceof JScrollPane sp) {
             sp.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
             sp.getViewport().setBackground(Color.WHITE);
+            sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            sp.getVerticalScrollBar().setUnitIncrement(16);
+            sp.getHorizontalScrollBar().setUnitIncrement(16);
         }
     }
 }

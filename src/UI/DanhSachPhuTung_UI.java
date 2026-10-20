@@ -27,8 +27,8 @@ public class DanhSachPhuTung_UI extends JPanel {
         root.add(UiHelper.tieuDeTrang("Quản lý phụ tùng"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
-        split.setResizeWeight(0);
-        split.setDividerLocation(430);
+        split.setResizeWeight(0.32);
+        split.setDividerLocation(470);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -36,7 +36,7 @@ public class DanhSachPhuTung_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 430);
+        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 470);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
@@ -61,6 +61,16 @@ public class DanhSachPhuTung_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phụ tùng");
         model = UiHelper.model("Mã PT", "Tên phụ tùng", "ĐVT", "Tồn kho", "Đơn giá");
         table = UiHelper.bang(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Mã PT
+        table.getColumnModel().getColumn(1).setPreferredWidth(260); // Tên phụ tùng
+        table.getColumnModel().getColumn(2).setPreferredWidth(90);  // ĐVT
+        table.getColumnModel().getColumn(3).setPreferredWidth(100); // Tồn kho
+        table.getColumnModel().getColumn(4).setPreferredWidth(140); // Đơn giá
+        UiHelper.canGiua(table, 0, 2, 3);
+        UiHelper.canTrai(table, 1);
+        UiHelper.canPhai(table, 4);
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
         });

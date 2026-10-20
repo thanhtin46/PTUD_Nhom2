@@ -732,7 +732,7 @@ public class AdminHub_UI extends JPanel {
         cboMucDoLog.setFont(UiHelper.FONT_BT);
 
         JButton btnLoc = UiHelper.nut("Lọc nhật ký", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> napBangNhatKy());
-        JButton btnXuat = UiHelper.nut("Xuất file log", UiIcon.of(UiIcon.PRINT, 15), UiHelper.CAM, e -> xuatFileLog());
+        JButton btnXuat = UiHelper.nut("Xuất file log", UiIcon.of(UiIcon.PRINT, 15), UiHelper.CAM, e -> {});
 
         txtTimNhatKy.addActionListener(e -> napBangNhatKy());
         cboMucDoLog.addActionListener(e -> napBangNhatKy());

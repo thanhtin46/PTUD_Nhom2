@@ -482,7 +482,7 @@ public class BaoCaoDoanhThu_UI extends JPanel {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        tableBang = new JTable(modelBang);
+        tableBang = UiHelper.bang(modelBang);
         tableBang.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tableBang.setRowHeight(30);
         tableBang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));

@@ -83,6 +83,15 @@ public class PhanQuyen_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Danh sách tài khoản");
         model = UiHelper.model("Mã NV", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái", "Số quyền");
         table = UiHelper.bang(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.getColumnModel().getColumn(0).setPreferredWidth(80);  // Mã NV
+        table.getColumnModel().getColumn(1).setPreferredWidth(160); // Họ tên
+        table.getColumnModel().getColumn(2).setPreferredWidth(110); // Tài khoản
+        table.getColumnModel().getColumn(3).setPreferredWidth(120); // Vai trò
+        table.getColumnModel().getColumn(4).setPreferredWidth(110); // Trạng thái
+        table.getColumnModel().getColumn(5).setPreferredWidth(80);  // Số quyền
+        UiHelper.canGiua(table, 0, 2, 4, 5);
+        UiHelper.canTrai(table, 1, 3);
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
         });

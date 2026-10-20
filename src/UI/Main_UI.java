@@ -26,6 +26,7 @@ import java.util.ArrayList;
 public class Main_UI extends JFrame {
 
     // ==== Trạng thái ====
+    private static Main_UI instance;
     private final NhanVien nhanVienHienTai;
     private final ArrayList<NhanVien> danhSachNhanVien;
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -58,6 +59,7 @@ public class Main_UI extends JFrame {
     public Main_UI(NhanVien nv, ArrayList<NhanVien> danhSachNhanVien) {
         this.nhanVienHienTai = nv;
         this.danhSachNhanVien = danhSachNhanVien;
+        instance = this;
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -382,6 +384,10 @@ public class Main_UI extends JFrame {
     //                       ĐIỀU HƯỚNG MÀN HÌNH
     // ===============================================================
     private void chonMenu(MenuRow nut, String tenMenu) {
+        chonMenu(nut, tenMenu, null);
+    }
+
+    private void chonMenu(MenuRow nut, String tenMenu, Component trang) {
         if (nutDangChon != null) {
             nutDangChon.setChon(false);
         }
@@ -391,12 +397,28 @@ public class Main_UI extends JFrame {
         }
 
         contentPanel.removeAll();
-        contentPanel.add(layTrangTheoTen(tenMenu), BorderLayout.CENTER);
+        contentPanel.add(trang != null ? trang : layTrangTheoTen(tenMenu), BorderLayout.CENTER);
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
+    public static Main_UI getInstance() {
+        return instance;
+    }
+
+    public NhanVien getNhanVienHienTai() {
+        return nhanVienHienTai;
+    }
+
+    public void chuyenTrangTiepNhan(Entity.PhuongTien xe) {
+        chuyenTrang("Lập phiếu tiếp nhận", new LapPhieuTiepNhan_UI(nhanVienHienTai, xe));
+    }
+
     public void chuyenTrang(String tenMenu) {
+        chuyenTrang(tenMenu, null);
+    }
+
+    public void chuyenTrang(String tenMenu, Component trang) {
         if (tenMenu == null || tenMenu.isEmpty()) return;
 
         MenuRow found = null;
@@ -408,12 +430,12 @@ public class Main_UI extends JFrame {
         }
 
         if (found != null) {
-            chonMenu(found, found.text);
+            chonMenu(found, found.text, trang);
         } else {
             if (nutDangChon != null) nutDangChon.setChon(false);
             nutDangChon = null;
             contentPanel.removeAll();
-            contentPanel.add(layTrangTheoTen(tenMenu), BorderLayout.CENTER);
+            contentPanel.add(trang != null ? trang : layTrangTheoTen(tenMenu), BorderLayout.CENTER);
             contentPanel.revalidate();
             contentPanel.repaint();
         }
@@ -445,7 +467,7 @@ public class Main_UI extends JFrame {
                     -> new TraCuuPhieuTiepNhan_UI();
 
             // 4. Sửa chữa
-            case "Sửa chữa", "Lập phiếu sửa chữa"
+            case "Phiếu sửa chữa", "Sửa chữa", "Lập phiếu sửa chữa"
                     -> new LapPhieuSuaChua_UI(nhanVienHienTai);
             case "Phân công KTV"
                     -> new PhanCongKyThuatVien_UI();
@@ -605,7 +627,7 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Tra cứu phiếu tiếp nhận")));
 
         // 4. Sửa chữa
-        ds.add(MucMenu.nhom("Sửa chữa", UiIcon.WRENCH, SUA_CHUA)
+        ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu sửa chữa"))
                 .them(MucMenu.con("Tra cứu phiếu sửa chữa")));
 

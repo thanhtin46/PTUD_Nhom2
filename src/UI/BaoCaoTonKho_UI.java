@@ -29,7 +29,7 @@ public class BaoCaoTonKho_UI extends JPanel {
         JLabel tde = UiHelper.tieuDeTrang("📊 Báo cáo tồn kho");
         tde.setAlignmentX(Component.LEFT_ALIGNMENT);
         north.add(tde);
-        root.add(north, BorderLayout.NORTH);
+
 
         // ==== Thống kê nhanh ====
         KhoDuLieu kho = KhoDuLieu.get();
@@ -57,11 +57,12 @@ public class BaoCaoTonKho_UI extends JPanel {
         grid.add(theCanhBao(UiIcon.of(UiIcon.BILL, 22, Color.WHITE), "Tổng giá trị tồn",
                 UiHelper.tien(tongGiaTri) + " đ", "Qua " + kho.getPhuTungs().size() + " mặt hàng",
                 new Color(37, 99, 168)));
-        JPanel wrapGrid = new JPanel(new BorderLayout());
-        wrapGrid.setPreferredSize(new Dimension(0, 100));
-        wrapGrid.setOpaque(false);
-        wrapGrid.add(grid, BorderLayout.CENTER);
-        root.add(wrapGrid, BorderLayout.CENTER);
+        north.add(grid);
+        root.add(north, BorderLayout.NORTH);
+
+
+
+
 
         // ==== Bảng chi tiết ====
         JPanel bangPanel = UiHelper.panelBang("Báo cáo chi tiết (cảnh báo real-time)");
@@ -101,6 +102,15 @@ public class BaoCaoTonKho_UI extends JPanel {
         bang.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
                 Component c = super.getTableCellRendererComponent(t, v, s, f, r, col);
+                if (c instanceof JLabel lbl) {
+                    if (col == 0 || col == 2 || col == 3 || col == 4) {
+                        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                    } else if (col == 6 || col == 7) {
+                        lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                    } else {
+                        lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                    }
+                }
                 if (!s && rowsCanhBao.contains(r)) {
                     String cb = model.getValueAt(r, 5).toString();
                     if (cb.contains("HẾT")) c.setBackground(new Color(255, 232, 232));
@@ -116,7 +126,7 @@ public class BaoCaoTonKho_UI extends JPanel {
                 return c;
             }
         });
-        bang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã PT
         bang.getColumnModel().getColumn(1).setPreferredWidth(200);  // Tên phụ tùng
         bang.getColumnModel().getColumn(2).setPreferredWidth(70);   // ĐVT
@@ -131,11 +141,11 @@ public class BaoCaoTonKho_UI extends JPanel {
         sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrapBang = new JScrollPane(bangPanel);
-        wrapBang.setBorder(null);
-        wrapBang.setOpaque(false);
-        wrapBang.getViewport().setOpaque(false);
-        wrapBang.setPreferredSize(new Dimension(0, 0));
+        root.add(bangPanel, BorderLayout.CENTER);
+
+
+
+
 
         // ==== Footer ====
         JPanel tongPanel = new JPanel() {
@@ -163,12 +173,12 @@ public class BaoCaoTonKho_UI extends JPanel {
         tongPanel.add(tPhai, BorderLayout.EAST);
 
         // Gộp bảng + footer
-        JPanel south = new JPanel(new BorderLayout());
-        south.setOpaque(false);
-        south.setBorder(new EmptyBorder(14, 0, 0, 0));
-        south.add(wrapBang, BorderLayout.CENTER);
-        south.add(tongPanel, BorderLayout.SOUTH);
-        root.add(south, BorderLayout.SOUTH);
+        root.add(tongPanel, BorderLayout.SOUTH);
+
+
+
+
+
     }
 
     private JPanel theCanhBao(Icon icon, String ten, String so, String phuDe, Color mau) {

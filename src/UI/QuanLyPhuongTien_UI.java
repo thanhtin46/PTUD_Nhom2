@@ -36,8 +36,8 @@ public class QuanLyPhuongTien_UI extends JPanel {
         root.add(UiHelper.tieuDeTrang("Quản lý phương tiện"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
-        split.setResizeWeight(0);
-        split.setDividerLocation(440);
+        split.setResizeWeight(0.32);
+        split.setDividerLocation(490);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -45,7 +45,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin xe", 440);
+        JPanel formPanel = UiHelper.panelForm("Thông tin xe", 490);
 
         txtBienSo = new JTextField();
         txtSoKhung = new JTextField();
@@ -74,15 +74,24 @@ public class QuanLyPhuongTien_UI extends JPanel {
         UiHelper.themDong(form, 7, "Chủ sở hữu", cboChuXe);
         UiHelper.themDong(form, 8, "Số km hiện tại", txtOdo);
 
-        JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
-        nut.setOpaque(false);
-        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
-        nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
-        nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
+        JPanel panelNut = new JPanel(new BorderLayout(0, 10));
+        panelNut.setOpaque(false);
+        panelNut.setBorder(new EmptyBorder(16, 0, 0, 0));
 
-        UiHelper.ganNoiDungForm(formPanel, form, nut);
+        JPanel hangNut1 = new JPanel(new GridLayout(1, 4, 8, 0));
+        hangNut1.setOpaque(false);
+        hangNut1.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        hangNut1.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
+        hangNut1.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+        hangNut1.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
+
+        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 16), UiHelper.XANH_TRUNG, true, e -> lapPhieuTiepNhan());
+        btnTiepNhan.setPreferredSize(new Dimension(btnTiepNhan.getPreferredSize().width, 38));
+
+        panelNut.add(hangNut1, BorderLayout.NORTH);
+        panelNut.add(btnTiepNhan, BorderLayout.CENTER);
+
+        UiHelper.ganNoiDungForm(formPanel, form, panelNut);
         return formPanel;
     }
 
@@ -107,11 +116,11 @@ public class QuanLyPhuongTien_UI extends JPanel {
                 "Mã chủ", "Tên chủ", "SĐT", "Tiếp nhận gần nhất");
         table = UiHelper.bang(model);
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.getColumnModel().getColumn(0).setPreferredWidth(110);  // Biển số
         table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Hãng
         table.getColumnModel().getColumn(2).setPreferredWidth(120);  // Dòng xe
-        table.getColumnModel().getColumn(3).setPreferredWidth(170);  // VIN
+        table.getColumnModel().getColumn(3).setPreferredWidth(160);  // VIN
         table.getColumnModel().getColumn(4).setPreferredWidth(80);   // Màu
         table.getColumnModel().getColumn(5).setPreferredWidth(70);   // Năm
         table.getColumnModel().getColumn(6).setPreferredWidth(90);   // ODO
@@ -120,8 +129,19 @@ public class QuanLyPhuongTien_UI extends JPanel {
         table.getColumnModel().getColumn(9).setPreferredWidth(110);  // SĐT
         table.getColumnModel().getColumn(10).setPreferredWidth(140); // Tiếp nhận gần nhất
 
+        UiHelper.canGiua(table, 0, 3, 4, 5, 6, 7, 9, 10);
+        UiHelper.canTrai(table, 1, 2, 8);
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
+        });
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    lapPhieuTiepNhan();
+                }
+            }
         });
         JScrollPane sp = new JScrollPane(table);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -209,10 +229,42 @@ public class QuanLyPhuongTien_UI extends JPanel {
         txtOdo.setText("");
         cboHang.setSelectedIndex(0);
         if (cboDong.getItemCount() > 0) cboDong.setSelectedIndex(0);
+        napComboChuXe();
         if (cboChuXe.getItemCount() > 0) cboChuXe.setSelectedIndex(0);
         txtBienSo.setEditable(true);
         table.clearSelection();
         txtBienSo.requestFocus();
+    }
+
+    private void lapPhieuTiepNhan() {
+        String bienSo = txtBienSo.getText().trim();
+        if (bienSo.isEmpty()) {
+            int dong = table.getSelectedRow();
+            if (dong >= 0) {
+                bienSo = model.getValueAt(dong, 0).toString().trim();
+            }
+        }
+        if (bienSo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một xe trong danh sách để lập phiếu tiếp nhận!", "Chưa chọn xe", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        PhuongTien xe = kho.timXeTheoBienSo(bienSo);
+        if (xe == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin xe với biển số: " + bienSo, "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Main_UI mainUI = Main_UI.getInstance();
+        if (mainUI == null) {
+            mainUI = (Main_UI) SwingUtilities.getAncestorOfClass(Main_UI.class, this);
+        }
+
+        if (mainUI != null) {
+            mainUI.chuyenTrangTiepNhan(xe);
+        } else {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy giao diện chính để chuyển trang.");
+        }
     }
 
     private void hienLenForm() {

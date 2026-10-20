@@ -383,8 +383,28 @@ public class QuanLyNhanVien_UI extends JPanel {
 
         table = new JTable(model) {
             @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                int prefW = 0;
+                for (int i = 0; i < getColumnCount(); i++) {
+                    prefW += getColumnModel().getColumn(i).getPreferredWidth();
+                }
+                if (prefW > 0) {
+                    d.width = Math.max(d.width, prefW);
+                }
+                return d;
+            }
+
+            @Override
             public boolean getScrollableTracksViewportWidth() {
-                return getPreferredSize().width <= getParent().getWidth();
+                if (getParent() instanceof JViewport vp) {
+                    int prefW = 0;
+                    for (int i = 0; i < getColumnCount(); i++) {
+                        prefW += getColumnModel().getColumn(i).getPreferredWidth();
+                    }
+                    return vp.getWidth() >= prefW;
+                }
+                return false;
             }
         };
         table.setRowHeight(52);
@@ -397,7 +417,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         table.setSelectionForeground(CHU_TIEU_DE);
 
         // Chế độ co giãn linh hoạt: Khi phóng to toàn màn hình tự dãn 100%, khi màn hình nhỏ kích hoạt cuộn ngang
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         // Header Table
         JTableHeader header = table.getTableHeader();

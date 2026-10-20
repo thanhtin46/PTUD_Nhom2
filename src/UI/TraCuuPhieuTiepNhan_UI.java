@@ -119,7 +119,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
             }
         });
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
         table.getColumnModel().getColumn(1).setPreferredWidth(80);   // Mã KH
         table.getColumnModel().getColumn(2).setPreferredWidth(160);  // Khách hàng
@@ -131,6 +131,10 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         table.getColumnModel().getColumn(8).setPreferredWidth(130);  // Tiến độ
         table.getColumnModel().getColumn(9).setPreferredWidth(140);  // Kỹ thuật viên
         table.getColumnModel().getColumn(10).setPreferredWidth(110); // Tạm tính
+
+        UiHelper.canGiua(table, 0, 1, 3, 4, 6, 8);
+        UiHelper.canTrai(table, 2, 5, 7, 9);
+        UiHelper.canPhai(table, 10);
 
         JScrollPane sp = new JScrollPane(table);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);

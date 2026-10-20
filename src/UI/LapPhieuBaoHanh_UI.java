@@ -39,8 +39,8 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         for (PhuongTien xe : kho.getPhuongTiens()) cboBienSo.addItem(xe.getBienSo());
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
-        split.setResizeWeight(0);
-        split.setDividerLocation(430);
+        split.setResizeWeight(0.32);
+        split.setDividerLocation(470);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -48,7 +48,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin phiếu bảo hành", 430);
+        JPanel formPanel = UiHelper.panelForm("Thông tin phiếu bảo hành", 470);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Số phiếu", txtSoPhieu);
@@ -73,7 +73,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         model = UiHelper.model("Số phiếu", "Biển số", "Ngày BĐ", "Ngày KT", "Người lập", "Tình trạng", "Nội dung");
         JTable table = UiHelper.bang(model);
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
         table.getColumnModel().getColumn(1).setPreferredWidth(110);  // Biển số
         table.getColumnModel().getColumn(2).setPreferredWidth(110);  // Ngày BĐ
@@ -81,6 +81,9 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(160);  // Người lập
         table.getColumnModel().getColumn(5).setPreferredWidth(120);  // Tình trạng
         table.getColumnModel().getColumn(6).setPreferredWidth(250);  // Nội dung
+
+        UiHelper.canGiua(table, 0, 1, 2, 3, 5);
+        UiHelper.canTrai(table, 4, 6);
 
         JScrollPane sp = new JScrollPane(table);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);

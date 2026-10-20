@@ -61,7 +61,7 @@ public class NhapKho_UI extends JPanel {
         cboPhuTung.addActionListener(e -> capNhatGia());
         capNhatGia();
 
-        JPanel formPanel = UiHelper.panelForm("Thông tin phiếu", 420);
+        JPanel formPanel = UiHelper.panelForm("Thông tin phiếu", 480);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Số phiếu", txtSoPhieu);
@@ -114,6 +114,15 @@ public class NhapKho_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Chi tiết phiếu");
         modelDong = UiHelper.model("Mã PT", "Tên", "SL", "Đơn giá", "Thành tiền");
         JTable table = UiHelper.bang(modelDong);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Mã PT
+        table.getColumnModel().getColumn(1).setPreferredWidth(250); // Tên
+        table.getColumnModel().getColumn(2).setPreferredWidth(70);  // SL
+        table.getColumnModel().getColumn(3).setPreferredWidth(120); // Đơn giá
+        table.getColumnModel().getColumn(4).setPreferredWidth(140); // Thành tiền
+        UiHelper.canGiua(table, 0, 2);
+        UiHelper.canTrai(table, 1);
+        UiHelper.canPhai(table, 3, 4);
         JScrollPane sp = new JScrollPane(table);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
@@ -128,8 +137,8 @@ public class NhapKho_UI extends JPanel {
         bangPanel.add(tong, BorderLayout.SOUTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, formPanel, bangPanel);
-        split.setResizeWeight(0);
-        split.setDividerLocation(440);
+        split.setResizeWeight(0.32);
+        split.setDividerLocation(480);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);

@@ -158,6 +158,33 @@ public class KhoDuLieu {
         return dbOk;
     }
 
+    public boolean capNhatPhieuSuaChua(String soPhieu, String tienDo, String maKtv, long tongTien) {
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (p.getSoPhieu().equalsIgnoreCase(soPhieu)) {
+                p.setTienDo(tienDo);
+                if (maKtv != null && !maKtv.isEmpty()) {
+                    p.setKyThuatVien(maKtv);
+                }
+                if (tongTien >= 0) {
+                    p.setThanhTien(tongTien);
+                }
+                break;
+            }
+        }
+        boolean dbOk = duLieuDAO.capNhatTienDoPhieuTiepNhan(soPhieu, tienDo, maKtv);
+        ghiNhatKy("Kỹ thuật", "Kỹ thuật", "Lập/Cập nhật phiếu sửa chữa", NhatKyHeThong.INFO,
+                "Cập nhật phiếu sửa chữa [" + soPhieu + "] -> " + tienDo + " - Tổng tiền: " + String.format("%,d", tongTien) + " đ" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public PhieuTiepNhan timPhieuTiepNhan(String soPhieu) {
+        if (soPhieu == null) return null;
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (p.getSoPhieu().equalsIgnoreCase(soPhieu.trim())) return p;
+        }
+        return null;
+    }
+
     // 5. HÓA ĐƠN
     public boolean themHoaDon(HoaDon hd, String maNV) {
         hoaDons.add(hd);
@@ -280,13 +307,53 @@ public class KhoDuLieu {
     }
 
     public KhachHang timKhachHangTheoSdt(String sdt) {
-        for (KhachHang kh : khachHangs) if (kh.getSdt().equals(sdt)) return kh;
+        if (sdt == null || sdt.trim().isEmpty()) return null;
+        String s = sdt.trim();
+        for (KhachHang kh : khachHangs) {
+            if (kh.getSdt() != null && kh.getSdt().equalsIgnoreCase(s)) return kh;
+        }
+        String soChiSo = s.replaceAll("[^0-9]", "");
+        if (!soChiSo.isEmpty()) {
+            for (KhachHang kh : khachHangs) {
+                if (kh.getSdt() != null) {
+                    String khSo = kh.getSdt().replaceAll("[^0-9]", "");
+                    if (khSo.equals(soChiSo)) return kh;
+                }
+            }
+        }
         return null;
     }
 
     public PhuongTien timXeTheoBienSo(String bienSo) {
-        for (PhuongTien xe : phuongTiens) if (xe.getBienSo().equalsIgnoreCase(bienSo)) return xe;
+        if (bienSo == null || bienSo.trim().isEmpty()) return null;
+        String bsTrim = bienSo.trim();
+        for (PhuongTien xe : phuongTiens) {
+            if (xe.getBienSo() != null && xe.getBienSo().equalsIgnoreCase(bsTrim)) return xe;
+        }
+        // Thử tìm theo chuỗi chuẩn hóa (loại bỏ khoảng trắng, dấu gạch ngang, dấu chấm)
+        String chuanHoa = bsTrim.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        if (!chuanHoa.isEmpty()) {
+            for (PhuongTien xe : phuongTiens) {
+                if (xe.getBienSo() != null) {
+                    String xeChuanHoa = xe.getBienSo().replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+                    if (xeChuanHoa.equals(chuanHoa)) return xe;
+                }
+            }
+        }
         return null;
+    }
+
+    public String maKhachHangMoi() {
+        int max = 0;
+        for (KhachHang kh : khachHangs) {
+            if (kh.getMaKH() != null && kh.getMaKH().toUpperCase().startsWith("KH")) {
+                try {
+                    int so = Integer.parseInt(kh.getMaKH().replaceAll("[^0-9]", ""));
+                    if (so > max) max = so;
+                } catch (Exception ignored) {}
+            }
+        }
+        return String.format("KH%02d", max + 1);
     }
 
     public PhuTung timPhuTung(String ma) {

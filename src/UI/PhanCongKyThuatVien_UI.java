@@ -43,7 +43,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         phu.setAlignmentX(Component.LEFT_ALIGNMENT);
         north.add(tde);
         north.add(phu);
-        root.add(north, BorderLayout.NORTH);
+
 
         // ==== Thẻ thống kê ====
         int soChoPC = 0, soDaPC = 0, soDangSua = 0;
@@ -62,11 +62,14 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         grid.add(the(UiIcon.of(UiIcon.CLOCK, 22, Color.WHITE), "Chờ phân công", String.valueOf(soChoPC), "Cần giao việc gấp", new Color(220, 80, 80)));
         grid.add(the(UiIcon.of(UiIcon.CHECK, 22, Color.WHITE), "Đã phân công", String.valueOf(soDaPC), "Đang chờ KTV nhận", new Color(225, 150, 45)));
         grid.add(the(UiIcon.of(UiIcon.WRENCH, 22, Color.WHITE), "Đang sửa", String.valueOf(soDangSua), "KTV đang xử lý", new Color(46, 160, 92)));
-        JPanel wrapGrid = new JPanel(new BorderLayout());
-        wrapGrid.setPreferredSize(new Dimension(0, 100));
-        wrapGrid.setOpaque(false);
-        wrapGrid.add(grid, BorderLayout.CENTER);
-        root.add(wrapGrid, BorderLayout.CENTER);
+        grid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        north.add(Box.createVerticalStrut(10));
+        north.add(grid);
+        root.add(north, BorderLayout.NORTH);
+
+
+
+
 
         // ==== Bảng ====
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu sửa chữa");
@@ -112,7 +115,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 }
             }
         });
-        bang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
         bang.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
         bang.getColumnModel().getColumn(2).setPreferredWidth(110);  // Biển số
@@ -120,16 +123,19 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         bang.getColumnModel().getColumn(4).setPreferredWidth(160);  // KTV phụ trách
         bang.getColumnModel().getColumn(5).setPreferredWidth(130);  // Tiến độ
 
+        UiHelper.canGiua(bang, 0, 2, 5);
+        UiHelper.canTrai(bang, 1, 3, 4);
+
         JScrollPane sp = new JScrollPane(bang);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrapBang = new JScrollPane(bangPanel);
-        wrapBang.setBorder(null);
-        wrapBang.setOpaque(false);
-        wrapBang.getViewport().setOpaque(false);
-        wrapBang.setPreferredSize(new Dimension(0, 0));
+        root.add(bangPanel, BorderLayout.CENTER);
+
+
+
+
 
         // ==== Panel phân công ====
         JPanel pcPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
@@ -148,11 +154,11 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         pcPanel.add(btnPhanCong);
         pcPanel.add(btnBoPhanCong);
 
-        JPanel south = new JPanel(new BorderLayout());
-        south.setOpaque(false);
-        south.add(wrapBang, BorderLayout.CENTER);
-        south.add(pcPanel, BorderLayout.SOUTH);
-        root.add(south, BorderLayout.SOUTH);
+        root.add(pcPanel, BorderLayout.SOUTH);
+
+
+
+
     }
 
     private void napComboKtv() {

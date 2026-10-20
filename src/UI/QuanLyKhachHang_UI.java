@@ -26,8 +26,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         root.add(UiHelper.tieuDeTrang("Quản lý khách hàng"), BorderLayout.NORTH);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
-        split.setResizeWeight(0);
-        split.setDividerLocation(440);
+        split.setResizeWeight(0.32);
+        split.setDividerLocation(470);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
@@ -35,7 +35,7 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng", 440);
+        JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng", 470);
 
         txtMa = new JTextField();
         txtTen = new JTextField();
@@ -79,17 +79,20 @@ public class QuanLyKhachHang_UI extends JPanel {
         table = UiHelper.bang(model);
 
         // Chế độ tự động dãn đều 100% khi phóng to và cuộn ngang khi thu nhỏ
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         // Đặt độ rộng tối thiểu và phù hợp cho từng cột để hiện đầy đủ thông tin
-        table.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã KH
+        table.getColumnModel().getColumn(0).setPreferredWidth(85);   // Mã KH
         table.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
         table.getColumnModel().getColumn(2).setPreferredWidth(110);  // SĐT
-        table.getColumnModel().getColumn(3).setPreferredWidth(130);  // CCCD
+        table.getColumnModel().getColumn(3).setPreferredWidth(120);  // CCCD
         table.getColumnModel().getColumn(4).setPreferredWidth(220);  // Địa chỉ
         table.getColumnModel().getColumn(5).setPreferredWidth(180);  // Email
         table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Ghi chú
         table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Ngày ĐK
+
+        UiHelper.canGiua(table, 0, 2, 3, 7);
+        UiHelper.canTrai(table, 1, 4, 5, 6);
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();

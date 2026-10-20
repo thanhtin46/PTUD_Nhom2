@@ -45,7 +45,7 @@ public class TheoDoiChoNhap_UI extends JPanel {
         north.add(tde);
         north.add(phu);
         north.add(Box.createVerticalStrut(10));
-        root.add(north, BorderLayout.NORTH);
+
 
         // ==== Thẻ thống kê ====
         int soChoNhap = 0, soTreHan = 0;
@@ -69,11 +69,13 @@ public class TheoDoiChoNhap_UI extends JPanel {
         grid.add(the(UiIcon.of(UiIcon.CLOCK, 22, Color.WHITE), "Đang chờ nhập", String.valueOf(soChoNhap), "Phiếu từ NCC", new Color(37, 99, 168)));
         grid.add(the(UiIcon.of(UiIcon.CLOSE, 22, Color.WHITE), "Trễ hạn giao", String.valueOf(soTreHan), "Cần liên hệ NCC", new Color(220, 80, 80)));
         grid.add(the(UiIcon.of(UiIcon.BILL, 22, Color.WHITE), "Giá trị chờ", UiHelper.tien(giaTriChoNhap) + " đ", "Tổng đơn chưa nhập", new Color(225, 150, 45)));
-        JPanel wrapGrid = new JPanel(new BorderLayout());
-        wrapGrid.setPreferredSize(new Dimension(0, 100));
-        wrapGrid.setOpaque(false);
-        wrapGrid.add(grid, BorderLayout.CENTER);
-        root.add(wrapGrid, BorderLayout.CENTER);
+        grid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        north.add(grid);
+        root.add(north, BorderLayout.NORTH);
+
+
+
+
 
         // ==== Bảng ====
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu chờ nhập");
@@ -81,6 +83,18 @@ public class TheoDoiChoNhap_UI extends JPanel {
                 "Số mặt hàng", "Tổng tiền", "Trạng thái", "Cảnh báo");
         napBang();
         bang = UiHelper.bang(model);
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Số phiếu
+        bang.getColumnModel().getColumn(1).setPreferredWidth(100);  // Ngày đặt
+        bang.getColumnModel().getColumn(2).setPreferredWidth(200);  // Nhà cung cấp
+        bang.getColumnModel().getColumn(3).setPreferredWidth(110);  // Dự kiến giao
+        bang.getColumnModel().getColumn(4).setPreferredWidth(90);   // Số mặt hàng
+        bang.getColumnModel().getColumn(5).setPreferredWidth(130);  // Tổng tiền
+        bang.getColumnModel().getColumn(6).setPreferredWidth(120);  // Trạng thái
+        bang.getColumnModel().getColumn(7).setPreferredWidth(120);  // Cảnh báo
+        UiHelper.canGiua(bang, 0, 1, 3, 4, 6, 7);
+        UiHelper.canTrai(bang, 2);
+        UiHelper.canPhai(bang, 5);
         bang.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 JLabel comp = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, c);
@@ -120,11 +134,11 @@ public class TheoDoiChoNhap_UI extends JPanel {
         JScrollPane sp = new JScrollPane(bang);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
-        JScrollPane wrapBang = new JScrollPane(bangPanel);
-        wrapBang.setBorder(null);
-        wrapBang.setOpaque(false);
-        wrapBang.getViewport().setOpaque(false);
-        wrapBang.setPreferredSize(new Dimension(0, 0));
+        root.add(bangPanel, BorderLayout.CENTER);
+
+
+
+
 
         // ==== Nút hành động ====
         JPanel nutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -137,11 +151,11 @@ public class TheoDoiChoNhap_UI extends JPanel {
         nutPanel.add(btnNhap);
         nutPanel.add(btnHuy);
 
-        JPanel south = new JPanel(new BorderLayout());
-        south.setOpaque(false);
-        south.add(wrapBang, BorderLayout.CENTER);
-        south.add(nutPanel, BorderLayout.SOUTH);
-        root.add(south, BorderLayout.SOUTH);
+        root.add(nutPanel, BorderLayout.SOUTH);
+
+
+
+
     }
 
     private void napBang() {
