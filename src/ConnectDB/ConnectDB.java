@@ -14,6 +14,7 @@ public class ConnectDB {
         "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;user=sa;password=123456;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
         "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;user=sa;password=123;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
         "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;user=sa;password=sa;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
+            "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;user=sa;password=sapassword;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
         "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;integratedSecurity=true;encrypt=true;trustServerCertificate=true;loginTimeout=3;"
     };
 

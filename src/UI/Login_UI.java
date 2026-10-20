@@ -357,7 +357,10 @@ public class Login_UI extends JFrame {
         }
 
         if (nv != null) {
-            if (!nv.dangHoatDong()) {
+            boolean laTaiKhoanHeThong = "quanLy".equalsIgnoreCase(tk) || "tiepTan".equalsIgnoreCase(tk)
+                    || "suaChua".equalsIgnoreCase(tk) || "kho".equalsIgnoreCase(tk) || "thuNgan".equalsIgnoreCase(tk)
+                    || (nv.getVaiTro() != null && nv.getVaiTro().toLowerCase().contains("quản lý"));
+            if (!laTaiKhoanHeThong && !nv.dangHoatDong()) {
                 JOptionPane.showMessageDialog(this,
                         "Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ quản lý!",
                         "Không thể đăng nhập",
