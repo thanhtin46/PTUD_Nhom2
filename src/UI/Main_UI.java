@@ -388,18 +388,43 @@ public class Main_UI extends JFrame {
     }
 
     private void chonMenu(MenuRow nut, String tenMenu, Component trang) {
-        if (nutDangChon != null) {
-            nutDangChon.setChon(false);
-        }
-        nutDangChon = nut;
-        if (nutDangChon != null) {
-            nutDangChon.setChon(true);
-        }
+        try {
+            if (nutDangChon != null) {
+                nutDangChon.setChon(false);
+            }
 
-        contentPanel.removeAll();
-        contentPanel.add(trang != null ? trang : layTrangTheoTen(tenMenu), BorderLayout.CENTER);
-        contentPanel.revalidate();
-        contentPanel.repaint();
+            nutDangChon = nut;
+
+            if (nutDangChon != null) {
+                nutDangChon.setChon(true);
+            }
+
+            contentPanel.removeAll();
+
+            Component manHinh = trang != null
+                    ? trang
+                    : layTrangTheoTen(tenMenu);
+
+            if (manHinh == null) {
+                throw new IllegalStateException(
+                        "Không tạo được giao diện: " + tenMenu);
+            }
+
+            contentPanel.add(manHinh, BorderLayout.CENTER);
+            contentPanel.revalidate();
+            contentPanel.repaint();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể mở màn hình: " + tenMenu
+                            + "\nLỗi: " + ex.getMessage(),
+                    "Lỗi giao diện",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     public static Main_UI getInstance() {
@@ -554,7 +579,12 @@ public class Main_UI extends JFrame {
             String vt = vaiTroNV.trim().toLowerCase();
 
             // 1. Quản lý / Admin / Điều hành có TOÀN QUYỀN tất cả các chức năng
-            if (vt.contains("quản lý") || vt.contains("admin") || vt.contains("điều hành") || vt.contains("giám đốc") || vt.contains("chủ xưởng")) {
+            if (vt.contains("quản lý")
+                    || vt.contains("quản trị")
+                    || vt.contains("admin")
+                    || vt.contains("điều hành")
+                    || vt.contains("giám đốc")
+                    || vt.contains("chủ xưởng")) {
                 return true;
             }
 

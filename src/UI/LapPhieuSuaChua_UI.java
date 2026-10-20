@@ -2,6 +2,7 @@ package UI;
 
 import ConnectDB.ConnectDB;
 import Entity.*;
+import DAO.PhieuXuat_DAO;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -29,6 +30,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     private final NhanVien nvHienTai;
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final PhieuXuat_DAO pxkDAO = new PhieuXuat_DAO();
 
     // Biến tĩnh hỗ trợ đồng bộ chuyển từ màn hình Tra cứu sang
     private static String phieuCanChonSan = null;
@@ -745,14 +747,40 @@ public class LapPhieuSuaChua_UI extends JPanel {
     // LƯU & ĐỒNG BỘ DỮ LIỆU
     // ===============================================================
     private void luuPhieuSuaChua() {
-        if (cboPhieuTN.getSelectedIndex() <= 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn Phiếu tiếp nhận xe trước khi lưu!", "Nhắc nhở", JOptionPane.WARNING_MESSAGE);
+        String selPTN = (String) cboPhieuTN.getSelectedItem();
+
+        if (selPTN == null) {
+            JOptionPane.showMessageDialog(
+                    this, "Vui lòng chọn phiếu tiếp nhận!");
             return;
         }
-        if (modelCongViec.getRowCount() == 0 && modelPhuTung.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng thêm ít nhất một hạng mục công việc hoặc phụ tùng thay thế!", "Nhắc nhở", JOptionPane.WARNING_MESSAGE);
+
+        String maPTN = selPTN.split(" - ")[0].trim();
+
+        try {
+            if (!pxkDAO.daXuatKhoChoPTN(maPTN)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Phiếu xuất kho chưa được xác nhận.\n"
+                                + "Vui lòng hoàn tất xuất kho trước khi lập "
+                                + "phiếu sửa chữa.",
+                        "Chưa thể lập phiếu sửa chữa",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể kiểm tra trạng thái xuất kho: "
+                            + ex.getMessage(),
+                    "Lỗi database",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
+
+    // Chỉ tiếp tục lưu phiếu sửa chữa sau khi qua bước kiểm tra.
 
         String selTN = String.valueOf(cboPhieuTN.getSelectedItem());
         String soPTN = selTN.split(" - ")[0].trim();
