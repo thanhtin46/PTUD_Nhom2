@@ -38,8 +38,8 @@ public class LapPhieuSuaChua_UI extends JPanel {
         phieuCanChonSan = soPhieu;
     }
 
-    private static int demPSC = 42;
     private String maPSC;
+    private JTextField txtMaPSC;
 
     // Khối 1: Tiếp nhận xe & Phân công
     private JComboBox<String> cboPhieuTN;
@@ -75,7 +75,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     public LapPhieuSuaChua_UI(NhanVien nv) {
         this.nvHienTai = nv;
-        this.maPSC = String.format("PSC%05d", demPSC++);
+        this.maPSC = taoMaPSCNgauNhien();
 
         setLayout(new BorderLayout());
         setBackground(UiHelper.NEN);
@@ -201,11 +201,23 @@ public class LapPhieuSuaChua_UI extends JPanel {
         JPanel col1 = new JPanel(new GridBagLayout());
         col1.setOpaque(false);
 
+// Khởi tạo phiếu tiếp nhận trước khi thêm vào giao diện
         cboPhieuTN = new JComboBox<>();
         cboPhieuTN.setFont(UiHelper.FONT_BT);
         cboPhieuTN.setBackground(Color.WHITE);
         cboPhieuTN.setPreferredSize(new Dimension(100, 36));
+
+// Cập nhật thông tin khi chọn phiếu tiếp nhận
         cboPhieuTN.addActionListener(e -> khiChonPhieuTiepNhan());
+
+        // Mã phiếu sửa chữa tự động
+        txtMaPSC = new JTextField(maPSC);
+        txtMaPSC.setEditable(false);
+        txtMaPSC.setFocusable(false);
+        txtMaPSC.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtMaPSC.setForeground(UiHelper.XANH_TRUNG);
+        txtMaPSC.setBackground(new Color(241, 245, 249));
+        UiHelper.trangTriInput(txtMaPSC);
 
         lblBienSoXe = new JLabel("-");
         lblBienSoXe.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -228,13 +240,14 @@ public class LapPhieuSuaChua_UI extends JPanel {
         txtNgayHenGiao = new JTextField(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         UiHelper.trangTriInput(txtNgayHenGiao);
 
-        UiHelper.themDong(col1, 0, "Phiếu tiếp nhận *", cboPhieuTN);
-        UiHelper.themDong(col1, 1, "Biển số xe", lblBienSoXe);
-        UiHelper.themDong(col1, 2, "Hãng & Dòng xe", lblHangXeDongXe);
-        UiHelper.themDong(col1, 3, "Khách hàng & SĐT", lblKhachHang);
-        UiHelper.themDong(col1, 4, "Yêu cầu ban đầu", lblYeuCauDauVao);
-        UiHelper.themDong(col1, 5, "Ngày giờ lập", txtNgayLap);
-        UiHelper.themDong(col1, 6, "Hẹn hoàn thành", txtNgayHenGiao);
+        UiHelper.themDong(col1, 0, "Mã phiếu sửa chữa", txtMaPSC);
+        UiHelper.themDong(col1, 1, "Phiếu tiếp nhận *", cboPhieuTN);
+        UiHelper.themDong(col1, 2, "Biển số xe", lblBienSoXe);
+        UiHelper.themDong(col1, 3, "Hãng & Dòng xe", lblHangXeDongXe);
+        UiHelper.themDong(col1, 4, "Khách hàng & SĐT", lblKhachHang);
+        UiHelper.themDong(col1, 5, "Yêu cầu ban đầu", lblYeuCauDauVao);
+        UiHelper.themDong(col1, 6, "Ngày giờ lập", txtNgayLap);
+        UiHelper.themDong(col1, 7, "Hẹn hoàn thành", txtNgayHenGiao);
 
         // CỘT 2: Phân công KTV & Tiến độ
         JPanel col2 = new JPanel(new GridBagLayout());
@@ -269,6 +282,14 @@ public class LapPhieuSuaChua_UI extends JPanel {
         card.add(grid, BorderLayout.CENTER);
 
         return card;
+    }
+
+    private String taoMaPSCNgauNhien() {
+        return "PSC" + java.util.UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 8)
+                .toUpperCase();
     }
 
     // ===============================================================
@@ -870,7 +891,10 @@ public class LapPhieuSuaChua_UI extends JPanel {
     }
 
     private void lamMoi() {
-        this.maPSC = String.format("PSC%05d", demPSC++);
+        this.maPSC = taoMaPSCNgauNhien();
+        if (txtMaPSC != null) {
+            txtMaPSC.setText(this.maPSC);
+        }
         txtNgayLap.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         txtNgayHenGiao.setText(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         txtTenCongViec.setText("");
