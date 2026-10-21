@@ -40,6 +40,7 @@ public class PhieuKho {
         this.trangThai = trangThai == null ? CHO_NHAP : trangThai;
     }
 
+<<<<<<< HEAD
     
 
 	public PhieuKho() {
@@ -91,6 +92,13 @@ public class PhieuKho {
 	}
 
 	public String getGhiChu() { return ghiChu; }
+=======
+    public String getSoPhieu() { return soPhieu; }
+    public String getLoai() { return loai; }
+    public String getNgay() { return ngay; }
+    public String getNguoiLap() { return nguoiLap; }
+    public String getGhiChu() { return ghiChu; }
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
     public ArrayList<ChiTietKho> getChiTiet() { return chiTiet; }
     public String getNhaCungCap() { return nhaCungCap; }
     public void setNhaCungCap(String nhaCungCap) { this.nhaCungCap = nhaCungCap; }

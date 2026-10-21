@@ -5,12 +5,19 @@ import DAO.NhanVien_DAO;
 import Entity.KhoDuLieu;
 import Entity.NhanVien;
 import javax.swing.*;
+<<<<<<< HEAD
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class RunApp_UI {
     public static void main(String[] args) throws SQLException {
+=======
+import java.util.ArrayList;
+
+public class RunApp_UI {
+    public static void main(String[] args) {
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

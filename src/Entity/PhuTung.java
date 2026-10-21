@@ -26,6 +26,7 @@ public class PhuTung {
         this.soLuongToiThieu = soLuongToiThieu;
     }
 
+<<<<<<< HEAD
    
 
 	public PhuTung() {
@@ -33,6 +34,9 @@ public class PhuTung {
 	}
 
 	public String getMaPT() { return maPT; }
+=======
+    public String getMaPT() { return maPT; }
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
     public void setMaPT(String maPT) { this.maPT = maPT; }
 
     public String getTen() { return ten; }
@@ -57,6 +61,9 @@ public class PhuTung {
         return "BÌNH THƯỜNG";
     }
     public boolean canhBao() { return soLuongTon <= soLuongToiThieu; }
+<<<<<<< HEAD
 
 	
+=======
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 }

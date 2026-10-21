@@ -19,7 +19,10 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+<<<<<<< HEAD
 import java.sql.SQLException;
+=======
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -217,12 +220,16 @@ public class QuanLyNhanVien_UI extends JPanel {
         btnLamMoi.setBorder(new LineBorder(VIEN_CARD, 1, true));
         btnLamMoi.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnLamMoi.addActionListener(e -> {
+<<<<<<< HEAD
             try {
 				ConnectDB.getInstance().connect();
 			} catch (SQLException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+=======
+            ConnectDB.getInstance().connect();
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
             napBang();
             JOptionPane.showMessageDialog(this, "Đã làm mới dữ liệu từ CSDL SQL Server!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         });

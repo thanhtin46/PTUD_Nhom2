@@ -809,5 +809,97 @@ public class DuLieu_DAO {
         }
     }
 
+<<<<<<< HEAD
     
+=======
+    // ===============================================================
+    // 7. NHẬP KHO & XUẤT KHO
+    // ===============================================================
+    public boolean themPhieuNhapKho(PhieuKho phieu, String maNV) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+
+        try {
+            String sqlPN = "INSERT INTO PhieuNhapKho (maPhieuNhap, maNCC, maNV, ngayNhap, tongTien) VALUES (?, ?, ?, CAST(GETDATE() AS DATE), ?)";
+            try (PreparedStatement stmt = con.prepareStatement(sqlPN)) {
+                stmt.setString(1, phieu.getSoPhieu());
+                stmt.setString(2, "NCC001");
+                stmt.setString(3, maNV != null && !maNV.isEmpty() ? maNV : "NV03");
+                stmt.setDouble(4, (double) phieu.getTongTien());
+                stmt.executeUpdate();
+            }
+
+            String sqlCT = "INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap, maPT, tenPT, soLuong, donGia) VALUES (?, ?, ?, ?, ?)";
+            for (ChiTietKho ct : phieu.getChiTiet()) {
+                try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
+                    stmt.setString(1, phieu.getSoPhieu());
+                    stmt.setString(2, ct.getMaPT());
+                    stmt.setString(3, ct.getTenPT());
+                    stmt.setInt(4, ct.getSoLuong());
+                    stmt.setDouble(5, (double) ct.getDonGia());
+                    stmt.executeUpdate();
+                }
+                // Tăng tồn kho
+                capNhatTonKhoCong(ct.getMaPT(), ct.getSoLuong());
+            }
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi themPhieuNhapKho: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean themPhieuXuatKho(PhieuKho phieu, String maNV) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+
+        try {
+            String sqlPX = "INSERT INTO PhieuXuatKho (maPhieuXuat, maPSC, maNV, ngayXuat) VALUES (?, ?, ?, CAST(GETDATE() AS DATE))";
+            try (PreparedStatement stmt = con.prepareStatement(sqlPX)) {
+                stmt.setString(1, phieu.getSoPhieu());
+                stmt.setString(2, "SC001");
+                stmt.setString(3, maNV != null && !maNV.isEmpty() ? maNV : "NV03");
+                stmt.executeUpdate();
+            }
+
+            String sqlCT = "INSERT INTO ChiTietPhieuXuatKho (maPhieuXuat, maPT, soLuong, lyDoXuat) VALUES (?, ?, ?, ?)";
+            for (ChiTietKho ct : phieu.getChiTiet()) {
+                try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
+                    stmt.setString(1, phieu.getSoPhieu());
+                    stmt.setString(2, ct.getMaPT());
+                    stmt.setInt(3, ct.getSoLuong());
+                    stmt.setString(4, "Xuất vật tư sửa chữa: " + ct.getTenPT());
+                    stmt.executeUpdate();
+                }
+                // Giảm tồn kho
+                capNhatTonKhoTru(ct.getMaPT(), ct.getSoLuong());
+            }
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi themPhieuXuatKho: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void capNhatTonKhoCong(String maPT, int soLuong) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return;
+        try (PreparedStatement ps = con.prepareStatement("UPDATE Kho SET soLuongTon = soLuongTon + ? WHERE maPT = ?")) {
+            ps.setInt(1, soLuong);
+            ps.setString(2, maPT);
+            ps.executeUpdate();
+        } catch (SQLException ignored) {}
+    }
+
+    private void capNhatTonKhoTru(String maPT, int soLuong) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return;
+        try (PreparedStatement ps = con.prepareStatement("UPDATE Kho SET soLuongTon = CASE WHEN soLuongTon >= ? THEN soLuongTon - ? ELSE 0 END WHERE maPT = ?")) {
+            ps.setInt(1, soLuong);
+            ps.setInt(2, soLuong);
+            ps.setString(3, maPT);
+            ps.executeUpdate();
+        } catch (SQLException ignored) {}
+    }
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 }

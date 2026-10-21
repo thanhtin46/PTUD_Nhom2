@@ -274,7 +274,11 @@ public class NhanVien_DAO {
         }
     }
 
+<<<<<<< HEAD
     public static void main(String[] args) throws SQLException {
+=======
+    public static void main(String[] args) {
+>>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
         ConnectDB.getInstance().connect();
         NhanVien_DAO dao = new NhanVien_DAO();
         ArrayList<NhanVien> list = dao.layTatCaNhanVien();
