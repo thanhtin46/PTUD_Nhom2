@@ -1,5 +1,6 @@
 package UI;
 
+import DAO.KhachHang_DAO;
 import Entity.KhachHang;
 import Entity.KhoDuLieu;
 
@@ -10,12 +11,20 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * QuanLyKhachHang_UI — Giao diện Quản Lý Khách Hàng dành cho Nhân viên Tiếp tân:
+ * - CRUD Khách hàng: Thêm, Sửa, Xóa, Làm mới
+ * - Tự động sinh mã khách hàng mới (KH001, KH002...) thông qua KhachHang_DAO
+ * - Kiểm tra hợp lệ dữ liệu và kiểm tra trùng số điện thoại, trùng mã bằng DAO
+ * - Đồng bộ trực tiếp 2 chiều với CSDL Microsoft SQL Server và KhoDuLieu
+ */
 public class QuanLyKhachHang_UI extends JPanel {
     private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail;
     private JTextArea txtGhiChu;
     private JTable table;
     private DefaultTableModel model;
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
 
     public QuanLyKhachHang_UI() {
         JPanel root = UiHelper.nen();
@@ -31,7 +40,9 @@ public class QuanLyKhachHang_UI extends JPanel {
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
+
         napBang();
+        lamMoi(); // Tự động sinh mã khách hàng đầu tiên cho Tiếp tân
     }
 
     private JPanel taoForm() {
@@ -108,7 +119,16 @@ public class QuanLyKhachHang_UI extends JPanel {
 
     private void napBang() {
         model.setRowCount(0);
-        for (KhachHang kh : kho.getKhachHangs()) {
+        // Đồng bộ danh sách từ CSDL SQL Server qua KhachHang_DAO
+        java.util.ArrayList<KhachHang> ds = khachHangDAO.layTatCaKhachHang();
+        if (ds.isEmpty()) {
+            ds = kho.getKhachHangs();
+        } else {
+            kho.getKhachHangs().clear();
+            kho.getKhachHangs().addAll(ds);
+        }
+
+        for (KhachHang kh : ds) {
             model.addRow(new Object[]{kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
                     kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKy()});
         }
@@ -121,21 +141,27 @@ public class QuanLyKhachHang_UI extends JPanel {
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
                 txtCccd.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(),
                 txtGhiChu.getText().trim(), ngayHomNay);
+
         boolean ok = kho.themKhachHang(kh);
         napBang();
         lamMoi();
-        JOptionPane.showMessageDialog(this, ok ? "Thêm khách hàng và lưu CSDL SQL Server thành công!" : "Thêm khách hàng thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Thêm khách hàng và lưu CSDL SQL Server thành công!" : "Thêm khách hàng thành công (Lưu bộ nhớ)!");
     }
 
     private void xoa() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa khách hàng này?",
-                "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         String ma = model.getValueAt(dong, 0).toString();
+        String ten = model.getValueAt(dong, 1).toString();
+
+        int hoi = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn xóa khách hàng [" + ma + "] " + ten + "?\nToàn bộ lịch sử liên quan cũng sẽ được xử lý an toàn.",
+                "Xác nhận xóa khách hàng", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (hoi != JOptionPane.YES_OPTION) return;
+
         boolean ok = kho.xoaKhachHang(ma);
         napBang();
         lamMoi();
@@ -145,34 +171,42 @@ public class QuanLyKhachHang_UI extends JPanel {
     private void sua() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!kiemTraForm(false)) return;
-        KhachHang kh = kho.timKhachHangTheoMa(model.getValueAt(dong, 0).toString());
+        String ma = model.getValueAt(dong, 0).toString();
+        KhachHang kh = kho.timKhachHangTheoMa(ma);
+        if (kh == null) {
+            kh = khachHangDAO.timKhachHangTheoMa(ma);
+        }
         if (kh == null) return;
+
         kh.setHoTen(txtTen.getText().trim());
         kh.setSdt(txtSdt.getText().trim());
         kh.setCccd(txtCccd.getText().trim());
         kh.setDiaChi(txtDiaChi.getText().trim());
         kh.setEmail(txtEmail.getText().trim());
         kh.setGhiChu(txtGhiChu.getText().trim());
+
         boolean ok = kho.capNhatKhachHang(kh);
         napBang();
         JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
     }
 
     private void lamMoi() {
-        txtMa.setText("");
+        // Tự động sinh mã mới tiếp theo từ KhachHang_DAO để Tiếp tân không phải gõ tay
+        String maMoi = khachHangDAO.sinhMaKhachHangTuDong();
+        txtMa.setText(maMoi);
         txtTen.setText("");
         txtSdt.setText("");
         txtCccd.setText("");
         txtDiaChi.setText("");
         txtEmail.setText("");
         txtGhiChu.setText("");
-        txtMa.setEditable(true);
+        txtMa.setEditable(false); // Khóa trường mã khách hàng tự sinh để chuẩn hóa dữ liệu
         table.clearSelection();
-        txtMa.requestFocus();
+        txtTen.requestFocus();
     }
 
     private void hienLenForm() {
@@ -195,12 +229,20 @@ public class QuanLyKhachHang_UI extends JPanel {
         String cccd = txtCccd.getText().trim();
         String email = txtEmail.getText().trim();
 
-        if (ma.isEmpty() || ten.isEmpty() || sdt.isEmpty()) {
-            UiHelper.loi(this, "Mã khách hàng, Họ tên và Số điện thoại không được để trống!", txtMa);
+        if (ma.isEmpty()) {
+            UiHelper.loi(this, "Mã khách hàng không được để trống!", txtMa);
+            return false;
+        }
+        if (ten.isEmpty()) {
+            UiHelper.loi(this, "Họ và tên khách hàng không được để trống!", txtTen);
+            return false;
+        }
+        if (sdt.isEmpty()) {
+            UiHelper.loi(this, "Số điện thoại không được để trống!", txtSdt);
             return false;
         }
         if (!sdt.matches("0\\d{9}")) {
-            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0!", txtSdt);
+            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0!", txtSdt);
             return false;
         }
         if (!cccd.isEmpty() && !cccd.matches("\\d{9}|\\d{12}")) {
@@ -208,13 +250,23 @@ public class QuanLyKhachHang_UI extends JPanel {
             return false;
         }
         if (!email.isEmpty() && !email.contains("@")) {
-            UiHelper.loi(this, "Email không hợp lệ!", txtEmail);
+            UiHelper.loi(this, "Địa chỉ Email không hợp lệ (cần có ký tự @)!", txtEmail);
             return false;
         }
-        if (laThem && kho.timKhachHangTheoMa(ma) != null) {
-            UiHelper.loi(this, "Mã khách hàng \"" + ma + "\" đã tồn tại!", txtMa);
+
+        // Kiểm tra trùng mã trong CSDL qua DAO
+        if (laThem && khachHangDAO.kiemTraTrungMa(ma)) {
+            UiHelper.loi(this, "Mã khách hàng \"" + ma + "\" đã tồn tại trong hệ thống!", txtMa);
             return false;
         }
+
+        // Kiểm tra trùng số điện thoại qua DAO
+        String maBoQua = laThem ? null : ma;
+        if (khachHangDAO.kiemTraTrungSdt(sdt, maBoQua)) {
+            UiHelper.loi(this, "Số điện thoại \"" + sdt + "\" đã được đăng ký bởi khách hàng khác!", txtSdt);
+            return false;
+        }
+
         return true;
     }
 }
