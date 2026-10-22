@@ -1,8 +1,9 @@
 package UI;
 
+import DAO.KhachHang_DAO;
+import DAO.TraCuuKhachHang_DAO;
 import Entity.KhachHang;
 import Entity.KhoDuLieu;
-import Entity.PhieuTiepNhan;
 import Entity.PhuongTien;
 
 import javax.swing.*;
@@ -14,11 +15,11 @@ import java.awt.*;
 import java.util.ArrayList;
 
 /**
- * TraCuuKhachHang_UI đáp ứng chuẩn nghiệp vụ:
- * - UC002: Tìm kiếm thông tin khách hàng đa năng (theo Tên, SĐT, Biển số xe, CCCD, Mã KH)
+ * TraCuuKhachHang_UI đáp ứng chuẩn nghiệp vụ Nhân viên Tiếp tân:
+ * - UC002: Tìm kiếm thông tin khách hàng đa năng (theo Tên, SĐT, Biển số xe, CCCD, Mã KH) qua TraCuuKhachHang_DAO
  * - Khung hướng dẫn rõ ràng, chi tiết, không gây mơ hồ cho người dùng
- * - UC003: Xem chi tiết thông tin khách hàng và danh sách xe sở hữu
- * - UC004: Xem lịch sử sửa chữa/bảo dưỡng của khách hàng tại gara
+ * - UC003: Xem chi tiết thông tin khách hàng và danh sách xe sở hữu trực tiếp từ SQL Server
+ * - UC004: Xem lịch sử sửa chữa/bảo dưỡng của khách hàng tại gara từ CSDL
  */
 public class TraCuuKhachHang_UI extends JPanel {
     private final JTextField txtTuKhoa = new JTextField();
@@ -37,6 +38,8 @@ public class TraCuuKhachHang_UI extends JPanel {
     private final DefaultTableModel model = UiHelper.model(
             "Mã KH", "Họ tên", "SĐT", "CCCD", "Xe sở hữu", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final TraCuuKhachHang_DAO traCuuDAO = new TraCuuKhachHang_DAO();
+    private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
     private JTable table;
 
     public TraCuuKhachHang_UI() {
@@ -69,16 +72,17 @@ public class TraCuuKhachHang_UI extends JPanel {
 
         // BẢNG DANH SÁCH KHÁCH HÀNG
         table = UiHelper.bang(model);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        // AUTO_RESIZE_OFF giữ nguyên độ rộng cột, cuộn ngang khi cần
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.getColumnModel().getColumn(0).setPreferredWidth(85);   // Mã KH
         table.getColumnModel().getColumn(1).setPreferredWidth(160);  // Họ tên
         table.getColumnModel().getColumn(2).setPreferredWidth(105);  // SĐT
-        table.getColumnModel().getColumn(3).setPreferredWidth(115);  // CCCD
-        table.getColumnModel().getColumn(4).setPreferredWidth(170);  // Xe sở hữu
-        table.getColumnModel().getColumn(5).setPreferredWidth(210);  // Địa chỉ
-        table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Email
-        table.getColumnModel().getColumn(7).setPreferredWidth(130);  // Ghi chú
-        table.getColumnModel().getColumn(8).setPreferredWidth(105);  // Ngày ĐK
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);  // CCCD
+        table.getColumnModel().getColumn(4).setPreferredWidth(160);  // Xe sở hữu
+        table.getColumnModel().getColumn(5).setPreferredWidth(300);  // Địa chỉ — tăng để hiện đủ
+        table.getColumnModel().getColumn(6).setPreferredWidth(145);  // Email
+        table.getColumnModel().getColumn(7).setPreferredWidth(120);  // Ghi chú
+        table.getColumnModel().getColumn(8).setPreferredWidth(100);  // Ngày ĐK
 
         UiHelper.canGiua(table, 0, 2, 3, 4, 8);
         UiHelper.canTrai(table, 1, 5, 6, 7);
@@ -276,81 +280,31 @@ public class TraCuuKhachHang_UI extends JPanel {
         }
     }
 
-    private String layDanhSachBienSoXe(String maKH) {
-        StringBuilder sb = new StringBuilder();
-        for (PhuongTien xe : kho.getPhuongTiens()) {
-            if (xe.getMaChuXe().equalsIgnoreCase(maKH)) {
-                if (sb.length() > 0) sb.append(", ");
-                sb.append(xe.getBienSo());
-            }
-        }
-        return sb.length() > 0 ? sb.toString() : "(Chưa có xe)";
-    }
-
-    private boolean khachCoXeDangSua(String maKH, String sdt) {
-        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            if (p.getMaKH().equalsIgnoreCase(maKH) || (sdt != null && sdt.equals(p.getSdt()))) {
-                String td = p.getTienDo() == null ? "" : p.getTienDo().toLowerCase();
-                if (td.contains("sửa") || td.contains("phụ tùng") || td.contains("phân công")) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     private void napBang() {
-        String q = txtTuKhoa.getText().trim().toLowerCase();
+        String q = txtTuKhoa.getText().trim();
         int tieuChi = cboTieuChi.getSelectedIndex();
         model.setRowCount(0);
 
-        ArrayList<KhachHang> danhSach = kho.getKhachHangs();
-        int dem = 0;
+        // 1. Tra cứu trực tiếp từ CSDL SQL Server thông qua TraCuuKhachHang_DAO
+        ArrayList<KhachHang> danhSach = traCuuDAO.traCuuKhachHang(q, tieuChi, boLocNhanh);
 
-        for (KhachHang kh : danhSach) {
-            String ma = kh.getMaKH().toLowerCase();
-            String ten = kh.getHoTen().toLowerCase();
-            String sdt = kh.getSdt().toLowerCase();
-            String cccd = kh.getCccd() != null ? kh.getCccd().toLowerCase() : "";
-            String xeSoHuu = layDanhSachBienSoXe(kh.getMaKH()).toLowerCase();
-
-            // 1. Kiểm tra bộ lọc nhanh
-            if ("VIP".equals(boLocNhanh)) {
-                String gh = kh.getGhiChu() == null ? "" : kh.getGhiChu().toLowerCase();
-                if (!gh.contains("vip")) continue;
-            } else if ("DANG_SUA".equals(boLocNhanh)) {
-                if (!khachCoXeDangSua(kh.getMaKH(), kh.getSdt())) continue;
-            } else if ("MOI".equals(boLocNhanh)) {
-                String gh = kh.getGhiChu() == null ? "" : kh.getGhiChu().toLowerCase();
-                if (!gh.contains("mới") && !kh.getNgayDangKy().contains("2026")) continue;
-            }
-
-            // 2. Kiểm tra từ khóa theo tiêu chí
-            boolean khop = false;
-            if (q.isEmpty()) {
-                khop = true;
-            } else {
-                switch (tieuChi) {
-                    case 1 -> khop = ten.contains(q);
-                    case 2 -> khop = sdt.contains(q);
-                    case 3 -> khop = xeSoHuu.contains(q);
-                    case 4 -> khop = cccd.contains(q);
-                    case 5 -> khop = ma.contains(q);
-                    default -> khop = ma.contains(q) || ten.contains(q) || sdt.contains(q) || cccd.contains(q) || xeSoHuu.contains(q);
-                }
-            }
-
-            if (khop) {
-                dem++;
-                model.addRow(new Object[]{
-                        kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
-                        layDanhSachBienSoXe(kh.getMaKH()),
-                        kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKy()
-                });
-            }
+        // 2. Dự phòng nếu offline thì tìm trên bộ nhớ cache
+        if (danhSach.isEmpty() && q.isEmpty() && "TAT_CA".equals(boLocNhanh)) {
+            danhSach = kho.getKhachHangs();
         }
 
-        lblDemKetQua.setText("Tìm thấy: " + dem + " / " + danhSach.size() + " khách hàng");
+        for (KhachHang kh : danhSach) {
+            String bienSoXe = traCuuDAO.layDanhSachBienSoXeCuaKhach(kh.getMaKH());
+            model.addRow(new Object[]{
+                    kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
+                    bienSoXe,
+                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKy()
+            });
+        }
+
+        int tongSo = khachHangDAO.layTongSoKhachHang();
+        if (tongSo == 0) tongSo = kho.getKhachHangs().size();
+        lblDemKetQua.setText("Tìm thấy: " + danhSach.size() + " / " + tongSo + " khách hàng");
     }
 
     /** UC003: Xem thông tin chi tiết khách hàng và danh sách xe sở hữu */
@@ -361,24 +315,26 @@ public class TraCuuKhachHang_UI extends JPanel {
             return;
         }
         String maKH = model.getValueAt(dong, 0).toString();
-        KhachHang kh = kho.timKhachHangTheoMa(maKH);
+        KhachHang kh = khachHangDAO.timKhachHangTheoMa(maKH);
+        if (kh == null) {
+            kh = kho.timKhachHangTheoMa(maKH);
+        }
         if (kh == null) return;
 
-        // Tìm xe sở hữu
+        // Truy vấn danh sách xe sở hữu trực tiếp qua TraCuuKhachHang_DAO
+        ArrayList<PhuongTien> dsXe = traCuuDAO.layDanhSachXeCuaKhach(maKH);
         StringBuilder sbXe = new StringBuilder();
-        int demXe = 0;
-        for (PhuongTien xe : kho.getPhuongTiens()) {
-            if (xe.getMaChuXe().equalsIgnoreCase(maKH)) {
-                demXe++;
-                sbXe.append("  • Biển số: <b>").append(xe.getBienSo()).append("</b> — ")
-                    .append(xe.getHangXe()).append(" ").append(xe.getDongXe())
-                    .append(" (Màu: ").append(xe.getMauSon()).append(", Năm SX: ").append(xe.getNamSX())
-                    .append(", ODO: ").append(String.format("%,d", xe.getOdo())).append(" km)<br>");
-            }
-        }
-        if (demXe == 0) sbXe.append("  <i>Khách hàng chưa đăng ký xe nào trong hệ thống</i><br>");
+        int demXe = dsXe.size();
 
-        String msg = "<html><div style='width:420px;font-family:Segoe UI;'>"
+        for (PhuongTien xe : dsXe) {
+            sbXe.append("  • Biển số: <b>").append(xe.getBienSo()).append("</b> — ")
+                .append(xe.getHangXe()).append(" ").append(xe.getDongXe())
+                .append(" (Màu: ").append(xe.getMauSon()).append(", Năm SX: ").append(xe.getNamSX())
+                .append(", ODO: ").append(xe.getOdo()).append(" km)<br>");
+        }
+        if (demXe == 0) sbXe.append("  <i>Khách hàng chưa đăng ký phương tiện nào trong hệ thống gara</i><br>");
+
+        String msg = "<html><div style='width:450px;font-family:Segoe UI;'>"
                 + "<h3 style='color:#0F172A;margin-bottom:8px;'>HỒ SƠ CHI TIẾT KHÁCH HÀNG</h3>"
                 + "<table cellpadding='3' style='font-size:12px;'>"
                 + "<tr><td width='120'><b>Mã khách hàng:</b></td><td><span style='color:#2563EB;font-weight:bold;'>" + kh.getMaKH() + "</span></td></tr>"
@@ -406,41 +362,42 @@ public class TraCuuKhachHang_UI extends JPanel {
             return;
         }
         String maKH = model.getValueAt(dong, 0).toString();
-        KhachHang kh = kho.timKhachHangTheoMa(maKH);
+        KhachHang kh = khachHangDAO.timKhachHangTheoMa(maKH);
+        if (kh == null) {
+            kh = kho.timKhachHangTheoMa(maKH);
+        }
         if (kh == null) return;
 
+        // Truy vấn lịch sử trực tiếp qua TraCuuKhachHang_DAO
+        ArrayList<TraCuuKhachHang_DAO.LichSuSuaChuaDTO> dsLs = traCuuDAO.layLichSuSuaChuaCuaKhach(maKH);
+
+        if (dsLs.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Khách hàng [" + kh.getMaKH() + "] " + kh.getHoTen() + " chưa có lịch sử tiếp nhận / sửa chữa nào trong hệ thống!",
+                    "Lịch sử sửa chữa", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Lịch sử sửa chữa — " + kh.getHoTen(), true);
-        dlg.setSize(880, 480);
+        dlg.setSize(920, 500);
         dlg.setLocationRelativeTo(this);
 
         JPanel pnl = new JPanel(new BorderLayout(12, 12));
         pnl.setBackground(UiHelper.NEN);
         pnl.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        JLabel lblTieuDe = new JLabel("Lịch sử sửa chữa của khách hàng: " + kh.getHoTen() + " — SĐT: " + kh.getSdt());
+        JLabel lblTieuDe = new JLabel("Lịch sử sửa chữa của khách hàng: " + kh.getHoTen() + " — SĐT: " + kh.getSdt() + " (" + dsLs.size() + " lần tiếp nhận)");
         lblTieuDe.setFont(UiHelper.FONT_TIEU_DE_PHU);
         lblTieuDe.setForeground(UiHelper.XANH_DAM);
         pnl.add(lblTieuDe, BorderLayout.NORTH);
 
         DefaultTableModel mdLs = UiHelper.model("Số phiếu", "Ngày tiếp nhận", "Biển số", "Hãng / Loại", "Yêu cầu sửa chữa", "KTV xử lý", "Tiến độ", "Chi phí");
-        int count = 0;
-        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            if (p.getMaKH().equalsIgnoreCase(maKH) || p.getSdt().equals(kh.getSdt())) {
-                count++;
-                mdLs.addRow(new Object[]{
-                        p.getSoPhieu(), p.getNgayTiepNhan(), p.getBienSo(),
-                        p.getHangXe() + " " + p.getLoaiXe(),
-                        p.getYeuCau(),
-                        p.getKyThuatVien() == null || p.getKyThuatVien().isEmpty() ? "Chưa giao" : p.getKyThuatVien(),
-                        p.getTienDo(),
-                        UiHelper.tien(p.getThanhTien()) + " đ"
-                });
-            }
-        }
-
-        if (count == 0) {
-            JOptionPane.showMessageDialog(this, "Khách hàng " + kh.getHoTen() + " chưa có lịch sử sửa chữa nào trong hệ thống!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
+        for (TraCuuKhachHang_DAO.LichSuSuaChuaDTO dto : dsLs) {
+            mdLs.addRow(new Object[]{
+                    dto.getSoPhieu(), dto.getNgayTiepNhan(), dto.getBienSo(),
+                    dto.getXe(), dto.getYeuCau(), dto.getKtvXuLy(), dto.getTienDo(),
+                    UiHelper.tien(dto.getChiPhi()) + " đ"
+            });
         }
 
         JTable tblLs = UiHelper.bang(mdLs);

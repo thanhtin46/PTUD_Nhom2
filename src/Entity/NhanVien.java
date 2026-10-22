@@ -85,7 +85,14 @@ public class NhanVien {
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
 
-    public boolean dangHoatDong() { return DANG_LAM.equals(trangThai); }
+    public boolean dangHoatDong() {
+        if (trangThai == null || trangThai.trim().isEmpty()) return true;
+        String tt = trangThai.trim().toUpperCase();
+        if (tt.contains("NGUNG") || tt.contains("KHOA") || tt.contains("THOI") || tt.contains("THÔI")) {
+            return false;
+        }
+        return true;
+    }
 
     public String[] getCacQuyen() { return cacQuyen; }
     public void setCacQuyen(String[] cacQuyen) { this.cacQuyen = cacQuyen; }

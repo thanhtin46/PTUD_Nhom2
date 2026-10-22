@@ -1,31 +1,28 @@
 package UI;
 
+import DAO.PhuongTien_DAO;
 import Entity.KhachHang;
 import Entity.KhoDuLieu;
 import Entity.PhuongTien;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class QuanLyPhuongTien_UI extends JPanel {
-    private JTextField txtBienSo, txtSoKhung, txtSoMay, txtMauSon, txtNamSX, txtOdo;
-    private JComboBox<String> cboHang, cboDong, cboChuXe;
+    private JTextField txtBienSo, txtHangXe, txtDongXe, txtSoKhung, txtMauSon, txtNamSX, txtOdo;
+    private JComboBox<String> cboChuXe;
     private JTable table;
     private DefaultTableModel model;
-    private final KhoDuLieu kho = KhoDuLieu.get();
 
-    private static final String[] HANG = {"Toyota", "Honda", "Hyundai", "Mazda", "Kia"};
-    private static final String[][] DONG = {
-        {"Vios 2021", "Camry", "Innova", "Fortuner"},
-        {"City", "Civic", "CR-V"},
-        {"Accent", "Elantra", "Tucson"},
-        {"Mazda3", "CX-5", "CX-8"},
-        {"Morning", "Cerato", "Seltos"}
-    };
+    private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
+    private final KhoDuLieu kho = KhoDuLieu.get();
 
     public QuanLyPhuongTien_UI() {
         JPanel root = UiHelper.nen();
@@ -48,16 +45,12 @@ public class QuanLyPhuongTien_UI extends JPanel {
         JPanel formPanel = UiHelper.panelForm("Thông tin xe", 490);
 
         txtBienSo = new JTextField();
+        txtHangXe = new JTextField();
+        txtDongXe = new JTextField();
         txtSoKhung = new JTextField();
-        txtSoMay = new JTextField();
         txtMauSon = new JTextField();
         txtNamSX = new JTextField();
         txtOdo = new JTextField();
-
-        cboHang = new JComboBox<>(HANG);
-        cboDong = new JComboBox<>(DONG[0]);
-        cboHang.addActionListener(e ->
-                cboDong.setModel(new DefaultComboBoxModel<>(DONG[cboHang.getSelectedIndex()])));
 
         cboChuXe = new JComboBox<>();
         napComboChuXe();
@@ -65,14 +58,13 @@ public class QuanLyPhuongTien_UI extends JPanel {
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Biển số xe *", txtBienSo);
-        UiHelper.themDong(form, 1, "Số khung (VIN) *", txtSoKhung);
-        UiHelper.themDong(form, 2, "Số máy", txtSoMay);
-        UiHelper.themDong(form, 3, "Hãng xe", cboHang);
-        UiHelper.themDong(form, 4, "Dòng xe / Model", cboDong);
-        UiHelper.themDong(form, 5, "Màu sơn", txtMauSon);
-        UiHelper.themDong(form, 6, "Năm sản xuất", txtNamSX);
-        UiHelper.themDong(form, 7, "Chủ sở hữu", cboChuXe);
-        UiHelper.themDong(form, 8, "Số km hiện tại", txtOdo);
+        UiHelper.themDong(form, 1, "Hãng xe *", txtHangXe);
+        UiHelper.themDong(form, 2, "Dòng xe / Model *", txtDongXe);
+        UiHelper.themDong(form, 3, "Số khung (VIN) *", txtSoKhung);
+        UiHelper.themDong(form, 4, "Màu sơn", txtMauSon);
+        UiHelper.themDong(form, 5, "Năm sản xuất", txtNamSX);
+        UiHelper.themDong(form, 6, "Chủ sở hữu *", cboChuXe);
+        UiHelper.themDong(form, 7, "Số km hiện tại", txtOdo);
 
         JPanel panelNut = new JPanel(new BorderLayout(0, 10));
         panelNut.setOpaque(false);
@@ -115,22 +107,20 @@ public class QuanLyPhuongTien_UI extends JPanel {
         model = UiHelper.model("Biển số", "Hãng", "Dòng xe", "VIN", "Màu", "Năm", "ODO (km)",
                 "Mã chủ", "Tên chủ", "SĐT", "Tiếp nhận gần nhất");
         table = UiHelper.bang(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        table.getColumnModel().getColumn(0).setPreferredWidth(110);  // Biển số
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);  // Hãng
-        table.getColumnModel().getColumn(2).setPreferredWidth(120);  // Dòng xe
-        table.getColumnModel().getColumn(3).setPreferredWidth(160);  // VIN
-        table.getColumnModel().getColumn(4).setPreferredWidth(80);   // Màu
-        table.getColumnModel().getColumn(5).setPreferredWidth(70);   // Năm
-        table.getColumnModel().getColumn(6).setPreferredWidth(90);   // ODO
-        table.getColumnModel().getColumn(7).setPreferredWidth(90);   // Mã chủ
-        table.getColumnModel().getColumn(8).setPreferredWidth(160);  // Tên chủ
-        table.getColumnModel().getColumn(9).setPreferredWidth(110);  // SĐT
-        table.getColumnModel().getColumn(10).setPreferredWidth(140); // Tiếp nhận gần nhất
-
-        UiHelper.canGiua(table, 0, 3, 4, 5, 6, 7, 9, 10);
-        UiHelper.canTrai(table, 1, 2, 8);
+        // Căn thẳng hàng giữa tiêu đề và nội dung cho từng cột
+        dinhDangCot(0, SwingConstants.CENTER, 110); // Biển số
+        dinhDangCot(1, SwingConstants.LEFT, 110);   // Hãng
+        dinhDangCot(2, SwingConstants.LEFT, 130);   // Dòng xe
+        dinhDangCot(3, SwingConstants.CENTER, 160); // VIN
+        dinhDangCot(4, SwingConstants.CENTER, 85);  // Màu
+        dinhDangCot(5, SwingConstants.CENTER, 75);  // Năm
+        dinhDangCot(6, SwingConstants.RIGHT, 95);   // ODO (km)
+        dinhDangCot(7, SwingConstants.CENTER, 85);  // Mã chủ
+        dinhDangCot(8, SwingConstants.LEFT, 170);   // Tên chủ
+        dinhDangCot(9, SwingConstants.CENTER, 115); // SĐT
+        dinhDangCot(10, SwingConstants.CENTER, 140);// Tiếp nhận gần nhất
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
@@ -151,9 +141,63 @@ public class QuanLyPhuongTien_UI extends JPanel {
         return bangPanel;
     }
 
+    /** Căn lề đồng bộ cho cả tiêu đề cột và nội dung dữ liệu để luôn thẳng hàng tuyệt đối */
+    private void dinhDangCot(int cot, int canLe, int doRong) {
+        if (cot < 0 || cot >= table.getColumnCount()) return;
+        TableColumn tc = table.getColumnModel().getColumn(cot);
+        tc.setPreferredWidth(doRong);
+
+        final int padL = (canLe == SwingConstants.LEFT) ? 12 : 4;
+        final int padR = (canLe == SwingConstants.RIGHT) ? 12 : 4;
+
+        // Tiêu đề cột (Header)
+        tc.setHeaderRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, c);
+                lbl.setHorizontalAlignment(canLe);
+                lbl.setBackground(new Color(241, 245, 249));
+                lbl.setForeground(new Color(30, 41, 59));
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                lbl.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, UiHelper.VIEN),
+                        new EmptyBorder(8, padL, 8, padR)
+                ));
+                return lbl;
+            }
+        });
+
+        // Nội dung dữ liệu (Cell)
+        tc.setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+                Component comp = super.getTableCellRendererComponent(t, v, s, f, r, c);
+                if (!t.isRowSelected(r)) {
+                    comp.setBackground(r % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
+                    comp.setForeground(new Color(30, 41, 59));
+                } else {
+                    comp.setBackground(new Color(219, 234, 254));
+                    comp.setForeground(UiHelper.XANH_TRUNG);
+                }
+                if (comp instanceof JLabel lbl) {
+                    lbl.setHorizontalAlignment(canLe);
+                    lbl.setBorder(new EmptyBorder(0, padL, 0, padR));
+                }
+                return comp;
+            }
+        });
+    }
+
     private void napBang() {
         model.setRowCount(0);
-        for (PhuongTien xe : kho.getPhuongTiens()) {
+
+        // 1. Lấy dữ liệu trực tiếp từ SQL Server qua PhuongTien_DAO
+        ArrayList<PhuongTien> dsXe = phuongTienDAO.layTatCaPhuongTien();
+        if (dsXe.isEmpty()) {
+            dsXe = kho.getPhuongTiens();
+        }
+
+        for (PhuongTien xe : dsXe) {
             KhachHang chu = kho.timKhachHangTheoMa(xe.getMaChuXe());
             String ten = chu != null ? chu.getHoTen() : "";
             String sdt = chu != null ? chu.getSdt() : "";
@@ -170,17 +214,27 @@ public class QuanLyPhuongTien_UI extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn chủ sở hữu!");
             return;
         }
+
         String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         PhuongTien xe = new PhuongTien(
                 txtBienSo.getText().trim(),
-                String.valueOf(cboHang.getSelectedItem()),
-                String.valueOf(cboDong.getSelectedItem()),
-                txtSoKhung.getText().trim(), txtSoMay.getText().trim(), txtMauSon.getText().trim(),
-                txtNamSX.getText().trim(), txtOdo.getText().trim(), maChu, ngayHomNay);
-        boolean ok = kho.themPhuongTien(xe);
+                txtHangXe.getText().trim(),
+                txtDongXe.getText().trim(),
+                txtSoKhung.getText().trim(),
+                "", // Bỏ nhập số máy
+                txtMauSon.getText().trim(),
+                txtNamSX.getText().trim(),
+                txtOdo.getText().trim(),
+                maChu,
+                ngayHomNay);
+
+        // Lưu trực tiếp vào SQL Server qua PhuongTien_DAO và cập nhật cache
+        boolean ok = phuongTienDAO.themPhuongTien(xe);
+        kho.themPhuongTien(xe);
+
         napBang();
         lamMoi();
-        JOptionPane.showMessageDialog(this, ok ? "Thêm xe và lưu CSDL SQL Server thành công!" : "Thêm xe thành công!");
+        JOptionPane.showMessageDialog(this, ok ? "Thêm xe và lưu CSDL SQL Server thành công!" : "Thêm xe thành công (lưu bộ nhớ tạm)!");
     }
 
     private void xoa() {
@@ -189,10 +243,22 @@ public class QuanLyPhuongTien_UI extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần xóa!");
             return;
         }
-        if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa xe này?",
-                "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
-        String bienSo = model.getValueAt(dong, 0).toString();
-        boolean ok = kho.xoaPhuongTien(bienSo);
+
+        String bienSo = model.getValueAt(dong, 0).toString().trim();
+
+        // Kiểm tra ràng buộc tiếp nhận / sửa chữa qua PhuongTien_DAO
+        boolean coHoatDong = phuongTienDAO.xeCoLichSuHoatDong(bienSo);
+        String canhBao = coHoatDong
+                ? "Xe [" + bienSo + "] đã có lịch sử phiếu tiếp nhận hoặc sửa chữa tại gara!\nBạn có chắc chắn muốn xóa toàn bộ thông tin xe này?"
+                : "Bạn có chắc muốn xóa xe [" + bienSo + "] khỏi hệ thống?";
+
+        if (JOptionPane.showConfirmDialog(this, canhBao,
+                "Xác nhận xóa xe", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
+
+        // Xóa an toàn qua PhuongTien_DAO
+        boolean ok = phuongTienDAO.xoaPhuongTien(bienSo);
+        kho.xoaPhuongTien(bienSo);
+
         napBang();
         lamMoi();
         JOptionPane.showMessageDialog(this, ok ? "Đã xóa xe khỏi CSDL SQL Server!" : "Đã xóa xe!");
@@ -205,30 +271,38 @@ public class QuanLyPhuongTien_UI extends JPanel {
             return;
         }
         if (!kiemTraForm(false)) return;
-        PhuongTien xe = kho.timXeTheoBienSo(model.getValueAt(dong, 0).toString());
+
+        String bienSo = model.getValueAt(dong, 0).toString().trim();
+        PhuongTien xe = phuongTienDAO.timPhuongTienTheoBienSo(bienSo);
+        if (xe == null) {
+            xe = kho.timXeTheoBienSo(bienSo);
+        }
         if (xe == null) return;
-        xe.setHangXe(String.valueOf(cboHang.getSelectedItem()));
-        xe.setDongXe(String.valueOf(cboDong.getSelectedItem()));
+
+        xe.setHangXe(txtHangXe.getText().trim());
+        xe.setDongXe(txtDongXe.getText().trim());
         xe.setSoKhung(txtSoKhung.getText().trim());
-        xe.setSoMay(txtSoMay.getText().trim());
         xe.setMauSon(txtMauSon.getText().trim());
         xe.setNamSX(txtNamSX.getText().trim());
         xe.setOdo(txtOdo.getText().trim());
         xe.setMaChuXe(maChuDangChon());
-        boolean ok = kho.capNhatPhuongTien(xe);
+
+        // Cập nhật CSDL qua PhuongTien_DAO
+        boolean ok = phuongTienDAO.capNhatPhuongTien(xe);
+        kho.capNhatPhuongTien(xe);
+
         napBang();
         JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
     }
 
     private void lamMoi() {
         txtBienSo.setText("");
+        txtHangXe.setText("");
+        txtDongXe.setText("");
         txtSoKhung.setText("");
-        txtSoMay.setText("");
         txtMauSon.setText("");
         txtNamSX.setText("");
         txtOdo.setText("");
-        cboHang.setSelectedIndex(0);
-        if (cboDong.getItemCount() > 0) cboDong.setSelectedIndex(0);
         napComboChuXe();
         if (cboChuXe.getItemCount() > 0) cboChuXe.setSelectedIndex(0);
         txtBienSo.setEditable(true);
@@ -249,7 +323,10 @@ public class QuanLyPhuongTien_UI extends JPanel {
             return;
         }
 
-        PhuongTien xe = kho.timXeTheoBienSo(bienSo);
+        PhuongTien xe = phuongTienDAO.timPhuongTienTheoBienSo(bienSo);
+        if (xe == null) {
+            xe = kho.timXeTheoBienSo(bienSo);
+        }
         if (xe == null) {
             JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin xe với biển số: " + bienSo, "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
@@ -270,15 +347,15 @@ public class QuanLyPhuongTien_UI extends JPanel {
     private void hienLenForm() {
         int dong = table.getSelectedRow();
         if (dong < 0) return;
-        txtBienSo.setText(model.getValueAt(dong, 0).toString());
-        cboHang.setSelectedItem(model.getValueAt(dong, 1));
-        cboDong.setSelectedItem(model.getValueAt(dong, 2));
-        txtSoKhung.setText(model.getValueAt(dong, 3).toString());
-        txtMauSon.setText(model.getValueAt(dong, 4).toString());
-        txtNamSX.setText(model.getValueAt(dong, 5).toString());
-        txtOdo.setText(model.getValueAt(dong, 6).toString());
+        txtBienSo.setText(model.getValueAt(dong, 0) != null ? model.getValueAt(dong, 0).toString() : "");
+        txtHangXe.setText(model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString() : "");
+        txtDongXe.setText(model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString() : "");
+        txtSoKhung.setText(model.getValueAt(dong, 3) != null ? model.getValueAt(dong, 3).toString() : "");
+        txtMauSon.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
+        txtNamSX.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
+        txtOdo.setText(model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "");
 
-        String maChu = model.getValueAt(dong, 7).toString();
+        String maChu = model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : "";
         for (int i = 0; i < cboChuXe.getItemCount(); i++) {
             if (cboChuXe.getItemAt(i).startsWith(maChu + " - ")) {
                 cboChuXe.setSelectedIndex(i);
@@ -290,12 +367,22 @@ public class QuanLyPhuongTien_UI extends JPanel {
 
     private boolean kiemTraForm(boolean laThem) {
         String bienSo = txtBienSo.getText().trim();
+        String hangXe = txtHangXe.getText().trim();
+        String dongXe = txtDongXe.getText().trim();
         String soKhung = txtSoKhung.getText().trim();
         String namSX = txtNamSX.getText().trim();
         String odo = txtOdo.getText().trim();
 
         if (bienSo.isEmpty() || soKhung.isEmpty()) {
             UiHelper.loi(this, "Biển số xe và Số khung không được để trống!", txtBienSo);
+            return false;
+        }
+        if (hangXe.isEmpty()) {
+            UiHelper.loi(this, "Vui lòng nhập Hãng xe!", txtHangXe);
+            return false;
+        }
+        if (dongXe.isEmpty()) {
+            UiHelper.loi(this, "Vui lòng nhập Dòng xe / Model!", txtDongXe);
             return false;
         }
         if (!namSX.isEmpty()) {
@@ -309,10 +396,19 @@ public class QuanLyPhuongTien_UI extends JPanel {
             UiHelper.loi(this, "Số km hiện tại chỉ được nhập số!", txtOdo);
             return false;
         }
-        if (laThem && kho.timXeTheoBienSo(bienSo) != null) {
-            UiHelper.loi(this, "Biển số \"" + bienSo + "\" đã tồn tại!", txtBienSo);
+
+        // Kiểm tra trùng biển số xe qua PhuongTien_DAO
+        if (laThem && phuongTienDAO.kiemTraTrungBienSo(bienSo)) {
+            UiHelper.loi(this, "Biển số \"" + bienSo + "\" đã tồn tại trong hệ thống!", txtBienSo);
             return false;
         }
+
+        // Kiểm tra trùng số VIN qua PhuongTien_DAO
+        if (phuongTienDAO.kiemTraTrungVIN(soKhung, laThem ? null : bienSo)) {
+            UiHelper.loi(this, "Số khung (VIN) \"" + soKhung + "\" đã được sử dụng cho xe khác!", txtSoKhung);
+            return false;
+        }
+
         return true;
     }
 }
