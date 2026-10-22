@@ -62,177 +62,141 @@ public class PhieuXuat_DAO {
     // Chỉ lưu các dòng được chọn. Nếu giao diện của bạn có
     // cấu trúc cột khác, hãy chỉnh các chỉ số tại đây.
     // =========================================================
+
     public String taoPhieuXuat(
             String maPSC,
             String maNV,
-            DefaultTableModel model) {
+            DefaultTableModel model,
+            String lyDoXuat) {
 
-        if (maPSC == null || maPSC.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Vui lòng chọn phiếu sửa chữa!");
-        }
+        String sqlKiemTra =
+                "SELECT COUNT(*) FROM PhieuSuaChua WHERE maPSC = ?";
 
-        if (maNV == null || maNV.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Không xác định được nhân viên kho!");
-        }
-
-        if (model == null || model.getRowCount() == 0) {
-            throw new IllegalArgumentException(
-                    "Vui lòng thêm ít nhất một phụ tùng!");
-        }
-
-        String maPX = "PXK" + LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyMMddHHmmssSSS"));
-
-        String sqlPhieu =
+        String sqlTaoPhieu =
                 "INSERT INTO PhieuXuatKho " +
-                        "(maPhieuXuat, maPSC, maNV, ngayXuat, trangThai) " +
-                        "VALUES (?, ?, ?, GETDATE(), N'Chờ xuất')";
+                        "(maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) " +
+                        "VALUES (?, ?, ?, GETDATE(), N'Chờ xuất', ?)";
 
         String sqlChiTiet =
                 "INSERT INTO ChiTietPhieuXuatKho " +
-                        "(maPhieuXuat, maPT, soLuong, lyDoXuat) " +
-                        "VALUES (?, ?, ?, ?)";
+                        "(maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, donGia, tinhTrangXuat) " +
+                        "VALUES (?, ?, ?, 0, ?, N'Chờ xuất')";
 
-        Connection con = getConnection();
+        String maPX = "PXK" + java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmmssSSS"));
 
-        if (con == null) {
-            throw new RuntimeException("Không kết nối được database!");
-        }
-
-        boolean autoCommitCu;
+        Connection conn = null;
 
         try {
-            autoCommitCu = con.getAutoCommit();
-        } catch (SQLException e) {
-            throw new RuntimeException("Không đọc được trạng thái kết nối.", e);
-        }
+            conn = getConnection();
 
-        try {
-            con.setAutoCommit(false);
+            if (conn == null) {
+                return null;
+            }
 
-            // Kiểm tra PSC tồn tại trước khi tạo phiếu xuất.
-            String sqlKiemTraPSC =
-                    "SELECT COUNT(*) FROM PhieuSuaChua WHERE maPSC = ?";
+            conn.setAutoCommit(false);
 
-            try (PreparedStatement ps = con.prepareStatement(sqlKiemTraPSC)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlKiemTra)) {
                 ps.setString(1, maPSC);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next() || rs.getInt(1) == 0) {
                         throw new SQLException(
-                                "Không tìm thấy phiếu sửa chữa " + maPSC);
+                                "Không tìm thấy phiếu sửa chữa " + maPSC
+                        );
                     }
                 }
             }
 
-            // Tránh tạo nhiều yêu cầu đang chờ cho cùng một PSC.
-            String sqlKiemTraPhieu =
-                    "SELECT COUNT(*) FROM PhieuXuatKho " +
-                            "WHERE maPSC = ? AND trangThai = N'Chờ xuất'";
+            // Mỗi phiếu sửa chữa chỉ có một phiếu xuất kho theo UNIQUE(maPSC).
+            String sqlDaTonTai =
+                    "SELECT COUNT(*) FROM PhieuXuatKho WHERE maPSC = ?";
 
-            try (PreparedStatement ps = con.prepareStatement(sqlKiemTraPhieu)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlDaTonTai)) {
                 ps.setString(1, maPSC);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next() && rs.getInt(1) > 0) {
                         throw new SQLException(
-                                "Phiếu sửa chữa này đã có yêu cầu xuất kho đang chờ.");
+                                "Phiếu sửa chữa này đã có phiếu xuất kho."
+                        );
                     }
                 }
             }
 
-            try (PreparedStatement ps = con.prepareStatement(sqlPhieu)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlTaoPhieu)) {
                 ps.setString(1, maPX);
                 ps.setString(2, maPSC);
                 ps.setString(3, maNV);
+                ps.setString(4, lyDoXuat == null || lyDoXuat.isBlank()
+                        ? "Xuất vật tư theo phiếu sửa chữa"
+                        : lyDoXuat);
                 ps.executeUpdate();
             }
 
             int soDongDaThem = 0;
 
-            try (PreparedStatement ps = con.prepareStatement(sqlChiTiet)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlChiTiet)) {
                 for (int i = 0; i < model.getRowCount(); i++) {
+                    Object chon = model.getValueAt(i, 0);
 
-                    Object giaTriChon = model.getValueAt(i, 0);
-
-                    // Nếu cột chọn là checkbox, chỉ lưu dòng được chọn.
-                    if (giaTriChon instanceof Boolean
-                            && !((Boolean) giaTriChon)) {
+                    if (!Boolean.TRUE.equals(chon)) {
                         continue;
                     }
 
-                    Object giaTriMaPT = model.getValueAt(i, 2);
+                    String maPT = String.valueOf(model.getValueAt(i, 2));
+                    int soLuongYeuCau = Integer.parseInt(
+                            String.valueOf(model.getValueAt(i, 6))
+                    );
+                    long donGia = Long.parseLong(
+                            String.valueOf(model.getValueAt(i, 8))
+                    );
 
-                    if (giaTriMaPT == null
-                            || giaTriMaPT.toString().trim().isEmpty()) {
+                    if (soLuongYeuCau <= 0 || donGia < 0) {
                         throw new SQLException(
-                                "Thiếu mã phụ tùng ở dòng " + (i + 1));
+                                "Số lượng yêu cầu hoặc đơn giá không hợp lệ: " + maPT
+                        );
                     }
-
-                    String maPT = giaTriMaPT.toString().trim();
-
-                    Object giaTriSL = model.getValueAt(i, 7);
-
-                    if (giaTriSL == null
-                            || giaTriSL.toString().trim().isEmpty()) {
-                        throw new SQLException(
-                                "Thiếu số lượng yêu cầu của phụ tùng " + maPT);
-                    }
-
-                    int soLuong;
-                    try {
-                        soLuong = Integer.parseInt(giaTriSL.toString().trim());
-                    } catch (NumberFormatException e) {
-                        throw new SQLException(
-                                "Số lượng không hợp lệ của phụ tùng " + maPT);
-                    }
-
-                    if (soLuong <= 0) {
-                        throw new SQLException(
-                                "Số lượng phải lớn hơn 0: " + maPT);
-                    }
-
-                    String lyDo = "Xuất phụ tùng theo phiếu sửa chữa " + maPSC;
 
                     ps.setString(1, maPX);
                     ps.setString(2, maPT);
-                    ps.setInt(3, soLuong);
-                    ps.setString(4, lyDo);
+                    ps.setInt(3, soLuongYeuCau);
+                    ps.setLong(4, donGia);
                     ps.addBatch();
-
                     soDongDaThem++;
                 }
 
                 if (soDongDaThem == 0) {
-                    throw new SQLException(
-                            "Vui lòng chọn ít nhất một phụ tùng!");
+                    throw new SQLException("Bạn chưa chọn phụ tùng nào.");
                 }
 
                 ps.executeBatch();
             }
 
-            con.commit();
+            conn.commit();
             return maPX;
 
         } catch (Exception e) {
-            try {
-                con.rollback();
-            } catch (SQLException ex) {
-                e.addSuppressed(ex);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
             }
 
-            throw new RuntimeException(
-                    "Không thể tạo yêu cầu xuất kho: " + e.getMessage(), e);
+            e.printStackTrace();
+            return null;
 
         } finally {
-            try {
-                con.setAutoCommit(autoCommitCu);
-            } catch (SQLException ignored) {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ignored) {
+                }
             }
         }
     }
+
 
     // =========================================================
     // 3. LẤY DANH SÁCH PHIẾU XUẤT ĐANG CHỜ
@@ -277,8 +241,9 @@ public class PhieuXuat_DAO {
         model.setRowCount(0);
 
         String sql =
-                "SELECT ct.maPT, pt.tenPT, ct.soLuong, " +
-                        "ct.lyDoXuat, pt.soLuongTon " +
+                "SELECT ct.maPT, pt.tenPT, " +
+                        "ct.soLuongYeuCau, ct.soLuongXuat, " +
+                        "ct.donGia, ct.tinhTrangXuat, pt.soLuongTon " +
                         "FROM ChiTietPhieuXuatKho ct " +
                         "JOIN PhuTung pt ON pt.maPT = ct.maPT " +
                         "WHERE ct.maPhieuXuat = ?";
@@ -300,131 +265,489 @@ public class PhieuXuat_DAO {
         }
     }
 
+
+
+    public void layPhuTungTheoPSC(
+            String maPSC,
+            DefaultTableModel model
+    ) throws SQLException {
+
+        model.setRowCount(0);
+
+        String sql =
+                "SELECT ct.maPT, pt.tenPT, pt.donViTinh, " +
+                        "COALESCE(k.soLuongTon, 0) AS soLuongTon, " +
+                        "ct.soLuong, ct.donGia " +
+                        "FROM ChiTietSuaChua ct " +
+                        "JOIN PhuTung pt ON pt.maPT = ct.maPT " +
+                        "LEFT JOIN Kho k ON k.maPT = pt.maPT " +
+                        "WHERE ct.maPSC = ? " +
+                        "ORDER BY ct.maPT";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maPSC);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                int stt = 1;
+
+                while (rs.next()) {
+                    String maPT = rs.getString("maPT");
+                    String tenPT = rs.getString("tenPT");
+                    String donVi = rs.getString("donViTinh");
+
+                    int tonKho = rs.getInt("soLuongTon");
+                    int soLuongYeuCau = rs.getInt("soLuong");
+                    long donGia = rs.getBigDecimal("donGia").longValue();
+
+                    int soLuongXuat = Math.min(soLuongYeuCau, tonKho);
+
+                    String tinhTrang;
+                    if (tonKho == 0) {
+                        tinhTrang = "Không đủ tồn kho";
+                    } else if (tonKho < soLuongYeuCau) {
+                        tinhTrang = "Xuất một phần";
+                    } else {
+                        tinhTrang = "Chờ xuất";
+                    }
+
+                    model.addRow(new Object[]{
+                            true,
+                            stt++,
+                            maPT,
+                            tenPT,
+                            donVi,
+                            tonKho,
+                            soLuongYeuCau,
+                            soLuongXuat,
+                            donGia,
+                            (long) soLuongXuat * donGia,
+                            tinhTrang
+                    });
+                }
+            }
+        }
+    }
+
+
+
     // =========================================================
     // 5. XÁC NHẬN XUẤT KHO VÀ TRỪ TỒN KHO
     // =========================================================
-    public boolean xacNhanXuat(String maPX) throws SQLException {
 
-        if (maPX == null || maPX.trim().isEmpty()) {
-            throw new SQLException("Vui lòng chọn phiếu xuất kho!");
-        }
+    public boolean xacNhanXuat(String maPX) {
+        String sqlKhoaPhieu =
+                "SELECT trangThai FROM PhieuXuatKho WITH (UPDLOCK, HOLDLOCK) " +
+                        "WHERE maPhieuXuat = ?";
 
-        Connection con = getConnection();
+        String sqlChiTiet =
+                "SELECT maPT, soLuongYeuCau, soLuongXuat " +
+                        "FROM ChiTietPhieuXuatKho WHERE maPhieuXuat = ?";
 
-        if (con == null) {
-            throw new SQLException("Không có kết nối database!");
-        }
+        String sqlTruTon =
+                "UPDATE Kho " +
+                        "SET soLuongTon = soLuongTon - ? " +
+                        "WHERE maPT = ? AND soLuongTon >= ?";
 
-        boolean autoCommitCu = con.getAutoCommit();
+        String sqlCapNhatChiTiet =
+                "UPDATE ChiTietPhieuXuatKho " +
+                        "SET tinhTrangXuat = ? " +
+                        "WHERE maPhieuXuat = ? AND maPT = ?";
+
+        String sqlCapNhatPhieu =
+                "UPDATE PhieuXuatKho SET trangThai = N'Đã xuất' " +
+                        "WHERE maPhieuXuat = ? AND trangThai = N'Chờ xuất'";
+
+        Connection conn = null;
 
         try {
-            con.setAutoCommit(false);
+            conn = getConnection();
 
-            String trangThai;
-            String sqlKiemTra =
-                    "SELECT trangThai FROM PhieuXuatKho " +
-                            "WITH (UPDLOCK, HOLDLOCK) " +
-                            "WHERE maPhieuXuat = ?";
+            if (conn == null) {
+                return false;
+            }
 
-            try (PreparedStatement ps = con.prepareStatement(sqlKiemTra)) {
+            conn.setAutoCommit(false);
+
+            // 1. Khóa phiếu và kiểm tra trạng thái.
+            try (PreparedStatement ps = conn.prepareStatement(sqlKhoaPhieu)) {
                 ps.setString(1, maPX);
 
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        throw new SQLException("Không tìm thấy phiếu xuất!");
+                    if (!rs.next()
+                            || !"Chờ xuất".equals(rs.getString("trangThai"))) {
+                        throw new SQLException(
+                                "Phiếu không tồn tại hoặc không ở trạng thái Chờ xuất."
+                        );
                     }
-
-                    trangThai = rs.getString("trangThai");
                 }
             }
 
-            if (!"Chờ xuất".equals(trangThai)) {
-                throw new SQLException(
-                        "Phiếu không ở trạng thái Chờ xuất hoặc đã được xử lý.");
+            // 2. Đọc các dòng chi tiết.
+            class ChiTiet {
+                String maPT;
+                int soLuongYeuCau;
+                int soLuongXuat;
+
+                ChiTiet(String maPT, int yeuCau, int xuat) {
+                    this.maPT = maPT;
+                    this.soLuongYeuCau = yeuCau;
+                    this.soLuongXuat = xuat;
+                }
             }
 
-            String sqlChiTiet =
-                    "SELECT maPT, soLuong FROM ChiTietPhieuXuatKho " +
-                            "WHERE maPhieuXuat = ?";
+            java.util.List<ChiTiet> ds = new java.util.ArrayList<>();
 
-            boolean coChiTiet = false;
-
-            try (PreparedStatement ps = con.prepareStatement(sqlChiTiet)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlChiTiet)) {
                 ps.setString(1, maPX);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        coChiTiet = true;
-
-                        String maPT = rs.getString("maPT");
-                        int soLuong = rs.getInt("soLuong");
-
-                        if (soLuong <= 0) {
-                            throw new SQLException(
-                                    "Số lượng không hợp lệ của phụ tùng " + maPT);
-                        }
-
-                        String sqlTruTon =
-                                "UPDATE PhuTung " +
-                                        "SET soLuongTon = soLuongTon - ? " +
-                                        "WHERE maPT = ? AND soLuongTon >= ?";
-
-                        try (PreparedStatement psTon =
-                                     con.prepareStatement(sqlTruTon)) {
-                            psTon.setInt(1, soLuong);
-                            psTon.setString(2, maPT);
-                            psTon.setInt(3, soLuong);
-
-                            if (psTon.executeUpdate() != 1) {
-                                throw new SQLException(
-                                        "Phụ tùng " + maPT +
-                                                " không tồn tại hoặc không đủ tồn kho!");
-                            }
-                        }
+                        ds.add(new ChiTiet(
+                                rs.getString("maPT"),
+                                rs.getInt("soLuongYeuCau"),
+                                rs.getInt("soLuongXuat")
+                        ));
                     }
                 }
             }
 
-            if (!coChiTiet) {
-                throw new SQLException(
-                        "Phiếu xuất chưa có chi tiết phụ tùng!");
+            if (ds.isEmpty()) {
+                throw new SQLException("Phiếu xuất kho chưa có phụ tùng.");
             }
 
-            String sqlCapNhat =
-                    "UPDATE PhieuXuatKho " +
-                            "SET trangThai = N'Đã xuất' " +
-                            "WHERE maPhieuXuat = ? AND trangThai = N'Chờ xuất'";
+            boolean coHangDuocXuat = false;
 
-            try (PreparedStatement ps = con.prepareStatement(sqlCapNhat)) {
-                ps.setString(1, maPX);
-
-                if (ps.executeUpdate() != 1) {
+            for (ChiTiet ct : ds) {
+                if (ct.soLuongXuat < 0
+                        || ct.soLuongXuat > ct.soLuongYeuCau) {
                     throw new SQLException(
-                            "Không thể cập nhật trạng thái phiếu xuất!");
+                            "Số lượng xuất không hợp lệ: " + ct.maPT
+                    );
+                }
+
+                if (ct.soLuongXuat > 0) {
+                    coHangDuocXuat = true;
+
+                    // 3. Trừ tồn kho có kiểm tra tồn thực tế.
+                    try (PreparedStatement ps = conn.prepareStatement(sqlTruTon)) {
+                        ps.setInt(1, ct.soLuongXuat);
+                        ps.setString(2, ct.maPT);
+                        ps.setInt(3, ct.soLuongXuat);
+
+                        if (ps.executeUpdate() != 1) {
+                            throw new SQLException(
+                                    "Phụ tùng " + ct.maPT
+                                            + " không đủ tồn kho hoặc không tồn tại."
+                            );
+                        }
+                    }
+                }
+
+                String tinhTrang;
+
+                if (ct.soLuongXuat == 0) {
+                    tinhTrang = "Không đủ tồn kho";
+                } else if (ct.soLuongXuat < ct.soLuongYeuCau) {
+                    tinhTrang = "Xuất một phần";
+                } else {
+                    tinhTrang = "Đã xuất";
+                }
+
+                // 4. Cập nhật trạng thái chi tiết.
+                try (PreparedStatement ps =
+                             conn.prepareStatement(sqlCapNhatChiTiet)) {
+                    ps.setString(1, tinhTrang);
+                    ps.setString(2, maPX);
+                    ps.setString(3, ct.maPT);
+                    ps.executeUpdate();
                 }
             }
 
-            con.commit();
+            if (!coHangDuocXuat) {
+                throw new SQLException(
+                        "Chưa có phụ tùng nào được xuất. Vui lòng kiểm tra số lượng."
+                );
+            }
+
+            // 5. Cập nhật trạng thái phiếu.
+            try (PreparedStatement ps = conn.prepareStatement(sqlCapNhatPhieu)) {
+                ps.setString(1, maPX);
+
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Không cập nhật được trạng thái phiếu.");
+                }
+            }
+
+            conn.commit();
             return true;
 
         } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ignored) {
+                }
+            }
+        }
+    }
+
+
+    // Lấy các phiếu sửa chữa đang chờ phụ tùng
+    public DefaultTableModel layDanhSachPSCChoXuat()
+            throws SQLException {
+
+        String[] columns = {
+                "Mã phiếu SC",
+                "Mã khách hàng",
+                "Số VIN",
+                "Biển số xe",
+                "Mã nhân viên",
+                "Ngày bắt đầu",
+                "Ngày dự kiến hoàn thành",
+                "Trạng thái"
+        };
+
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        String sql =
+                "SELECT p.maPSC, p.maKH, p.soVIN, " +
+                        "       pt.bienSoXe, p.maNV, p.ngayBD, " +
+                        "       p.ngayHoanThanhDuKien, p.trangThai " +
+                        "FROM PhieuSuaChua p " +
+                        "LEFT JOIN PhuongTien pt ON p.soVIN = pt.soVIN " +
+                        "WHERE p.trangThai = ? " +
+                        "AND EXISTS ( " +
+                        "    SELECT 1 FROM ChiTietSuaChua ct " +
+                        "    WHERE ct.maPSC = p.maPSC " +
+                        "      AND ct.trangThai = ? " +
+                        ") " +
+                        "AND NOT EXISTS ( " +
+                        "    SELECT 1 FROM PhieuXuatKho px " +
+                        "    WHERE px.maPSC = p.maPSC " +
+                        "      AND px.trangThai = N'Đã xuất' " +
+                        ") " +
+                        "ORDER BY p.ngayBD DESC";
+
+        try (PreparedStatement ps =
+                     getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, "CHO_SUA");
+            ps.setString(2, "CHO_THUC_HIEN");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    model.addRow(new Object[]{
+                            rs.getString("maPSC"),
+                            rs.getString("maKH"),
+                            rs.getString("soVIN"),
+                            rs.getString("bienSoXe"),
+                            rs.getString("maNV"),
+                            rs.getTimestamp("ngayBD"),
+                            rs.getTimestamp("ngayHoanThanhDuKien"),
+                            rs.getString("trangThai")
+                    });
+                }
+            }
+        }
+
+        return model;
+    }
+
+
+    public String taoVaXacNhanXuat(
+            String maPSC,
+            String maNV,
+            DefaultTableModel model,
+            String lyDoXuat) throws SQLException {
+
+        if (maPSC == null || maPSC.isBlank()) {
+            throw new SQLException("Vui lòng chọn phiếu sửa chữa.");
+        }
+        if (maNV == null || maNV.isBlank()) {
+            throw new SQLException("Không xác định được nhân viên xuất kho.");
+        }
+
+        String maPX = "PXK" + LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyMMddHHmmssSSS"));
+
+        Connection conn = getConnection();
+        if (conn == null) {
+            throw new SQLException("Không kết nối được SQL Server.");
+        }
+
+        boolean autoCommitCu = conn.getAutoCommit();
+
+        try {
+            conn.setAutoCommit(false);
+
+            // Không tạo phiếu xuất trùng cho cùng một phiếu sửa chữa.
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT maPhieuXuat, trangThai "
+                            + "FROM PhieuXuatKho WITH (UPDLOCK, HOLDLOCK) "
+                            + "WHERE maPSC = ?")) {
+
+                ps.setString(1, maPSC);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        throw new SQLException(
+                                "Phiếu sửa chữa đã có phiếu xuất kho "
+                                        + rs.getString("maPhieuXuat")
+                                        + " với trạng thái " + rs.getString("trangThai")
+                                        + ". Không tạo phiếu trùng."
+                        );
+                    }
+                }
+            }
+
+            // Tạo phiếu xuất.
+            String sqlHeader =
+                    "INSERT INTO PhieuXuatKho "
+                            + "(maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) "
+                            + "VALUES (?, ?, ?, GETDATE(), N'Chờ xuất', ?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlHeader)) {
+                ps.setString(1, maPX);
+                ps.setString(2, maPSC);
+                ps.setString(3, maNV);
+                ps.setString(
+                        4,
+                        lyDoXuat == null || lyDoXuat.isBlank()
+                                ? "Xuất vật tư theo phiếu sửa chữa"
+                                : lyDoXuat
+                );
+                ps.executeUpdate();
+            }
+
+            String sqlChiTiet =
+                    "INSERT INTO ChiTietPhieuXuatKho "
+                            + "(maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, "
+                            + "donGia, tinhTrangXuat) VALUES (?, ?, ?, ?, ?, ?)";
+
+            String sqlTruTon =
+                    "UPDATE PhuTung "
+                            + "SET soLuongTon = soLuongTon - ? "
+                            + "WHERE maPT = ? AND soLuongTon >= ?";
+
+            int soDongDaXuat = 0;
+
+            try (PreparedStatement psCT = conn.prepareStatement(sqlChiTiet);
+                 PreparedStatement psTon = conn.prepareStatement(sqlTruTon)) {
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    if (!Boolean.TRUE.equals(model.getValueAt(i, 0))) {
+                        continue;
+                    }
+
+                    String maPT = String.valueOf(model.getValueAt(i, 2)).trim();
+                    int slYeuCau = Integer.parseInt(
+                            String.valueOf(model.getValueAt(i, 6)).trim()
+                    );
+                    int slXuat = Integer.parseInt(
+                            String.valueOf(model.getValueAt(i, 7)).trim()
+                    );
+                    String giaText = String.valueOf(model.getValueAt(i, 8))
+                            .replaceAll("[^0-9]", "");
+                    java.math.BigDecimal donGia =
+                            new java.math.BigDecimal(giaText.isEmpty() ? "0" : giaText);
+
+                    if (maPT.isBlank() || slYeuCau <= 0
+                            || slXuat < 0 || slXuat > slYeuCau
+                            || donGia.signum() < 0) {
+                        throw new SQLException(
+                                "Dữ liệu không hợp lệ tại phụ tùng " + maPT
+                        );
+                    }
+
+                    if (slXuat == 0) {
+                        throw new SQLException(
+                                "Số lượng thực xuất phải lớn hơn 0 cho phụ tùng " + maPT
+                        );
+                    }
+
+                    // Trừ tồn kho có điều kiện. Nếu không đủ thì rollback toàn bộ.
+                    psTon.setInt(1, slXuat);
+                    psTon.setString(2, maPT);
+                    psTon.setInt(3, slXuat);
+
+                    if (psTon.executeUpdate() != 1) {
+                        throw new SQLException(
+                                "Phụ tùng " + maPT
+                                        + " không tồn tại hoặc không đủ tồn kho."
+                        );
+                    }
+
+                    String tinhTrang = slXuat < slYeuCau
+                            ? "Xuất một phần"
+                            : "Đã xuất";
+
+                    psCT.setString(1, maPX);
+                    psCT.setString(2, maPT);
+                    psCT.setInt(3, slYeuCau);
+                    psCT.setInt(4, slXuat);
+                    psCT.setBigDecimal(5, donGia);
+                    psCT.setString(6, tinhTrang);
+                    psCT.addBatch();
+
+                    soDongDaXuat++;
+                }
+
+                if (soDongDaXuat == 0) {
+                    throw new SQLException("Bạn chưa chọn phụ tùng nào để xuất.");
+                }
+
+                psCT.executeBatch();
+            }
+
+            // Chỉ đổi trạng thái sau khi lưu chi tiết và trừ kho thành công.
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE PhieuXuatKho SET trangThai = N'Đã xuất' "
+                            + "WHERE maPhieuXuat = ? AND trangThai = N'Chờ xuất'")) {
+                ps.setString(1, maPX);
+
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Không cập nhật được trạng thái phiếu xuất.");
+                }
+            }
+
+            conn.commit();
+            return maPX;
+
+        } catch (Exception ex) {
             try {
-                con.rollback();
-            } catch (SQLException ex) {
-                e.addSuppressed(ex);
+                conn.rollback();
+            } catch (SQLException ignored) {
             }
 
-            if (e instanceof SQLException) {
-                throw (SQLException) e;
+            if (ex instanceof SQLException) {
+                throw (SQLException) ex;
             }
-
-            throw new SQLException("Lỗi xuất kho: " + e.getMessage(), e);
+            throw new SQLException("Lỗi khi xác nhận xuất kho: " + ex.getMessage(), ex);
 
         } finally {
             try {
-                con.setAutoCommit(autoCommitCu);
+                conn.setAutoCommit(autoCommitCu);
             } catch (SQLException ignored) {
             }
         }
     }
+
 }
