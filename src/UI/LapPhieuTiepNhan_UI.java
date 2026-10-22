@@ -1,5 +1,6 @@
 package UI;
 
+import DAO.PhieuTiepNhan_DAO;
 import Entity.KhachHang;
 import Entity.KhoDuLieu;
 import Entity.NhanVien;
@@ -18,8 +19,10 @@ import java.time.format.DateTimeFormatter;
 public class LapPhieuTiepNhan_UI extends JPanel {
     private final NhanVien nv;
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final PhieuTiepNhan_DAO phieuTiepNhanDAO = new PhieuTiepNhan_DAO();
 
     private final JComboBox<String> cboXeCoSan = new JComboBox<>();
+    private final JTextField txtSoPhieu = new JTextField();
     private final JTextField txtBienSo = new JTextField();
     private final JTextField txtHang = new JTextField();
     private final JTextField txtLoai = new JTextField();
@@ -27,8 +30,8 @@ public class LapPhieuTiepNhan_UI extends JPanel {
     private final JTextField txtHoTen = new JTextField();
     private final JTextField txtNgay = new JTextField();
     private final JTextField txtYeuCau = new JTextField();
-    private final JTextField txtThanhTien = new JTextField("0");
 
+    private JTable table;
     private DefaultTableModel model;
     private boolean isUpdating = false;
 
@@ -46,6 +49,8 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         root.add(UiHelper.tieuDeTrang("Lập phiếu tiếp nhận xe vào xưởng"), BorderLayout.NORTH);
 
         txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtSoPhieu.setEditable(false);
+        txtSoPhieu.setText(kho.maPhieuTiepNhanMoi());
 
         // Lắng nghe sự kiện để tự động đồng bộ & tra cứu thông tin
         txtSdt.addActionListener(e -> doSdt());
@@ -99,24 +104,29 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
 
-        UiHelper.themDong(form, 0, "Chọn xe trong hệ thống", cboXeCoSan, 3, 3);
-        UiHelper.themDong(form, 1, "Biển số xe *", txtBienSo, 3, 3);
-        UiHelper.themDong(form, 2, "Hãng xe", txtHang, 3, 3);
-        UiHelper.themDong(form, 3, "Dòng xe / Model", txtLoai, 3, 3);
-        UiHelper.themDong(form, 4, "Số điện thoại chủ xe *", txtSdt, 3, 3);
-        UiHelper.themDong(form, 5, "Họ tên chủ xe", txtHoTen, 3, 3);
-        UiHelper.themDong(form, 6, "Ngày tiếp nhận", txtNgay, 3, 3);
-        UiHelper.themDong(form, 7, "Yêu cầu của khách", txtYeuCau, 3, 3);
-        UiHelper.themDong(form, 8, "Tạm tính dịch vụ (VNĐ)", txtThanhTien, 3, 3);
+        UiHelper.themDong(form, 0, "Số phiếu tiếp nhận", txtSoPhieu, 3, 3);
+        UiHelper.themDong(form, 1, "Chọn xe trong hệ thống", cboXeCoSan, 3, 3);
+        UiHelper.themDong(form, 2, "Biển số xe *", txtBienSo, 3, 3);
+        UiHelper.themDong(form, 3, "Hãng xe", txtHang, 3, 3);
+        UiHelper.themDong(form, 4, "Dòng xe / Model", txtLoai, 3, 3);
+        UiHelper.themDong(form, 5, "Số điện thoại chủ xe *", txtSdt, 3, 3);
+        UiHelper.themDong(form, 6, "Họ tên chủ xe", txtHoTen, 3, 3);
+        UiHelper.themDong(form, 7, "Ngày tiếp nhận", txtNgay, 3, 3);
+        UiHelper.themDong(form, 8, "Yêu cầu của khách *", txtYeuCau, 3, 3);
 
-        JPanel nut = new JPanel(new GridLayout(1, 2, 8, 0));
+        // Cụm 4 nút: Tạo mới, Sửa, Xóa, Làm mới
+        JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
         nut.setBorder(new EmptyBorder(16, 0, 0, 0));
 
-        JButton btnTao = UiHelper.nut("Tạo phiếu tiếp nhận", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_LA, true, e -> tao());
-        JButton btnLamMoi = UiHelper.nut("Làm mới form", UiIcon.of(UiIcon.REFRESH, 16), UiHelper.XAM, false, e -> lamMoi());
+        JButton btnTao = UiHelper.nut("Tạo phiếu", UiIcon.of(UiIcon.PLUS, 16), UiHelper.XANH_LA, true, e -> tao());
+        JButton btnSua = UiHelper.nut("Sửa phiếu", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_TRUNG, true, e -> sua());
+        JButton btnXoa = UiHelper.nut("Xóa phiếu", UiIcon.of(UiIcon.CLOSE, 16), UiHelper.CHU_CHAY, true, e -> xoa());
+        JButton btnLamMoi = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 16), UiHelper.XAM, false, e -> lamMoi());
 
         nut.add(btnTao);
+        nut.add(btnSua);
+        nut.add(btnXoa);
         nut.add(btnLamMoi);
 
         UiHelper.ganNoiDungForm(formPanel, form, nut);
@@ -125,8 +135,9 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu tiếp nhận chờ xử lý");
-        model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Loại", "Ngày", "Yêu cầu", "Tiến độ", "Tạm tính");
-        JTable table = UiHelper.bang(model);
+        // Đã xóa cột Tạm tính ở bảng bên phải theo yêu cầu
+        model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu", "Tiến độ");
+        table = UiHelper.bang(model);
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.getColumnModel().getColumn(0).setPreferredWidth(85);   // Số phiếu
@@ -134,11 +145,20 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(140);  // Họ tên
         table.getColumnModel().getColumn(3).setPreferredWidth(95);   // Biển số
         table.getColumnModel().getColumn(4).setPreferredWidth(85);   // Hãng
-        table.getColumnModel().getColumn(5).setPreferredWidth(95);   // Loại
-        table.getColumnModel().getColumn(6).setPreferredWidth(90);   // Ngày
-        table.getColumnModel().getColumn(7).setPreferredWidth(160);  // Yêu cầu
+        table.getColumnModel().getColumn(5).setPreferredWidth(95);   // Dòng xe
+        table.getColumnModel().getColumn(6).setPreferredWidth(95);   // Ngày tiếp nhận
+        table.getColumnModel().getColumn(7).setPreferredWidth(180);  // Yêu cầu
         table.getColumnModel().getColumn(8).setPreferredWidth(110);  // Tiến độ
-        table.getColumnModel().getColumn(9).setPreferredWidth(100);  // Tạm tính
+
+        UiHelper.canGiua(table, 0, 1, 3, 6, 8);
+        UiHelper.canTrai(table, 2, 4, 5, 7);
+
+        // Click vào dòng trên bảng để đổ dữ liệu lên form sửa/xóa
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                hienLenForm();
+            }
+        });
 
         JScrollPane sp = new JScrollPane(table);
         sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -148,11 +168,33 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         return bangPanel;
     }
 
+    private void hienLenForm() {
+        int dong = table.getSelectedRow();
+        if (dong < 0) return;
+
+        isUpdating = true;
+        try {
+            txtSoPhieu.setText(model.getValueAt(dong, 0).toString());
+            txtSdt.setText(model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString() : "");
+            txtHoTen.setText(model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString() : "");
+            String bienSo = model.getValueAt(dong, 3) != null ? model.getValueAt(dong, 3).toString() : "";
+            txtBienSo.setText(bienSo);
+            txtHang.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
+            txtLoai.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
+            txtNgay.setText(model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "");
+            txtYeuCau.setText(model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : "");
+
+            dongBoComboXe(bienSo);
+        } finally {
+            isUpdating = false;
+        }
+    }
+
     private void napComboXeCoSan() {
         isUpdating = true;
         try {
             cboXeCoSan.removeAllItems();
-            cboXeCoSan.addItem("-- Chọn xe đã đăng ký trong gara (hoặc nhập bên dưới) --");
+            cboXeCoSan.addItem("-- Chọn xe đã đăng ký trong gara --");
             for (PhuongTien xe : kho.getPhuongTiens()) {
                 KhachHang chu = kho.timKhachHangTheoMa(xe.getMaChuXe());
                 String tenChu = chu != null ? chu.getHoTen() : "Chưa có chủ";
@@ -208,7 +250,6 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         try {
             txtHoTen.setText(kh.getHoTen());
 
-            // Nếu ô biển số đang trống, tìm xe sở hữu đầu tiên của khách này để điền tự động
             if (txtBienSo.getText().trim().isEmpty()) {
                 for (PhuongTien xe : kho.getPhuongTiens()) {
                     if (xe.getMaChuXe() != null && xe.getMaChuXe().equalsIgnoreCase(kh.getMaKH())) {
@@ -253,9 +294,16 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private void napBang() {
         model.setRowCount(0);
-        for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            model.addRow(new Object[]{p.getSoPhieu(), p.getSdt(), p.getHoTen(), p.getBienSo(), p.getHangXe(),
-                    p.getLoaiXe(), p.getNgayTiepNhan(), p.getYeuCau(), p.getTienDo(), UiHelper.tien(p.getThanhTien())});
+        // Tải danh sách trực tiếp qua PhieuTiepNhan_DAO
+        java.util.List<PhieuTiepNhan> ds = phieuTiepNhanDAO.layTatCaPhieuTiepNhan();
+        if (ds.isEmpty()) {
+            ds = kho.getPhieuTiepNhans();
+        }
+        for (PhieuTiepNhan p : ds) {
+            model.addRow(new Object[]{
+                    p.getSoPhieu(), p.getSdt(), p.getHoTen(), p.getBienSo(), p.getHangXe(),
+                    p.getLoaiXe(), p.getNgayTiepNhan(), p.getYeuCau(), p.getTienDo()
+            });
         }
     }
 
@@ -263,14 +311,15 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         isUpdating = true;
         try {
             cboXeCoSan.setSelectedIndex(0);
+            txtSoPhieu.setText(kho.maPhieuTiepNhanMoi());
             txtBienSo.setText("");
             txtHang.setText("");
             txtLoai.setText("");
             txtSdt.setText("");
             txtHoTen.setText("");
             txtYeuCau.setText("");
-            txtThanhTien.setText("0");
             txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            table.clearSelection();
             txtBienSo.requestFocus();
         } finally {
             isUpdating = false;
@@ -294,18 +343,12 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             UiHelper.loi(this, "Số điện thoại chủ xe không được để trống!", txtSdt);
             return;
         }
-
-        long tien = 0;
-        String tienStr = txtThanhTien.getText().trim().replace(",", "");
-        if (!tienStr.isEmpty()) {
-            if (!tienStr.matches("\\d+")) {
-                UiHelper.loi(this, "Tạm tính dịch vụ phải là số!", txtThanhTien);
-                return;
-            }
-            tien = Long.parseLong(tienStr);
+        if (yeuCau.isEmpty()) {
+            UiHelper.loi(this, "Vui lòng nhập yêu cầu / tình trạng sửa chữa của khách!", txtYeuCau);
+            return;
         }
 
-        // 1. Đồng bộ khách hàng: Nếu chưa có trong hệ thống thì tự động lưu khách hàng mới
+        // 1. Đồng bộ khách hàng
         KhachHang kh = kho.timKhachHangTheoSdt(sdt);
         String maKH;
         if (kh == null) {
@@ -321,7 +364,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             }
         }
 
-        // 2. Đồng bộ phương tiện: Nếu chưa có xe trong Quản lý phương tiện thì tự động thêm xe mới
+        // 2. Đồng bộ phương tiện
         PhuongTien xe = kho.timXeTheoBienSo(bienSo);
         if (xe == null) {
             String hangXe = hang.isEmpty() ? "Khác" : hang;
@@ -340,24 +383,125 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             kho.capNhatPhuongTien(xe);
         }
 
-        // 3. Tạo phiếu tiếp nhận
+        // 3. Tạo phiếu tiếp nhận qua PhieuTiepNhan_DAO
+        String maPhieu = txtSoPhieu.getText().trim();
+        if (maPhieu.isEmpty()) maPhieu = kho.maPhieuTiepNhanMoi();
+
         PhieuTiepNhan ptn = new PhieuTiepNhan(
-                kho.maPhieuTiepNhanMoi(), maKH, kh.getHoTen(), sdt,
+                maPhieu, maKH, kh.getHoTen(), sdt,
                 xe.getBienSo(), xe.getHangXe(), xe.getDongXe(),
                 ngay, yeuCau, "Chờ tiếp nhận",
-                nv != null ? nv.getHoTen() : "Tiếp tân", tien);
+                nv != null ? nv.getHoTen() : "Tiếp tân", 0);
 
-        boolean ok = kho.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
+        boolean ok = phieuTiepNhanDAO.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
+        kho.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
 
         napBang();
         napComboXeCoSan();
         dongBoComboXe(xe.getBienSo());
-        txtYeuCau.setText("");
-        txtThanhTien.setText("0");
+        lamMoi();
 
         JOptionPane.showMessageDialog(this,
-                (ok ? "Đã tạo phiếu tiếp nhận và lưu CSDL thành công!" : "Đã tạo phiếu tiếp nhận!") +
+                (ok ? "Đã tạo phiếu tiếp nhận và lưu CSDL SQL Server thành công!" : "Đã tạo phiếu tiếp nhận!") +
                         "\nPhương tiện [" + xe.getBienSo() + "] và Khách hàng [" + kh.getHoTen() + "] đã được đồng bộ vào hệ thống.",
                 "Thành công", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void sua() {
+        int dong = table.getSelectedRow();
+        if (dong < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu tiếp nhận trong bảng để sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String soPhieu = txtSoPhieu.getText().trim();
+        if (soPhieu.isEmpty()) {
+            soPhieu = model.getValueAt(dong, 0).toString();
+        }
+
+        String bienSo = txtBienSo.getText().trim();
+        String sdt = txtSdt.getText().trim();
+        String hoTen = txtHoTen.getText().trim();
+        String hang = txtHang.getText().trim();
+        String loai = txtLoai.getText().trim();
+        String ngay = txtNgay.getText().trim();
+        String yeuCau = txtYeuCau.getText().trim();
+
+        if (bienSo.isEmpty()) {
+            UiHelper.loi(this, "Biển số xe không được để trống!", txtBienSo);
+            return;
+        }
+        if (sdt.isEmpty()) {
+            UiHelper.loi(this, "Số điện thoại chủ xe không được để trống!", txtSdt);
+            return;
+        }
+        if (yeuCau.isEmpty()) {
+            UiHelper.loi(this, "Vui lòng nhập yêu cầu của khách!", txtYeuCau);
+            return;
+        }
+
+        // Cập nhật thông tin khách hàng nếu có sửa tên
+        KhachHang kh = kho.timKhachHangTheoSdt(sdt);
+        String maKH = (kh != null) ? kh.getMaKH() : "KH001";
+        if (kh != null && !hoTen.isEmpty() && !hoTen.equalsIgnoreCase(kh.getHoTen())) {
+            kh.setHoTen(hoTen);
+            kho.capNhatKhachHang(kh);
+        }
+
+        // Cập nhật thông tin xe
+        PhuongTien xe = kho.timXeTheoBienSo(bienSo);
+        if (xe != null) {
+            if (!hang.isEmpty()) xe.setHangXe(hang);
+            if (!loai.isEmpty()) xe.setDongXe(loai);
+            kho.capNhatPhuongTien(xe);
+        }
+
+        // Cập nhật phiếu tiếp nhận qua PhieuTiepNhan_DAO
+        String tienDoHienTai = model.getValueAt(dong, 8) != null ? model.getValueAt(dong, 8).toString() : "Chờ tiếp nhận";
+        PhieuTiepNhan ptn = new PhieuTiepNhan(
+                soPhieu, maKH, hoTen, sdt, bienSo, hang, loai, ngay, yeuCau, tienDoHienTai,
+                nv != null ? nv.getHoTen() : "Tiếp tân", 0
+        );
+
+        boolean ok = phieuTiepNhanDAO.capNhatPhieuTiepNhan(ptn);
+
+        // Cập nhật trong cache
+        PhieuTiepNhan pCache = kho.timPhieuTiepNhan(soPhieu);
+        if (pCache != null) {
+            // Cập nhật cache nếu cần
+            napBang();
+        } else {
+            napBang();
+        }
+
+        JOptionPane.showMessageDialog(this, ok ? "Cập nhật phiếu tiếp nhận và lưu CSDL SQL Server thành công!" : "Cập nhật phiếu tiếp nhận thành công!",
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void xoa() {
+        int dong = table.getSelectedRow();
+        if (dong < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu tiếp nhận trong bảng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String soPhieu = model.getValueAt(dong, 0).toString().trim();
+        String bienSo = model.getValueAt(dong, 3).toString().trim();
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc chắn muốn xóa phiếu tiếp nhận [" + soPhieu + "] của xe [" + bienSo + "] không?\nThao tác này sẽ đồng thời dọn dẹp các dữ liệu liên quan.",
+                "Xác nhận xóa phiếu tiếp nhận", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        // Xóa an toàn qua PhieuTiepNhan_DAO
+        boolean ok = phieuTiepNhanDAO.xoaPhieuTiepNhan(soPhieu);
+        kho.getPhieuTiepNhans().removeIf(p -> p.getSoPhieu().equalsIgnoreCase(soPhieu));
+
+        napBang();
+        lamMoi();
+
+        JOptionPane.showMessageDialog(this, ok ? "Đã xóa phiếu tiếp nhận [" + soPhieu + "] khỏi CSDL SQL Server!" : "Đã xóa phiếu tiếp nhận!",
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
     }
 }

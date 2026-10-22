@@ -30,7 +30,7 @@ import java.util.ArrayList;
 public class TraCuuPhuongTien_UI extends JPanel {
     private final JTextField txtTuKhoa = new JTextField();
     private final JComboBox<String> cboTieuChi = new JComboBox<>(new String[]{
-            "Tất cả tiêu chí (Tự động nhận diện)",
+            "Tất cả tiêu chí",
             "Biển số xe",
             "Hãng xe",
             "Dòng xe / Model",

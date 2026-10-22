@@ -6,6 +6,7 @@ import DAO.KhachHang_DAO;
 import DAO.TraCuuKhachHang_DAO;
 import DAO.PhuongTien_DAO;
 import DAO.TraCuuPhuongTien_DAO;
+import DAO.PhieuTiepNhan_DAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class KhoDuLieu {
     private final TraCuuKhachHang_DAO traCuuKhachHangDAO = new TraCuuKhachHang_DAO();
     private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
     private final TraCuuPhuongTien_DAO traCuuPhuongTienDAO = new TraCuuPhuongTien_DAO();
+    private final PhieuTiepNhan_DAO phieuTiepNhanDAO = new PhieuTiepNhan_DAO();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -68,6 +70,7 @@ public class KhoDuLieu {
     public TraCuuKhachHang_DAO getTraCuuKhachHangDAO() { return traCuuKhachHangDAO; }
     public PhuongTien_DAO getPhuongTienDAO() { return phuongTienDAO; }
     public TraCuuPhuongTien_DAO getTraCuuPhuongTienDAO() { return traCuuPhuongTienDAO; }
+    public PhieuTiepNhan_DAO getPhieuTiepNhanDAO() { return phieuTiepNhanDAO; }
 
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
@@ -623,7 +626,7 @@ public class KhoDuLieu {
         khachHangs.addAll(khachHangDAO.layTatCaKhachHang());
         phuongTiens.addAll(phuongTienDAO.layTatCaPhuongTien());
         phuTungs.addAll(duLieuDAO.layTatCaPhuTung());
-        phieuTiepNhans.addAll(duLieuDAO.layTatCaPhieuTiepNhan());
+        phieuTiepNhans.addAll(phieuTiepNhanDAO.layTatCaPhieuTiepNhan());
         phieuBaoHanhs.addAll(duLieuDAO.layTatCaPhieuBaoHanh());
         hoaDons.addAll(duLieuDAO.layTatCaHoaDon());
 
