@@ -97,7 +97,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         table.getColumnModel().getColumn(1).setPreferredWidth(170);  // Họ tên
         table.getColumnModel().getColumn(2).setPreferredWidth(110);  // SĐT
         table.getColumnModel().getColumn(3).setPreferredWidth(120);  // CCCD
-        table.getColumnModel().getColumn(4).setPreferredWidth(220);  // Địa chỉ
+        table.getColumnModel().getColumn(4).setPreferredWidth(260);  // Địa chỉ
         table.getColumnModel().getColumn(5).setPreferredWidth(180);  // Email
         table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Ghi chú
         table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Ngày ĐK
