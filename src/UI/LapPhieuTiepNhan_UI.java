@@ -146,7 +146,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         table.getColumnModel().getColumn(3).setPreferredWidth(95);   // Biển số
         table.getColumnModel().getColumn(4).setPreferredWidth(85);   // Hãng
         table.getColumnModel().getColumn(5).setPreferredWidth(95);   // Dòng xe
-        table.getColumnModel().getColumn(6).setPreferredWidth(95);   // Ngày tiếp nhận
+        table.getColumnModel().getColumn(6).setPreferredWidth(115);   // Ngày tiếp nhận
         table.getColumnModel().getColumn(7).setPreferredWidth(180);  // Yêu cầu
         table.getColumnModel().getColumn(8).setPreferredWidth(110);  // Tiến độ
 

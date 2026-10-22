@@ -406,4 +406,52 @@ public class PhieuTiepNhan_DAO {
         }
         return KhoDuLieu.get().getPhieuTiepNhans().size();
     }
+
+    /**
+     * Sinh mã số phiếu tiếp nhận tự động thông minh:
+     * - Tự động lấp khoảng trống khi xóa phiếu (trở lại số phiếu vừa xóa)
+     * - Không tăng lên vô tận khi bấm làm mới hoặc hủy
+     * - Luôn bắt đầu từ TN001 nếu chưa có phiếu nào
+     */
+    public String sinhMaTiepNhanTuDong() {
+        Connection con = ConnectDB.getInstance().getConnection();
+        java.util.TreeSet<Integer> dsSo = new java.util.TreeSet<>();
+
+        // 1. Quét danh sách mã phiếu từ CSDL SQL Server
+        if (con != null) {
+            String sql = "SELECT maPTN FROM PhieuTiepNhan WHERE maPTN LIKE 'TN%'";
+            try (PreparedStatement stmt = con.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String ma = rs.getString("maPTN");
+                    if (ma != null) {
+                        try {
+                            int so = Integer.parseInt(ma.replaceAll("[^0-9]", ""));
+                            dsSo.add(so);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi PhieuTiepNhan_DAO.sinhMaTiepNhanTuDong: " + e.getMessage());
+            }
+        }
+
+        // 2. Quét thêm từ bộ nhớ cache phòng trường hợp offline
+        for (PhieuTiepNhan p : KhoDuLieu.get().getPhieuTiepNhans()) {
+            if (p.getSoPhieu() != null && p.getSoPhieu().toUpperCase().startsWith("TN")) {
+                try {
+                    int so = Integer.parseInt(p.getSoPhieu().replaceAll("[^0-9]", ""));
+                    dsSo.add(so);
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // 3. Tìm số nguyên dương nhỏ nhất chưa được sử dụng
+        int soMoi = 1;
+        while (dsSo.contains(soMoi)) {
+            soMoi++;
+        }
+
+        return String.format("TN%03d", soMoi);
+    }
 }

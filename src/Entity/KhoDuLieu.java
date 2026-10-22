@@ -531,8 +531,19 @@ public class KhoDuLieu {
     }
 
     public String maPhieuTiepNhanMoi() {
-        demTiepNhan++;
-        return String.format("TN%03d", demTiepNhan);
+        if (phieuTiepNhanDAO != null) {
+            return phieuTiepNhanDAO.sinhMaTiepNhanTuDong();
+        }
+        int max = 0;
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (p.getSoPhieu() != null && p.getSoPhieu().toUpperCase().startsWith("TN")) {
+                try {
+                    int s = Integer.parseInt(p.getSoPhieu().replaceAll("[^0-9]", ""));
+                    if (s > max) max = s;
+                } catch (Exception ignored) {}
+            }
+        }
+        return String.format("TN%03d", max + 1);
     }
 
     public String maPhieuBaoHanhMoi() {
