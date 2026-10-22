@@ -1,7 +1,9 @@
 package UI;
 
+import Entity.LenhSuaChuaTam;
 import Entity.NhanVien;
-
+import DAO.PhieuXuat_DAO;
+import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -10,6 +12,7 @@ import java.awt.*;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 
 /**
  * Giao diện lập phiếu xuất kho phụ tùng cho hệ thống quản lý gara.
@@ -31,8 +34,6 @@ public class XuatKho_UI extends JPanel {
     private JTextField txtNgayLap;
     private JTextField txtThuKho;
     private JTextField txtLenhSuaChua;
-    private JTextField txtKyThuatVien;
-    private JComboBox<String> cboKho;
     private JComboBox<String> cboLyDo;
 
     private DefaultTableModel model;
@@ -42,6 +43,11 @@ public class XuatKho_UI extends JPanel {
     private JLabel lblTongTien;
     private JLabel lblTongGiaTri;
     private JLabel lblChietKhau;
+    private static String maPSCCanChon;
+
+    public static void datPSCCanChon(String maPSC) {
+        maPSCCanChon = maPSC;
+    }
 
     private final DecimalFormat df = new DecimalFormat("#,##0");
 
@@ -145,7 +151,7 @@ public class XuatKho_UI extends JPanel {
         panel.add(tieuDeMuc("1. THÔNG TIN CHỨNG TỪ & LỆNH SỬA CHỮA LIÊN KẾT"),
                 BorderLayout.NORTH);
 
-        JPanel fields = new JPanel(new GridLayout(2, 4, 10, 8));
+        JPanel fields = new JPanel(new GridLayout(2, 3, 10, 8));
         fields.setBackground(Color.WHITE);
         fields.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -166,11 +172,6 @@ public class XuatKho_UI extends JPanel {
         txtThuKho.setEditable(false);
         txtThuKho.setBackground(new Color(241, 245, 253));
 
-        cboKho = new JComboBox<>(new String[]{
-                "Kho phụ tùng chính - Cơ sở 1",
-                "Kho vật tư - Cơ sở 1"
-        });
-
         txtLenhSuaChua = new JTextField();
         txtLenhSuaChua.setToolTipText("Chọn lệnh sửa chữa cần xuất phụ tùng");
 
@@ -182,9 +183,6 @@ public class XuatKho_UI extends JPanel {
         lienKetPanel.add(txtLenhSuaChua, BorderLayout.CENTER);
         lienKetPanel.add(btnChonPSC, BorderLayout.EAST);
 
-        txtKyThuatVien = new JTextField();
-        txtKyThuatVien.setToolTipText("Nhập hoặc chọn kỹ thuật viên nhận vật tư");
-
         cboLyDo = new JComboBox<>(new String[]{
                 "Xuất vật tư thay thế theo phiếu sửa chữa",
                 "Xuất vật tư bổ sung",
@@ -194,10 +192,8 @@ public class XuatKho_UI extends JPanel {
         fields.add(createField("Mã phiếu xuất kho *", txtMaPhieu));
         fields.add(createField("Ngày giờ lập phiếu *", txtNgayLap));
         fields.add(createField("Thủ kho lập phiếu *", txtThuKho));
-        fields.add(createField("Kho xuất hàng *", cboKho));
 
         fields.add(createField("Lệnh sửa chữa liên kết *", lienKetPanel));
-        fields.add(createField("Kỹ thuật viên nhận vật tư *", txtKyThuatVien));
         fields.add(createField("Lý do xuất kho *", cboLyDo));
         fields.add(createField(" ", new JLabel(" ")));
 
@@ -210,9 +206,107 @@ public class XuatKho_UI extends JPanel {
     }
 
     private void chonPhieuSuaChua() {
-        JOptionPane.showMessageDialog(this,
-                "Chức năng tra cứu phiếu sửa chữa sẽ được kết nối DAO ở bước tiếp theo.",
-                "Tra cứu phiếu sửa chữa", JOptionPane.INFORMATION_MESSAGE);
+        PhieuXuat_DAO dao = new PhieuXuat_DAO();
+
+        try {
+            DefaultTableModel modelPSC =
+                    dao.layDanhSachPSCChoXuat();
+
+            if (modelPSC.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không có phiếu sửa chữa nào đang chờ phụ tùng.",
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
+
+            JTable tbl = new JTable(modelPSC);
+            tbl.setSelectionMode(
+                    ListSelectionModel.SINGLE_SELECTION
+            );
+            tbl.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+            int[] widths = {
+                    110, 100, 160, 110, 100, 160, 180, 110
+            };
+
+            for (int i = 0; i < widths.length; i++) {
+                tbl.getColumnModel()
+                        .getColumn(i)
+                        .setPreferredWidth(widths[i]);
+            }
+
+            JScrollPane scroll = new JScrollPane(tbl);
+            scroll.setPreferredSize(new Dimension(1100, 300));
+
+            int result = JOptionPane.showConfirmDialog(
+                    this,
+                    scroll,
+                    "Chọn phiếu sửa chữa đang chờ phụ tùng",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (result != JOptionPane.OK_OPTION) {
+                return;
+            }
+
+            int row = tbl.getSelectedRow();
+
+            if (row < 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Vui lòng chọn một phiếu sửa chữa."
+                );
+                return;
+            }
+
+            String maPSC = tbl.getValueAt(row, 0).toString();
+
+            txtLenhSuaChua.setText(maPSC);
+
+            try {
+                PhieuXuat_DAO daoo = new PhieuXuat_DAO();
+
+                dao.layPhuTungTheoPSC(maPSC, model);
+
+                capNhatTongTien();
+
+                if (model.getRowCount() == 0) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Phiếu sửa chữa chưa có phụ tùng trong ChiTietSuaChua.",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không thể tải phụ tùng: " + ex.getMessage(),
+                        "Lỗi database",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Đã chọn phiếu sửa chữa: " + maPSC,
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Lỗi tải danh sách phiếu sửa chữa:\n"
+                            + ex.getMessage(),
+                    "Lỗi database",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     private JPanel createField(String label, JComponent input) {
@@ -265,7 +359,7 @@ public class XuatKho_UI extends JPanel {
 
         String[] columns = {
                 "Chọn", "STT", "Mã phụ tùng", "Tên phụ tùng",
-                "ĐVT", "Vị trí kệ kho", "Tồn khả dụng",
+                "ĐVT", "Tồn khả dụng",
                 "SL yêu cầu", "SL thực xuất", "Đơn giá (VNĐ)",
                 "Thành tiền (VNĐ)", "Tình trạng xuất"
         };
@@ -273,13 +367,15 @@ public class XuatKho_UI extends JPanel {
         model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
-                return col == 0 || col == 8;
+                return col == 0 || col == 7; // Chỉ cho chọn phụ tùng và sửa số lượng thực xuất
             }
 
             @Override
             public Class<?> getColumnClass(int col) {
                 if (col == 0) return Boolean.class;
-                if (col == 1 || col == 7 || col == 8) return Integer.class;
+                if (col == 1 || col == 6 || col == 7) {
+                    return Integer.class;
+                }
                 return Object.class;
             }
         };
@@ -300,7 +396,7 @@ public class XuatKho_UI extends JPanel {
         table.getTableHeader().setPreferredSize(new Dimension(100, 45));
         table.getTableHeader().setReorderingAllowed(false);
 
-        int[] widths = {45, 45, 105, 175, 55, 95, 95, 75, 85, 110, 120, 120};
+        int[] widths = {45, 45, 105, 175, 55, 95, 75, 85, 110, 120, 120};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
@@ -345,7 +441,7 @@ public class XuatKho_UI extends JPanel {
         // Chỉ tính tổng khi người dùng đổi checkbox hoặc số lượng thực xuất.
         model.addTableModelListener(e -> {
             if (e.getType() == javax.swing.event.TableModelEvent.UPDATE
-                    && (e.getColumn() == 0 || e.getColumn() == 8
+                    && (e.getColumn() == 0 || e.getColumn() == 7
                     || e.getColumn() == javax.swing.event.TableModelEvent.ALL_COLUMNS)) {
                 capNhatTongTien();
             }
@@ -490,24 +586,37 @@ public class XuatKho_UI extends JPanel {
     // ---------------- TÍNH TỔNG ----------------
 
     private void capNhatTongTien() {
-        if (model == null || lblSoMatHang == null) return;
+        if (model == null || lblSoMatHang == null) {
+            return;
+        }
 
         int soMatHang = 0;
         int tongSoLuong = 0;
         long tongTien = 0;
 
         for (int i = 0; i < model.getRowCount(); i++) {
-            if (!Boolean.TRUE.equals(model.getValueAt(i, 0))) continue;
+            if (!Boolean.TRUE.equals(model.getValueAt(i, 0))) {
+                continue;
+            }
 
-            int soLuong = docSo(model.getValueAt(i, 8));
-            long donGia = docSo(model.getValueAt(i, 9));
+            // Cột 7: Số lượng thực xuất
+            int soLuong = docSo(model.getValueAt(i, 7));
+
+            // Cột 8: Đơn giá
+            long donGia = docSo(model.getValueAt(i, 8));
 
             soMatHang++;
             tongSoLuong += soLuong;
             tongTien += (long) soLuong * donGia;
+
+            // Cột 9: Thành tiền
+            model.setValueAt((long) soLuong * donGia, i, 9);
         }
 
-        lblSoMatHang.setText(soMatHang + " mặt hàng (" + tongSoLuong + " đơn vị)");
+        lblSoMatHang.setText(
+                soMatHang + " mặt hàng (" + tongSoLuong + " đơn vị)"
+        );
+
         lblTongTien.setText(df.format(tongTien) + " VNĐ");
         lblTongGiaTri.setText(df.format(tongTien) + " VNĐ");
         lblChietKhau.setText("0 VNĐ (0%)");
@@ -569,7 +678,7 @@ public class XuatKho_UI extends JPanel {
 
             model.addRow(new Object[]{
                     true, model.getRowCount() + 1, maPT, tenPT, donVi,
-                    "Chưa xếp kệ", tonKho + " " + donVi,
+                     tonKho + " " + donVi,
                     soLuong, soLuong, donGia, (long) soLuong * donGia,
                     "Chờ xuất"
             });
@@ -627,62 +736,83 @@ public class XuatKho_UI extends JPanel {
         }
     }
 
-    private void xacNhanXuat() {
-        if (txtLenhSuaChua.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn lệnh sửa chữa liên kết trước khi xuất kho.");
-            txtLenhSuaChua.requestFocus();
-            return;
-        }
-        if (txtKyThuatVien.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập kỹ thuật viên nhận vật tư.");
-            txtKyThuatVien.requestFocus();
-            return;
-        }
-        if (model.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Danh sách phụ tùng đang trống. Hãy chọn phụ tùng từ lệnh sửa chữa hoặc thêm phụ tùng.");
-            return;
-        }
 
-        if (table.isEditing() && table.getCellEditor() != null) {
+    private void xacNhanXuat() {
+        if (table.isEditing()) {
             table.getCellEditor().stopCellEditing();
         }
 
-        int soDongChon = 0;
-        for (int i = 0; i < model.getRowCount(); i++) {
-            if (!Boolean.TRUE.equals(model.getValueAt(i, 0))) continue;
-            soDongChon++;
+        String maPSC = txtLenhSuaChua.getText().trim();
 
-            int slYeuCau = docSo(model.getValueAt(i, 7));
-            int slXuat = docSo(model.getValueAt(i, 8));
-            if (slXuat <= 0 || slXuat > slYeuCau) {
-                JOptionPane.showMessageDialog(this,
-                        "Số lượng thực xuất không hợp lệ tại phụ tùng "
-                                + model.getValueAt(i, 2));
-                return;
+        if (maPSC.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn phiếu sửa chữa.");
+            return;
+        }
+
+        int soDongChon = 0;
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            if (Boolean.TRUE.equals(model.getValueAt(i, 0))) {
+                soDongChon++;
             }
         }
 
         if (soDongChon == 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một phụ tùng.");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn phụ tùng cần xuất.");
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
+        int xacNhan = JOptionPane.showConfirmDialog(
+                this,
                 "Xác nhận xuất " + soDongChon + " mặt hàng?\n"
-                        + "Lưu ý: giao diện hiện chưa kết nối SQL Server, "
-                        + "chưa cập nhật tồn kho hoặc trạng thái phiếu.",
-                "Xác nhận xuất kho", JOptionPane.YES_NO_OPTION);
+                        + "Tồn kho sẽ được cập nhật trong SQL Server.",
+                "Xác nhận xuất kho",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this,
-                    "Kiểm tra dữ liệu thành công. Chức năng cập nhật tồn kho "
-                            + "và lưu phiếu sẽ được bổ sung khi kết nối DAO.",
-                    "Chưa kết nối dữ liệu", JOptionPane.INFORMATION_MESSAGE);
+        if (xacNhan != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            String maNV = nhanVienHienTai == null
+                    ? ""
+                    : nhanVienHienTai.getMaNV();
+
+            String lyDo = cboLyDo.getSelectedItem() == null
+                    ? "Xuất vật tư theo phiếu sửa chữa"
+                    : cboLyDo.getSelectedItem().toString();
+
+            PhieuXuat_DAO dao = new PhieuXuat_DAO();
+
+            String maPX = dao.taoVaXacNhanXuat(
+                    maPSC, maNV, model, lyDo
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Xuất kho thành công!\n"
+                            + "Mã phiếu xuất: " + maPX
+                            + "\nMã phiếu sửa chữa: " + maPSC,
+                    "Thành công",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            // Tải lại tồn kho sau khi xuất thành công.
+            dao.layPhuTungTheoPSC(maPSC, model);
+            capNhatTongTien();
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể xác nhận xuất kho:\n" + ex.getMessage(),
+                    "Lỗi database",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
+
 
     // Chạy thử giao diện độc lập.
     public static void main(String[] args) {
@@ -695,4 +825,6 @@ public class XuatKho_UI extends JPanel {
             frame.setVisible(true);
         });
     }
+
+
 }
