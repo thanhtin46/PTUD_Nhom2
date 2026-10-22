@@ -4,6 +4,8 @@ import DAO.DuLieu_DAO;
 import DAO.NhanVien_DAO;
 import DAO.KhachHang_DAO;
 import DAO.TraCuuKhachHang_DAO;
+import DAO.PhuongTien_DAO;
+import DAO.TraCuuPhuongTien_DAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,8 @@ public class KhoDuLieu {
     private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
     private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
     private final TraCuuKhachHang_DAO traCuuKhachHangDAO = new TraCuuKhachHang_DAO();
+    private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
+    private final TraCuuPhuongTien_DAO traCuuPhuongTienDAO = new TraCuuPhuongTien_DAO();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -62,6 +66,8 @@ public class KhoDuLieu {
     public ArrayList<NhatKyHeThong> getNhatKyList() { return nhatKyList; }
     public KhachHang_DAO getKhachHangDAO() { return khachHangDAO; }
     public TraCuuKhachHang_DAO getTraCuuKhachHangDAO() { return traCuuKhachHangDAO; }
+    public PhuongTien_DAO getPhuongTienDAO() { return phuongTienDAO; }
+    public TraCuuPhuongTien_DAO getTraCuuPhuongTienDAO() { return traCuuPhuongTienDAO; }
 
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
@@ -98,14 +104,14 @@ public class KhoDuLieu {
     // 2. PHƯƠNG TIỆN
     public boolean themPhuongTien(PhuongTien pt) {
         phuongTiens.add(pt);
-        boolean dbOk = duLieuDAO.themPhuongTien(pt);
+        boolean dbOk = phuongTienDAO.themPhuongTien(pt);
         ghiNhatKy("Người dùng", "Thao tác", "Thêm phương tiện", NhatKyHeThong.INFO,
                 "Đã thêm xe [" + pt.getBienSo() + "] " + pt.getHangXe() + " " + pt.getDongXe() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
     public boolean capNhatPhuongTien(PhuongTien pt) {
-        boolean dbOk = duLieuDAO.capNhatPhuongTien(pt);
+        boolean dbOk = phuongTienDAO.capNhatPhuongTien(pt);
         ghiNhatKy("Người dùng", "Thao tác", "Cập nhật phương tiện", NhatKyHeThong.INFO,
                 "Đã cập nhật xe [" + pt.getBienSo() + "]" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -113,7 +119,7 @@ public class KhoDuLieu {
 
     public boolean xoaPhuongTien(String bienSo) {
         phuongTiens.removeIf(xe -> xe.getBienSo().equalsIgnoreCase(bienSo));
-        boolean dbOk = duLieuDAO.xoaPhuongTien(bienSo);
+        boolean dbOk = phuongTienDAO.xoaPhuongTien(bienSo);
         ghiNhatKy("Người dùng", "Thao tác", "Xóa phương tiện", NhatKyHeThong.WARN,
                 "Đã xóa xe [" + bienSo + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -615,7 +621,7 @@ public class KhoDuLieu {
 
         // Nạp dữ liệu chuẩn từ SQL Server
         khachHangs.addAll(khachHangDAO.layTatCaKhachHang());
-        phuongTiens.addAll(duLieuDAO.layTatCaPhuongTien());
+        phuongTiens.addAll(phuongTienDAO.layTatCaPhuongTien());
         phuTungs.addAll(duLieuDAO.layTatCaPhuTung());
         phieuTiepNhans.addAll(duLieuDAO.layTatCaPhieuTiepNhan());
         phieuBaoHanhs.addAll(duLieuDAO.layTatCaPhieuBaoHanh());
