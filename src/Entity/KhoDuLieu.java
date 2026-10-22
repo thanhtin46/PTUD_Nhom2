@@ -2,6 +2,8 @@ package Entity;
 
 import DAO.DuLieu_DAO;
 import DAO.NhanVien_DAO;
+import DAO.KhachHang_DAO;
+import DAO.TraCuuKhachHang_DAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ public class KhoDuLieu {
 
     private final DuLieu_DAO duLieuDAO = new DuLieu_DAO();
     private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
+    private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
+    private final TraCuuKhachHang_DAO traCuuKhachHangDAO = new TraCuuKhachHang_DAO();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -56,6 +60,8 @@ public class KhoDuLieu {
     public ArrayList<HoaDon> getHoaDons() { return hoaDons; }
     public CauHinhHeThong getCauHinh() { return cauHinh; }
     public ArrayList<NhatKyHeThong> getNhatKyList() { return nhatKyList; }
+    public KhachHang_DAO getKhachHangDAO() { return khachHangDAO; }
+    public TraCuuKhachHang_DAO getTraCuuKhachHangDAO() { return traCuuKhachHangDAO; }
 
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
@@ -68,14 +74,14 @@ public class KhoDuLieu {
     // 1. KHÁCH HÀNG
     public boolean themKhachHang(KhachHang kh) {
         khachHangs.add(kh);
-        boolean dbOk = duLieuDAO.themKhachHang(kh);
+        boolean dbOk = khachHangDAO.themKhachHang(kh);
         ghiNhatKy("Người dùng", "Thao tác", "Thêm khách hàng", NhatKyHeThong.INFO,
                 "Đã thêm KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
     public boolean capNhatKhachHang(KhachHang kh) {
-        boolean dbOk = duLieuDAO.capNhatKhachHang(kh);
+        boolean dbOk = khachHangDAO.capNhatKhachHang(kh);
         ghiNhatKy("Người dùng", "Thao tác", "Cập nhật khách hàng", NhatKyHeThong.INFO,
                 "Đã cập nhật KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -83,7 +89,7 @@ public class KhoDuLieu {
 
     public boolean xoaKhachHang(String maKH) {
         khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
-        boolean dbOk = duLieuDAO.xoaKhachHang(maKH);
+        boolean dbOk = khachHangDAO.xoaKhachHang(maKH);
         ghiNhatKy("Người dùng", "Thao tác", "Xóa khách hàng", NhatKyHeThong.WARN,
                 "Đã xóa KH [" + maKH + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -450,6 +456,8 @@ public class KhoDuLieu {
     }
 
     public String maKhachHangMoi() {
+        String maDAO = khachHangDAO.sinhMaKhachHangTuDong();
+        if (maDAO != null && !maDAO.isEmpty()) return maDAO;
         int max = 0;
         for (KhachHang kh : khachHangs) {
             if (kh.getMaKH() != null && kh.getMaKH().toUpperCase().startsWith("KH")) {
@@ -606,7 +614,7 @@ public class KhoDuLieu {
         hoaDons.clear();
 
         // Nạp dữ liệu chuẩn từ SQL Server
-        khachHangs.addAll(duLieuDAO.layTatCaKhachHang());
+        khachHangs.addAll(khachHangDAO.layTatCaKhachHang());
         phuongTiens.addAll(duLieuDAO.layTatCaPhuongTien());
         phuTungs.addAll(duLieuDAO.layTatCaPhuTung());
         phieuTiepNhans.addAll(duLieuDAO.layTatCaPhieuTiepNhan());
