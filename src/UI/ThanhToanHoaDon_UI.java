@@ -1,5 +1,6 @@
 package UI;
 
+import DAO.HoaDon_DAO;
 import Entity.CauHinhHeThong;
 import Entity.HoaDon;
 import Entity.KhachHang;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ThanhToanHoaDon_UI — Quầy Thu ngân & Thanh toán Hóa đơn dịch vụ Gara Ô tô:
@@ -35,6 +37,7 @@ public class ThanhToanHoaDon_UI extends JPanel {
     private final NhanVien nvHienTai;
     private final KhoDuLieu kho = KhoDuLieu.get();
     private final CauHinhHeThong cauHinh = kho.getCauHinh();
+    private final HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
 
     // ==== Form Header Thông tin phiếu ====
     private final JTextField txtMaHD = new JTextField();
@@ -46,7 +49,6 @@ public class ThanhToanHoaDon_UI extends JPanel {
     private final JTextField txtTienDichVu = new JTextField("0");
     private final JTextField txtTienPhuTung = new JTextField("0");
     private final JTextField txtGiamGia = new JTextField("0");
-    private final JTextField txtVat = new JTextField("10");
     private final JLabel lblTongTien = new JLabel("0 đ");
     private final JTextField txtGhiChu = new JTextField();
 
@@ -172,7 +174,6 @@ public class ThanhToanHoaDon_UI extends JPanel {
         txtTienDichVu.addKeyListener(tinhAdapter);
         txtTienPhuTung.addKeyListener(tinhAdapter);
         txtGiamGia.addKeyListener(tinhAdapter);
-        txtVat.addKeyListener(tinhAdapter);
 
         cboPhieuSC.addActionListener(e -> chonPhieuSC());
 
@@ -201,11 +202,7 @@ public class ThanhToanHoaDon_UI extends JPanel {
         rowTienCong.add(txtTienPhuTung);
         UiHelper.themDong(form, 4, "Tiền công / Phụ tùng", rowTienCong, 3, 3);
 
-        JPanel rowChietKhau = new JPanel(new GridLayout(1, 2, 6, 0));
-        rowChietKhau.setOpaque(false);
-        rowChietKhau.add(txtGiamGia);
-        rowChietKhau.add(txtVat);
-        UiHelper.themDong(form, 5, "Chiết khấu % / VAT %", rowChietKhau, 3, 3);
+        UiHelper.themDong(form, 5, "Giảm giá (%)", txtGiamGia, 3, 3);
 
         UiHelper.themDong(form, 6, "Ghi chú hóa đơn", txtGhiChu, 3, 3);
 
@@ -800,17 +797,31 @@ public class ThanhToanHoaDon_UI extends JPanel {
     // XỬ LÝ NGHIỆP VỤ & TÍNH TIỀN
     // ===============================================================
     private void khoiTaoDuLieu() {
-        txtMaHD.setText(kho.maHoaDonMoi());
+        txtMaHD.setText(hoaDonDAO.sinhMaHoaDonTuDong());
         txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
         cboPhieuSC.removeAllItems();
-        cboPhieuSC.addItem("-- Chọn phiếu sửa chữa cần thanh toán --");
+        cboPhieuSC.addItem("-- Chọn phiếu đã hoàn thành --");
+        List<HoaDon> dsHoaDon = hoaDonDAO.layTatCaHoaDon();
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            cboPhieuSC.addItem(p.getSoPhieu() + " - " + p.getBienSo() + " (" + p.getHoTen() + ")");
+            boolean daHoanThanh = p.getTienDo() != null && p.getTienDo().toLowerCase().contains("hoàn thành");
+            boolean daCoHoaDon = dsHoaDon.stream().anyMatch(h -> cungMotPhieu(h.getSoPhieuSC(), p.getSoPhieu()));
+            if (daHoanThanh && !daCoHoaDon) {
+                cboPhieuSC.addItem(p.getSoPhieu() + " - " + p.getBienSo() + " (" + p.getHoTen() + ")");
+            }
         }
 
         txtTkThuHuong.setText(cauHinh.getStkNganHang() + " (" + cauHinh.getTenGara() + ")");
-        txtVat.setText(String.valueOf(cauHinh.getThueVAT()));
+    }
+
+    private boolean cungMotPhieu(String maHoaDon, String maTiepNhan) {
+        if (maHoaDon == null || maTiepNhan == null) return false;
+        String a = maHoaDon.trim().toUpperCase();
+        String b = maTiepNhan.trim().toUpperCase();
+        if (a.equals(b)) return true;
+        String soA = a.replaceAll("[^0-9]", "");
+        String soB = b.replaceAll("[^0-9]", "");
+        return !soA.isEmpty() && soA.equals(soB);
     }
 
     private void chonPhieuSC() {
@@ -858,12 +869,9 @@ public class ThanhToanHoaDon_UI extends JPanel {
                     }
                 }
             } else {
-                tongCong = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.4) : 300000;
-                tongPT = ptn.getThanhTien() > 0 ? (long)(ptn.getThanhTien() * 0.6) : 650000;
-                Entity.PhuTung ptMacDinh = kho.timPhuTung("PT001");
-                String tenPTMacDinh = ptMacDinh != null ? ptMacDinh.getTen() : "Dầu nhớt tổng hợp Castrol Magnatec 4L";
-                modelChiTiet.addRow(new Object[]{"Tiền công", ptn.getYeuCau(), "Lần", 1, UiHelper.tien(tongCong), UiHelper.tien(tongCong)});
-                modelChiTiet.addRow(new Object[]{"Phụ tùng", tenPTMacDinh, "Can", 1, UiHelper.tien(tongPT), UiHelper.tien(tongPT)});
+                // Không tự gán giá ước lượng: thu ngân nhập tổng tiền công/phụ tùng thực tế.
+                tongCong = 0;
+                tongPT = 0;
             }
             txtTienDichVu.setText(String.format("%,d", tongCong));
             txtTienPhuTung.setText(String.format("%,d", tongPT));
@@ -876,15 +884,13 @@ public class ThanhToanHoaDon_UI extends JPanel {
             long cong = Long.parseLong(txtTienDichVu.getText().trim().replace(",", "").replace(".", ""));
             long pt = Long.parseLong(txtTienPhuTung.getText().trim().replace(",", "").replace(".", ""));
             double ck = Double.parseDouble(txtGiamGia.getText().trim());
-            double vat = Double.parseDouble(txtVat.getText().trim());
 
             long tongChiPhi = cong + pt;
             lblTongChiPhiBang.setText("Tổng chi phí dịch vụ & vật tư: " + UiHelper.tien(tongChiPhi) + " đ");
 
             long giam = Math.round(tongChiPhi * (ck / 100.0));
             long sauGiam = Math.max(0, tongChiPhi - giam);
-            long tienVat = Math.round(sauGiam * (vat / 100.0));
-            long tongCong = sauGiam + tienVat;
+            long tongCong = sauGiam;
 
             lblTongTien.setText(UiHelper.tien(tongCong) + " đ");
             lblQrSoTien.setText(UiHelper.tien(tongCong) + " VNĐ");
@@ -951,23 +957,30 @@ public class ThanhToanHoaDon_UI extends JPanel {
                 gia = Long.parseLong(String.valueOf(modelChiTiet.getValueAt(i, 4)).replaceAll("[^0-9]", ""));
             } catch (Exception ignored) {}
             String maPT = "";
-            Entity.PhuTung ptFound = kho.timPhuTungPhuHop("", ten);
-            if (ptFound != null) {
-                maPT = ptFound.getMaPT();
+            if (loai.toLowerCase().contains("phụ tùng")) {
+                Entity.PhuTung ptFound = kho.timPhuTungPhuHop("", ten);
+                if (ptFound != null) maPT = ptFound.getMaPT();
             }
             dsItems.add(new Entity.ChiTietDichVu(loai, maPT, ten, dvt, sl, gia));
         }
-        boolean ok = kho.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05", dsItems);
-
-        // Chuyển tiến độ phiếu sửa chữa thành "Hoàn thành" và đồng bộ CSDL
-        if (ptn != null) {
-            kho.capNhatTienDoPhieuTiepNhan(soPhieu, "Hoàn thành", null);
+        boolean ok = hoaDonDAO.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05", dsItems);
+        // DAO ghi SQL Server; cập nhật cache và tồn kho tại đây để các màn hình khác thấy dữ liệu mới.
+        if (!kho.getHoaDons().stream().anyMatch(h -> h.getMaHD().equalsIgnoreCase(hd.getMaHD()))) {
+            kho.getHoaDons().add(hd);
         }
+        kho.luuChiTietHoaDon(hd.getMaHD(), dsItems);
+        for (Entity.ChiTietDichVu ct : dsItems) {
+            if (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng") && ct.getMaPT() != null && !ct.getMaPT().isBlank()) {
+                kho.truTonKho(ct.getMaPT(), ct.getSoLuong());
+            }
+        }
+        if (ptn != null) ptn.setTienDo("Hoàn thành");
 
         napBangHoaDon();
+        khoiTaoDuLieu();
 
         JOptionPane.showMessageDialog(this,
-                "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!" + (ok ? " (Đã lưu CSDL SQL Server)\n" : "\n")
+                "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!" + (ok ? " (Đã lưu CSDL SQL Server)\n" : " (Đang lưu trong bộ nhớ)\n")
                         + "Số tiền: " + UiHelper.tien(tong) + " đ (" + phuongThucChon + ")\n"
                         + "Phiếu tiếp nhận " + soPhieu + " đã hoàn tất.",
                 "Thanh toán thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -1000,9 +1013,12 @@ public class ThanhToanHoaDon_UI extends JPanel {
     }
 
     private void napBangHoaDon() {
+        List<HoaDon> ds = hoaDonDAO.layTatCaHoaDon();
+        kho.getHoaDons().clear();
+        kho.getHoaDons().addAll(ds);
         modelHoaDon.setRowCount(0);
         long tongTien = 0;
-        for (HoaDon hd : kho.getHoaDons()) {
+        for (HoaDon hd : ds) {
             modelHoaDon.addRow(new Object[]{
                     hd.getMaHD(),
                     hd.getSoPhieuSC(),
@@ -1019,7 +1035,7 @@ public class ThanhToanHoaDon_UI extends JPanel {
                 tongTien += hd.getTongTien();
             }
         }
-        lblTongDoanhThu.setText("Tổng doanh thu quầy: " + UiHelper.tien(tongTien) + " đ (" + kho.getHoaDons().size() + " hóa đơn)");
+        lblTongDoanhThu.setText("Tổng doanh thu quầy: " + UiHelper.tien(tongTien) + " đ (" + ds.size() + " hóa đơn)");
     }
 
     private void huyHoaDon() {
@@ -1033,18 +1049,32 @@ public class ThanhToanHoaDon_UI extends JPanel {
         int cf = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn hủy hóa đơn [" + ma + "] không?", "Xác nhận hủy", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (cf != JOptionPane.YES_OPTION) return;
 
+        boolean dbOk = false;
         for (HoaDon h : kho.getHoaDons()) {
             if (h.getMaHD().equals(ma)) {
                 h.setTrangThai(HoaDon.DA_HUY);
+                dbOk = hoaDonDAO.capNhatHoaDon(h);
                 break;
             }
         }
-        napBangHoaDon();
-        JOptionPane.showMessageDialog(this, "Đã hủy hóa đơn [" + ma + "].", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        if (dbOk) napBangHoaDon();
+        else renderBangHoaDonTuCache();
+        JOptionPane.showMessageDialog(this, "Đã hủy hóa đơn [" + ma + "]." + (dbOk ? " Đã cập nhật SQL Server." : " Trạng thái đã cập nhật trong bộ nhớ."), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void renderBangHoaDonTuCache() {
+        modelHoaDon.setRowCount(0);
+        long tongTien = 0;
+        for (HoaDon hd : kho.getHoaDons()) {
+            modelHoaDon.addRow(new Object[]{hd.getMaHD(), hd.getSoPhieuSC(), hd.getTenKH(), hd.getSdtKH(), hd.getBienSo(),
+                    hd.getNgayThanhToan(), hd.getPhuongThuc(), UiHelper.tien(hd.getTongTien()), hd.getNguoiThu(), hd.getTrangThai()});
+            if (HoaDon.DA_THANH_TOAN.equals(hd.getTrangThai())) tongTien += hd.getTongTien();
+        }
+        lblTongDoanhThu.setText("Tổng doanh thu quầy: " + UiHelper.tien(tongTien) + " đ (" + kho.getHoaDons().size() + " hóa đơn)");
     }
 
     private void lamMoiForm() {
-        txtMaHD.setText(kho.maHoaDonMoi());
+        txtMaHD.setText(hoaDonDAO.sinhMaHoaDonTuDong());
         cboPhieuSC.setSelectedIndex(0);
         txtKhachHang.setText("");
         txtSdt.setText("");
