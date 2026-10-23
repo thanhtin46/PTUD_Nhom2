@@ -332,155 +332,135 @@ GO
   DU LIEU MAU
 ============================================================*/
 
-/* Nhan vien */
-INSERT INTO NhanVien VALUES
-('NV01',N'Nguyen Van Tiep Tan',N'Nhân viên tiếp tân','0901234561'),
-('NV02',N'Tran Van Sua Chua',N'Nhân viên sửa chữa','0901234562'),
-('NV03',N'Nguyen Van Kho',N'Nhân viên kho','0901234563'),
-('NV04',N'Quan Ly Tong',N'Quản lý','0901234564'),
-('NV05',N'Tran Thi Thu Ngan',N'Nhân viên thu ngân','0901234565');
+USE QuanLySuaChuaXe;
 GO
 
-/* Tai khoan dang nhap he thong */
+/* 1. Nhan vien */
+INSERT INTO NhanVien (maNV, hoTen, chucVu, soDT) VALUES
+('NV01', N'Nguyen Van Tiep Tan', N'Nhân viên tiếp tân', '0901234561'),
+('NV02', N'Tran Van Sua Chua', N'Nhân viên sửa chữa', '0901234562'),
+('NV03', N'Nguyen Van Kho', N'Nhân viên kho', '0901234563'),
+('NV04', N'Quan Ly Tong', N'Quản lý', '0901234564'),
+('NV05', N'Tran Thi Thu Ngan', N'Nhân viên thu ngân', '0901234565');
+GO
+
+/* 2. Tai khoan dang nhap he thong */
 INSERT INTO TaiKhoan (maNV, taiKhoan, matKhau, trangThai) VALUES
-('NV01','tiepTan','123','HOAT_DONG'),
-('NV02','suaChua','123','HOAT_DONG'),
-('NV03','kho','123','HOAT_DONG'),
-('NV04','quanLy','123','HOAT_DONG'),
-('NV05','thuNgan','123','HOAT_DONG');
+('NV01', 'tiepTan', '123', 'HOAT_DONG'),
+('NV02', 'suaChua', '123', 'HOAT_DONG'),
+('NV03', 'kho', '123', 'HOAT_DONG'),
+('NV04', 'quanLy', '123', 'HOAT_DONG'),
+('NV05', 'thuNgan', '123', 'HOAT_DONG');
 GO
 
-/* Khach hang */
+/* 3. Khach hang */
 INSERT INTO KhachHang (maKH, hoTen, soDT, chungMinh, diaChi, email, ghiChu, ngayDangKy) VALUES
-('KH001',N'Nguyen Minh Quan','0912000001','079000000001',N'123 Nguyễn Văn Cừ, Q.5, TP.HCM','quan.nm@gmail.com',N'Khách VIP','01/01/2026'),
-('KH002',N'Tran Ngoc Mai','0912000002','079000000002',N'456 Lê Lợi, Q.1, TP.HCM','mai.tn@gmail.com',N'Khách thân thiết','15/01/2026'),
-('KH003',N'Do Hoang Nam','0912000003','079000000003',N'789 Cách Mạng Tháng 8, Q.10, TP.HCM','nam.dh@gmail.com',N'Khách mới','20/02/2026');
+('KH001', N'Nguyen Minh Quan', '0912000001', '079000000001', N'123 Nguyễn Văn Cừ, Q.5, TP.HCM', 'quan.nm@gmail.com', N'Khách VIP', '01/01/2026'),
+('KH002', N'Tran Ngoc Mai', '0912000002', '079000000002', N'456 Lê Lợi, Q.1, TP.HCM', 'mai.tn@gmail.com', N'Khách thân thiết', '15/01/2026'),
+('KH003', N'Do Hoang Nam', '0912000003', '079000000003', N'789 Cách Mạng Tháng 8, Q.10, TP.HCM', 'nam.dh@gmail.com', N'Khách mới', '20/02/2026');
 GO
 
-/* Phuong tien */
-INSERT INTO PhuongTien
-    (soVIN,bienSoXe,hangXe,dongXe,maSX,maKH)
-VALUES
-('VIN001','51A-12345',N'Honda',N'City',2022,'KH001'),
-('VIN002','59A-67890',N'Toyota',N'Vios',2021,'KH002'),
-('VIN003','60A-11223',N'Yamaha',N'Exciter',2023,'KH003');
+/* 4. Phuong tien */
+INSERT INTO PhuongTien (soVIN, bienSoXe, hangXe, dongXe, maSX, maKH) VALUES
+('VIN001', '51A-12345', N'Honda', N'City', 2022, 'KH001'),
+('VIN002', '59A-67890', N'Toyota', N'Vios', 2021, 'KH002'),
+('VIN003', '60A-11223', N'Yamaha', N'Exciter', 2023, 'KH003');
 GO
 
-/* Nha cung cap */
-INSERT INTO NhaCungCap VALUES
-('NCC001',N'Cong ty Phu Tung Sai Gon','02830000001',
- N'Quan 5, TP HCM','sales1@example.com'),
-('NCC002',N'Phu Tung Mien Dong','02830000002',
- N'Thu Duc, TP HCM','sales2@example.com');
+/* 5. Nha cung cap */
+INSERT INTO NhaCungCap (maNCC, tenNCC, soDT, diaChi, email) VALUES
+('NCC001', N'Cong ty Phu Tung Sai Gon', '02830000001', N'Quan 5, TP HCM', 'sales1@example.com'),
+('NCC002', N'Phu Tung Mien Dong', '02830000002', N'Thu Duc, TP HCM', 'sales2@example.com');
 GO
 
-/* Phu tung */
-INSERT INTO PhuTung VALUES
-('PT001',N'Loc dau',N'Chiec',150000),
-('PT002',N'Loc gio',N'Chiec',220000),
-('PT003',N'Bugi',N'Chiec',85000),
-('PT004',N'Dau dong co',N'Lit',120000),
-('PT005',N'Bo phanh',N'Bo',450000);
+/* 6. Phu tung */
+INSERT INTO PhuTung (maPT, tenPT, donViTinh, donGiaBan) VALUES
+('PT001', N'Loc dau', N'Chiec', 150000),
+('PT002', N'Loc gio', N'Chiec', 220000),
+('PT003', N'Bugi', N'Chiec', 85000),
+('PT004', N'Dau dong co', N'Lit', 120000),
+('PT005', N'Bo phanh', N'Bo', 450000);
 GO
 
-/* Kho */
-INSERT INTO Kho VALUES
-('KHO001','PT001',50,N'Ke A1',5,100),
-('KHO002','PT002',30,N'Ke A2',5,80),
-('KHO003','PT003',100,N'Ke B1',10,200),
-('KHO004','PT004',80,N'Ke B2',10,150),
-('KHO005','PT005',20,N'Ke C1',3,50);
+/* 7. Kho */
+INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) VALUES
+('KHO001', 'PT001', 50, N'Ke A1', 5, 100),
+('KHO002', 'PT002', 30, N'Ke A2', 5, 80),
+('KHO003', 'PT003', 100, N'Ke B1', 10, 200),
+('KHO004', 'PT004', 80, N'Ke B2', 10, 150),
+('KHO005', 'PT005', 20, N'Ke C1', 3, 50);
 GO
 
-/* Hoa don */
-INSERT INTO HoaDon
-    (maHD, maKH, maNV, ngayLap, hinhThucThanhToan,
-     soPhieuSC, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai)
-VALUES
-('HD001','KH001','NV05','2026-03-01',N'CHUYEN_KHOAN',
- NULL,0,600000,0,600000,N'Hóa đơn mẫu',N'DA_THANH_TOAN'),
-('HD002','KH002','NV05','2026-03-05',N'TIEN_MAT',
- NULL,0,170000,0,170000,N'Hóa đơn mẫu',N'DA_THANH_TOAN');
+/* 8. Hoa don */
+INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, soPhieuSC, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
+('HD001', 'KH001', 'NV05', '2026-03-01', N'Chuyển Khoản', NULL, 0, 600000, 0, 600000, N'Hóa đơn mẫu', N'Đã Thanh Toán'),
+('HD002', 'KH002', 'NV05', '2026-03-05', N'Tiền Mặt', NULL, 0, 170000, 0, 170000, N'Hóa đơn mẫu', N'Đã Thanh Toán');
 GO
 
-/* Chi tiet hoa don */
-INSERT INTO ChiTietHoaDon VALUES
-('HD001','PT001',N'Loc dau',2,150000),
-('HD001','PT004',N'Dau dong co',4,120000),
-('HD002','PT003',N'Bugi',2,85000);
+/* 9. Chi tiet hoa don */
+INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES
+('HD001', 'PT001', N'Loc dau', 2, 150000),
+('HD001', 'PT004', N'Dau dong co', 4, 120000),
+('HD002', 'PT003', N'Bugi', 2, 85000);
 GO
 
-/* Phieu bao hanh */
-INSERT INTO PhieuBaoHanh
-    (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon)
-VALUES
-('BH001','2026-01-10','2027-01-10',N'CON_HAN','KH001','VIN001','HD001'),
-('BH002','2026-02-15','2027-02-15',N'CON_HAN','KH002','VIN002','HD002');
+/* 10. Phieu bao hanh */
+INSERT INTO PhieuBaoHanh (maPBH, ngayBD, ngayKT, trangThaiBH, maKH, soVIN, maHoaDon) VALUES
+('BH001', '2026-01-10', '2027-01-10', N'CON_HAN', 'KH001', 'VIN001', 'HD001'),
+('BH002', '2026-02-15', '2027-02-15', N'CON_HAN', 'KH002', 'VIN002', 'HD002');
 GO
 
-/* Chi tiet bao hanh */
-INSERT INTO ChiTietPhieuBaoHanh VALUES
-('BH001','PT001',N'Bao hanh loc dau',N'Kiem tra va thay neu loi'),
-('BH002','PT002',N'Bao hanh loc gio',N'Kiem tra tinh trang loc');
+/* 11. Chi tiet bao hanh */
+INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES
+('BH001', 'PT001', N'Bao hanh loc dau', N'Kiem tra va thay neu loi'),
+('BH002', 'PT002', N'Bao hanh loc gio', N'Kiem tra tinh trang loc');
 GO
 
-/* Phieu nhap kho */
-INSERT INTO PhieuNhapKho VALUES
-('PN001','NCC001','NV04','2026-03-01',1800000),
-('PN002','NCC002','NV04','2026-03-06',1000000);
+/* 12. Phieu nhap kho */
+INSERT INTO PhieuNhapKho (maPhieuNhap, maNCC, maNV, ngayNhap, tongTien) VALUES
+('PN001', 'NCC001', 'NV04', '2026-03-01', 1800000),
+('PN002', 'NCC002', 'NV04', '2026-03-06', 1000000);
 GO
 
-/* Chi tiet nhap kho */
-INSERT INTO ChiTietPhieuNhapKho VALUES
-('PN001','PT001',N'Loc dau',10,100000),
-('PN001','PT002',N'Loc gio',5,160000),
-('PN002','PT003',N'Bugi',20,50000);
+/* 13. Chi tiet nhap kho */
+INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap, maPT, tenPT, soLuong, donGia) VALUES
+('PN001', 'PT001', N'Loc dau', 10, 100000),
+('PN001', 'PT002', N'Loc gio', 5, 160000),
+('PN002', 'PT003', N'Bugi', 20, 50000);
 GO
 
-/* Phieu tiep nhan */
-INSERT INTO PhieuTiepNhan VALUES
-('TN001','NV01','KH001','VIN001','2026-03-10T08:30:00',
- N'Thay dau va kiem tra loc gio',N'DA_TIEP_NHAN'),
-('TN002','NV01','KH002','VIN002','2026-03-10T09:00:00',
- N'Kiem tra he thong phanh',N'DA_TIEP_NHAN'),
-('TN003','NV01','KH003','VIN003','2026-03-11T10:00:00',
- N'Kiem tra bugi',N'DANG_KIEM_TRA');
+/* 14. Phieu tiep nhan */
+INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES
+('TN001', 'NV01', 'KH001', 'VIN001', '2026-03-10T08:30:00', N'Thay dau va kiem tra loc gio', N'DA_TIEP_NHAN'),
+('TN002', 'NV01', 'KH002', 'VIN002', '2026-03-10T09:00:00', N'Kiem tra he thong phanh', N'DA_TIEP_NHAN'),
+('TN003', 'NV01', 'KH003', 'VIN003', '2026-03-11T10:00:00', N'Kiem tra bugi', N'DANG_KIEM_TRA');
 GO
 
-/* Phieu sua chua */
-INSERT INTO PhieuSuaChua
-    (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai)
-VALUES
-('SC001','NV02','KH001','VIN001','2026-03-10T09:00:00',
- '2026-03-10',N'DANG_SUA'),
-('SC002','NV02','KH002','VIN002','2026-03-10T10:00:00',
- '2026-03-11',N'CHO_SUA');
+/* 15. Phieu sua chua */
+INSERT INTO PhieuSuaChua (maPSC, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES
+('SC001', 'NV02', 'KH001', 'VIN001', '2026-03-10T09:00:00', '2026-03-10', N'DANG_SUA'),
+('SC002', 'NV02', 'KH002', 'VIN002', '2026-03-10T10:00:00', '2026-03-11', N'CHO_SUA');
 GO
 
-/* Chi tiet sua chua */
-INSERT INTO ChiTietSuaChua VALUES
-('SC001','PT001',N'Thay loc dau',N'Loc dau',1,150000,N'DA_HOAN_THANH'),
-('SC001','PT004',N'Thay dau dong co',N'Dau dong co',4,120000,N'DA_HOAN_THANH'),
-('SC002','PT005',N'Kiem tra va thay bo phanh',N'Bo phanh',1,450000,N'CHO_THUC_HIEN');
+/* 16. Chi tiet sua chua */
+INSERT INTO ChiTietSuaChua (maPSC, maPT, noiDungSC, tenPhuTung, soLuong, donGia, trangThai) VALUES
+('SC001', 'PT001', N'Thay loc dau', N'Loc dau', 1, 150000, N'DA_HOAN_THANH'),
+('SC001', 'PT004', N'Thay dau dong co', N'Dau dong co', 4, 120000, N'DA_HOAN_THANH'),
+('SC002', 'PT005', N'Kiem tra va thay bo phanh', N'Bo phanh', 1, 450000, N'CHO_THUC_HIEN');
 GO
 
-/* Phieu xuat kho */
-INSERT INTO PhieuXuatKho
-    (maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat)
-VALUES
-('PX001','SC001','NV03','2026-03-10',N'Đã xuất',N'Xuất vật tư thay thế theo phiếu sửa chữa'),
-('PX002','SC002','NV03','2026-03-10',N'Chờ xuất',N'Xuất vật tư thay thế theo phiếu sửa chữa');
+/* 17. Phieu xuat kho */
+INSERT INTO PhieuXuatKho (maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) VALUES
+('PX001', 'SC001', 'NV03', '2026-03-10', N'Đã xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa'),
+('PX002', 'SC002', 'NV03', '2026-03-10', N'Chờ xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa');
 GO
 
-/* Chi tiet xuat kho */
-INSERT INTO ChiTietPhieuXuatKho
-    (maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, donGia, tinhTrangXuat)
-VALUES
-('PX001','PT001',1,1,150000,N'Đã xuất'),
-('PX001','PT004',4,4,120000,N'Đã xuất'),
-('PX002','PT005',1,0,450000,N'Chờ xuất');
+/* 18. Chi tiet xuat kho */
+INSERT INTO ChiTietPhieuXuatKho (maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, donGia, tinhTrangXuat) VALUES
+('PX001', 'PT001', 1, 1, 150000, N'Đã xuất'),
+('PX001', 'PT004', 4, 4, 120000, N'Đã xuất'),
+('PX002', 'PT005', 1, 0, 450000, N'Chờ xuất');
 GO
-
 /*============================================================
   TRUY VAN THU NGHIEM
 ============================================================*/
@@ -561,3 +541,65 @@ GO
 PRINT N'Da tao CSDL QuanLySuaChuaXe va du lieu mau.';
 GO
 
+CREATE TABLE ChiTietCongViecSuaChua (
+    maPSC VARCHAR(20) NOT NULL,
+    stt INT NOT NULL,
+    noiDungCongViec NVARCHAR(255) NOT NULL,
+    tenKTV NVARCHAR(100),
+    tienCong DECIMAL(15,2) NOT NULL DEFAULT 0,
+
+    CONSTRAINT PK_ChiTietCongViecSuaChua
+        PRIMARY KEY (maPSC, stt),
+
+    CONSTRAINT FK_CTCV_PSC
+        FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
+
+    CONSTRAINT CK_CTCV_TienCong
+        CHECK (tienCong >= 0)
+);
+
+USE QuanLySuaChuaXe;
+GO
+
+BEGIN TRANSACTION;
+BEGIN TRY
+
+    -- TẦNG 1: Xóa các bảng chi tiết / bảng phụ thuộc nhiều nhất
+    DELETE FROM ChiTietPhieuXuatKho;
+    DELETE FROM ChiTietPhieuNhapKho;
+    DELETE FROM ChiTietCongViecSuaChua;
+    DELETE FROM ChiTietSuaChua;
+    DELETE FROM ChiTietPhieuBaoHanh;
+    DELETE FROM ChiTietHoaDon;
+
+    -- TẦNG 2: Xóa các bảng phiếu giao dịch
+    DELETE FROM PhieuXuatKho;
+    DELETE FROM PhieuNhapKho;
+    DELETE FROM PhieuBaoHanh;
+    DELETE FROM PhieuSuaChua;
+    DELETE FROM PhieuTiepNhan;
+    DELETE FROM HoaDon;
+
+    -- TẦNG 3: Xóa các bảng chứa thông tin đối tượng & tài khoản
+    DELETE FROM Kho;
+    DELETE FROM PhuongTien;
+    DELETE FROM TaiKhoan;
+
+    -- TẦNG 4: Xóa các bảng danh mục gốc (Bảng cha không phụ thuộc bảng nào)
+    DELETE FROM PhuTung;
+    DELETE FROM NhaCungCap;
+    DELETE FROM KhachHang;
+    DELETE FROM NhanVien;
+
+    -- Xác nhận xóa thành công nếu không có lỗi
+    COMMIT TRANSACTION;
+    PRINT N'Đã xóa sạch toàn bộ dữ liệu! Cấu trúc các bảng vẫn được giữ nguyên.';
+
+END TRY
+BEGIN CATCH
+    -- Tự động khôi phục dữ liệu nếu có lỗi xảy ra
+    ROLLBACK TRANSACTION;
+    PRINT N'Có lỗi xảy ra, thao tác xóa đã được hủy!';
+    PRINT ERROR_MESSAGE();
+END CATCH;
+GO

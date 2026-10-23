@@ -811,6 +811,16 @@ public class XuatKho_UI extends JPanel {
                     JOptionPane.ERROR_MESSAGE
             );
         }
+
+        // Chuyển mã phiếu vừa xuất kho sang màn hình sửa chữa
+        LapPhieuSuaChua_UI.datPSCCanMoLai(maPSC);
+
+// Quay về màn hình phiếu sửa chữa
+        Main_UI mainUI = Main_UI.getInstance();
+
+        if (mainUI != null) {
+            mainUI.chuyenTrang("Phiếu sửa chữa");
+        }
     }
 
 
