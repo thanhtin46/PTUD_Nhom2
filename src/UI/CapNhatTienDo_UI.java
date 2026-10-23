@@ -12,6 +12,11 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
+import ConnectDB.ConnectDB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * Tra cứu phiếu sửa chữa & Cập nhật tiến độ sửa chữa:
@@ -282,20 +287,63 @@ public class CapNhatTienDo_UI extends JPanel {
     }
 
     /** Mở phiếu sửa chữa chi tiết và đồng bộ sang LapPhieuSuaChua_UI */
+
     private void moPhieuSuaChua() {
         int dong = table.getSelectedRow();
+
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu trong bảng để mở phiếu sửa chữa chi tiết!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this, "Vui lòng chọn một phiếu trong bảng!"
+            );
             return;
         }
-        String soPhieu = model.getValueAt(dong, 0).toString();
+
+        String maPTN = String.valueOf(model.getValueAt(dong, 0));
+        String maPSC = null;
+
+        String sql =
+                "SELECT TOP 1 ps.maPSC " +
+                        "FROM PhieuSuaChua ps " +
+                        "JOIN PhieuTiepNhan tn ON tn.soVIN = ps.soVIN " +
+                        "WHERE tn.maPTN = ? " +
+                        "ORDER BY ps.ngayBD DESC";
+
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maPTN);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    maPSC = rs.getString("maPSC");
+                }
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm được phiếu sửa chữa:\n" + ex.getMessage(),
+                    "Lỗi SQL",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
 
         Main_UI mainUI = Main_UI.getInstance();
-        if (mainUI != null) {
-            LapPhieuSuaChua_UI.datPhieuCanChon(soPhieu);
-            mainUI.chuyenTrang("Lập phiếu sửa chữa");
+
+        if (mainUI == null) return;
+
+        if (maPSC != null) {
+            // Đã có phiếu sửa chữa: mở đúng phiếu đã lưu
+            LapPhieuSuaChua_UI.datPSCCanMoLai(maPSC);
+        } else {
+            // Chưa có phiếu sửa chữa: mở theo phiếu tiếp nhận
+            LapPhieuSuaChua_UI.datPhieuCanChon(maPTN);
         }
+
+        mainUI.chuyenTrang("Lập phiếu sửa chữa");
     }
+
 
     private void xemChiTiet() {
         int dong = table.getSelectedRow();
