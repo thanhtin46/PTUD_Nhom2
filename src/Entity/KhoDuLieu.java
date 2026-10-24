@@ -6,6 +6,8 @@ import DAO.KhachHang_DAO;
 import DAO.TraCuuKhachHang_DAO;
 import DAO.PhuongTien_DAO;
 import DAO.TraCuuPhuongTien_DAO;
+import DAO.PhieuTiepNhan_DAO;
+import DAO.PhieuBaoHanh_DAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,8 @@ public class KhoDuLieu {
     private final TraCuuKhachHang_DAO traCuuKhachHangDAO = new TraCuuKhachHang_DAO();
     private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
     private final TraCuuPhuongTien_DAO traCuuPhuongTienDAO = new TraCuuPhuongTien_DAO();
+    private final PhieuTiepNhan_DAO phieuTiepNhanDAO = new PhieuTiepNhan_DAO();
+    private final PhieuBaoHanh_DAO phieuBaoHanhDAO = new PhieuBaoHanh_DAO();
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -68,6 +72,8 @@ public class KhoDuLieu {
     public TraCuuKhachHang_DAO getTraCuuKhachHangDAO() { return traCuuKhachHangDAO; }
     public PhuongTien_DAO getPhuongTienDAO() { return phuongTienDAO; }
     public TraCuuPhuongTien_DAO getTraCuuPhuongTienDAO() { return traCuuPhuongTienDAO; }
+    public PhieuTiepNhan_DAO getPhieuTiepNhanDAO() { return phieuTiepNhanDAO; }
+    public PhieuBaoHanh_DAO getPhieuBaoHanhDAO() { return phieuBaoHanhDAO; }
 
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
@@ -323,9 +329,25 @@ public class KhoDuLieu {
     // 6. PHIẾU BẢO HÀNH
     public boolean themPhieuBaoHanh(PhieuBaoHanh pbh) {
         phieuBaoHanhs.add(pbh);
-        boolean dbOk = duLieuDAO.themPhieuBaoHanh(pbh, null, null);
+        boolean dbOk = phieuBaoHanhDAO.them(pbh);
         ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu bảo hành", NhatKyHeThong.INFO,
                 "Lập phiếu bảo hành [" + pbh.getSoPhieu() + "] cho xe " + pbh.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
+        return dbOk;
+    }
+
+    public boolean capNhatPhieuBaoHanh(PhieuBaoHanh pbh) {
+        int index = -1;
+        for (int i = 0; i < phieuBaoHanhs.size(); i++) {
+            if (phieuBaoHanhs.get(i).getSoPhieu().equals(pbh.getSoPhieu())) { index = i; break; }
+        }
+        if (index < 0) return false;
+        phieuBaoHanhs.set(index, pbh);
+        return phieuBaoHanhDAO.capNhat(pbh);
+    }
+
+    public boolean xoaPhieuBaoHanh(String soPhieu) {
+        boolean dbOk = phieuBaoHanhDAO.xoa(soPhieu);
+        phieuBaoHanhs.removeIf(p -> p.getSoPhieu().equals(soPhieu));
         return dbOk;
     }
 
@@ -528,8 +550,19 @@ public class KhoDuLieu {
     }
 
     public String maPhieuTiepNhanMoi() {
-        demTiepNhan++;
-        return String.format("TN%03d", demTiepNhan);
+        if (phieuTiepNhanDAO != null) {
+            return phieuTiepNhanDAO.sinhMaTiepNhanTuDong();
+        }
+        int max = 0;
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (p.getSoPhieu() != null && p.getSoPhieu().toUpperCase().startsWith("TN")) {
+                try {
+                    int s = Integer.parseInt(p.getSoPhieu().replaceAll("[^0-9]", ""));
+                    if (s > max) max = s;
+                } catch (Exception ignored) {}
+            }
+        }
+        return String.format("TN%03d", max + 1);
     }
 
     public String maPhieuBaoHanhMoi() {
@@ -623,8 +656,8 @@ public class KhoDuLieu {
         khachHangs.addAll(khachHangDAO.layTatCaKhachHang());
         phuongTiens.addAll(phuongTienDAO.layTatCaPhuongTien());
         phuTungs.addAll(duLieuDAO.layTatCaPhuTung());
-        phieuTiepNhans.addAll(duLieuDAO.layTatCaPhieuTiepNhan());
-        phieuBaoHanhs.addAll(duLieuDAO.layTatCaPhieuBaoHanh());
+        phieuTiepNhans.addAll(phieuTiepNhanDAO.layTatCaPhieuTiepNhan());
+        phieuBaoHanhs.addAll(phieuBaoHanhDAO.layTatCa());
         hoaDons.addAll(duLieuDAO.layTatCaHoaDon());
 
         // Nạp danh sách nhân sự từ SQL Server nếu có
