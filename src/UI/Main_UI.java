@@ -444,7 +444,9 @@ public class Main_UI extends JFrame {
     private Component layTrangTheoTen(String tenMenu) {
         return switch (tenMenu) {
             case "Trang chủ"
-                    -> new TrangChu_UI();
+                    -> (nhanVienHienTai != null && nhanVienHienTai.getVaiTro() != null && nhanVienHienTai.getVaiTro().toLowerCase().contains("tiếp tân"))
+                            ? new TrangChuTiepTan_UI(nhanVienHienTai)
+                            : new TrangChu_UI();
             case "Quản trị hệ thống (Admin)", "Quản trị hệ thống", "Admin Hub"
                     -> new AdminHub_UI(nhanVienHienTai, this);
 

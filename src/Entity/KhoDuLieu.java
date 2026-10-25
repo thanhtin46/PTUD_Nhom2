@@ -8,9 +8,10 @@ import DAO.PhuongTien_DAO;
 import DAO.TraCuuPhuongTien_DAO;
 import DAO.PhieuTiepNhan_DAO;
 import DAO.PhieuBaoHanh_DAO;
+import DAO.HoaDon_DAO;
+import DAO.TrangChuTiepTan_DAO;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class KhoDuLieu {
     private static KhoDuLieu instance;
@@ -38,6 +39,9 @@ public class KhoDuLieu {
     private final TraCuuPhuongTien_DAO traCuuPhuongTienDAO = new TraCuuPhuongTien_DAO();
     private final PhieuTiepNhan_DAO phieuTiepNhanDAO = new PhieuTiepNhan_DAO();
     private final PhieuBaoHanh_DAO phieuBaoHanhDAO = new PhieuBaoHanh_DAO();
+    private final HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
+    private final TrangChuTiepTan_DAO trangChuTiepTanDAO = new TrangChuTiepTan_DAO();
+
 
     private int demTiepNhan = 3;
     private int demBaoHanh = 2;
@@ -74,6 +78,8 @@ public class KhoDuLieu {
     public TraCuuPhuongTien_DAO getTraCuuPhuongTienDAO() { return traCuuPhuongTienDAO; }
     public PhieuTiepNhan_DAO getPhieuTiepNhanDAO() { return phieuTiepNhanDAO; }
     public PhieuBaoHanh_DAO getPhieuBaoHanhDAO() { return phieuBaoHanhDAO; }
+    public HoaDon_DAO getHoaDonDAO() { return hoaDonDAO; }
+    public TrangChuTiepTan_DAO getTrangChuTiepTanDAO() { return trangChuTiepTanDAO; }
 
     public void ghiNhatKy(String nguoi, String vaiTro, String hanhDong, String mucDo, String chiTiet) {
         nhatKyList.add(0, new NhatKyHeThong(nguoi, vaiTro, hanhDong, mucDo, chiTiet));
