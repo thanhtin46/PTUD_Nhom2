@@ -243,7 +243,14 @@ public class Login_UI extends JFrame {
         center.add(txtMatKhau);
         center.add(Box.createVerticalStrut(26));
 
-        JButton btnDangNhap = UiHelper.nut("ĐĂNG NHẬP", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_TRUNG, true, e -> xuLyDangNhap());
+        JButton btnDangNhap = UiHelper.nut("ĐĂNG NHẬP", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_TRUNG, true, e -> {
+			try {
+				xuLyDangNhap();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         btnDangNhap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         btnDangNhap.setAlignmentX(Component.LEFT_ALIGNMENT);
         center.add(btnDangNhap);
@@ -330,7 +337,7 @@ public class Login_UI extends JFrame {
         return phai;
     }
 
-    private void xuLyDangNhap() {
+    private void xuLyDangNhap() throws Exception {
         String tk = txtTaiKhoan.getText().trim();
         String mk = new String(txtMatKhau.getPassword()).trim();
 

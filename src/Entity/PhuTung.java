@@ -26,22 +26,15 @@ public class PhuTung {
         this.soLuongToiThieu = soLuongToiThieu;
     }
 
-<<<<<<< HEAD
-   
-
+  
 	public PhuTung() {
 		// TODO Auto-generated constructor stub
 	}
-
 	public String getMaPT() { return maPT; }
-=======
-    public String getMaPT() { return maPT; }
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
     public void setMaPT(String maPT) { this.maPT = maPT; }
 
     public String getTen() { return ten; }
     public void setTen(String ten) { this.ten = ten; }
-
     public String getDonVi() { return donVi; }
     public void setDonVi(String donVi) { this.donVi = donVi; }
 
@@ -61,9 +54,5 @@ public class PhuTung {
         return "BÌNH THƯỜNG";
     }
     public boolean canhBao() { return soLuongTon <= soLuongToiThieu; }
-<<<<<<< HEAD
 
-	
-=======
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 }

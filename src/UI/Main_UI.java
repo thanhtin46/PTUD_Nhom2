@@ -6,6 +6,7 @@ import Entity.NhanVien;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
@@ -56,7 +57,7 @@ public class Main_UI extends JFrame {
     private static final Color CHU_MUC_CON = new Color(71, 85, 105);       // Slate 600
     private static final Color DUONG_KE = new Color(241, 245, 249);        // Slate 100
 
-    public Main_UI(NhanVien nv, ArrayList<NhanVien> danhSachNhanVien) {
+    public Main_UI(NhanVien nv, ArrayList<NhanVien> danhSachNhanVien) throws Exception {
         this.nhanVienHienTai = nv;
         this.danhSachNhanVien = danhSachNhanVien;
         instance = this;
@@ -68,7 +69,7 @@ public class Main_UI extends JFrame {
         initComponents();
     }
 
-    private void initComponents() {
+    private void initComponents() throws Exception {
         setTitle("Hệ thống quản lý Gara ô tô — The T4 Auto");
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         int w = Math.min(1480, screen.width - 40);
@@ -280,7 +281,14 @@ public class Main_UI extends JFrame {
         if (!muc.laNhom()) {
             // Mục độc lập (Trang chủ, Quản trị hệ thống)
             MenuRow nut = new MenuRow(muc.ten, muc.icon, 0, false);
-            nut.addActionListener(e -> chonMenu(nut, muc.ten));
+            nut.addActionListener(e -> {
+				try {
+					chonMenu(nut, muc.ten);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
             menuPanel.add(nut);
 
             Component s = Box.createVerticalStrut(2);
@@ -300,7 +308,12 @@ public class Main_UI extends JFrame {
         MenuRow nutCha = new MenuRow(muc.ten, muc.icon, 0, true);
         nutCha.addActionListener(e -> {
             if (!muc.danhSachCon.isEmpty()) {
-                chuyenTrang(muc.danhSachCon.get(0).ten);
+                try {
+					chuyenTrang(muc.danhSachCon.get(0).ten);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
             }
         });
         menuPanel.add(nutCha);
@@ -308,7 +321,14 @@ public class Main_UI extends JFrame {
         // Các mục con thụt lề
         for (MucMenu con : muc.danhSachCon) {
             MenuRow nutCon = new MenuRow(con.ten, null, 1, false);
-            nutCon.addActionListener(e -> chonMenu(nutCon, con.ten));
+            nutCon.addActionListener(e -> {
+				try {
+					chonMenu(nutCon, con.ten);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
             menuPanel.add(nutCon);
 
             Component s = Box.createVerticalStrut(1);
@@ -383,11 +403,11 @@ public class Main_UI extends JFrame {
     // ===============================================================
     //                       ĐIỀU HƯỚNG MÀN HÌNH
     // ===============================================================
-    private void chonMenu(MenuRow nut, String tenMenu) {
+    private void chonMenu(MenuRow nut, String tenMenu) throws Exception {
         chonMenu(nut, tenMenu, null);
     }
 
-    private void chonMenu(MenuRow nut, String tenMenu, Component trang) {
+    private void chonMenu(MenuRow nut, String tenMenu, Component trang) throws Exception {
         if (nutDangChon != null) {
             nutDangChon.setChon(false);
         }
@@ -410,15 +430,15 @@ public class Main_UI extends JFrame {
         return nhanVienHienTai;
     }
 
-    public void chuyenTrangTiepNhan(Entity.PhuongTien xe) {
+    public void chuyenTrangTiepNhan(Entity.PhuongTien xe) throws Exception {
         chuyenTrang("Lập phiếu tiếp nhận", new LapPhieuTiepNhan_UI(nhanVienHienTai, xe));
     }
 
-    public void chuyenTrang(String tenMenu) {
+    public void chuyenTrang(String tenMenu) throws Exception {
         chuyenTrang(tenMenu, null);
     }
 
-    public void chuyenTrang(String tenMenu, Component trang) {
+    public void chuyenTrang(String tenMenu, Component trang) throws Exception {
         if (tenMenu == null || tenMenu.isEmpty()) return;
 
         MenuRow found = null;
@@ -441,7 +461,7 @@ public class Main_UI extends JFrame {
         }
     }
 
-    private Component layTrangTheoTen(String tenMenu) {
+    private Component layTrangTheoTen(String tenMenu) throws Exception {
         return switch (tenMenu) {
             case "Trang chủ"
                     -> new TrangChu_UI();
@@ -484,14 +504,14 @@ public class Main_UI extends JFrame {
             case "Kho phụ tùng", "Quản lý phụ tùng", "Danh sách phụ tùng"
                     -> new DanhSachPhuTung_UI();
             case "Nhập kho"
-                    -> new NhapKho_UI(nhanVienHienTai);
+                    -> new NhapKho_UI(nhanVienHienTai,true);
             case "Xuất kho"
                     -> new XuatKho_UI(nhanVienHienTai);
             case "Báo cáo tồn kho"
                     -> new BaoCaoTonKho_UI();
             case "Theo dõi chờ nhập"
                     -> new TheoDoiChoNhap_UI();
-
+            case "Tìm kiếm phụ tùng" -> new TimKiemPhuTung_UI();
             // 7. Bảo hành
             case "Bảo hành", "Lập phiếu bảo hành"
                     -> new LapPhieuBaoHanh_UI(nhanVienHienTai);
@@ -641,7 +661,8 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Quản lý phụ tùng"))
                 .them(MucMenu.con("Nhập kho"))
                 .them(MucMenu.con("Xuất kho"))
-                .them(MucMenu.con("Báo cáo tồn kho")));
+                .them(MucMenu.con("Báo cáo tồn kho"))
+                .them(MucMenu.con("Tìm kiếm phụ tùng")));
 
         // 7. Bảo hành
         ds.add(MucMenu.nhom("Bảo hành", UiIcon.SHIELD, TIEP_TAN)

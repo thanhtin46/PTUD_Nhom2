@@ -122,7 +122,12 @@ public class CapNhatTienDo_UI extends JPanel {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    moPhieuSuaChua();
+                    try {
+						moPhieuSuaChua();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 }
             }
         });
@@ -211,7 +216,14 @@ public class CapNhatTienDo_UI extends JPanel {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
 
-        JButton btnMoPSC = UiHelper.nut("Mở phiếu sửa chữa chi tiết", UiIcon.of(UiIcon.WRENCH, 15), UiHelper.XANH_DAM, true, e -> moPhieuSuaChua());
+        JButton btnMoPSC = UiHelper.nut("Mở phiếu sửa chữa chi tiết", UiIcon.of(UiIcon.WRENCH, 15), UiHelper.XANH_DAM, true, e -> {
+			try {
+				moPhieuSuaChua();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         JButton btnChiTiet = UiHelper.nut("Xem chi tiết", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XAM, true, e -> xemChiTiet());
 
         right.add(btnChiTiet);
@@ -281,8 +293,9 @@ public class CapNhatTienDo_UI extends JPanel {
                 "Cập nhật thành công", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Mở phiếu sửa chữa chi tiết và đồng bộ sang LapPhieuSuaChua_UI */
-    private void moPhieuSuaChua() {
+    /** Mở phiếu sửa chữa chi tiết và đồng bộ sang LapPhieuSuaChua_UI 
+     * @throws Exception */
+    private void moPhieuSuaChua() throws Exception {
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu trong bảng để mở phiếu sửa chữa chi tiết!", "Thông báo", JOptionPane.WARNING_MESSAGE);

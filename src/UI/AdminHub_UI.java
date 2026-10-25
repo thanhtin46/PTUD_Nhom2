@@ -241,7 +241,12 @@ public class AdminHub_UI extends JPanel {
 
             JButton btnMo = UiHelper.nut("Mở", UiIcon.of(UiIcon.CHECK, 13), mauNhom, e -> {
                 if (mainUI != null) {
-                    mainUI.chuyenTrang(tenModule);
+                    try {
+						mainUI.chuyenTrang(tenModule);
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 } else {
                     JOptionPane.showMessageDialog(this, "Chuyển đến màn hình: " + tenModule);
                 }

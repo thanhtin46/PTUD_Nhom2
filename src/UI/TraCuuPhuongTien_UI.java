@@ -53,7 +53,12 @@ public class TraCuuPhuongTien_UI extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    lapPhieuTiepNhan();
+                    try {
+						lapPhieuTiepNhan();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 }
             }
         });
@@ -64,7 +69,14 @@ public class TraCuuPhuongTien_UI extends JPanel {
 
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
         bottom.setOpaque(false);
-        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe đã chọn", UiIcon.of(UiIcon.FILE, 15), UiHelper.XANH_TRUNG, true, e -> lapPhieuTiepNhan());
+        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe đã chọn", UiIcon.of(UiIcon.FILE, 15), UiHelper.XANH_TRUNG, true, e -> {
+			try {
+				lapPhieuTiepNhan();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         bottom.add(btnTiepNhan);
         bangPanel.add(bottom, BorderLayout.SOUTH);
 
@@ -87,7 +99,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         }
     }
 
-    private void lapPhieuTiepNhan() {
+    private void lapPhieuTiepNhan() throws Exception {
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một xe trong bảng kết quả tra cứu để lập phiếu tiếp nhận!", "Chưa chọn xe", JOptionPane.WARNING_MESSAGE);

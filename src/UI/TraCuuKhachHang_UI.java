@@ -112,7 +112,14 @@ public class TraCuuKhachHang_UI extends JPanel {
 
         JButton btnXemChiTiet = UiHelper.nut("Xem chi tiết & Xe", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemChiTiet());
         JButton btnXemLichSu = UiHelper.nut("Xem lịch sử sửa chữa", UiIcon.of(UiIcon.CLOCK, 15), UiHelper.CAM, e -> xemLichSuSuaChua());
-        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho khách", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> lapPhieuTiepNhanChoKhach());
+        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho khách", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> {
+			try {
+				lapPhieuTiepNhanChoKhach();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
 
         boxNut.add(btnXemChiTiet);
         boxNut.add(btnXemLichSu);
@@ -463,7 +470,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         dlg.setVisible(true);
     }
 
-    private void lapPhieuTiepNhanChoKhach() {
+    private void lapPhieuTiepNhanChoKhach() throws Exception {
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng muốn lập phiếu tiếp nhận!", "Thông báo", JOptionPane.WARNING_MESSAGE);

@@ -19,10 +19,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-<<<<<<< HEAD
+
 import java.sql.SQLException;
-=======
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -87,11 +86,11 @@ public class QuanLyNhanVien_UI extends JPanel {
     private JLabel lblThongKeTong;
     private JLabel lblTrangThaiDB;
 
-    public QuanLyNhanVien_UI() {
+    public QuanLyNhanVien_UI() throws SQLException {
         this(null);
     }
 
-    public QuanLyNhanVien_UI(NhanVien nv) {
+    public QuanLyNhanVien_UI(NhanVien nv) throws SQLException {
         this.nvHienTai = nv;
         setLayout(new BorderLayout());
         setBackground(NEN_APP);
@@ -122,7 +121,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     // ===============================================================
     // 1. HEADER PANEL CHUẨN ERP
     // ===============================================================
-    private JPanel taoHeaderPanel() {
+    private JPanel taoHeaderPanel() throws SQLException {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
 
@@ -220,16 +219,8 @@ public class QuanLyNhanVien_UI extends JPanel {
         btnLamMoi.setBorder(new LineBorder(VIEN_CARD, 1, true));
         btnLamMoi.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnLamMoi.addActionListener(e -> {
-<<<<<<< HEAD
-            try {
-				ConnectDB.getInstance().connect();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-=======
             ConnectDB.getInstance().connect();
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
+            ConnectDB.getInstance().connect();
             napBang();
             JOptionPane.showMessageDialog(this, "Đã làm mới dữ liệu từ CSDL SQL Server!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         });

@@ -85,7 +85,14 @@ public class QuanLyPhuongTien_UI extends JPanel {
         hangNut1.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
         hangNut1.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
-        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 16), UiHelper.XANH_TRUNG, true, e -> lapPhieuTiepNhan());
+        JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 16), UiHelper.XANH_TRUNG, true, e -> {
+			try {
+				lapPhieuTiepNhan();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         btnTiepNhan.setPreferredSize(new Dimension(btnTiepNhan.getPreferredSize().width, 38));
 
         panelNut.add(hangNut1, BorderLayout.NORTH);
@@ -139,7 +146,12 @@ public class QuanLyPhuongTien_UI extends JPanel {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    lapPhieuTiepNhan();
+                    try {
+						lapPhieuTiepNhan();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 }
             }
         });
@@ -236,7 +248,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
         txtBienSo.requestFocus();
     }
 
-    private void lapPhieuTiepNhan() {
+    private void lapPhieuTiepNhan() throws Exception {
         String bienSo = txtBienSo.getText().trim();
         if (bienSo.isEmpty()) {
             int dong = table.getSelectedRow();

@@ -809,9 +809,7 @@ public class DuLieu_DAO {
         }
     }
 
-<<<<<<< HEAD
-    
-=======
+
     // ===============================================================
     // 7. NHẬP KHO & XUẤT KHO
     // ===============================================================
@@ -901,5 +899,5 @@ public class DuLieu_DAO {
             ps.executeUpdate();
         } catch (SQLException ignored) {}
     }
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
+
 }

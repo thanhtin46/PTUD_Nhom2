@@ -403,23 +403,8 @@ public class KhoDuLieu {
             }
         }
         phieu.setTrangThai(PhieuKho.DA_NHAP);
-<<<<<<< HEAD
+
         return phieuKhos.add(phieu);
-    }
-       
-
-    
-
-=======
-        phieuKhos.add(phieu);
-
-        // Lưu trực tiếp vào CSDL SQL Server
-        if (PhieuKho.NHAP.equals(phieu.getLoai())) {
-            duLieuDAO.themPhieuNhapKho(phieu, null);
-        } else {
-            duLieuDAO.themPhieuXuatKho(phieu, null);
-        }
-        return true;
     }
 
     /** UC010: chỉ lưu phiếu nhập dạng "chờ nhập" — chưa cộng tồn kho. */
@@ -440,7 +425,6 @@ public class KhoDuLieu {
         duLieuDAO.themPhieuNhapKho(phieu, null);
         return true;
     }
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
 
     /** UC010: đánh dấu hủy phiếu chờ nhập. */
     public boolean huyPhieuChoNhap(PhieuKho phieu) {
@@ -491,12 +475,9 @@ public class KhoDuLieu {
     private void seed() {
         dongBoTuSQLServer();
     }
-<<<<<<< HEAD
-
-	public boolean xacNhanNhap(PhieuKho phieuDangChon) {
+	public boolean xacNhanNhap1(PhieuKho phieuDangChon) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-=======
->>>>>>> 32a3a048d53529208494b32d997c0ac097f98d22
+
 }

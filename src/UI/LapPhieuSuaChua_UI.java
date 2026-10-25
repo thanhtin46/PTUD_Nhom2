@@ -163,12 +163,25 @@ public class LapPhieuSuaChua_UI extends JPanel {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         right.setOpaque(false);
 
-        JButton btnLuu = UiHelper.nut("Lưu phiếu", UiIcon.of(UiIcon.CHECK, 15), UiHelper.XANH_LA, e -> luuPhieuSuaChua());
+        JButton btnLuu = UiHelper.nut("Lưu phiếu", UiIcon.of(UiIcon.CHECK, 15), UiHelper.XANH_LA, e -> {
+			try {
+				luuPhieuSuaChua();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         JButton btnIn = UiHelper.nut("In phiếu", UiIcon.of(UiIcon.PRINT, 15), new Color(13, 148, 136), e -> {});
         JButton btnLamMoi = UiHelper.nut("Làm mới (F5)", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
         JButton btnTraCuu = UiHelper.nut("Tra cứu", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_DAM, e -> {
             Main_UI mainUI = Main_UI.getInstance();
-            if (mainUI != null) mainUI.chuyenTrang("Tra cứu phiếu sửa chữa");
+            if (mainUI != null)
+				try {
+					mainUI.chuyenTrang("Tra cứu phiếu sửa chữa");
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
         });
 
         right.add(btnLuu);
@@ -728,7 +741,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
     // ===============================================================
     // LƯU & ĐỒNG BỘ DỮ LIỆU
     // ===============================================================
-    private void luuPhieuSuaChua() {
+    private void luuPhieuSuaChua() throws Exception {
         if (cboPhieuTN.getSelectedIndex() <= 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn Phiếu tiếp nhận xe trước khi lưu!", "Nhắc nhở", JOptionPane.WARNING_MESSAGE);
             return;
