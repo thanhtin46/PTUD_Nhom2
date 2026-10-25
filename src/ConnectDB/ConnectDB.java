@@ -1,4 +1,3 @@
-
 package ConnectDB;
 
 import java.sql.Connection;
@@ -11,18 +10,24 @@ public class ConnectDB {
 
     private Connection connection;
 
-    // Thay đổi thông tin cho đúng với SQL Server trên máy bạn
-    private static final String URL =
+    // Danh sách mật khẩu phổ biến của các thành viên trong nhóm để máy nào cũng chạy được
+    private static final String[] DANH_SACH_MAT_KHAU = {
+            "sapassword123@",
+            "sapassword",
+            "123456",
+            "123",
+            "sa"
+    };
+
+    private static final String BASE_URL =
             "jdbc:sqlserver://localhost:1433;"
                     + "databaseName=QuanLySuaChuaXe;"
                     + "encrypt=true;"
                     + "trustServerCertificate=true;"
-                    + "loginTimeout=5;";
+                    + "loginTimeout=3;";
 
     private static final String USER = "sa";
-
-    // Thay bằng mật khẩu thực tế của tài khoản SQL Server
-    private static final String PASSWORD = "sapassword";
+    private static final String PASSWORD = "sapassword123@";
 
     private ConnectDB() {
     }
@@ -37,22 +42,42 @@ public class ConnectDB {
                 return;
             }
 
-            connection = DriverManager.getConnection(
-                    URL, USER, PASSWORD
-            );
+            // 1. Thử mật khẩu chính của máy hiện tại
+            try {
+                connection = DriverManager.getConnection(BASE_URL, USER, PASSWORD);
+                if (connection != null && !connection.isClosed()) {
+                    System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công!");
+                    return;
+                }
+            } catch (SQLException ignored) {}
 
-            System.out.println(
-                    "Kết nối SQL Server thành công: "
-                            + connection.getCatalog()
-            );
+            // 2. Thử các mật khẩu dự phòng khác của thành viên trong nhóm
+            for (String mk : DANH_SACH_MAT_KHAU) {
+                if (mk.equals(PASSWORD)) continue;
+                try {
+                    connection = DriverManager.getConnection(BASE_URL, USER, mk);
+                    if (connection != null && !connection.isClosed()) {
+                        System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công với mật khẩu dự phòng!");
+                        return;
+                    }
+                } catch (SQLException ignored) {}
+            }
 
-        } catch (SQLException e) {
+            // 3. Thử kết nối qua Windows Authentication (nếu cấu hình)
+            try {
+                String winUrl = "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;integratedSecurity=true;encrypt=true;trustServerCertificate=true;loginTimeout=3;";
+                connection = DriverManager.getConnection(winUrl);
+                if (connection != null && !connection.isClosed()) {
+                    System.out.println("Kết nối CSDL SQL Server qua Windows Authentication thành công!");
+                    return;
+                }
+            } catch (SQLException ignored) {}
+
+            System.err.println("Không thể kết nối SQL Server (localhost:1433, DB: QuanLySuaChuaXe). Hệ thống tự động chuyển sang chế độ Demo / Bộ nhớ đệm dự phòng.");
+
+        } catch (Exception e) {
             connection = null;
-
-            System.err.println("Không thể kết nối SQL Server.");
-            System.err.println("SQLState: " + e.getSQLState());
-            System.err.println("Mã lỗi: " + e.getErrorCode());
-            System.err.println("Chi tiết: " + e.getMessage());
+            System.err.println("Lỗi khởi tạo kết nối CSDL: " + e.getMessage());
         }
     }
 
@@ -64,9 +89,7 @@ public class ConnectDB {
             connection = null;
 
         } catch (SQLException e) {
-            System.err.println(
-                    "Lỗi đóng kết nối: " + e.getMessage()
-            );
+            System.err.println("Lỗi đóng kết nối: " + e.getMessage());
         }
     }
 
@@ -76,9 +99,7 @@ public class ConnectDB {
                 connect();
             }
         } catch (SQLException e) {
-            System.err.println(
-                    "Lỗi kiểm tra kết nối: " + e.getMessage()
-            );
+            System.err.println("Lỗi kiểm tra kết nối: " + e.getMessage());
         }
 
         return connection;
