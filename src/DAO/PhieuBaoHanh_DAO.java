@@ -6,17 +6,26 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+// Tắt cảnh báo SQL của IntelliJ (chưa cấu hình Data Source nên báo "dbo" đỏ).
+// Đây không phải lỗi biên dịch, code vẫn chạy bình thường.
+@SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve"})
 public class PhieuBaoHanh_DAO {
 
+    // Lấy kết nối dùng chung của project.
+    // Lưu ý: KHÔNG đóng Connection ở đây vì ConnectDB dùng chung 1 kết nối.
+    // Chỉ đóng PreparedStatement và ResultSet (đã dùng try-with-resources).
     private Connection getConnection() {
         return ConnectDB.getInstance().getConnection();
     }
 
+    // Kiểm tra chuỗi null hoặc rỗng (thay cho String.isBlank() của Java 11)
     private boolean rong(String s) {
         return s == null || s.trim().isEmpty();
     }
 
+    // =========================================================
     // 1. LỚP LỰA CHỌN HIỂN THỊ TRÊN COMBOBOX
+    // =========================================================
     public static class LuaChon {
         public final String ma;
         public final String ten;
@@ -32,8 +41,9 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
-
+    // =========================================================
     // 2. LỚP CHI TIẾT BẢO HÀNH
+    // =========================================================
     public static class ChiTiet {
         public String tenHangMuc;
         public int thoiHan;
@@ -65,7 +75,9 @@ public class PhieuBaoHanh_DAO {
         public List<ChiTiet> chiTiet = new ArrayList<>();
     }
 
+    // =========================================================
     // 4. LẤY DANH SÁCH HÓA ĐƠN ĐỂ LẬP PHIẾU BẢO HÀNH
+    // =========================================================
     public List<LuaChon> layDanhSachHoaDon() throws SQLException {
 
         String sql = "SELECT h.maHD, h.ngayLap, h.tongTien, h.maKH, k.hoTen "
@@ -99,7 +111,9 @@ public class PhieuBaoHanh_DAO {
         return ds;
     }
 
+    // =========================================================
     // 5. SINH MÃ PHIẾU: PBH00001, PBH00002, ...
+    // =========================================================
     public String taoMaPhieuMoi() throws SQLException {
 
         String sql = "SELECT ISNULL(MAX(TRY_CONVERT(INT, SUBSTRING(maPBH, 4, 17))), 0) + 1 AS soMoi "
@@ -120,7 +134,9 @@ public class PhieuBaoHanh_DAO {
         throw new SQLException("Không tạo được mã phiếu bảo hành.");
     }
 
+    // =========================================================
     // 6. KIỂM TRA HÓA ĐƠN ĐÃ CÓ PHIẾU BẢO HÀNH CHƯA
+    // =========================================================
     public boolean hoaDonDaCoPhieu(String maHD) throws SQLException {
         return hoaDonDaCoPhieu(getConnection(), maHD);
     }
@@ -177,7 +193,15 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
+    // =========================================================
     // 7. THÊM PHIẾU BẢO HÀNH VÀ CÁC HẠNG MỤC
+    // dsChiTiet: mỗi phần tử là Object[] gồm 5 giá trị:
+    //   [0] tenHangMuc (String)
+    //   [1] thoiHan    (Number)
+    //   [2] ngayHetHan (java.sql.Date)
+    //   [3] dieuKien   (String)
+    //   [4] ghiChu     (String)
+    // =========================================================
     public void themPhieuBaoHanh(
             String maPBH,
             String maHD,
@@ -317,11 +341,13 @@ public class PhieuBaoHanh_DAO {
         try {
             c.rollback();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            System.err.println("Rollback thất bại: " + ex.getMessage());
         }
     }
 
+    // =========================================================
     // 8. LẤY THÔNG TIN PHIẾU ĐỂ IN
+    // =========================================================
     public ThongTinIn layThongTinIn(String maPBH) throws SQLException {
 
         String sql = "SELECT b.maPBH, b.maHD, b.maNV, nv.hoTen AS tenNhanVien, "
@@ -393,8 +419,9 @@ public class PhieuBaoHanh_DAO {
         return t;
     }
 
-
+    // =========================================================
     // 9. LẤY DANH SÁCH PHIẾU BẢO HÀNH ĐÃ LẬP
+    // =========================================================
     public List<Object[]> layDanhSachPhieu() throws SQLException {
 
         String sql = "SELECT b.maPBH, b.maHD, b.maNV, b.ngayLap, b.ngayBatDau, "

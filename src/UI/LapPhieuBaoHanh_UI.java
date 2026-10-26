@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+// Tắt cảnh báo SQL của IntelliJ (chưa cấu hình Data Source nên báo "dbo" đỏ).
+// Đây không phải lỗi biên dịch, code vẫn chạy bình thường.
+@SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve"})
 public class LapPhieuBaoHanh_UI extends JPanel {
 
     private final NhanVien nhanVien;
@@ -24,7 +27,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     private final Color NAVY = new Color(23, 42, 70);
     private final Color BLUE = new Color(53, 91, 170);
     private final Color GREEN = new Color(34, 139, 91);
-    private final Color BG = new Color(245, 247, 252);
     private final Color BORDER = new Color(215, 222, 234);
 
     private final JTextField txtMaPBH = new JTextField();
@@ -54,13 +56,14 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     private DefaultTableModel model;
     private JTable tblChiTiet;
 
+    // true khi đang nạp dữ liệu, để combobox không tự chạy sự kiện
     private boolean dangNap = false;
 
     public LapPhieuBaoHanh_UI(NhanVien nhanVien) {
         this.nhanVien = nhanVien;
 
         setLayout(new BorderLayout(0, 10));
-        setBackground(BG);
+        setBackground(new Color(245, 247, 252));
         setBorder(new EmptyBorder(12, 12, 12, 12));
 
         add(taoHeader(), BorderLayout.NORTH);
@@ -77,6 +80,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         napDuLieu();
     }
 
+    // ================= HEADER =================
 
     private JPanel taoHeader() {
         JPanel p = new JPanel(new BorderLayout(10, 0));
@@ -123,6 +127,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         return p;
     }
 
+    // ================= FORM =================
 
     private JPanel taoNoiDung() {
         JPanel content = new JPanel(new BorderLayout(0, 10));
@@ -249,6 +254,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         return card;
     }
 
+    // ================= INPUT STATE =================
 
     private void moKhoaInput() {
         txtMaPBH.setEditable(false);
@@ -267,6 +273,8 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         cboTrangThai.setEnabled(true);
         spThoiHan.setEnabled(true);
     }
+
+    // ================= LOAD SQL DATA =================
 
     private void napDuLieu() {
         dangNap = true;
