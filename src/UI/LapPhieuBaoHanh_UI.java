@@ -315,6 +315,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     }
 
 
+
     private void napThongTinHoaDon() {
         LuaChon hd = (LuaChon) cboHoaDon.getSelectedItem();
 
@@ -346,35 +347,62 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             ps.setString(1, hd.ma);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String tenKhachHang = rs.getString("hoTen");
-                    String bienSoXe = rs.getString("bienSoXe");
-                    String tongTien = rs.getString("tongTien");
-
-                    txtKhachHang.setText(
-                            tenKhachHang == null ? "" : tenKhachHang
-                    );
-
-                    txtBienSoXe.setText(
-                            bienSoXe == null ? "" : bienSoXe
-                    );
-
-                    txtTongTien.setText(
-                            tongTien == null ? "" : tongTien
-                    );
-
-                    if (bienSoXe == null || bienSoXe.isBlank()) {
-                        System.out.println(
-                                "Không tìm thấy biển số xe cho hóa đơn: " + hd.ma
-                        );
-                    }
+                if (!rs.next()) {
+                    thongBao("Không tìm thấy hóa đơn: " + hd.ma);
+                    return;
                 }
+
+                String tenKH = rs.getString("hoTen");
+                String tongTien = rs.getString("tongTien");
+
+                txtKhachHang.setText(tenKH == null ? "" : tenKH);
+                txtTongTien.setText(tongTien == null ? "" : tongTien);
+
+                List<String> bienSoList = new ArrayList<>();
+
+                do {
+                    String bienSo = rs.getString("bienSoXe");
+
+                    if (bienSo != null && !bienSo.isBlank()
+                            && !bienSoList.contains(bienSo)) {
+                        bienSoList.add(bienSo);
+                    }
+                } while (rs.next());
+
+                if (bienSoList.isEmpty()) {
+                    txtBienSoXe.setText("");
+                    System.out.println(
+                            "Chưa tìm thấy biển số xe cho hóa đơn: " + hd.ma
+                    );
+                    return;
+                }
+
+                if (bienSoList.size() == 1) {
+                    txtBienSoXe.setText(bienSoList.get(0));
+                    return;
+                }
+
+                Object luaChon = JOptionPane.showInputDialog(
+                        this,
+                        "Khách hàng có nhiều xe. Hãy chọn biển số xe:",
+                        "Chọn phương tiện",
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        bienSoList.toArray(),
+                        bienSoList.get(0)
+                );
+
+                if (luaChon != null) {
+                    txtBienSoXe.setText(luaChon.toString());
+                }
+
             }
 
         } catch (SQLException ex) {
             baoLoi("Không lấy được thông tin hóa đơn.", ex);
         }
     }
+
 
 
     private void napDanhSachNhanVien() throws SQLException {
