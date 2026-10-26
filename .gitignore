@@ -1,0 +1,22 @@
+# Compiled class files & build directories
+*.class
+/bin/
+/classes/
+/out/
+/build/
+/target/
+
+# IntelliJ IDEA user-specific files
+.idea/workspace.xml
+.idea/shelf/
+.idea/logs/
+.idea/usage.statistics.xml
+*.iws
+
+# OS temporary files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary folders
+PTUD_Nhom2/
