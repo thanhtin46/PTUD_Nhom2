@@ -13,9 +13,7 @@ public class PhieuBaoHanh_DAO {
         return ConnectDB.getInstance().getConnection();
     }
 
-    // =========================================================
     // 1. LỚP LỰA CHỌN HIỂN THỊ TRÊN COMBOBOX
-    // =========================================================
     public static class LuaChon {
         public final String ma;
         public final String ten;
@@ -31,9 +29,8 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
-    // =========================================================
+
     // 2. LỚP CHI TIẾT BẢO HÀNH
-    // =========================================================
     public static class ChiTiet {
         public String tenHangMuc;
         public int thoiHan;
@@ -42,9 +39,8 @@ public class PhieuBaoHanh_DAO {
         public String ghiChu;
     }
 
-    // =========================================================
+
     // 3. LỚP DỮ LIỆU DÙNG ĐỂ IN PHIẾU
-    // =========================================================
     public static class ThongTinIn {
         public String maPBH;
         public String maHD;
@@ -65,9 +61,8 @@ public class PhieuBaoHanh_DAO {
         public List<ChiTiet> chiTiet = new ArrayList<>();
     }
 
-    // =========================================================
+
     // 4. LẤY DANH SÁCH HÓA ĐƠN ĐỂ LẬP PHIẾU BẢO HÀNH
-    // =========================================================
     public List<LuaChon> layDanhSachHoaDon() throws SQLException {
 
         String sql = """
@@ -103,57 +98,54 @@ public class PhieuBaoHanh_DAO {
         return ds;
     }
 
-    // =========================================================
     // 5. SINH MÃ PHIẾU PBH00001, PBH00002...
-    // =========================================================
     public String taoMaPhieuMoi() throws SQLException {
-
         String sql = """
-            SELECT ISNULL(MAX(
-                TRY_CONVERT(INT, SUBSTRING(maPBH, 4, 17))
-            ), 0) + 1 AS soMoi
-            FROM dbo.PhieuBaoHanh
-            WHERE maPBH LIKE 'PBH%'
-            """;
+        SELECT ISNULL(MAX(
+            TRY_CONVERT(INT, SUBSTRING(maPBH, 4, 17))
+        ), 0) + 1 AS soMoi
+        FROM dbo.PhieuBaoHanh
+        WHERE maPBH LIKE 'PBH%'
+        """;
 
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             if (rs.next()) {
-                return String.format("PBH%05d", rs.getInt("soMoi"));
+                int soMoi = rs.getInt("soMoi");
+                return String.format("PBH%05d", soMoi);
             }
         }
 
-        throw new SQLException("Không tạo được mã phiếu bảo hành.");
+        throw new SQLException("Khong tao duoc ma phieu bao hanh.");
     }
 
-    // =========================================================
     // 6. KIỂM TRA HÓA ĐƠN ĐÃ CÓ PHIẾU BẢO HÀNH CHƯA
-    // =========================================================
     public boolean hoaDonDaCoPhieu(String maHD) throws SQLException {
-
         String sql = """
-            SELECT COUNT(*)
-            FROM dbo.PhieuBaoHanh
-            WHERE maHD = ?
-              AND trangThai <> N'Đã hủy'
-            """;
+        SELECT COUNT(*)
+        FROM dbo.PhieuBaoHanh
+        WHERE maHD = ?
+          AND trangThai <> N'Đã hủy'
+        """;
 
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, maHD);
 
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         }
+
+        return false;
     }
 
-    // =========================================================
     // 7. THÊM PHIẾU BẢO HÀNH VÀ CÁC HẠNG MỤC
-    // =========================================================
     public void themPhieuBaoHanh(
             String maPBH,
             String maHD,
@@ -363,9 +355,7 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
-    // =========================================================
     // 8. LẤY THÔNG TIN PHIẾU ĐỂ IN
-    // =========================================================
     public ThongTinIn layThongTinIn(String maPBH)
             throws SQLException {
 

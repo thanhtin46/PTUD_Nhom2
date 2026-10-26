@@ -316,92 +316,91 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
 
 
-    private void napThongTinHoaDon() {
-        LuaChon hd = (LuaChon) cboHoaDon.getSelectedItem();
 
+    private void napThongTinHoaDon() {
+        LuaChon hoaDon = (LuaChon) cboHoaDon.getSelectedItem();
+
+        // Xoa thong tin cu truoc khi hien thi hoa don moi
         txtKhachHang.setText("");
         txtBienSoXe.setText("");
         txtTongTien.setText("");
 
-        if (hd == null) {
+        if (hoaDon == null) {
             return;
         }
 
         String sql = """
-        SELECT
-            k.hoTen,
-            h.tongTien,
-            pt.bienSoXe
+        SELECT k.hoTen, h.tongTien, pt.bienSoXe
         FROM dbo.HoaDon h
-        LEFT JOIN dbo.KhachHang k
-            ON k.maKH = h.maKH
-        LEFT JOIN dbo.PhuongTien pt
-            ON pt.maKH = h.maKH
+        LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH
+        LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH
         WHERE h.maHD = ?
         ORDER BY pt.bienSoXe
         """;
 
-        try (Connection c = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, hd.ma);
+            ps.setString(1, hoaDon.ma);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    thongBao("Không tìm thấy hóa đơn: " + hd.ma);
+                    thongBao("Khong tim thay hoa don: " + hoaDon.ma);
                     return;
                 }
 
+                // Lay thong tin khach hang va tong tien
                 String tenKH = rs.getString("hoTen");
                 String tongTien = rs.getString("tongTien");
 
                 txtKhachHang.setText(tenKH == null ? "" : tenKH);
                 txtTongTien.setText(tongTien == null ? "" : tongTien);
 
-                List<String> bienSoList = new ArrayList<>();
+                // Lay danh sach bien so xe cua khach hang
+                List<String> danhSachXe = new ArrayList<>();
 
                 do {
                     String bienSo = rs.getString("bienSoXe");
 
                     if (bienSo != null && !bienSo.isBlank()
-                            && !bienSoList.contains(bienSo)) {
-                        bienSoList.add(bienSo);
+                            && !danhSachXe.contains(bienSo)) {
+                        danhSachXe.add(bienSo);
                     }
                 } while (rs.next());
 
-                if (bienSoList.isEmpty()) {
-                    txtBienSoXe.setText("");
-                    System.out.println(
-                            "Chưa tìm thấy biển số xe cho hóa đơn: " + hd.ma
-                    );
+                if (danhSachXe.isEmpty()) {
+                    thongBao("Khong tim thay bien so xe cua khach hang.");
                     return;
                 }
 
-                if (bienSoList.size() == 1) {
-                    txtBienSoXe.setText(bienSoList.get(0));
+                // Neu chi co mot xe thi tu dong hien thi
+                if (danhSachXe.size() == 1) {
+                    txtBienSoXe.setText(danhSachXe.get(0));
                     return;
                 }
 
-                Object luaChon = JOptionPane.showInputDialog(
+                // Neu co nhieu xe thi cho nguoi dung chon
+                Object xeDuocChon = JOptionPane.showInputDialog(
                         this,
-                        "Khách hàng có nhiều xe. Hãy chọn biển số xe:",
-                        "Chọn phương tiện",
+                        "Vui long chon bien so xe:",
+                        "Chon phuong tien",
                         JOptionPane.QUESTION_MESSAGE,
                         null,
-                        bienSoList.toArray(),
-                        bienSoList.get(0)
+                        danhSachXe.toArray(),
+                        danhSachXe.get(0)
                 );
 
-                if (luaChon != null) {
-                    txtBienSoXe.setText(luaChon.toString());
+                if (xeDuocChon != null) {
+                    txtBienSoXe.setText(xeDuocChon.toString());
                 }
-
             }
 
         } catch (SQLException ex) {
-            baoLoi("Không lấy được thông tin hóa đơn.", ex);
+            baoLoi("Loi khi lay thong tin hoa don.", ex);
         }
     }
+
+
 
 
 
@@ -414,20 +413,19 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
         cboNhanVien.removeAllItems();
 
-        try (Connection c = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                cboNhanVien.addItem(
-                        new LuaChon(
-                                rs.getString("maNV"),
-                                rs.getString("hoTen")
-                        )
-                );
+                String maNV = rs.getString("maNV");
+                String hoTen = rs.getString("hoTen");
+
+                cboNhanVien.addItem(new LuaChon(maNV, hoTen));
             }
         }
     }
+
     // ================= DETAIL INPUT =================
 
     private void themHangMuc() {
@@ -466,28 +464,31 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         }
     }
 
+
     private void tinhNgayHetHan(int row) {
-        if (row < 0 || row >= model.getRowCount()) return;
+        if (row < 0 || row >= model.getRowCount()) {
+            return;
+        }
 
         try {
-            LocalDate bd = LocalDate.parse(
+            LocalDate ngayBatDau = LocalDate.parse(
                     txtNgayBatDau.getText().trim()
             );
 
-            int thang = Integer.parseInt(
+            int thoiHan = Integer.parseInt(
                     model.getValueAt(row, 2).toString()
             );
 
-            if (thang <= 0) return;
+            if (thoiHan > 0) {
+                LocalDate ngayHetHan = ngayBatDau.plusMonths(thoiHan);
+                model.setValueAt(Date.valueOf(ngayHetHan), row, 3);
+            }
 
-            model.setValueAt(
-                    Date.valueOf(bd.plusMonths(thang)), row, 3
-            );
-
-        } catch (Exception ignored) {
-            // Kiểm tra lại dữ liệu khi lưu.
+        } catch (Exception ex) {
+            // Ngay hoac thoi han chua hop le
         }
     }
+
 
     private void xoaHangMuc() {
         int row = tblChiTiet.getSelectedRow();
