@@ -65,9 +65,7 @@ public class PhieuBaoHanh_DAO {
         public List<ChiTiet> chiTiet = new ArrayList<>();
     }
 
-    // =========================================================
     // 4. LẤY DANH SÁCH HÓA ĐƠN ĐỂ LẬP PHIẾU BẢO HÀNH
-    // =========================================================
     public List<LuaChon> layDanhSachHoaDon() throws SQLException {
 
         String sql = "SELECT h.maHD, h.ngayLap, h.tongTien, h.maKH, k.hoTen "
@@ -101,9 +99,7 @@ public class PhieuBaoHanh_DAO {
         return ds;
     }
 
-    // =========================================================
     // 5. SINH MÃ PHIẾU: PBH00001, PBH00002, ...
-    // =========================================================
     public String taoMaPhieuMoi() throws SQLException {
 
         String sql = "SELECT ISNULL(MAX(TRY_CONVERT(INT, SUBSTRING(maPBH, 4, 17))), 0) + 1 AS soMoi "
@@ -124,9 +120,7 @@ public class PhieuBaoHanh_DAO {
         throw new SQLException("Không tạo được mã phiếu bảo hành.");
     }
 
-    // =========================================================
     // 6. KIỂM TRA HÓA ĐƠN ĐÃ CÓ PHIẾU BẢO HÀNH CHƯA
-    // =========================================================
     public boolean hoaDonDaCoPhieu(String maHD) throws SQLException {
         return hoaDonDaCoPhieu(getConnection(), maHD);
     }
@@ -183,15 +177,7 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
-    // =========================================================
     // 7. THÊM PHIẾU BẢO HÀNH VÀ CÁC HẠNG MỤC
-    // dsChiTiet: mỗi phần tử là Object[] gồm 5 giá trị:
-    //   [0] tenHangMuc (String)
-    //   [1] thoiHan    (Number)
-    //   [2] ngayHetHan (java.sql.Date)
-    //   [3] dieuKien   (String)
-    //   [4] ghiChu     (String)
-    // =========================================================
     public void themPhieuBaoHanh(
             String maPBH,
             String maHD,
@@ -335,9 +321,7 @@ public class PhieuBaoHanh_DAO {
         }
     }
 
-    // =========================================================
     // 8. LẤY THÔNG TIN PHIẾU ĐỂ IN
-    // =========================================================
     public ThongTinIn layThongTinIn(String maPBH) throws SQLException {
 
         String sql = "SELECT b.maPBH, b.maHD, b.maNV, nv.hoTen AS tenNhanVien, "

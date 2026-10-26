@@ -54,7 +54,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     private DefaultTableModel model;
     private JTable tblChiTiet;
 
-    // true khi đang nạp dữ liệu, để combobox không tự chạy sự kiện
     private boolean dangNap = false;
 
     public LapPhieuBaoHanh_UI(NhanVien nhanVien) {
@@ -78,7 +77,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         napDuLieu();
     }
 
-    // ================= HEADER =================
 
     private JPanel taoHeader() {
         JPanel p = new JPanel(new BorderLayout(10, 0));
@@ -125,7 +123,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         return p;
     }
 
-    // ================= FORM =================
 
     private JPanel taoNoiDung() {
         JPanel content = new JPanel(new BorderLayout(0, 10));
@@ -252,7 +249,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         return card;
     }
 
-    // ================= INPUT STATE =================
 
     private void moKhoaInput() {
         txtMaPBH.setEditable(false);
@@ -271,8 +267,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         cboTrangThai.setEnabled(true);
         spThoiHan.setEnabled(true);
     }
-
-    // ================= LOAD SQL DATA =================
 
     private void napDuLieu() {
         dangNap = true;
