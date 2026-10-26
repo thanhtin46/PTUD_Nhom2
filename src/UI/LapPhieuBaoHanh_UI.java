@@ -22,6 +22,7 @@ import java.util.List;
 public class LapPhieuBaoHanh_UI extends JPanel {
 
     private final NhanVien nhanVien;
+    private String maPhieuVuaLuu = "";
     private final PhieuBaoHanh_DAO dao = new PhieuBaoHanh_DAO();
 
     private final Color NAVY = new Color(23, 42, 70);
@@ -329,7 +330,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         String sql = "SELECT k.hoTen, h.tongTien, pt.bienSoXe "
                 + "FROM dbo.HoaDon h "
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
-                + "LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH "
+                + "LEFT JOIN dbo.PhieuSuaChua sc ON sc.maPSC = h.soPhieuSC " + "LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH AND (h.soPhieuSC IS NULL OR pt.soVIN = sc.soVIN) "
                 + "WHERE h.maHD = ? "
                 + "ORDER BY pt.bienSoXe";
 
@@ -602,6 +603,9 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             );
 
             txtMaPBH.setText(maPBH);
+            maPhieuVuaLuu = maPBH;
+            Entity.KhoDuLieu.get().getPhieuBaoHanhs().clear();
+            Entity.KhoDuLieu.get().getPhieuBaoHanhs().addAll(dao.layTatCa());
 
             JOptionPane.showMessageDialog(
                     this,
@@ -629,7 +633,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     // ================= PRINT =================
 
     private void inPhieu() {
-        String maPBH = txtMaPBH.getText().trim();
+        String maPBH = maPhieuVuaLuu;
 
         if (maPBH.isEmpty()) {
             thongBao("Không có mã phiếu để in.");

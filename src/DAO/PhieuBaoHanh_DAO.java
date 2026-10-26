@@ -1,6 +1,8 @@
 package DAO;
 
 import ConnectDB.ConnectDB;
+import Entity.KhoDuLieu;
+import Entity.PhieuBaoHanh;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,12 +12,20 @@ import java.util.List;
 // Đây không phải lỗi biên dịch, code vẫn chạy bình thường.
 @SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve"})
 public class PhieuBaoHanh_DAO {
+    private final Connection suppliedConnection;
+
+    public PhieuBaoHanh_DAO() { this.suppliedConnection = null; }
+
+    // Allows transaction tests without opening the application's shared connection.
+    public PhieuBaoHanh_DAO(Connection connection) { this.suppliedConnection = connection; }
 
     // Lấy kết nối dùng chung của project.
     // Lưu ý: KHÔNG đóng Connection ở đây vì ConnectDB dùng chung 1 kết nối.
     // Chỉ đóng PreparedStatement và ResultSet (đã dùng try-with-resources).
-    private Connection getConnection() {
-        return ConnectDB.getInstance().getConnection();
+    private Connection getConnection() throws SQLException {
+        Connection c = suppliedConnection != null ? suppliedConnection : ConnectDB.getInstance().getConnection();
+        if (c == null || c.isClosed()) throw new SQLException("Chưa kết nối SQL Server.");
+        return c;
     }
 
     // Kiểm tra chuỗi null hoặc rỗng (thay cho String.isBlank() của Java 11)
@@ -144,8 +154,8 @@ public class PhieuBaoHanh_DAO {
     // Bản dùng chung kết nối (để gọi bên trong transaction)
     private boolean hoaDonDaCoPhieu(Connection c, String maHD) throws SQLException {
 
-        String sql = "SELECT COUNT(*) FROM dbo.PhieuBaoHanh "
-                + "WHERE maHD = ? AND trangThai <> N'Đã hủy'";
+        String sql = "SELECT COUNT(*) FROM dbo.PhieuBaoHanh WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE maHoaDon = ? AND trangThaiBH <> N'DA_HUY'";
 
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, maHD);
@@ -249,7 +259,17 @@ public class PhieuBaoHanh_DAO {
 
             kiemTraNgayBatDau(c, ngayBatDau);
 
-            luuPhieu(c, maPBH, maHD, maNV, bienSoXe, ngayBatDau, trangThai, ghiChu);
+            Date ngayKetThuc = ngayBatDau;
+            for (Object[] ct : dsChiTiet) {
+                if (ct == null || ct.length < 5 || !(ct[1] instanceof Number)
+                        || !(ct[2] instanceof Date)) throw new SQLException("Chi tiết bảo hành không hợp lệ.");
+                int thang = ((Number) ct[1]).intValue();
+                Date hetHan = (Date) ct[2];
+                if (thang <= 0 || !hetHan.equals(Date.valueOf(ngayBatDau.toLocalDate().plusMonths(thang))))
+                    throw new SQLException("Ngày hết hạn phải khớp ngày bắt đầu và số tháng bảo hành. Hãy nhập lại hạng mục.");
+                if (hetHan.after(ngayKetThuc)) ngayKetThuc = hetHan;
+            }
+            luuPhieu(c, maPBH, maHD, maNV, bienSoXe, ngayBatDau, ngayKetThuc, trangThai, ghiChu);
             luuChiTiet(c, maPBH, dsChiTiet);
 
             c.commit();
@@ -270,31 +290,27 @@ public class PhieuBaoHanh_DAO {
 
     // Lưu 1 dòng vào bảng PhieuBaoHanh
     private void luuPhieu(Connection c, String maPBH, String maHD, String maNV,
-                          String bienSoXe, Date ngayBatDau,
+                          String bienSoXe, Date ngayBatDau, Date ngayKetThuc,
                           String trangThai, String ghiChu) throws SQLException {
-
         String sql = "INSERT INTO dbo.PhieuBaoHanh "
-                + "(maPBH, maHD, maNV, ngayBatDau, trangThai, ghiChu, bienSoXe) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+                + "(maPBH, maHoaDon, maNV, ngayBD, ngayKT, trangThaiBH, ghiChu, maKH, soVIN) "
+                + "SELECT ?, h.maHD, ?, ?, ?, ?, ?, h.maKH, pt.soVIN FROM dbo.HoaDon h "
+                + "JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH AND pt.bienSoXe = ? "
+                + "LEFT JOIN dbo.PhieuSuaChua sc ON sc.maPSC = h.soPhieuSC "
+                + "WHERE h.maHD = ? AND (h.soPhieuSC IS NULL OR sc.soVIN = pt.soVIN)";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, maPBH);
-            ps.setString(2, maHD);
-            ps.setString(3, maNV);
-            ps.setDate(4, ngayBatDau);
-            ps.setString(5, trangThai);
-            ps.setString(6, ghiChu);
-            ps.setString(7, bienSoXe);
-
-            ps.executeUpdate();
+            ps.setString(1, maPBH); ps.setString(2, maNV);
+            ps.setDate(3, ngayBatDau); ps.setDate(4, ngayKetThuc);
+            ps.setString(5, toDatabaseStatus(trangThai)); ps.setString(6, ghiChu);
+            ps.setString(7, bienSoXe); ps.setString(8, maHD);
+            if (ps.executeUpdate() != 1) throw new SQLException("Xe không khớp với hóa đơn đã chọn.");
         }
     }
-
     // Lưu các hạng mục vào bảng ChiTietPhieuBaoHanh
     private void luuChiTiet(Connection c, String maPBH, List<Object[]> dsChiTiet)
             throws SQLException {
 
-        String sql = "INSERT INTO dbo.ChiTietPhieuBaoHanh "
+        String sql = "INSERT INTO dbo.HangMucBaoHanh "
                 + "(maPBH, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) "
                 + "VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -350,18 +366,18 @@ public class PhieuBaoHanh_DAO {
     // =========================================================
     public ThongTinIn layThongTinIn(String maPBH) throws SQLException {
 
-        String sql = "SELECT b.maPBH, b.maHD, b.maNV, nv.hoTen AS tenNhanVien, "
-                + "b.ngayLap, b.ngayBatDau, b.trangThai, b.ghiChu, b.bienSoXe, "
+        String sql = "SELECT b.maPBH, b.maHoaDon AS maHD, b.maNV, nv.hoTen AS tenNhanVien, "
+                + "b.ngayLap, b.ngayBD AS ngayBatDau, b.trangThaiBH AS trangThai, b.ghiChu, pt.bienSoXe, "
                 + "h.maKH, k.hoTen AS tenKhachHang, h.tongTien "
-                + "FROM dbo.PhieuBaoHanh b "
-                + "JOIN dbo.HoaDon h ON h.maHD = b.maHD "
-                + "JOIN dbo.NhanVien nv ON nv.maNV = b.maNV "
+                + "FROM dbo.PhieuBaoHanh b JOIN dbo.PhuongTien pt ON pt.soVIN = b.soVIN "
+                + "JOIN dbo.HoaDon h ON h.maHD = b.maHoaDon "
+                + "LEFT JOIN dbo.NhanVien nv ON nv.maNV = b.maNV "
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
                 + "WHERE b.maPBH = ?";
 
         String sqlCT = "SELECT tenHangMuc, thoiHanBaoHanh, ngayHetHan, "
                 + "dieuKienBaoHanh, ghiChu "
-                + "FROM dbo.ChiTietPhieuBaoHanh "
+                + "FROM dbo.HangMucBaoHanh "
                 + "WHERE maPBH = ? "
                 + "ORDER BY maCTPBH";
 
@@ -386,7 +402,7 @@ public class PhieuBaoHanh_DAO {
                 t.ngayLap = rs.getDate("ngayLap");
                 t.ngayBatDau = rs.getDate("ngayBatDau");
 
-                t.trangThai = rs.getString("trangThai");
+                t.trangThai = hienThiTrangThai(rs.getString("trangThai"));
                 t.ghiChu = rs.getString("ghiChu");
 
                 t.maKH = rs.getString("maKH");
@@ -424,10 +440,10 @@ public class PhieuBaoHanh_DAO {
     // =========================================================
     public List<Object[]> layDanhSachPhieu() throws SQLException {
 
-        String sql = "SELECT b.maPBH, b.maHD, b.maNV, b.ngayLap, b.ngayBatDau, "
-                + "b.trangThai, b.bienSoXe, k.hoTen AS tenKhachHang "
-                + "FROM dbo.PhieuBaoHanh b "
-                + "JOIN dbo.HoaDon h ON h.maHD = b.maHD "
+        String sql = "SELECT b.maPBH, b.maHoaDon AS maHD, b.maNV, b.ngayLap, b.ngayBD AS ngayBatDau, "
+                + "b.trangThaiBH AS trangThai, pt.bienSoXe, k.hoTen AS tenKhachHang "
+                + "FROM dbo.PhieuBaoHanh b JOIN dbo.PhuongTien pt ON pt.soVIN = b.soVIN "
+                + "JOIN dbo.HoaDon h ON h.maHD = b.maHoaDon "
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
                 + "ORDER BY b.ngayLap DESC, b.maPBH DESC";
 
@@ -444,7 +460,7 @@ public class PhieuBaoHanh_DAO {
                         rs.getString("maNV"),
                         rs.getDate("ngayLap"),
                         rs.getDate("ngayBatDau"),
-                        rs.getString("trangThai"),
+                        hienThiTrangThai(rs.getString("trangThai")),
                         rs.getString("bienSoXe"),
                         rs.getString("tenKhachHang")
                 });
@@ -453,4 +469,159 @@ public class PhieuBaoHanh_DAO {
 
         return ds;
     }
+    public ArrayList<PhieuBaoHanh> layTatCa() {
+        ArrayList<PhieuBaoHanh> ds = new ArrayList<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return ds;
+        String sql = "SELECT bh.maPBH, pt.bienSoXe, CONVERT(VARCHAR(10), bh.ngayBD, 103) AS ngayBD, " +
+                "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ngayKT, bh.trangThaiBH, COALESCE(ct.lyDo, hm.noiDung, bh.ghiChu) AS lyDo " +
+                "FROM PhieuBaoHanh bh JOIN PhuongTien pt ON pt.soVIN = bh.soVIN " +
+                "OUTER APPLY (SELECT STRING_AGG(CAST(lyDo AS nvarchar(max)), N'; ') AS lyDo FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) ct " + "OUTER APPLY (SELECT STRING_AGG(CAST(tenHangMuc AS nvarchar(max)), N'; ') AS noiDung FROM HangMucBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
+        try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String status = rs.getString("trangThaiBH");
+                String displayStatus = switch (status == null ? "" : status.toUpperCase()) {
+                    case "CON_HAN" -> "Còn hạn";
+                    case "DANG_XU_LY" -> "Đang xử lý";
+                    case "HET_HAN" -> "Hết hạn";
+                    case "TAM_NGUNG" -> "Tạm ngưng";
+                    case "DA_HUY" -> "Đã hủy";
+                    default -> status == null ? "" : status;
+                };
+                ds.add(new PhieuBaoHanh(rs.getString("maPBH"), rs.getString("bienSoXe"),
+                        rs.getString("ngayBD"), rs.getString("ngayKT"), "", displayStatus,
+                        rs.getString("lyDo") == null ? "" : rs.getString("lyDo")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PhieuBaoHanh_DAO.layTatCa: " + e.getMessage());
+        }
+        return ds;
+    }
+
+    public ArrayList<PhieuBaoHanh> traCuu(String tuKhoa, int tieuChi, String tinhTrang) {
+        String q = tuKhoa == null ? "" : tuKhoa.trim().toLowerCase();
+        ArrayList<PhieuBaoHanh> result = new ArrayList<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        ArrayList<PhieuBaoHanh> source = con == null
+                ? new ArrayList<>(KhoDuLieu.get().getPhieuBaoHanhs()) : layTatCa();
+        for (PhieuBaoHanh p : source) {
+            String text = switch (tieuChi) {
+                case 1 -> p.getSoPhieu();
+                case 2 -> p.getBienSo();
+                case 3 -> p.getTinhTrang();
+                case 4 -> p.getNoiDung();
+                default -> String.join(" ", safe(p.getSoPhieu()), safe(p.getBienSo()), safe(p.getNgayBatDau()),
+                        safe(p.getNgayKetThuc()), safe(p.getTinhTrang()), safe(p.getNoiDung()));
+            };
+            boolean matchText = q.isEmpty() || safe(text).toLowerCase().contains(q);
+            boolean matchStatus = tinhTrang == null || tinhTrang.isBlank() || "TAT_CA".equalsIgnoreCase(tinhTrang)
+                    || tinhTrang.equalsIgnoreCase(p.getTinhTrang());
+            if (matchText && matchStatus) result.add(p);
+        }
+        return result;
+    }
+
+    public boolean them(PhieuBaoHanh pbh) {
+        if (pbh == null) return false;
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+        String lookup = "SELECT soVIN, maKH FROM PhuongTien WHERE bienSoXe = ?";
+        try {
+            String vin, maKH;
+            try (PreparedStatement ps = con.prepareStatement(lookup)) {
+                ps.setString(1, pbh.getBienSo());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) return false;
+                    vin = rs.getString("soVIN"); maKH = rs.getString("maKH");
+                }
+            }
+            con.setAutoCommit(false);
+            String status = toDatabaseStatus(pbh.getTinhTrang());
+            String insert = "INSERT INTO PhieuBaoHanh (maPBH, ngayBD, ngayKT, trangThaiBH, maKH, soVIN, maHoaDon) " +
+                    "VALUES (?, TRY_CONVERT(date, ?, 103), TRY_CONVERT(date, ?, 103), ?, ?, ?, NULL)";
+            try (PreparedStatement ps = con.prepareStatement(insert)) {
+                ps.setString(1, pbh.getSoPhieu()); ps.setString(2, pbh.getNgayBatDau()); ps.setString(3, pbh.getNgayKetThuc());
+                ps.setString(4, status); ps.setString(5, maKH); ps.setString(6, vin); ps.executeUpdate();
+            }
+            themChiTietMacDinh(con, pbh);
+            con.commit();
+            return true;
+        } catch (SQLException e) {
+            rollback(con); System.err.println("Lỗi PhieuBaoHanh_DAO.them: " + e.getMessage()); return false;
+        } finally { autoCommit(con); }
+    }
+
+    public boolean capNhat(PhieuBaoHanh pbh) {
+        if (pbh == null) return false;
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+        String sql = "UPDATE bh SET ngayBD = TRY_CONVERT(date, ?, 103), ngayKT = TRY_CONVERT(date, ?, 103), " +
+                "trangThaiBH = ?, soVIN = pt.soVIN, maKH = pt.maKH FROM PhieuBaoHanh bh " +
+                "JOIN PhuongTien pt ON pt.bienSoXe = ? WHERE bh.maPBH = ?";
+        try {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setString(1, pbh.getNgayBatDau()); ps.setString(2, pbh.getNgayKetThuc());
+                ps.setString(3, toDatabaseStatus(pbh.getTinhTrang())); ps.setString(4, pbh.getBienSo()); ps.setString(5, pbh.getSoPhieu());
+                if (ps.executeUpdate() == 0) { con.rollback(); return false; }
+            }
+            try (PreparedStatement ps = con.prepareStatement("UPDATE ChiTietPhieuBaoHanh SET lyDo = ? WHERE maPBH = ?")) {
+                ps.setString(1, pbh.getNoiDung()); ps.setString(2, pbh.getSoPhieu());
+                if (ps.executeUpdate() == 0) themChiTietMacDinh(con, pbh);
+            }
+            con.commit(); return true;
+        } catch (SQLException e) {
+            rollback(con); System.err.println("Lỗi PhieuBaoHanh_DAO.capNhat: " + e.getMessage()); return false;
+        } finally { autoCommit(con); }
+    }
+
+    public boolean xoa(String soPhieu) {
+        if (soPhieu == null || soPhieu.isBlank()) return false;
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+        try {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH = ?")) {
+                ps.setString(1, soPhieu); ps.executeUpdate();
+            }
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuBaoHanh WHERE maPBH = ?")) {
+                ps.setString(1, soPhieu); if (ps.executeUpdate() == 0) { con.rollback(); return false; }
+            }
+            con.commit(); return true;
+        } catch (SQLException e) {
+            rollback(con); System.err.println("Lỗi PhieuBaoHanh_DAO.xoa: " + e.getMessage()); return false;
+        } finally { autoCommit(con); }
+    }
+
+    private void themChiTietMacDinh(Connection con, PhieuBaoHanh pbh) throws SQLException {
+        String sql = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pbh.getSoPhieu()); ps.setString(2, "PT001");
+            ps.setString(3, pbh.getNoiDung() == null ? "Bảo hành linh kiện xe" : pbh.getNoiDung());
+            ps.setString(4, "Kiểm tra và thay thế miễn phí"); ps.executeUpdate();
+        }
+    }
+
+    private String toDatabaseStatus(String status) {
+        if ("Tạm ngưng".equalsIgnoreCase(status)) return "TAM_NGUNG";
+        if ("Đã hủy".equalsIgnoreCase(status)) return "DA_HUY";
+        if ("Hết hạn".equalsIgnoreCase(status)) return "HET_HAN";
+        if ("Đang xử lý".equalsIgnoreCase(status)) return "DANG_XU_LY";
+        return "CON_HAN";
+    }
+    private String hienThiTrangThai(String status) {
+        if (status == null) return "";
+        return switch (status) {
+            case "CON_HAN" -> "Còn hạn";
+            case "HET_HAN" -> "Hết hạn";
+            case "DANG_XU_LY" -> "Đang xử lý";
+            case "TAM_NGUNG" -> "Tạm ngưng";
+            case "DA_HUY" -> "Đã hủy";
+            default -> status;
+        };
+    }
+
+    private String safe(String value) { return value == null ? "" : value; }
+    private void rollback(Connection con) { if (con != null) try { con.rollback(); } catch (SQLException ignored) { } }
+    private void autoCommit(Connection con) { if (con != null) try { con.setAutoCommit(true); } catch (SQLException ignored) { } }
 }
