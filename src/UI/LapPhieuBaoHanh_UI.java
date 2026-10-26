@@ -1,4 +1,3 @@
-
 package UI;
 
 import DAO.PhieuBaoHanh_DAO;
@@ -55,6 +54,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     private DefaultTableModel model;
     private JTable tblChiTiet;
 
+    // true khi đang nạp dữ liệu, để combobox không tự chạy sự kiện
     private boolean dangNap = false;
 
     public LapPhieuBaoHanh_UI(NhanVien nhanVien) {
@@ -159,8 +159,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
     private JPanel taoThongTinHoaDon() {
         JPanel card = card();
-        card.add(tieuDe("2. THÔNG TIN HÓA ĐƠN"),
-                BorderLayout.NORTH);
+        card.add(tieuDe("2. THÔNG TIN HÓA ĐƠN"), BorderLayout.NORTH);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -176,8 +175,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
     private JPanel taoChiTiet() {
         JPanel card = card();
-        card.add(tieuDe("3. CÁC HẠNG MỤC BẢO HÀNH"),
-                BorderLayout.NORTH);
+        card.add(tieuDe("3. CÁC HẠNG MỤC BẢO HÀNH"), BorderLayout.NORTH);
 
         model = new DefaultTableModel(
                 new Object[]{
@@ -200,6 +198,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                 new Font("Segoe UI", Font.BOLD, 12)
         );
 
+        // Khi sửa cột "Thời hạn" thì tự tính lại "Ngày hết hạn"
         model.addTableModelListener(e -> {
             if (e.getType()
                     == javax.swing.event.TableModelEvent.UPDATE
@@ -298,8 +297,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             cboHoaDon.removeAllItems();
 
             for (LuaChon x : dao.layDanhSachHoaDon()) {
-                // Mỗi hóa đơn đã được cấp phiếu sẽ không xuất hiện
-                // trong danh sách tạo mới.
+                // Hóa đơn đã có phiếu thì không hiện trong danh sách tạo mới.
                 if (!dao.hoaDonDaCoPhieu(x.ma)) {
                     cboHoaDon.addItem(x);
                 }
@@ -314,13 +312,10 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         napThongTinHoaDon();
     }
 
-
-
-
     private void napThongTinHoaDon() {
         LuaChon hoaDon = (LuaChon) cboHoaDon.getSelectedItem();
 
-        // Xoa thong tin cu truoc khi hien thi hoa don moi
+        // Xóa thông tin cũ trước khi hiển thị hóa đơn mới
         txtKhachHang.setText("");
         txtBienSoXe.setText("");
         txtTongTien.setText("");
@@ -329,61 +324,61 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             return;
         }
 
-        String sql = """
-        SELECT k.hoTen, h.tongTien, pt.bienSoXe
-        FROM dbo.HoaDon h
-        LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH
-        LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH
-        WHERE h.maHD = ?
-        ORDER BY pt.bienSoXe
-        """;
+        String sql = "SELECT k.hoTen, h.tongTien, pt.bienSoXe "
+                + "FROM dbo.HoaDon h "
+                + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
+                + "LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH "
+                + "WHERE h.maHD = ? "
+                + "ORDER BY pt.bienSoXe";
 
-        try (Connection con = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        // Không đóng Connection vì ConnectDB dùng chung 1 kết nối
+        Connection con = ConnectDB.getInstance().getConnection();
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, hoaDon.ma);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    thongBao("Khong tim thay hoa don: " + hoaDon.ma);
+                    thongBao("Không tìm thấy hóa đơn: " + hoaDon.ma);
                     return;
                 }
 
-                // Lay thong tin khach hang va tong tien
+                // Lấy thông tin khách hàng và tổng tiền
                 String tenKH = rs.getString("hoTen");
                 String tongTien = rs.getString("tongTien");
 
                 txtKhachHang.setText(tenKH == null ? "" : tenKH);
                 txtTongTien.setText(tongTien == null ? "" : tongTien);
 
-                // Lay danh sach bien so xe cua khach hang
+                // Lấy danh sách biển số xe của khách hàng
                 List<String> danhSachXe = new ArrayList<>();
 
                 do {
                     String bienSo = rs.getString("bienSoXe");
 
-                    if (bienSo != null && !bienSo.isBlank()
+                    if (bienSo != null && !bienSo.trim().isEmpty()
                             && !danhSachXe.contains(bienSo)) {
                         danhSachXe.add(bienSo);
                     }
                 } while (rs.next());
 
                 if (danhSachXe.isEmpty()) {
-                    thongBao("Khong tim thay bien so xe cua khach hang.");
+                    thongBao("Không tìm thấy biển số xe của khách hàng.");
                     return;
                 }
 
-                // Neu chi co mot xe thi tu dong hien thi
+                // Chỉ có một xe thì tự động hiển thị
                 if (danhSachXe.size() == 1) {
                     txtBienSoXe.setText(danhSachXe.get(0));
                     return;
                 }
 
-                // Neu co nhieu xe thi cho nguoi dung chon
+                // Có nhiều xe thì cho người dùng chọn
                 Object xeDuocChon = JOptionPane.showInputDialog(
                         this,
-                        "Vui long chon bien so xe:",
-                        "Chon phuong tien",
+                        "Vui lòng chọn biển số xe:",
+                        "Chọn phương tiện",
                         JOptionPane.QUESTION_MESSAGE,
                         null,
                         danhSachXe.toArray(),
@@ -396,25 +391,19 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             }
 
         } catch (SQLException ex) {
-            baoLoi("Loi khi lay thong tin hoa don.", ex);
+            baoLoi("Lỗi khi lấy thông tin hóa đơn.", ex);
         }
     }
 
-
-
-
-
     private void napDanhSachNhanVien() throws SQLException {
-        String sql = """
-        SELECT maNV, hoTen
-        FROM dbo.NhanVien
-        ORDER BY hoTen
-        """;
+        String sql = "SELECT maNV, hoTen FROM dbo.NhanVien ORDER BY hoTen";
 
         cboNhanVien.removeAllItems();
 
-        try (Connection con = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        // Không đóng Connection vì ConnectDB dùng chung 1 kết nối
+        Connection con = ConnectDB.getInstance().getConnection();
+
+        try (PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -464,7 +453,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         }
     }
 
-
     private void tinhNgayHetHan(int row) {
         if (row < 0 || row >= model.getRowCount()) {
             return;
@@ -485,10 +473,9 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             }
 
         } catch (Exception ex) {
-            // Ngay hoac thoi han chua hop le
+            // Ngày hoặc thời hạn chưa hợp lệ thì bỏ qua
         }
     }
-
 
     private void xoaHangMuc() {
         int row = tblChiTiet.getSelectedRow();
@@ -500,6 +487,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
         model.removeRow(tblChiTiet.convertRowIndexToModel(row));
 
+        // Đánh lại số thứ tự
         for (int i = 0; i < model.getRowCount(); i++) {
             model.setValueAt(i + 1, i, 0);
         }
@@ -589,7 +577,9 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                     JOptionPane.YES_NO_OPTION
             );
 
-            if (chon != JOptionPane.YES_OPTION) return;
+            if (chon != JOptionPane.YES_OPTION) {
+                return;
+            }
 
             String bienSoXe = txtBienSoXe.getText().trim();
 
@@ -653,20 +643,21 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
             StringBuilder html = new StringBuilder();
 
-            html.append("""
-                <html><head><meta charset='UTF-8'>
-                <style>
-                body { font-family: sans-serif; font-size: 11pt; }
-                h2 { text-align: center; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #555; padding: 6px; }
-                th { background: #eee; }
-                </style></head><body>
-                <b>GARA Ô TÔ</b>
-                <h2>PHIẾU BẢO HÀNH</h2>
-                <p style='text-align:center'>Mã phiếu: 
-                """).append(escape(t.maPBH)).append("</p>");
+            // --- Phần đầu trang ---
+            html.append("<html><head><meta charset='UTF-8'>");
+            html.append("<style>");
+            html.append("body { font-family: sans-serif; font-size: 11pt; }");
+            html.append("h2 { text-align: center; }");
+            html.append("table { width: 100%; border-collapse: collapse; }");
+            html.append("th, td { border: 1px solid #555; padding: 6px; }");
+            html.append("th { background: #eee; }");
+            html.append("</style></head><body>");
+            html.append("<b>GARA Ô TÔ</b>");
+            html.append("<h2>PHIẾU BẢO HÀNH</h2>");
+            html.append("<p style='text-align:center'>Mã phiếu: ")
+                    .append(escape(t.maPBH)).append("</p>");
 
+            // --- Thông tin phiếu ---
             html.append("<p><b>Mã hóa đơn:</b> ")
                     .append(escape(t.maHD)).append("</p>");
 
@@ -688,13 +679,12 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             html.append("<p><b>Trạng thái:</b> ")
                     .append(escape(t.trangThai)).append("</p>");
 
-            html.append("""
-                <table><tr>
-                <th>STT</th><th>Hạng mục</th>
-                <th>Thời hạn</th><th>Ngày hết hạn</th>
-                <th>Điều kiện</th><th>Ghi chú</th>
-                </tr>
-                """);
+            // --- Bảng hạng mục ---
+            html.append("<table><tr>");
+            html.append("<th>STT</th><th>Hạng mục</th>");
+            html.append("<th>Thời hạn</th><th>Ngày hết hạn</th>");
+            html.append("<th>Điều kiện</th><th>Ghi chú</th>");
+            html.append("</tr>");
 
             int stt = 1;
 
@@ -713,23 +703,17 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             html.append("<p><b>Ghi chú:</b> ")
                     .append(escape(t.ghiChu)).append("</p>");
 
-            html.append("""
-                <br><br>
-                <table style='border:none'>
-                <tr>
-                <td style='border:none;text-align:center'>
-                Khách hàng<br>(Ký và ghi rõ họ tên)
-                <br><br><br><br>
-                </td>
-                <td style='border:none;text-align:center'>
-                Đại diện gara<br>
-                """)
-                    .append(escape(t.tenNhanVien))
-                    .append("""
-                <br><br><br>
-                (Ký và ghi rõ họ tên)
-                </td></tr></table></body></html>
-                """);
+            // --- Phần chữ ký ---
+            html.append("<br><br>");
+            html.append("<table style='border:none'><tr>");
+            html.append("<td style='border:none;text-align:center'>");
+            html.append("Khách hàng<br>(Ký và ghi rõ họ tên)");
+            html.append("<br><br><br><br></td>");
+            html.append("<td style='border:none;text-align:center'>");
+            html.append("Đại diện gara<br>");
+            html.append(escape(t.tenNhanVien));
+            html.append("<br><br><br>(Ký và ghi rõ họ tên)");
+            html.append("</td></tr></table></body></html>");
 
             JEditorPane editor = new JEditorPane(
                     "text/html", html.toString()
@@ -747,8 +731,11 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         }
     }
 
+    // Đổi các ký tự đặc biệt để HTML không bị lỗi
     private String escape(Object value) {
-        if (value == null) return "";
+        if (value == null) {
+            return "";
+        }
 
         return value.toString()
                 .replace("&", "&amp;")
