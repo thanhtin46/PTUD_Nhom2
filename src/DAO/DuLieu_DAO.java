@@ -970,37 +970,164 @@ public class DuLieu_DAO {
     // ===============================================================
     // 7. NHẬP KHO & XUẤT KHO
     // ===============================================================
-    public boolean themPhieuNhapKho(PhieuKho phieu, String maNV) {
-        Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return false;
 
+    /**
+     * Lấy danh sách Nhà cung cấp từ CSDL SQL Server để nhân viên kho chọn khi lập phiếu nhập.
+     */
+    public ArrayList<String> layDanhSachNhaCungCap() {
+        ArrayList<String> list = new ArrayList<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con != null) {
+            String sql = "SELECT maNCC, tenNCC FROM NhaCungCap ORDER BY maNCC ASC";
+            try (PreparedStatement stmt = con.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getString("maNCC") + " - " + rs.getString("tenNCC"));
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi layDanhSachNhaCungCap: " + e.getMessage());
+            }
+        }
+        if (list.isEmpty()) {
+            list.add("NCC001 - Công ty Phụ Tùng Sài Gòn");
+            list.add("NCC002 - Phụ Tùng Miền Đông");
+        }
+        return list;
+    }
+
+    /**
+     * Nghiệp vụ Nhập kho (Transaction SQL):
+     * [Bắt đầu transaction SQL] -> [Lưu phiếu và chi tiết] -> [Cộng tồn kho] -> [Cập nhật trạng thái DA_NHAP]
+     * -> Nếu thành công: COMMIT -> Hoàn tất nhập kho.
+     * -> Nếu thất bại: ROLLBACK -> Thông báo lỗi CSDL, giữ nguyên tồn kho cũ.
+     */
+    public boolean themPhieuNhapKho(PhieuKho phieu, String maNV) throws SQLException {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) {
+            throw new SQLException("Lỗi CSDL: Không thể kết nối tới SQL Server (localhost:1433)!");
+        }
+
+        boolean autoCommitGoc = con.getAutoCommit();
         try {
+            // [Bắt đầu transaction SQL]
+            con.setAutoCommit(false);
+
+            // 1. Kiểm tra Nhà cung cấp hợp lệ
+            String rawNcc = phieu.getNhaCungCap() != null ? phieu.getNhaCungCap().trim() : "";
+            if (rawNcc.isEmpty()) {
+                throw new SQLException("Nhà cung cấp không hợp lệ!");
+            }
+            String maNCC = rawNcc.contains(" - ") ? rawNcc.split(" - ")[0].trim() : rawNcc;
+
+            boolean nccTonTai = false;
+            try (PreparedStatement checkNCC = con.prepareStatement("SELECT maNCC FROM NhaCungCap WHERE maNCC = ?")) {
+                checkNCC.setString(1, maNCC);
+                try (ResultSet rs = checkNCC.executeQuery()) {
+                    if (rs.next()) {
+                        nccTonTai = true;
+                    }
+                }
+            }
+            if (!nccTonTai) {
+                try (PreparedStatement checkTenNCC = con.prepareStatement("SELECT maNCC FROM NhaCungCap WHERE tenNCC LIKE ?")) {
+                    checkTenNCC.setString(1, "%" + rawNcc + "%");
+                    try (ResultSet rs = checkTenNCC.executeQuery()) {
+                        if (rs.next()) {
+                            maNCC = rs.getString("maNCC");
+                            nccTonTai = true;
+                        }
+                    }
+                }
+            }
+            if (!nccTonTai) {
+                throw new SQLException("Nhà cung cấp không hợp lệ hoặc không tồn tại trong CSDL: " + rawNcc);
+            }
+
+            // 2. Xác định mã nhân viên lập phiếu
+            String nvLap = (maNV != null && !maNV.isEmpty()) ? maNV : "NV04";
+            try (PreparedStatement checkNV = con.prepareStatement("SELECT maNV FROM NhanVien WHERE maNV = ?")) {
+                checkNV.setString(1, nvLap);
+                try (ResultSet rs = checkNV.executeQuery()) {
+                    if (!rs.next()) nvLap = "NV01";
+                }
+            }
+
+            // 3. [Lưu phiếu nhập]
             String sqlPN = "INSERT INTO PhieuNhapKho (maPhieuNhap, maNCC, maNV, ngayNhap, tongTien) VALUES (?, ?, ?, CAST(GETDATE() AS DATE), ?)";
-            try (PreparedStatement stmt = con.prepareStatement(sqlPN)) {
-                stmt.setString(1, phieu.getSoPhieu());
-                stmt.setString(2, "NCC001");
-                stmt.setString(3, maNV != null && !maNV.isEmpty() ? maNV : "NV03");
-                stmt.setDouble(4, (double) phieu.getTongTien());
-                stmt.executeUpdate();
+            try (PreparedStatement stmtPN = con.prepareStatement(sqlPN)) {
+                stmtPN.setString(1, phieu.getSoPhieu());
+                stmtPN.setString(2, maNCC);
+                stmtPN.setString(3, nvLap);
+                stmtPN.setDouble(4, (double) phieu.getTongTien());
+                stmtPN.executeUpdate();
+            }
+
+            // 4. [Lưu chi tiết và Cộng tồn kho]
+            if (phieu.getChiTiet() == null || phieu.getChiTiet().isEmpty()) {
+                throw new SQLException("Phiếu rỗng, không có dòng chi tiết phụ tùng!");
             }
 
             String sqlCT = "INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap, maPT, tenPT, soLuong, donGia) VALUES (?, ?, ?, ?, ?)";
+            String sqlUpdateKho = "UPDATE Kho SET soLuongTon = soLuongTon + ? WHERE maPT = ?";
+
             for (ChiTietKho ct : phieu.getChiTiet()) {
-                try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
-                    stmt.setString(1, phieu.getSoPhieu());
-                    stmt.setString(2, ct.getMaPT());
-                    stmt.setString(3, ct.getTenPT());
-                    stmt.setInt(4, ct.getSoLuong());
-                    stmt.setDouble(5, (double) ct.getDonGia());
-                    stmt.executeUpdate();
+                // Ngoại lệ: Mã phụ tùng không tồn tại
+                try (PreparedStatement checkPT = con.prepareStatement("SELECT maPT FROM PhuTung WHERE maPT = ?")) {
+                    checkPT.setString(1, ct.getMaPT());
+                    try (ResultSet rsPT = checkPT.executeQuery()) {
+                        if (!rsPT.next()) {
+                            throw new SQLException("Mã phụ tùng không tồn tại trong CSDL: " + ct.getMaPT());
+                        }
+                    }
                 }
-                // Tăng tồn kho
-                capNhatTonKhoCong(ct.getMaPT(), ct.getSoLuong());
+
+                // Ngoại lệ: Số lượng không hợp lệ
+                if (ct.getSoLuong() <= 0) {
+                    throw new SQLException("Số lượng không hợp lệ cho phụ tùng " + ct.getMaPT() + ": " + ct.getSoLuong());
+                }
+
+                // Lưu chi tiết
+                try (PreparedStatement stmtCT = con.prepareStatement(sqlCT)) {
+                    stmtCT.setString(1, phieu.getSoPhieu());
+                    stmtCT.setString(2, ct.getMaPT());
+                    stmtCT.setString(3, ct.getTenPT());
+                    stmtCT.setInt(4, ct.getSoLuong());
+                    stmtCT.setDouble(5, (double) ct.getDonGia());
+                    stmtCT.executeUpdate();
+                }
+
+                // [Cộng tồn kho]
+                try (PreparedStatement stmtKho = con.prepareStatement(sqlUpdateKho)) {
+                    stmtKho.setInt(1, ct.getSoLuong());
+                    stmtKho.setString(2, ct.getMaPT());
+                    int updated = stmtKho.executeUpdate();
+                    if (updated == 0) {
+                        String sqlInsertKho = "INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) VALUES (?, ?, ?, N'KHO_CHINH', 5, 200)";
+                        try (PreparedStatement stmtIns = con.prepareStatement(sqlInsertKho)) {
+                            stmtIns.setString(1, "KHO_" + ct.getMaPT());
+                            stmtIns.setString(2, ct.getMaPT());
+                            stmtIns.setInt(3, ct.getSoLuong());
+                            stmtIns.executeUpdate();
+                        }
+                    }
+                }
             }
+
+            // 5. [COMMIT] nếu tất cả thành công
+            con.commit();
             return true;
         } catch (SQLException e) {
-            System.err.println("Lỗi themPhieuNhapKho: " + e.getMessage());
-            return false;
+            // [ROLLBACK] nếu có bất kỳ lỗi nào xảy ra -> Thông báo lỗi, giữ tồn cũ
+            try {
+                con.rollback();
+            } catch (SQLException exRoll) {
+                System.err.println("Lỗi Rollback: " + exRoll.getMessage());
+            }
+            throw e;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitGoc);
+            } catch (SQLException ignored) {}
         }
     }
 

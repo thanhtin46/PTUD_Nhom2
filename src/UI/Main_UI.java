@@ -516,6 +516,8 @@ public class Main_UI extends JFrame {
                     -> new XuatKho_UI(nhanVienHienTai);
             case "Báo cáo tồn kho"
                     -> new BaoCaoTonKho_UI();
+            case "Lịch sử nhập xuất kho", "Theo dõi lịch sử nhập xuất", "Lịch sử nhập xuất"
+                    -> new LichSuNhapXuat_UI(nhanVienHienTai);
             case "Theo dõi chờ nhập"
                     -> new TheoDoiChoNhap_UI();
 
@@ -673,6 +675,7 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Quản lý phụ tùng"))
                 .them(MucMenu.con("Nhập kho"))
                 .them(MucMenu.con("Xuất kho"))
+                .them(MucMenu.con("Lịch sử nhập xuất kho"))
                 .them(MucMenu.con("Báo cáo tồn kho")));
 
         // 7. Bảo hành
