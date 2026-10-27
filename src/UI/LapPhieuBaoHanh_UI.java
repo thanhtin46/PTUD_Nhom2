@@ -612,17 +612,6 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                     "Lưu phiếu bảo hành thành công!\nMã phiếu: " + maPBH
             );
 
-            int in = JOptionPane.showConfirmDialog(
-                    this,
-                    "Bạn có muốn in phiếu vừa lưu không?",
-                    "In phiếu",
-                    JOptionPane.YES_NO_OPTION
-            );
-
-            if (in == JOptionPane.YES_OPTION) {
-                inPhieuTheoMa(maPBH);
-            }
-
             lamMoi();
 
         } catch (Exception ex) {
@@ -633,14 +622,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     // ================= PRINT =================
 
     private void inPhieu() {
-        String maPBH = maPhieuVuaLuu;
-
-        if (maPBH.isEmpty()) {
-            thongBao("Không có mã phiếu để in.");
-            return;
-        }
-
-        inPhieuTheoMa(maPBH);
+        // Giữ biểu tượng thiết kế giao diện đồ án sinh viên, không gọi máy in phần cứng
     }
 
     private void inPhieuTheoMa(String maPBH) {

@@ -115,7 +115,7 @@ public class DanhSachPhuTung_UI extends JPanel {
         // 2. BẢNG DỮ LIỆU
         model = UiHelper.model("Mã PT", "Tên phụ tùng", "Phân loại", "ĐVT", "Tồn kho", "Đơn giá (đ)");
         table = UiHelper.bang(model);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(85);  // Mã PT
         table.getColumnModel().getColumn(1).setPreferredWidth(230); // Tên phụ tùng

@@ -36,7 +36,7 @@ public class PhieuTiepNhan_DAO {
                      "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
                      "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
                      "LEFT JOIN NhanVien nv ON tn.maNV = nv.maNV " +
-                     "LEFT JOIN PhieuSuaChua sc ON ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC " +
+                     "LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) " +
                      "LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV " +
                      "ORDER BY tn.maPTN DESC";
 
@@ -269,7 +269,7 @@ public class PhieuTiepNhan_DAO {
            .append("JOIN KhachHang kh ON tn.maKH = kh.maKH ")
            .append("JOIN PhuongTien pt ON tn.soVIN = pt.soVIN ")
            .append("LEFT JOIN NhanVien nv ON tn.maNV = nv.maNV ")
-           .append("LEFT JOIN PhieuSuaChua sc ON ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC ")
+           .append("LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) ")
            .append("LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV ")
            .append("WHERE 1=1 ");
 

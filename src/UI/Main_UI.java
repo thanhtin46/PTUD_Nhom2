@@ -245,7 +245,7 @@ public class Main_UI extends JFrame {
 
         tatCaNutMenu.clear();
         for (MucMenu muc : taoDanhSachMenu()) {
-            if (muc.coQuyen(nhanVienHienTai.getVaiTro())) {
+            if (muc.coQuyen(nhanVienHienTai)) {
                 themMucMenu(menuPanel, muc);
             }
         }
@@ -444,6 +444,11 @@ public class Main_UI extends JFrame {
     }
 
     public void chuyenTrang(String tenMenu, Component trang) {
+        try { Entity.KhoDuLieu.get().dongBoTuSQLServer(); }
+        catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Không đồng bộ được dữ liệu", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (tenMenu == null || tenMenu.isEmpty()) return;
 
         MenuRow found = null;
@@ -576,26 +581,35 @@ public class Main_UI extends JFrame {
             return !danhSachCon.isEmpty();
         }
 
-        boolean coQuyen(String vaiTroNV) {
+        private static String boDau(String str) {
+            if (str == null) return "";
+            String nfd = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
+            return nfd.replaceAll("\\p{M}", "").toLowerCase().replace("đ", "d").trim();
+        }
+
+        boolean coQuyen(NhanVien nv) {
             if (vaiTro == null) return true;
-            if (vaiTroNV == null || vaiTroNV.trim().isEmpty()) return false;
+            if (nv == null) return false;
 
-            String vt = vaiTroNV.trim().toLowerCase();
+            // 1. Quản lý / Admin có TOÀN QUYỀN tất cả các chức năng
+            String maNV = nv.getMaNV() != null ? nv.getMaNV().trim() : "";
+            String tk = nv.getTaiKhoan() != null ? nv.getTaiKhoan().trim() : "";
+            String vaiTroNV = nv.getVaiTro() != null ? nv.getVaiTro().trim() : "";
+            String vt = boDau(vaiTroNV);
 
-            // 1. Quản lý / Admin / Điều hành có TOÀN QUYỀN tất cả các chức năng
-            if (vt.contains("quản lý")
-                    || vt.contains("quản trị")
+            if ("NV04".equalsIgnoreCase(maNV) || "quanLy".equalsIgnoreCase(tk) || "admin".equalsIgnoreCase(tk)
+                    || vt.contains("quan")
                     || vt.contains("admin")
-                    || vt.contains("điều hành")
-                    || vt.contains("giám đốc")
-                    || vt.contains("chủ xưởng")) {
+                    || vt.contains("dieu hanh")
+                    || vt.contains("giam doc")
+                    || vt.contains("chu xuong")) {
                 return true;
             }
 
             // 2. Kiểm tra khớp theo danh sách quyền của từng mục menu
             String[] vts = vaiTro.split(",");
             for (String v : vts) {
-                String req = v.trim().toLowerCase();
+                String req = boDau(v);
 
                 // Khớp chính xác hoặc chứa nhau
                 if (vt.equalsIgnoreCase(req) || vt.contains(req) || req.contains(vt)) {
@@ -603,22 +617,22 @@ public class Main_UI extends JFrame {
                 }
 
                 // Nhóm Tiếp tân / Cố vấn dịch vụ / Khách hàng
-                if (req.contains("tiếp tân") && (vt.contains("tiếp tân") || vt.contains("cố vấn") || vt.contains("lễ tân") || vt.contains("tiếp nhận") || vt.contains("dịch vụ"))) {
+                if (req.contains("tiep tan") && (vt.contains("tiep tan") || vt.contains("co van") || vt.contains("le tan") || vt.contains("tiep nhan") || vt.contains("dich vu") || "tiepTan".equalsIgnoreCase(tk))) {
                     return true;
                 }
 
                 // Nhóm Kỹ thuật viên / Sửa chữa
-                if (req.contains("sửa chữa") && (vt.contains("sửa chữa") || vt.contains("ktv") || vt.contains("kỹ thuật") || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện") || vt.contains("sơn") || vt.contains("bảo dưỡng"))) {
+                if (req.contains("sua chua") && (vt.contains("sua chua") || vt.contains("ktv") || vt.contains("ky thuat") || vt.contains("may") || vt.contains("gam") || vt.contains("dien") || vt.contains("son") || vt.contains("bao duong") || "suaChua".equalsIgnoreCase(tk))) {
                     return true;
                 }
 
                 // Nhóm Kho / Vật tư / Phụ tùng
-                if (req.contains("kho") && (vt.contains("kho") || vt.contains("vật tư") || vt.contains("phụ tùng") || vt.contains("thủ kho"))) {
+                if (req.contains("kho") && (vt.contains("kho") || vt.contains("vat tu") || vt.contains("phu tung") || vt.contains("thu kho") || "kho".equalsIgnoreCase(tk))) {
                     return true;
                 }
 
                 // Nhóm Thu ngân / Kế toán
-                if (req.contains("thu ngân") && (vt.contains("thu ngân") || vt.contains("kế toán") || vt.contains("thanh toán") || vt.contains("tài chính"))) {
+                if (req.contains("thu ngan") && (vt.contains("thu ngan") || vt.contains("ke toan") || vt.contains("thanh toan") || vt.contains("tai chinh") || "thuNgan".equalsIgnoreCase(tk))) {
                     return true;
                 }
             }
@@ -663,7 +677,8 @@ public class Main_UI extends JFrame {
         // 4. Sửa chữa
         ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu sửa chữa"))
-                .them(MucMenu.con("Tra cứu phiếu sửa chữa")));
+                .them(MucMenu.con("Phân công KTV"))
+                .them(MucMenu.con("Cập nhật tiến độ")));
 
         // 5. Hóa đơn
         ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)
@@ -674,6 +689,7 @@ public class Main_UI extends JFrame {
         ds.add(MucMenu.nhom("Kho phụ tùng", UiIcon.BOX, KHO)
                 .them(MucMenu.con("Quản lý phụ tùng"))
                 .them(MucMenu.con("Nhập kho"))
+                .them(MucMenu.con("Theo dõi chờ nhập"))
                 .them(MucMenu.con("Xuất kho"))
                 .them(MucMenu.con("Lịch sử nhập xuất kho"))
                 .them(MucMenu.con("Báo cáo tồn kho")));
@@ -686,7 +702,7 @@ public class Main_UI extends JFrame {
         // 8. Nhân viên
         ds.add(MucMenu.nhom("Nhân viên", UiIcon.USERS, QUAN_LY)
                 .them(MucMenu.con("Quản lý nhân viên"))
-                .them(MucMenu.con("Tra cứu nhân viên")));
+                .them(MucMenu.con("Phân quyền")));
 
         // 9. Báo cáo – Thống kê
         ds.add(MucMenu.nhom("Báo cáo – Thống kê", UiIcon.CHART, QUAN_LY + "," + THU_NGAN)

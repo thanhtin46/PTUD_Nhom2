@@ -218,7 +218,7 @@ public class Login_UI extends JFrame {
         lblTk.setForeground(new Color(51, 65, 85));
         lblTk.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        txtTaiKhoan = new JTextField();
+        txtTaiKhoan = new JTextField("quanLy");
         UiHelper.trangTriInput(txtTaiKhoan);
         txtTaiKhoan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         txtTaiKhoan.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -233,7 +233,7 @@ public class Login_UI extends JFrame {
         lblMk.setForeground(new Color(51, 65, 85));
         lblMk.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        txtMatKhau = new JPasswordField();
+        txtMatKhau = new JPasswordField("123");
         UiHelper.trangTriInput(txtMatKhau);
         txtMatKhau.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         txtMatKhau.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -279,9 +279,17 @@ public class Login_UI extends JFrame {
 
         JPanel chipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         chipPanel.setOpaque(false);
-        String[] accs = {"tiepTan", "suaChua", "kho", "thuNgan", "quanLy"};
-        for (String acc : accs) {
-            JButton chip = new JButton(acc);
+        String[][] accs = {
+                {"quanLy", "Quản lý (Toàn quyền)"},
+                {"tiepTan", "Tiếp tân"},
+                {"suaChua", "Sửa chữa"},
+                {"kho", "Thủ kho"},
+                {"thuNgan", "Thu ngân"}
+        };
+        for (String[] item : accs) {
+            String acc = item[0];
+            String label = item[1];
+            JButton chip = new JButton(label);
             chip.setFont(new Font("Segoe UI", Font.BOLD, 11));
             chip.setForeground(new Color(37, 99, 235));
             chip.setBackground(new Color(239, 246, 255));

@@ -117,7 +117,7 @@ public class NhapKho_UI extends JPanel {
         JPanel bangPanel = UiHelper.panelBang("Chi tiết phiếu");
         modelDong = UiHelper.model("Mã PT", "Tên", "SL", "Đơn giá", "Thành tiền");
         JTable table = UiHelper.bang(modelDong);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.getColumnModel().getColumn(0).setPreferredWidth(100); // Mã PT
         table.getColumnModel().getColumn(1).setPreferredWidth(250); // Tên
         table.getColumnModel().getColumn(2).setPreferredWidth(70);  // SL
@@ -127,6 +127,7 @@ public class NhapKho_UI extends JPanel {
         UiHelper.canTrai(table, 1);
         UiHelper.canPhai(table, 3, 4);
         JScrollPane sp = new JScrollPane(table);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(sp);
         bangPanel.add(sp, BorderLayout.CENTER);
 
@@ -409,7 +410,8 @@ public class NhapKho_UI extends JPanel {
         phieu.getChiTiet().addAll(dongTam);
 
         // Kết thúc, chưa tăng tồn
-        kho.luuPhieuChoNhap(phieu);
+        try { kho.luuPhieuChoNhap(phieu); }
+        catch (IllegalStateException ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Không lưu được phiếu", JOptionPane.ERROR_MESSAGE); return; }
 
         JOptionPane.showMessageDialog(this,
                 "Đã lưu phiếu chờ nhập: " + phieu.getSoPhieu() + "\n" +

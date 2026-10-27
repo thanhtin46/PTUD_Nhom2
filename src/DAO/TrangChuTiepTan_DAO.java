@@ -43,9 +43,9 @@ public class TrangChuTiepTan_DAO {
                     "SUM(CASE WHEN CAST(ngayTN AS DATE) = CAST(GETDATE() AS DATE) " +
                     "          OR CONVERT(VARCHAR(10), ngayTN, 103) = CONVERT(VARCHAR(10), GETDATE(), 103) " +
                     "          OR CONVERT(VARCHAR(10), ngayTN, 120) = CONVERT(VARCHAR(10), GETDATE(), 120) THEN 1 ELSE 0 END) AS homNay, " +
-                    "SUM(CASE WHEN trangThaiXe LIKE N'%chờ%' OR trangThaiXe IS NULL THEN 1 ELSE 0 END) AS choTN, " +
-                    "SUM(CASE WHEN trangThaiXe LIKE N'%sửa chữa%' OR trangThaiXe LIKE N'%xử lý%' OR trangThaiXe LIKE N'%bảo dưỡng%' THEN 1 ELSE 0 END) AS dangSC, " +
-                    "SUM(CASE WHEN trangThaiXe LIKE N'%hoàn thành%' OR trangThaiXe LIKE N'%xong%' OR trangThaiXe LIKE N'%chờ giao%' THEN 1 ELSE 0 END) AS daHT " +
+                    "SUM(CASE WHEN trangThaiXe LIKE N'%chờ%' OR trangThaiXe IN ('DA_TIEP_NHAN','CHO_SUA','CHO_TIEP_NHAN') OR trangThaiXe IS NULL THEN 1 ELSE 0 END) AS choTN, " +
+                    "SUM(CASE WHEN trangThaiXe LIKE N'%đang sửa%' OR trangThaiXe IN ('DANG_SUA','DANG_KIEM_TRA') OR trangThaiXe LIKE N'%sửa chữa%' OR trangThaiXe LIKE N'%xử lý%' OR trangThaiXe LIKE N'%bảo dưỡng%' THEN 1 ELSE 0 END) AS dangSC, " +
+                    "SUM(CASE WHEN trangThaiXe IN ('HOAN_THANH','DA_HOAN_THANH') OR trangThaiXe LIKE N'%hoàn thành%' OR trangThaiXe LIKE N'%xong%' OR trangThaiXe LIKE N'%chờ giao%' THEN 1 ELSE 0 END) AS daHT " +
                     "FROM PhieuTiepNhan";
             try (PreparedStatement ps = con.prepareStatement(sqlTN); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -79,7 +79,7 @@ public class TrangChuTiepTan_DAO {
 
             // 4. Nghiệp vụ bảo hành: Phiếu bảo hành còn hạn
             String sqlBH = "SELECT COUNT(*) AS tongBH, " +
-                    "SUM(CASE WHEN trangThaiBH = 'CON_HAN' OR ngayKT >= GETDATE() THEN 1 ELSE 0 END) AS conHan " +
+                    "SUM(CASE WHEN trangThaiBH IN ('CON_HAN',N'Còn hạn') AND ngayKT >= CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS conHan " +
                     "FROM PhieuBaoHanh";
             try (PreparedStatement ps = con.prepareStatement(sqlBH); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -92,7 +92,7 @@ public class TrangChuTiepTan_DAO {
             String sqlHD = "SELECT " +
                     "SUM(CASE WHEN CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) " +
                     "          OR CONVERT(VARCHAR(10), ngayLap, 103) = CONVERT(VARCHAR(10), GETDATE(), 103) THEN 1 ELSE 0 END) AS hdHomNay, " +
-                    "ISNULL(SUM(CASE WHEN trangThai = N'Đã thanh toán' AND " +
+                    "ISNULL(SUM(CASE WHEN trangThai IN (N'Đã thanh toán','DA_THANH_TOAN') AND " +
                     "                    (CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) " +
                     "                     OR CONVERT(VARCHAR(10), ngayLap, 103) = CONVERT(VARCHAR(10), GETDATE(), 103)) " +
                     "               THEN tongTien ELSE 0 END), 0) AS doanhThu " +

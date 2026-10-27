@@ -537,17 +537,9 @@ public class TraCuuHoaDon_UI extends JPanel {
         JScrollPane scroll = new JScrollPane(editor);
         scroll.setPreferredSize(new Dimension(620, 560));
 
-        Object[] options = {"In hóa đơn", "Đóng"};
-        int choice = JOptionPane.showOptionDialog(this, scroll, "In lại hóa đơn - " + hd.getMaHD(),
-                JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-
-        if (choice == 0) {
-            try {
-                editor.print();
-            } catch (PrinterException ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi khi gửi lệnh in: " + ex.getMessage(), "Lỗi in ấn", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        Object[] options = {"Đóng"};
+        JOptionPane.showOptionDialog(this, scroll, "Xem chi tiết hóa đơn - " + hd.getMaHD(),
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
     }
 
     private String dong(String label, String value) {

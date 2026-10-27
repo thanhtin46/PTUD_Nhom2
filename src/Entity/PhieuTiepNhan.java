@@ -40,10 +40,22 @@ public class PhieuTiepNhan {
         this.loaiXe = loaiXe;
         this.ngayTiepNhan = ngayTiepNhan;
         this.yeuCau = yeuCau;
-        this.tienDo = tienDo;
+        this.tienDo = chuanHoaTienDo(tienDo);
         this.nguoiLap = nguoiLap;
         this.thanhTien = thanhTien;
         this.kyThuatVien = kyThuatVien == null ? "" : kyThuatVien;
+    }
+
+    public static String chuanHoaTienDo(String value) {
+        if (value == null) return "Chờ tiếp nhận";
+        return switch (value.toUpperCase()) {
+            case "DA_TIEP_NHAN", "CHO_TIEP_NHAN", "CHO_SUA" -> "Chờ tiếp nhận";
+            case "DA_PHAN_CONG" -> "Đã phân công";
+            case "DANG_SUA", "DANG_KIEM_TRA" -> "Đang sửa";
+            case "CHO_PHU_TUNG" -> "Chờ phụ tùng";
+            case "HOAN_THANH", "DA_HOAN_THANH" -> "Hoàn thành";
+            default -> value;
+        };
     }
 
     public String getSoPhieu() { return soPhieu; }
@@ -56,7 +68,7 @@ public class PhieuTiepNhan {
     public String getNgayTiepNhan() { return ngayTiepNhan; }
     public String getYeuCau() { return yeuCau; }
     public String getTienDo() { return tienDo; }
-    public void setTienDo(String tienDo) { this.tienDo = tienDo; }
+    public void setTienDo(String tienDo) { this.tienDo = chuanHoaTienDo(tienDo); }
     public String getNguoiLap() { return nguoiLap; }
     public long getThanhTien() { return thanhTien; }
     public void setThanhTien(long thanhTien) { this.thanhTien = thanhTien; }

@@ -163,7 +163,7 @@ public class BaoCaoTonKho_UI extends JPanel {
             }
         });
 
-        bang.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        bang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         bang.getColumnModel().getColumn(0).setPreferredWidth(90);   // Mã PT
         bang.getColumnModel().getColumn(1).setPreferredWidth(210);  // Tên phụ tùng
         bang.getColumnModel().getColumn(2).setPreferredWidth(70);   // ĐVT

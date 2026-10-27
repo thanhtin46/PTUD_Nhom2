@@ -208,63 +208,12 @@ public class KhachHang_DAO {
      * Xóa khách hàng và tự động dọn dẹp an toàn các dữ liệu liên quan (Cascade an toàn)
      */
     public boolean xoaKhachHang(String maKH) {
-        if (maKH == null || maKH.trim().isEmpty()) return false;
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
-
-        String ma = maKH.trim();
-        try {
-            // 1. Dọn dẹp chi tiết hóa đơn và hóa đơn của khách
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHD IN (SELECT maHD FROM HoaDon WHERE maKH = ?)")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HoaDon WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-
-            // 2. Dọn dẹp phiếu bảo hành
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH IN (SELECT maPBH FROM PhieuBaoHanh WHERE maKH = ?)")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuBaoHanh WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-
-            // 3. Dọn dẹp chi tiết sửa chữa và phiếu sửa chữa
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC IN (SELECT maPSC FROM PhieuSuaChua WHERE maKH = ?)")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-
-            // 4. Dọn dẹp phiếu tiếp nhận
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuTiepNhan WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-
-            // 5. Cập nhật hoặc xóa phương tiện của khách
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhuongTien WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                ps.executeUpdate();
-            }
-
-            // 6. Xóa chính thức trong bảng KhachHang
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM KhachHang WHERE maKH = ?")) {
-                ps.setString(1, ma);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi KhachHang_DAO.xoaKhachHang: " + e.getMessage());
-            return false;
-        }
+        try (PreparedStatement ps = con.prepareStatement("DELETE FROM KhachHang WHERE maKH = ?")) {
+            ps.setString(1, maKH);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException ex) { System.err.println("Không thể xóa bản ghi đang có dữ liệu liên quan: " + ex.getMessage()); return false; }
     }
 
     /**

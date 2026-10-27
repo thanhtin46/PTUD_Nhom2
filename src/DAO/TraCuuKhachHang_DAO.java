@@ -231,7 +231,7 @@ public class TraCuuKhachHang_DAO {
                      "ISNULL(hd.tongTien, 0) AS chiPhi " +
                      "FROM PhieuTiepNhan tn " +
                      "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
-                     "LEFT JOIN PhieuSuaChua sc ON ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC " +
+                     "LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) " +
                      "LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV " +
                      "LEFT JOIN HoaDon hd ON (hd.soPhieuSC = tn.maPTN OR hd.soPhieuSC = sc.maPSC) " +
                      "WHERE tn.maKH = ? " +

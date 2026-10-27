@@ -161,53 +161,12 @@ public class PhuongTien_DAO {
      * Xóa phương tiện và dọn dẹp các ràng buộc phụ thuộc an toàn
      */
     public boolean xoaPhuongTien(String bienSo) {
-        if (bienSo == null || bienSo.trim().isEmpty()) return false;
-
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
-
-        String bsTrim = bienSo.trim();
-        try {
-            // Lấy soVIN trước
-            String soVIN = "";
-            try (PreparedStatement ps = con.prepareStatement("SELECT soVIN FROM PhuongTien WHERE bienSoXe = ?")) {
-                ps.setString(1, bsTrim);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) soVIN = rs.getString("soVIN");
-                }
-            }
-
-            if (!soVIN.isEmpty()) {
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH IN (SELECT maPBH FROM PhieuBaoHanh WHERE soVIN = ?)")) {
-                    ps.setString(1, soVIN);
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuBaoHanh WHERE soVIN = ?")) {
-                    ps.setString(1, soVIN);
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC IN (SELECT maPSC FROM PhieuSuaChua WHERE soVIN = ?)")) {
-                    ps.setString(1, soVIN);
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE soVIN = ?")) {
-                    ps.setString(1, soVIN);
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuTiepNhan WHERE soVIN = ?")) {
-                    ps.setString(1, soVIN);
-                    ps.executeUpdate();
-                }
-            }
-
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhuongTien WHERE bienSoXe = ?")) {
-                ps.setString(1, bsTrim);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi PhuongTien_DAO.xoaPhuongTien: " + e.getMessage());
-            return false;
-        }
+        try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhuongTien WHERE bienSoXe = ?")) {
+            ps.setString(1, bienSo);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException ex) { System.err.println("Không thể xóa bản ghi đang có dữ liệu liên quan: " + ex.getMessage()); return false; }
     }
 
     /**

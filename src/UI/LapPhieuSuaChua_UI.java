@@ -1198,6 +1198,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
             autoCommitCu = con.getAutoCommit();
             con.setAutoCommit(false);
 
+            maPSC = DAO.LienKetPhieu.maSuaChua(con, maPTN);
             // Nếu phiếu đã được xuất kho thì không ghi đè chi tiết phụ tùng.
             String sqlKiemTraPXK =
                     "SELECT COUNT(*) FROM PhieuXuatKho WHERE maPSC = ?";
@@ -1370,6 +1371,9 @@ public class LapPhieuSuaChua_UI extends JPanel {
             }
 
 
+            try (PreparedStatement link = con.prepareStatement("UPDATE PhieuSuaChua SET maPTN=? WHERE maPSC=?")) {
+                link.setString(1, maPTN); link.setString(2, maPSC); link.executeUpdate();
+            }
             con.commit();
 
         } catch (Exception ex) {

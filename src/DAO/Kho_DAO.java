@@ -29,7 +29,7 @@ public class Kho_DAO {
         }
 
         // 1. Truy vấn lịch sử Phiếu nhập kho
-        String sqlPN = "SELECT pn.maPhieuNhap, pn.ngayNhap, pn.tongTien, " +
+        String sqlPN = "SELECT pn.maPhieuNhap, pn.ngayNhap, pn.tongTien, pn.trangThai, pn.ngayDuKienGiao, pn.ghiChu, " +
                 "ISNULL(nv.hoTen, pn.maNV) AS nguoiLap, " +
                 "ISNULL(ncc.tenNCC, pn.maNCC) AS nhaCungCap " +
                 "FROM PhieuNhapKho pn " +
@@ -47,7 +47,7 @@ public class Kho_DAO {
                 String ncc = rs.getString("nhaCungCap");
 
                 PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.NHAP, ngayStr, nguoiLap,
-                        "Nhập từ NCC: " + ncc, ncc, "", PhieuKho.DA_NHAP);
+                        rs.getString("ghiChu"), ncc, rs.getDate("ngayDuKienGiao") == null ? "" : rs.getDate("ngayDuKienGiao").toLocalDate().format(FMT_DDMMYYYY), rs.getString("trangThai"));
 
                 // Nạp chi tiết phiếu nhập
                 pk.getChiTiet().addAll(layChiTietPhieuNhap(con, soPhieu));

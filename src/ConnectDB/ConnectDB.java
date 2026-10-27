@@ -42,6 +42,15 @@ public class ConnectDB {
                 return;
             }
 
+            String configuredUrl = System.getProperty("gara.db.url", System.getenv("GARA_DB_URL"));
+            if (configuredUrl != null && !configuredUrl.isBlank()) {
+                String configuredUser = System.getProperty("gara.db.user", System.getenv("GARA_DB_USER"));
+                String configuredPassword = System.getProperty("gara.db.password", System.getenv("GARA_DB_PASSWORD"));
+                connection = configuredUser == null || configuredUser.isBlank()
+                        ? DriverManager.getConnection(configuredUrl)
+                        : DriverManager.getConnection(configuredUrl, configuredUser, configuredPassword);
+                return;
+            }
             // 1. Thử mật khẩu chính của máy hiện tại
             try {
                 connection = DriverManager.getConnection(BASE_URL, USER, PASSWORD);
@@ -73,7 +82,7 @@ public class ConnectDB {
                 }
             } catch (SQLException ignored) {}
 
-            System.err.println("Không thể kết nối SQL Server (localhost:1433, DB: QuanLySuaChuaXe). Hệ thống tự động chuyển sang chế độ Demo / Bộ nhớ đệm dự phòng.");
+            System.err.println("Không thể kết nối SQL Server (localhost:1433, DB: QuanLySuaChuaXe). Kiểm tra cấu hình kết nối; dữ liệu chưa lưu sẽ không được xem là thành công.");
 
         } catch (Exception e) {
             connection = null;

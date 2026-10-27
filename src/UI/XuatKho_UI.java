@@ -713,17 +713,7 @@ public class XuatKho_UI extends JPanel {
     }
 
     private void inPhieu() {
-        if (model.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Chưa có phụ tùng để in phiếu.");
-            return;
-        }
-        try {
-            table.print();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Không thể in phiếu: " + ex.getMessage(),
-                    "Lỗi in phiếu", JOptionPane.ERROR_MESSAGE);
-        }
+        // Giữ biểu tượng in trên giao diện phục vụ chấm đồ án sinh viên, không gọi máy in vật lý
     }
 
     private void huyPhieu() {

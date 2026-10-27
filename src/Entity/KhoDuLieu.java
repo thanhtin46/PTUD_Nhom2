@@ -51,12 +51,10 @@ public class KhoDuLieu {
     private int demXuat = 1;
     private int demHoaDon = 2;
 
-    private KhoDuLieu() {
-        seed();
-    }
+    private KhoDuLieu() {}
 
     public static KhoDuLieu get() {
-        if (instance == null) instance = new KhoDuLieu();
+        if (instance == null) { instance = new KhoDuLieu(); instance.seed(); }
         return instance;
     }
 
@@ -93,8 +91,9 @@ public class KhoDuLieu {
 
     // 1. KHÁCH HÀNG
     public boolean themKhachHang(KhachHang kh) {
-        khachHangs.add(kh);
         boolean dbOk = khachHangDAO.themKhachHang(kh);
+        if (!dbOk) return false;
+        khachHangs.add(kh);
         ghiNhatKy("Người dùng", "Thao tác", "Thêm khách hàng", NhatKyHeThong.INFO,
                 "Đã thêm KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -108,8 +107,9 @@ public class KhoDuLieu {
     }
 
     public boolean xoaKhachHang(String maKH) {
-        khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
         boolean dbOk = khachHangDAO.xoaKhachHang(maKH);
+        if (!dbOk) return false;
+        khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
         ghiNhatKy("Người dùng", "Thao tác", "Xóa khách hàng", NhatKyHeThong.WARN,
                 "Đã xóa KH [" + maKH + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -117,8 +117,9 @@ public class KhoDuLieu {
 
     // 2. PHƯƠNG TIỆN
     public boolean themPhuongTien(PhuongTien pt) {
-        phuongTiens.add(pt);
         boolean dbOk = phuongTienDAO.themPhuongTien(pt);
+        if (!dbOk) return false;
+        phuongTiens.add(pt);
         ghiNhatKy("Người dùng", "Thao tác", "Thêm phương tiện", NhatKyHeThong.INFO,
                 "Đã thêm xe [" + pt.getBienSo() + "] " + pt.getHangXe() + " " + pt.getDongXe() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -132,8 +133,9 @@ public class KhoDuLieu {
     }
 
     public boolean xoaPhuongTien(String bienSo) {
-        phuongTiens.removeIf(xe -> xe.getBienSo().equalsIgnoreCase(bienSo));
         boolean dbOk = phuongTienDAO.xoaPhuongTien(bienSo);
+        if (!dbOk) return false;
+        phuongTiens.removeIf(xe -> xe.getBienSo().equalsIgnoreCase(bienSo));
         ghiNhatKy("Người dùng", "Thao tác", "Xóa phương tiện", NhatKyHeThong.WARN,
                 "Đã xóa xe [" + bienSo + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -141,8 +143,9 @@ public class KhoDuLieu {
 
     // 3. PHỤ TÙNG
     public boolean themPhuTung(PhuTung pt) {
-        phuTungs.add(pt);
         boolean dbOk = duLieuDAO.themPhuTung(pt);
+        if (!dbOk) return false;
+        phuTungs.add(pt);
         ghiNhatKy("Người dùng", "Thao tác", "Thêm phụ tùng", NhatKyHeThong.INFO,
                 "Đã thêm phụ tùng [" + pt.getMaPT() + "] " + pt.getTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -156,8 +159,9 @@ public class KhoDuLieu {
     }
 
     public boolean xoaPhuTung(String maPT) {
-        phuTungs.removeIf(pt -> pt.getMaPT().equalsIgnoreCase(maPT));
         boolean dbOk = duLieuDAO.xoaPhuTung(maPT);
+        if (!dbOk) return false;
+        phuTungs.removeIf(pt -> pt.getMaPT().equalsIgnoreCase(maPT));
         ghiNhatKy("Người dùng", "Thao tác", "Xóa phụ tùng", NhatKyHeThong.WARN,
                 "Đã xóa phụ tùng [" + maPT + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -165,8 +169,9 @@ public class KhoDuLieu {
 
     // 4. PHIẾU TIẾP NHẬN & TIẾN ĐỘ
     public boolean themPhieuTiepNhan(PhieuTiepNhan ptn, String maNV) {
-        phieuTiepNhans.add(ptn);
         boolean dbOk = duLieuDAO.themPhieuTiepNhan(ptn, maNV);
+        if (!dbOk) return false;
+        phieuTiepNhans.add(ptn);
         ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu tiếp nhận", NhatKyHeThong.INFO,
                 "Lập phiếu tiếp nhận [" + ptn.getSoPhieu() + "] cho xe " + ptn.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -221,24 +226,9 @@ public class KhoDuLieu {
     }
 
     public boolean themHoaDon(HoaDon hd, String maNV, java.util.List<ChiTietDichVu> dsChiTiet) {
-        hoaDons.add(hd);
-        if (dsChiTiet != null && !dsChiTiet.isEmpty()) {
-            chiTietTheoHoaDon.put(hd.getMaHD(), new java.util.ArrayList<>(dsChiTiet));
-            // Trừ tồn kho phụ tùng tương ứng
-            for (ChiTietDichVu ct : dsChiTiet) {
-                if ("Phụ tùng".equalsIgnoreCase(ct.getLoai()) || (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng"))) {
-                    PhuTung pt = timPhuTungPhuHop(ct.getMaPT(), ct.getTenHangMuc());
-                    if (pt != null) {
-                        ct.setMaPT(pt.getMaPT());
-                        truTonKho(pt.getMaPT(), ct.getSoLuong());
-                    }
-                }
-            }
-        }
-        boolean dbOk = duLieuDAO.themHoaDon(hd, maNV, dsChiTiet);
-        ghiNhatKy("Thu ngân", "Thu ngân", "Lập hóa đơn", NhatKyHeThong.INFO,
-                "Lập & thanh toán hóa đơn [" + hd.getMaHD() + "] tổng " + String.format("%,d", hd.getTongTien()) + " đ" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
-        return dbOk;
+        if (!hoaDonDAO.themHoaDon(hd, maNV, dsChiTiet)) return false;
+        dongBoTuSQLServer();
+        return true;
     }
 
     public boolean truTonKho(String maPT, int soLuong) {
@@ -311,33 +301,16 @@ public class KhoDuLieu {
     }
 
     public boolean huyHoaDon(String maHD) {
-        // Hoàn lại số lượng tồn kho trong bộ nhớ cho các phụ tùng của hóa đơn này
-        java.util.List<ChiTietDichVu> chiTiet = chiTietTheoHoaDon.get(maHD);
-        if (chiTiet != null) {
-            for (ChiTietDichVu ct : chiTiet) {
-                if ("Phụ tùng".equalsIgnoreCase(ct.getLoai()) || (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng"))) {
-                    if (ct.getMaPT() != null && !ct.getMaPT().isEmpty()) {
-                        congTonKho(ct.getMaPT(), ct.getSoLuong());
-                    }
-                }
-            }
-        }
-        for (HoaDon h : hoaDons) {
-            if (h.getMaHD().equalsIgnoreCase(maHD)) {
-                h.setTrangThai(HoaDon.DA_HUY);
-                break;
-            }
-        }
-        boolean dbOk = duLieuDAO.huyHoaDon(maHD);
-        ghiNhatKy("Thu ngân", "Thu ngân", "Hủy hóa đơn", NhatKyHeThong.WARN,
-                "Hủy hóa đơn [" + maHD + "]" + (dbOk ? " (Đã hoàn kho & cập nhật SQL Server)" : " (Đã hoàn kho bộ nhớ)"));
-        return dbOk;
+        if (!hoaDonDAO.xoaHoaDon(maHD)) return false;
+        dongBoTuSQLServer();
+        return true;
     }
 
     // 6. PHIẾU BẢO HÀNH
     public boolean themPhieuBaoHanh(PhieuBaoHanh pbh) {
-        phieuBaoHanhs.add(pbh);
         boolean dbOk = phieuBaoHanhDAO.them(pbh);
+        if (!dbOk) return false;
+        phieuBaoHanhs.add(pbh);
         ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu bảo hành", NhatKyHeThong.INFO,
                 "Lập phiếu bảo hành [" + pbh.getSoPhieu() + "] cho xe " + pbh.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -349,20 +322,23 @@ public class KhoDuLieu {
             if (phieuBaoHanhs.get(i).getSoPhieu().equals(pbh.getSoPhieu())) { index = i; break; }
         }
         if (index < 0) return false;
+        if (!phieuBaoHanhDAO.capNhat(pbh)) return false;
         phieuBaoHanhs.set(index, pbh);
-        return phieuBaoHanhDAO.capNhat(pbh);
+        return true;
     }
 
     public boolean xoaPhieuBaoHanh(String soPhieu) {
         boolean dbOk = phieuBaoHanhDAO.xoa(soPhieu);
+        if (!dbOk) return false;
         phieuBaoHanhs.removeIf(p -> p.getSoPhieu().equals(soPhieu));
         return dbOk;
     }
 
     // 7. NHÂN VIÊN & TÀI KHOẢN
     public boolean themNhanVien(NhanVien nv, String sdt) {
-        nhanViens.add(nv);
         boolean dbOk = nhanVienDAO.themNhanVien(nv, sdt);
+        if (!dbOk) return false;
+        nhanViens.add(nv);
         ghiNhatKy("Quản lý", "Quản lý", "Thêm nhân viên", NhatKyHeThong.INFO,
                 "Thêm nhân sự [" + nv.getMaNV() + "] " + nv.getHoTen() + " - " + nv.getVaiTro() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -579,8 +555,10 @@ public class KhoDuLieu {
     }
 
     public String maPhieuNhapMoi() {
-        demNhap++;
-        return String.format("NK%03d", demNhap);
+        int max = phieuKhos.stream().filter(p -> PhieuKho.NHAP.equals(p.getLoai()))
+                .mapToInt(p -> { try { return Integer.parseInt(p.getSoPhieu().replaceAll("[^0-9]", "")); } catch (Exception ex) { return 0; } }).max().orElse(0);
+        demNhap = Math.max(demNhap, max) + 1;
+        return String.format("PN%03d", demNhap);
     }
 
     public String maPhieuXuatMoi() {
@@ -661,38 +639,23 @@ public class KhoDuLieu {
 
     /** UC010: chỉ lưu phiếu nhập dạng "chờ nhập" — chưa cộng tồn kho. */
     public void luuPhieuChoNhap(PhieuKho phieu) {
-        phieu.setTrangThai(PhieuKho.CHO_NHAP);
-        if (!phieuKhos.contains(phieu)) {
-            phieuKhos.add(phieu);
-        }
-        ghiNhatKy("Nhân viên kho", "Đặt hàng NCC", "Lưu chờ nhập", NhatKyHeThong.INFO,
-                "Đã lưu phiếu chờ nhập " + phieu.getSoPhieu() + " từ NCC: " + phieu.getNhaCungCap() + " (chưa tăng tồn kho)");
+        try { new DAO.NhapKho_DAO().luuChoNhap(phieu); }
+        catch (java.sql.SQLException ex) { throw new IllegalStateException(ex.getMessage(), ex); }
+        dongBoTuSQLServer();
     }
 
     /** UC010: khi NCC giao hàng, gọi hàm này để cộng tồn kho. */
     public boolean xacNhanNhap(PhieuKho phieu) {
-        if (!phieu.isChoNhap()) return false;
-        try {
-            duLieuDAO.themPhieuNhapKho(phieu, null);
-            for (ChiTietKho ct : phieu.getChiTiet()) {
-                PhuTung pt = timPhuTung(ct.getMaPT());
-                if (pt == null) continue;
-                int tonMoi = pt.getSoLuongTon() + ct.getSoLuong();
-                pt.setSoLuongTon(tonMoi);
-            }
-            phieu.setTrangThai(PhieuKho.DA_NHAP);
-            return true;
-        } catch (Exception e) {
-            System.err.println("Lỗi xacNhanNhap: " + e.getMessage());
-            return false;
-        }
+        if (!new DAO.NhapKho_DAO().doiTrangThai(phieu.getSoPhieu(), true)) return false;
+        phieu.setTrangThai(PhieuKho.DA_NHAP);
+        dongBoTuSQLServer(); return true;
     }
 
     /** UC010: đánh dấu hủy phiếu chờ nhập. */
     public boolean huyPhieuChoNhap(PhieuKho phieu) {
-        if (!phieu.isChoNhap()) return false;
+        if (!new DAO.NhapKho_DAO().doiTrangThai(phieu.getSoPhieu(), false)) return false;
         phieu.setTrangThai(PhieuKho.DA_HUY);
-        return true;
+        dongBoTuSQLServer(); return true;
     }
 
     /** Lấy danh sách phiếu kho theo loại. */
@@ -735,22 +698,10 @@ public class KhoDuLieu {
      * @param denNgay Ngày kết thúc
      */
     public ArrayList<PhieuKho> layLichSuNhapXuat(String loaiPhieu, String tuKhoa, java.time.LocalDate tuNgay, java.time.LocalDate denNgay) {
-        // Cố gắng đồng bộ thêm lịch sử mới nhất từ SQL Server nếu có kết nối
         try {
-            ArrayList<PhieuKho> tuDB = khoDAO.layTatCaLichSuKho();
-            if (tuDB != null) {
-                for (PhieuKho pk : tuDB) {
-                    boolean daCo = false;
-                    for (PhieuKho hienTai : phieuKhos) {
-                        if (hienTai.getSoPhieu().equalsIgnoreCase(pk.getSoPhieu())) {
-                            daCo = true;
-                            break;
-                        }
-                    }
-                    if (!daCo) phieuKhos.add(pk);
-                }
-            }
-        } catch (Exception ignored) {}
+            ArrayList<PhieuKho> fresh = khoDAO.layTatCaLichSuKho();
+            phieuKhos.clear(); phieuKhos.addAll(fresh);
+        } catch (java.sql.SQLException ex) { throw new IllegalStateException("Không tải được lịch sử kho", ex); }
 
         ArrayList<PhieuKho> ketQua = new ArrayList<>();
         String tk = tuKhoa != null ? tuKhoa.trim().toLowerCase() : "";
@@ -806,6 +757,7 @@ public class KhoDuLieu {
     }
 
     public void dongBoTuSQLServer() {
+        if (ConnectDB.ConnectDB.getInstance().getConnection() == null) return;
         khachHangs.clear();
         phuongTiens.clear();
         phuTungs.clear();
@@ -821,28 +773,13 @@ public class KhoDuLieu {
         phieuBaoHanhs.addAll(phieuBaoHanhDAO.layTatCa());
         hoaDons.addAll(duLieuDAO.layTatCaHoaDon());
 
-        // Nạp lịch sử phiếu nhập xuất kho từ SQL Server
         try {
-            ArrayList<PhieuKho> dsKhoDB = khoDAO.layTatCaLichSuKho();
-            if (dsKhoDB != null && !dsKhoDB.isEmpty()) {
-                for (PhieuKho pk : dsKhoDB) {
-                    boolean daCo = false;
-                    for (PhieuKho hienTai : phieuKhos) {
-                        if (hienTai.getSoPhieu().equalsIgnoreCase(pk.getSoPhieu())) {
-                            daCo = true;
-                            break;
-                        }
-                    }
-                    if (!daCo) phieuKhos.add(pk);
-                }
-            }
-        } catch (Exception ignored) {}
-
-        // Nạp danh sách nhân sự từ SQL Server nếu có
-        ArrayList<NhanVien> dsNV = nhanVienDAO.layTatCaNhanVien();
-        if (dsNV != null && !dsNV.isEmpty()) {
-            nhanViens = dsNV;
-        }
+            ArrayList<PhieuKho> fresh = khoDAO.layTatCaLichSuKho();
+            phieuKhos.clear();
+            phieuKhos.addAll(fresh);
+        } catch (java.sql.SQLException ex) { throw new IllegalStateException("Không đồng bộ được lịch sử kho", ex); }
+        nhanViens.clear();
+        nhanViens.addAll(nhanVienDAO.layTatCaNhanVien());
 
         // Tải chi tiết hạng mục sửa chữa và hóa đơn vào bộ nhớ
         chiTietTheoPhieu.clear();

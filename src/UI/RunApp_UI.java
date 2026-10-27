@@ -21,13 +21,9 @@ public class RunApp_UI {
         NhanVien_DAO nvDao = new NhanVien_DAO();
         ArrayList<NhanVien> danhSach = nvDao.layTatCaNhanVien();
 
-        // Nếu database chưa có dữ liệu thì dùng dữ liệu mặc định dự phòng
         if (danhSach.isEmpty()) {
-            danhSach.add(new NhanVien("NV01", "Nguyễn Văn Tiếp Tân", "tiepTan", "123", "Nhân viên tiếp tân"));
-            danhSach.add(new NhanVien("NV02", "Trần Văn Sửa Chữa", "suaChua", "123", "Nhân viên sửa chữa"));
-            danhSach.add(new NhanVien("NV03", "Nguyễn Văn Kho", "kho", "123", "Nhân viên kho"));
-            danhSach.add(new NhanVien("NV04", "Quản Lý Tổng", "quanLy", "123", "Quản lý"));
-            danhSach.add(new NhanVien("NV05", "Trần Thị Thu Ngân", "thuNgan", "123", "Nhân viên thu ngân"));
+            JOptionPane.showMessageDialog(null, "Không tải được tài khoản SQL Server. Kiểm tra kết nối và chạy file SQL theo hướng dẫn database/README_DONG_BO.md.");
+            return;
         }
         KhoDuLieu.get().setNhanViens(danhSach);
 

@@ -416,8 +416,8 @@ public class QuanLyNhanVien_UI extends JPanel {
         table.setSelectionBackground(new Color(239, 246, 255));
         table.setSelectionForeground(CHU_TIEU_DE);
 
-        // Chế độ co giãn linh hoạt: Khi phóng to toàn màn hình tự dãn 100%, khi màn hình nhỏ kích hoạt cuộn ngang
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        // Bật cuộn ngang tự nhiên và giữ đúng kích thước chuẩn của từng cột
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         // Header Table
         JTableHeader header = table.getTableHeader();

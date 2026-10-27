@@ -89,8 +89,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
         table = UiHelper.bang(model);
 
-        // Chế độ tự động dãn đều 100% khi phóng to và cuộn ngang khi thu nhỏ
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        // Bật cuộn ngang tự nhiên và giữ đúng kích thước chuẩn của từng cột
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         // Đặt độ rộng tối thiểu và phù hợp cho từng cột để hiện đầy đủ thông tin
         table.getColumnModel().getColumn(0).setPreferredWidth(85);   // Mã KH

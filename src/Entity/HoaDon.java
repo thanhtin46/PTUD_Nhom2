@@ -43,7 +43,8 @@ public class HoaDon {
         this.phuongThuc = phuongThuc;
         this.nguoiThu = nguoiThu;
         this.ghiChu = ghiChu;
-        this.trangThai = trangThai;
+        this.trangThai = "DA_THANH_TOAN".equalsIgnoreCase(trangThai) ? DA_THANH_TOAN
+                : "DA_HUY".equalsIgnoreCase(trangThai) ? DA_HUY : trangThai;
     }
 
     public String getMaHD() { return maHD; }
@@ -89,5 +90,6 @@ public class HoaDon {
     public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
 
     public String getTrangThai() { return trangThai; }
-    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = "DA_THANH_TOAN".equalsIgnoreCase(trangThai) ? DA_THANH_TOAN
+                : "DA_HUY".equalsIgnoreCase(trangThai) ? DA_HUY : trangThai; }
 }

@@ -243,9 +243,10 @@ public class PhieuXuat_DAO {
         String sql =
                 "SELECT ct.maPT, pt.tenPT, " +
                         "ct.soLuongYeuCau, ct.soLuongXuat, " +
-                        "ct.donGia, ct.tinhTrangXuat, pt.soLuongTon " +
+                        "ct.donGia, ct.tinhTrangXuat, COALESCE(k.soLuongTon, 0) AS soLuongTon " +
                         "FROM ChiTietPhieuXuatKho ct " +
                         "JOIN PhuTung pt ON pt.maPT = ct.maPT " +
+                        "LEFT JOIN Kho k ON k.maPT = pt.maPT " +
                         "WHERE ct.maPhieuXuat = ?";
 
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
@@ -256,8 +257,10 @@ public class PhieuXuat_DAO {
                     model.addRow(new Object[]{
                             rs.getString("maPT"),
                             rs.getString("tenPT"),
-                            rs.getInt("soLuong"),
-                            rs.getString("lyDoXuat"),
+                            rs.getInt("soLuongYeuCau"),
+                            rs.getInt("soLuongXuat"),
+                            rs.getBigDecimal("donGia"),
+                            rs.getString("tinhTrangXuat"),
                             rs.getInt("soLuongTon")
                     });
                 }
@@ -643,7 +646,7 @@ public class PhieuXuat_DAO {
                             + "donGia, tinhTrangXuat) VALUES (?, ?, ?, ?, ?, ?)";
 
             String sqlTruTon =
-                    "UPDATE PhuTung "
+                    "UPDATE Kho "
                             + "SET soLuongTon = soLuongTon - ? "
                             + "WHERE maPT = ? AND soLuongTon >= ?";
 

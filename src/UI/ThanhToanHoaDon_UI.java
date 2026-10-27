@@ -799,6 +799,10 @@ public class ThanhToanHoaDon_UI extends JPanel {
         String a = maHoaDon.trim().toUpperCase();
         String b = maTiepNhan.trim().toUpperCase();
         if (a.equals(b)) return true;
+        try {
+            java.sql.Connection connection = ConnectDB.ConnectDB.getInstance().getConnection();
+            if (connection != null && a.equals(DAO.LienKetPhieu.maSuaChua(connection, b))) return true;
+        } catch (java.sql.SQLException ex) { throw new IllegalStateException("Không tra được liên kết phiếu", ex); }
         String soA = a.replaceAll("[^0-9]", "");
         String soB = b.replaceAll("[^0-9]", "");
         return !soA.isEmpty() && soA.equals(soB);
@@ -936,25 +940,25 @@ public class ThanhToanHoaDon_UI extends JPanel {
         }
 
         boolean ok = hoaDonDAO.themHoaDon(hd, nvHienTai != null ? nvHienTai.getMaNV() : "NV05", dsItems);
-        if (!kho.getHoaDons().stream().anyMatch(h -> h.getMaHD().equalsIgnoreCase(hd.getMaHD()))) {
-            kho.getHoaDons().add(hd);
+        if (!ok) {
+            JOptionPane.showMessageDialog(this, "Không lưu được hóa đơn. Kiểm tra phiếu sửa chữa, chi tiết và kết nối SQL Server.", "Lưu thất bại", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-        kho.luuChiTietHoaDon(hd.getMaHD(), dsItems);
-        for (ChiTietDichVu ct : dsItems) {
-            if (ct.getLoai() != null && ct.getLoai().toLowerCase().contains("phụ tùng") && ct.getMaPT() != null && !ct.getMaPT().isBlank()) {
-                kho.truTonKho(ct.getMaPT(), ct.getSoLuong());
-            }
-        }
-        ptn.setTienDo("Hoàn thành");
+        kho.dongBoTuSQLServer();
 
-        JOptionPane.showMessageDialog(this,
+        int luaChonBH = JOptionPane.showConfirmDialog(this,
                 "Thanh toán hóa đơn [" + hd.getMaHD() + "] thành công!" + (ok ? " (Đã lưu CSDL SQL Server)\n" : " (Đang lưu trong bộ nhớ)\n")
                         + "Khách hàng: " + hd.getTenKH() + " (" + hd.getBienSo() + ")\n"
                         + "Số tiền: " + UiHelper.tien(tong) + " đ (" + phuongThucChon + ")\n"
-                        + "Phiếu sửa chữa " + ptn.getSoPhieu() + " đã hoàn tất.",
-                "Thanh toán thành công", JOptionPane.INFORMATION_MESSAGE);
+                        + "Phiếu sửa chữa " + ptn.getSoPhieu() + " đã hoàn tất.\n\n"
+                        + "Bạn có muốn chuyển sang phân hệ \"Lập phiếu bảo hành\" cho hóa đơn này ngay không?",
+                "Thanh toán thành công & Lập bảo hành", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
         lamMoiForm();
+
+        if (luaChonBH == JOptionPane.YES_OPTION && Main_UI.getInstance() != null) {
+            Main_UI.getInstance().chuyenTrang("Lập phiếu bảo hành");
+        }
     }
 
     private void lamMoiForm() {
@@ -1048,17 +1052,9 @@ public class ThanhToanHoaDon_UI extends JPanel {
         JScrollPane scroll = new JScrollPane(editor);
         scroll.setPreferredSize(new Dimension(620, 560));
 
-        Object[] options = {"In hóa đơn", "Đóng"};
-        int choice = JOptionPane.showOptionDialog(this, scroll, "Xem trước & In hóa đơn - " + maHD,
-                JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-
-        if (choice == 0) {
-            try {
-                editor.print();
-            } catch (PrinterException ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi khi gửi lệnh in: " + ex.getMessage(), "Lỗi in ấn", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        Object[] options = {"Đóng"};
+        JOptionPane.showOptionDialog(this, scroll, "Xem trước hóa đơn - " + maHD,
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
     }
 
     // ===============================================================

@@ -93,7 +93,7 @@ public class PhieuBaoHanh_DAO {
         String sql = "SELECT h.maHD, h.ngayLap, h.tongTien, h.maKH, k.hoTen "
                 + "FROM dbo.HoaDon h "
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
-                + "ORDER BY h.ngayLap DESC, h.maHD DESC";
+                + "WHERE h.trangThai IN (N'Đã thanh toán','DA_THANH_TOAN') ORDER BY h.ngayLap DESC, h.maHD DESC";
 
         List<LuaChon> ds = new ArrayList<>();
         Connection c = getConnection();
@@ -581,6 +581,9 @@ public class PhieuBaoHanh_DAO {
         if (con == null) return false;
         try {
             con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HangMucBaoHanh WHERE maPBH = ?")) {
+                ps.setString(1, soPhieu); ps.executeUpdate();
+            }
             try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH = ?")) {
                 ps.setString(1, soPhieu); ps.executeUpdate();
             }

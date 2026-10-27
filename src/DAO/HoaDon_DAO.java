@@ -43,7 +43,7 @@ public class HoaDon_DAO {
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
                      "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
-                     "LEFT JOIN PhuongTien pt ON (pt.soVIN = ptn.soVIN OR pt.maKH = hd.maKH) " +
+                     "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
                      "ORDER BY hd.maHD DESC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
@@ -86,108 +86,7 @@ public class HoaDon_DAO {
      * Thêm mới hóa đơn kèm chi tiết phụ tùng & dịch vụ vào SQL Server
      */
     public boolean themHoaDon(HoaDon hd, String maNV, List<ChiTietDichVu> dsChiTiet) {
-        if (hd == null || hd.getMaHD() == null) return false;
-        Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return false;
-
-        try {
-            // 1. Xác định mã khách hàng
-            String maKH = hd.getMaKH();
-            if (maKH == null || maKH.isEmpty()) {
-                try (PreparedStatement ps = con.prepareStatement("SELECT maKH FROM KhachHang WHERE soDT = ?")) {
-                    ps.setString(1, hd.getSdtKH());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) maKH = rs.getString("maKH");
-                    }
-                }
-            }
-            if (maKH == null || maKH.isEmpty()) maKH = "KH001";
-
-            // 2. Xác định mã nhân viên thu ngân
-            String nvLap = (maNV != null && !maNV.isEmpty()) ? maNV : "NV05";
-
-            // 3. Phương thức thanh toán chuẩn hóa cho DB
-            String httt = "TIEN_MAT";
-            if (hd.getPhuongThuc() != null) {
-                String pt = hd.getPhuongThuc().toLowerCase();
-                if (pt.contains("chuyển") || pt.contains("qr")) httt = "CHUYEN_KHOAN";
-                else if (pt.contains("pos") || pt.contains("thẻ")) httt = "THE_POS";
-            }
-
-            // 4. Thêm hóa đơn
-            String sqlHD = "INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, soPhieuSC, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) " +
-                           "VALUES (?, ?, ?, CAST(GETDATE() AS DATE), ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement stmt = con.prepareStatement(sqlHD)) {
-                stmt.setString(1, hd.getMaHD());
-                stmt.setString(2, maKH);
-                stmt.setString(3, nvLap);
-                stmt.setString(4, httt);
-                stmt.setString(5, hd.getSoPhieuSC() != null ? hd.getSoPhieuSC() : "TN001");
-                stmt.setDouble(6, (double) hd.getTienDichVu());
-                stmt.setDouble(7, (double) hd.getTienPhuTung());
-                stmt.setDouble(8, hd.getGiamGiaPhanTram());
-                stmt.setDouble(9, (double) hd.getTongTien());
-                stmt.setString(10, hd.getGhiChu() != null ? hd.getGhiChu() : "");
-                stmt.setString(11, hd.getTrangThai() != null ? hd.getTrangThai() : "Đã thanh toán");
-                stmt.executeUpdate();
-            }
-
-            // 5. Thêm chi tiết hóa đơn
-            String sqlCT = "INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES (?, ?, ?, ?, ?)";
-            try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
-                if (dsChiTiet != null && !dsChiTiet.isEmpty()) {
-                    HashSet<String> daCoPT = new HashSet<>();
-                    int ptCount = 1;
-                    for (ChiTietDichVu ct : dsChiTiet) {
-                        String rawPT = ct.getMaPT() != null ? ct.getMaPT().trim() : "";
-                        String maPT = rawPT;
-                        if (!maPT.toUpperCase().startsWith("PT") || daCoPT.contains(maPT)) {
-                            while (ptCount <= 20 && daCoPT.contains(String.format("PT%03d", ptCount))) {
-                                ptCount++;
-                            }
-                            maPT = String.format("PT%03d", Math.min(20, ptCount++));
-                        }
-                        daCoPT.add(maPT);
-
-                        stmt.setString(1, hd.getMaHD());
-                        stmt.setString(2, maPT);
-                        stmt.setString(3, ct.getTenHangMuc());
-                        stmt.setInt(4, ct.getSoLuong());
-                        stmt.setDouble(5, (double) ct.getDonGia());
-                        stmt.executeUpdate();
-                    }
-                } else {
-                    stmt.setString(1, hd.getMaHD());
-                    stmt.setString(2, "PT001");
-                    stmt.setString(3, "Chi phí phụ tùng & vật tư sửa chữa");
-                    stmt.setInt(4, 1);
-                    stmt.setDouble(5, (double) hd.getTienPhuTung());
-                    stmt.executeUpdate();
-
-                    if (hd.getTienDichVu() > 0) {
-                        stmt.setString(1, hd.getMaHD());
-                        stmt.setString(2, "PT002");
-                        stmt.setString(3, "Chi phí tiền công bảo dưỡng / sửa chữa");
-                        stmt.setInt(4, 1);
-                        stmt.setDouble(5, (double) hd.getTienDichVu());
-                        stmt.executeUpdate();
-                    }
-                }
-            }
-
-            // 6. Cập nhật trạng thái phiếu tiếp nhận sang "Hoàn thành"
-            if (hd.getSoPhieuSC() != null && !hd.getSoPhieuSC().isEmpty()) {
-                try (PreparedStatement ps = con.prepareStatement("UPDATE PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' WHERE maPTN = ?")) {
-                    ps.setString(1, hd.getSoPhieuSC());
-                    ps.executeUpdate();
-                }
-            }
-
-            return true;
-        } catch (SQLException e) {
-            System.err.println("Lỗi HoaDon_DAO.themHoaDon: " + e.getMessage());
-            return false;
-        }
+        return new ThanhToan_DAO().luu(hd, maNV, dsChiTiet);
     }
 
     /**
@@ -222,77 +121,14 @@ public class HoaDon_DAO {
      * Hủy hoặc xóa an toàn hóa đơn và chi tiết hóa đơn
      */
     public boolean xoaHoaDon(String maHD) {
-        if (maHD == null || maHD.trim().isEmpty()) return false;
-        Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return false;
-
-        try {
-            // 1. Hoàn lại tồn kho cho các phụ tùng trong hóa đơn
-            try (PreparedStatement psRead = con.prepareStatement("SELECT maPT, soLuong FROM ChiTietHoaDon WHERE maHD = ?")) {
-                psRead.setString(1, maHD);
-                try (ResultSet rs = psRead.executeQuery()) {
-                    while (rs.next()) {
-                        String maPT = rs.getString("maPT");
-                        int sl = rs.getInt("soLuong");
-                        if (maPT != null && maPT.toUpperCase().startsWith("PT")) {
-                            try (PreparedStatement psAdd = con.prepareStatement("UPDATE PhuTung SET soLuongTon = soLuongTon + ? WHERE maPT = ?")) {
-                                psAdd.setInt(1, sl);
-                                psAdd.setString(2, maPT);
-                                psAdd.executeUpdate();
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 2. Xóa chi tiết hóa đơn
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHD = ?")) {
-                ps.setString(1, maHD);
-                ps.executeUpdate();
-            }
-
-            // 3. Xóa hóa đơn
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HoaDon WHERE maHD = ?")) {
-                ps.setString(1, maHD);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi HoaDon_DAO.xoaHoaDon: " + e.getMessage());
-            return false;
-        }
+        return new ThanhToan_DAO().huy(maHD);
     }
 
     /**
      * Lấy danh sách chi tiết dịch vụ & phụ tùng của hóa đơn
      */
     public ArrayList<ChiTietDichVu> layChiTietTheoHoaDon(String maHD) {
-        ArrayList<ChiTietDichVu> list = new ArrayList<>();
-        Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null || maHD == null) return list;
-
-        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, " +
-                     "ISNULL(pt.donViTinh, N'Cái') AS donViTinh " +
-                     "FROM ChiTietHoaDon ct " +
-                     "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
-                     "WHERE ct.maHD = ?";
-        try (PreparedStatement stmt = con.prepareStatement(sql)) {
-            stmt.setString(1, maHD);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String maPT = rs.getString("maPT");
-                    String ten = rs.getString("tenPhuTung");
-                    int sl = rs.getInt("soLuong");
-                    long donGia = (long) rs.getDouble("donGia");
-                    String dvt = rs.getString("donViTinh");
-                    String loai = (ten != null && ten.toLowerCase().contains("công")) ? "Tiền công" : "Phụ tùng";
-
-                    list.add(new ChiTietDichVu(loai, maPT, ten, dvt, sl, donGia));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi HoaDon_DAO.layChiTietTheoHoaDon: " + e.getMessage());
-        }
-        return list;
+        return new DuLieu_DAO().layChiTietTheoHoaDon(maHD);
     }
 
     /**
@@ -369,7 +205,7 @@ public class HoaDon_DAO {
                    "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                    "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
                    "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
-                   "LEFT JOIN PhuongTien pt ON (pt.soVIN = ptn.soVIN OR pt.maKH = hd.maKH) " +
+                   "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
                    "WHERE 1=1 ");
 
         // Lọc trạng thái
