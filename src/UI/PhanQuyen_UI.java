@@ -26,6 +26,7 @@ public class PhanQuyen_UI extends JPanel {
             {"PHUTUNG",  "Quản lý phụ tùng"},
             {"NHAPKHO",  "Nhập kho"},
             {"XUATKHO",  "Xuất kho"},
+            {"LSKHO",    "Lịch sử nhập xuất kho"},
             {"TONKHO",   "Báo cáo tồn kho"},
             {"NV",       "Quản lý nhân viên"},
             {"PQ",       "Phân quyền"},
@@ -35,11 +36,11 @@ public class PhanQuyen_UI extends JPanel {
 
     /** Quyền mặc định theo vai trò */
     private static final String[][] QUYEN_MAC_DINH = {
-            {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,TONKHO,NV,PQ,HD,BCDT"},
+            {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,LSKHO,TONKHO,NV,PQ,HD,BCDT"},
             {"Nhân viên tiếp tân", "KH,PT,BH,HD"},
             {"Nhân viên thu ngân", "HD,BCDT,KH,PT"},
             {"Nhân viên sửa chữa", "SC,TD,TONKHO"},
-            {"Nhân viên kho",      "PHUTUNG,NHAPKHO,XUATKHO,TONKHO"},
+            {"Nhân viên kho",      "PHUTUNG,NHAPKHO,XUATKHO,LSKHO,TONKHO"},
     };
 
     private final KhoDuLieu kho = KhoDuLieu.get();
