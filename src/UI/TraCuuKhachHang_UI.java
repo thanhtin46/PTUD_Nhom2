@@ -320,6 +320,7 @@ public class TraCuuKhachHang_UI extends JPanel {
             kh = kho.timKhachHangTheoMa(maKH);
         }
         if (kh == null) return;
+        final KhachHang finalKh = kh;
 
         // Truy vấn danh sách xe sở hữu trực tiếp qua TraCuuKhachHang_DAO
         ArrayList<PhuongTien> dsXe = traCuuDAO.layDanhSachXeCuaKhach(maKH);
@@ -367,6 +368,7 @@ public class TraCuuKhachHang_UI extends JPanel {
             kh = kho.timKhachHangTheoMa(maKH);
         }
         if (kh == null) return;
+        final KhachHang finalKh = kh;
 
         // Truy vấn lịch sử trực tiếp qua TraCuuKhachHang_DAO
         ArrayList<TraCuuKhachHang_DAO.LichSuSuaChuaDTO> dsLs = traCuuDAO.layLichSuSuaChuaCuaKhach(maKH);
@@ -413,6 +415,14 @@ public class TraCuuKhachHang_UI extends JPanel {
         JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, e -> dlg.dispose());
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlBot.setOpaque(false);
+        JButton btnMoToanManHinh = UiHelper.nut("Mở tra cứu chi tiết", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, ev -> {
+            dlg.dispose();
+            Main_UI mainUI = Main_UI.getInstance();
+            if (mainUI != null) {
+                mainUI.chuyenTrang("Tra cứu lịch sử sửa chữa", new TraCuuLichSuSuaChua_UI(finalKh.getSdt(), 2));
+            }
+        });
+        pnlBot.add(btnMoToanManHinh);
         pnlBot.add(btnDong);
         pnl.add(pnlBot, BorderLayout.SOUTH);
 

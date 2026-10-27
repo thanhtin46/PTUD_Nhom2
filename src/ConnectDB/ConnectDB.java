@@ -3,12 +3,14 @@ package ConnectDB;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ConnectDB {
 
     private static final ConnectDB instance = new ConnectDB();
 
     private Connection connection;
+    private static boolean daDongBoCauTruc = false;
 
     // Danh sách mật khẩu phổ biến của các thành viên trong nhóm để máy nào cũng chạy được
     private static final String[] DANH_SACH_MAT_KHAU = {
@@ -49,6 +51,7 @@ public class ConnectDB {
                 connection = configuredUser == null || configuredUser.isBlank()
                         ? DriverManager.getConnection(configuredUrl)
                         : DriverManager.getConnection(configuredUrl, configuredUser, configuredPassword);
+                damBaoCauTrucDatabase(connection);
                 return;
             }
             // 1. Thử mật khẩu chính của máy hiện tại
@@ -56,6 +59,7 @@ public class ConnectDB {
                 connection = DriverManager.getConnection(BASE_URL, USER, PASSWORD);
                 if (connection != null && !connection.isClosed()) {
                     System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công!");
+                    damBaoCauTrucDatabase(connection);
                     return;
                 }
             } catch (SQLException ignored) {}
@@ -67,6 +71,7 @@ public class ConnectDB {
                     connection = DriverManager.getConnection(BASE_URL, USER, mk);
                     if (connection != null && !connection.isClosed()) {
                         System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công với mật khẩu dự phòng!");
+                        damBaoCauTrucDatabase(connection);
                         return;
                     }
                 } catch (SQLException ignored) {}
@@ -78,6 +83,7 @@ public class ConnectDB {
                 connection = DriverManager.getConnection(winUrl);
                 if (connection != null && !connection.isClosed()) {
                     System.out.println("Kết nối CSDL SQL Server qua Windows Authentication thành công!");
+                    damBaoCauTrucDatabase(connection);
                     return;
                 }
             } catch (SQLException ignored) {}
@@ -87,6 +93,64 @@ public class ConnectDB {
         } catch (Exception e) {
             connection = null;
             System.err.println("Lỗi khởi tạo kết nối CSDL: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Tự động kiểm tra và bổ sung các bảng/cột mới nếu CSDL của thành viên chưa chạy script nâng cấp.
+     * Chạy đúng 1 lần khi kết nối thành công, không làm chậm ứng dụng.
+     */
+    private static synchronized void damBaoCauTrucDatabase(Connection c) {
+        if (c == null || daDongBoCauTruc) return;
+        try (Statement stmt = c.createStatement()) {
+            // NhanVien
+            stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'email') IS NULL ALTER TABLE dbo.NhanVien ADD email VARCHAR(100) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'bacNghe') IS NULL ALTER TABLE dbo.NhanVien ADD bacNghe NVARCHAR(50) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'boPhan') IS NULL ALTER TABLE dbo.NhanVien ADD boPhan NVARCHAR(50) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'ngayVaoLam') IS NULL ALTER TABLE dbo.NhanVien ADD ngayVaoLam VARCHAR(20) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'trangThai') IS NULL ALTER TABLE dbo.NhanVien ADD trangThai NVARCHAR(30) NOT NULL CONSTRAINT DF_NV_TrangThai DEFAULT N'Đang làm việc' WITH VALUES;");
+
+            // PhieuTiepNhan / PhieuSuaChua: liên kết tường minh maPTN
+            stmt.execute("IF COL_LENGTH('dbo.PhieuSuaChua', 'maPTN') IS NULL BEGIN " +
+                         "  ALTER TABLE dbo.PhieuSuaChua ADD maPTN VARCHAR(20) NULL CONSTRAINT FK_PSC_PTN REFERENCES dbo.PhieuTiepNhan(maPTN); " +
+                         "  EXEC('UPDATE sc SET sc.maPTN = tn.maPTN FROM dbo.PhieuSuaChua sc JOIN dbo.PhieuTiepNhan tn ON sc.maPSC = ''SC'' + SUBSTRING(tn.maPTN, 3, 18) WHERE sc.maPTN IS NULL'); " +
+                         "END;");
+
+            // PhieuNhapKho: trạng thái, ngày giao, ghi chú
+            stmt.execute("IF COL_LENGTH('dbo.PhieuNhapKho', 'trangThai') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD trangThai VARCHAR(20) NOT NULL CONSTRAINT DF_PNK_TrangThai DEFAULT 'DA_NHAP' WITH VALUES;");
+            stmt.execute("IF COL_LENGTH('dbo.PhieuNhapKho', 'ngayDuKienGiao') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD ngayDuKienGiao DATE NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.PhieuNhapKho', 'ghiChu') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD ghiChu NVARCHAR(255) NULL;");
+
+            // PhieuBaoHanh
+            stmt.execute("IF COL_LENGTH('dbo.PhieuBaoHanh', 'ngayLap') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD ngayLap DATE NOT NULL CONSTRAINT DF_PBH_NgayLap DEFAULT (CONVERT(date, GETDATE())) WITH VALUES;");
+            stmt.execute("IF COL_LENGTH('dbo.PhieuBaoHanh', 'maNV') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD maNV VARCHAR(20) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.PhieuBaoHanh', 'ghiChu') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD ghiChu NVARCHAR(MAX) NULL;");
+
+            // HangMucBaoHanh
+            stmt.execute("IF OBJECT_ID('dbo.HangMucBaoHanh', 'U') IS NULL " +
+                         "CREATE TABLE dbo.HangMucBaoHanh (" +
+                         "  maCTPBH INT IDENTITY(1,1) PRIMARY KEY, maPBH VARCHAR(20) NOT NULL, " +
+                         "  tenHangMuc NVARCHAR(255) NOT NULL, thoiHanBaoHanh INT NOT NULL CHECK (thoiHanBaoHanh > 0), " +
+                         "  ngayHetHan DATE NOT NULL, dieuKienBaoHanh NVARCHAR(MAX) NULL, ghiChu NVARCHAR(MAX) NULL, " +
+                         "  CONSTRAINT FK_HMBH_PBH FOREIGN KEY (maPBH) REFERENCES dbo.PhieuBaoHanh(maPBH) ON DELETE CASCADE);");
+
+            // ChiTietCongViecSuaChua
+            stmt.execute("IF OBJECT_ID('dbo.ChiTietCongViecSuaChua', 'U') IS NULL " +
+                         "CREATE TABLE dbo.ChiTietCongViecSuaChua (" +
+                         "  maPSC VARCHAR(20) NOT NULL, stt INT NOT NULL, noiDungCongViec NVARCHAR(255) NOT NULL, " +
+                         "  tenKTV NVARCHAR(100) NULL, tienCong DECIMAL(15,2) NOT NULL DEFAULT 0 CHECK (tienCong >= 0), " +
+                         "  PRIMARY KEY (maPSC, stt), CONSTRAINT FK_CTCV_PSC FOREIGN KEY (maPSC) REFERENCES dbo.PhieuSuaChua(maPSC));");
+
+            // ChiTietDichVuHoaDon
+            stmt.execute("IF OBJECT_ID('dbo.ChiTietDichVuHoaDon', 'U') IS NULL " +
+                         "CREATE TABLE dbo.ChiTietDichVuHoaDon (" +
+                         "  maHD VARCHAR(20) NOT NULL, stt INT NOT NULL, tenDichVu NVARCHAR(255) NOT NULL, " +
+                         "  soLuong INT NOT NULL CHECK (soLuong > 0), donGia DECIMAL(15,2) NOT NULL CHECK (donGia >= 0), " +
+                         "  PRIMARY KEY (maHD, stt), CONSTRAINT FK_CTDVHD_HoaDon FOREIGN KEY (maHD) REFERENCES dbo.HoaDon(maHD));");
+
+            daDongBoCauTruc = true;
+        } catch (SQLException ex) {
+            System.err.println("Cảnh báo đồng bộ cấu trúc CSDL: " + ex.getMessage());
         }
     }
 

@@ -777,7 +777,7 @@ public class KhoDuLieu {
             ArrayList<PhieuKho> fresh = khoDAO.layTatCaLichSuKho();
             phieuKhos.clear();
             phieuKhos.addAll(fresh);
-        } catch (java.sql.SQLException ex) { throw new IllegalStateException("Không đồng bộ được lịch sử kho", ex); }
+        } catch (java.sql.SQLException ex) { System.err.println("Cảnh báo: Không đồng bộ được lịch sử kho (" + ex.getMessage() + "), giữ dữ liệu bộ nhớ."); }
         nhanViens.clear();
         nhanViens.addAll(nhanVienDAO.layTatCaNhanVien());
 

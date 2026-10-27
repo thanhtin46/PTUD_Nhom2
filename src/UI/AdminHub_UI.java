@@ -134,6 +134,7 @@ public class AdminHub_UI extends JPanel {
         gridBox.add(taoTheNhomModule("Khách hàng & Phương tiện", new Color(37, 99, 235), new String[][]{
                 {"Danh sách khách hàng", "Quản lý hồ sơ, địa chỉ, số điện thoại & CCCD", kho.getKhachHangs().size() + " hồ sơ"},
                 {"Tra cứu khách hàng", "Tra cứu lịch sử sửa chữa và danh sách xe sở hữu", "Tìm kiếm đa năng"},
+                {"Tra cứu lịch sử sửa chữa", "Tra cứu chi tiết lịch sử sửa chữa, phụ tùng và chi phí của khách hàng", "Lịch sử dịch vụ"},
                 {"Danh sách phương tiện", "Quản lý thông tin xe, số khung VIN, ODO và chủ xe", kho.getPhuongTiens().size() + " phương tiện"},
                 {"Tra cứu phương tiện", "Tra cứu phương tiện theo biển số, dòng xe", "Lịch sử tiếp nhận"}
         }));

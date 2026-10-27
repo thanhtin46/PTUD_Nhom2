@@ -1,35 +1,55 @@
-﻿-- Tạo mới database cho bài tập. Database đã tồn tại: dùng upgrade_dong_bo.sql + seed_demo.sql.
+﻿-- ============================================================
+-- HỆ THỐNG QUẢN LÝ GARA Ô TÔ
+-- CƠ SỞ DỮ LIỆU: QuanLySuaChuaXe
+-- Script chuẩn hóa toàn diện: Bảng, Ràng buộc, Dữ liệu mẫu
+-- ============================================================
+
 USE master;
 GO
+
+-- 1. Nếu Database đã tồn tại, đóng kết nối và xóa để tạo lại sạch sẽ
 IF DB_ID(N'QuanLySuaChuaXe') IS NOT NULL
 BEGIN
- RAISERROR(N'Database đã tồn tại. Dùng script nâng cấp để giữ dữ liệu.',16,1);
- SET NOEXEC ON;
+    ALTER DATABASE QuanLySuaChuaXe SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE QuanLySuaChuaXe;
 END;
 GO
+
+-- 2. Tạo mới Database
 CREATE DATABASE QuanLySuaChuaXe;
 GO
+
 USE QuanLySuaChuaXe;
 GO
+
+-- ============================================================
+-- PHẦN I: TẠO BẢNG & RÀNG BUỘC (21 BẢNG CHUẨN ĐỒ ÁN)
+-- Thứ tự tạo bảng tuân thủ chặt chẽ quan hệ khóa ngoại (Foreign Key)
+-- ============================================================
+
+/* 1. NHAN VIEN */
 CREATE TABLE NhanVien (
     maNV VARCHAR(20) NOT NULL PRIMARY KEY,
     hoTen NVARCHAR(100) NOT NULL,
     chucVu NVARCHAR(50) NOT NULL,
     soDT VARCHAR(15) NOT NULL UNIQUE,
+    email VARCHAR(100) NULL,
+    bacNghe NVARCHAR(50) NULL,
+    boPhan NVARCHAR(50) NULL,
+    ngayVaoLam VARCHAR(20) NULL,
+    trangThai NVARCHAR(30) NOT NULL DEFAULT N'Đang làm việc',
     CONSTRAINT CK_NhanVien_SDT CHECK (LEN(soDT) >= 9)
 );
 GO
 
-/* 2. TAI KHOAN: moi nhan vien co toi da mot tai khoan */
+/* 2. TAI KHOAN: Mỗi nhân viên có tối đa một tài khoản */
 CREATE TABLE TaiKhoan (
     maNV VARCHAR(20) NOT NULL PRIMARY KEY,
     taiKhoan VARCHAR(50) NOT NULL UNIQUE,
     matKhau VARCHAR(255) NOT NULL,
     trangThai VARCHAR(20) NOT NULL DEFAULT 'HOAT_DONG',
-    CONSTRAINT CK_TaiKhoan_TrangThai
-        CHECK (trangThai IN ('HOAT_DONG','KHOA')),
-    CONSTRAINT FK_TaiKhoan_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
+    CONSTRAINT CK_TaiKhoan_TrangThai CHECK (trangThai IN ('HOAT_DONG', 'KHOA')),
+    CONSTRAINT FK_TaiKhoan_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
 );
 GO
 
@@ -59,10 +79,8 @@ CREATE TABLE PhuongTien (
     mauSon NVARCHAR(50) NULL,
     odo VARCHAR(20) NULL,
     ngayTiepNhanGanNhat VARCHAR(20) NULL,
-    CONSTRAINT CK_PhuongTien_Nam
-        CHECK (maSX BETWEEN 1900 AND 2100),
-    CONSTRAINT FK_PhuongTien_KhachHang
-        FOREIGN KEY (maKH) REFERENCES KhachHang(maKH)
+    CONSTRAINT CK_PhuongTien_Nam CHECK (maSX BETWEEN 1900 AND 2100),
+    CONSTRAINT FK_PhuongTien_KhachHang FOREIGN KEY (maKH) REFERENCES KhachHang(maKH)
 );
 GO
 
@@ -73,8 +91,7 @@ CREATE TABLE NhaCungCap (
     soDT VARCHAR(15) NOT NULL,
     diaChi NVARCHAR(255) NULL,
     email VARCHAR(150) NULL,
-    CONSTRAINT CK_NhaCungCap_Email
-        CHECK (email IS NULL OR email LIKE '%_@_%._%')
+    CONSTRAINT CK_NhaCungCap_Email CHECK (email IS NULL OR email LIKE '%_@_%._%')
 );
 GO
 
@@ -88,7 +105,7 @@ CREATE TABLE PhuTung (
 );
 GO
 
-/* 7. KHO: moi phu tung co mot dong ton kho */
+/* 7. KHO: Quản lý vị trí và tồn kho phụ tùng */
 CREATE TABLE Kho (
     maKho VARCHAR(20) NOT NULL PRIMARY KEY,
     maPT VARCHAR(20) NOT NULL UNIQUE,
@@ -99,134 +116,11 @@ CREATE TABLE Kho (
     CONSTRAINT CK_Kho_SoLuong CHECK (soLuongTon >= 0),
     CONSTRAINT CK_Kho_ToiThieu CHECK (soLTT >= 0),
     CONSTRAINT CK_Kho_ToiDa CHECK (soLTD >= soLTT),
-    CONSTRAINT FK_Kho_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+    CONSTRAINT FK_Kho_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
 );
 GO
 
-/* 8. HOA DON */
-CREATE TABLE HoaDon (
-    maHD VARCHAR(20) NOT NULL PRIMARY KEY,
-    maKH VARCHAR(20) NOT NULL,
-    maNV VARCHAR(20) NOT NULL,
-    ngayLap DATE NOT NULL,
-    hinhThucThanhToan NVARCHAR(50) NOT NULL
-        DEFAULT N'TIEN_MAT',
-    soPhieuSC VARCHAR(20) NULL,
-    tienDichVu DECIMAL(15,2) DEFAULT 0,
-    tienPhuTung DECIMAL(15,2) DEFAULT 0,
-    giamGia DECIMAL(5,2) DEFAULT 0,
-    tongTien DECIMAL(15,2) DEFAULT 0,
-    ghiChu NVARCHAR(255) NULL,
-    trangThai NVARCHAR(50) DEFAULT N'DA_THANH_TOAN',
-    CONSTRAINT FK_HoaDon_KhachHang
-        FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
-    CONSTRAINT FK_HoaDon_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
-);
-GO
-
-/* 9. CHI TIET HOA DON */
-CREATE TABLE ChiTietHoaDon (
-    maHD VARCHAR(20) NOT NULL,
-    maPT VARCHAR(20) NOT NULL,
-    tenPhuTung NVARCHAR(150) NOT NULL,
-    soLuong INT NOT NULL,
-    donGia DECIMAL(15,2) NOT NULL,
-    CONSTRAINT PK_ChiTietHoaDon PRIMARY KEY (maHD, maPT),
-    CONSTRAINT CK_CTHD_SoLuong CHECK (soLuong > 0),
-    CONSTRAINT CK_CTHD_DonGia CHECK (donGia >= 0),
-    CONSTRAINT FK_CTHD_HoaDon
-        FOREIGN KEY (maHD) REFERENCES HoaDon(maHD),
-    CONSTRAINT FK_CTHD_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
-);
-GO
-
-/* 10. PHIEU BAO HANH */
-CREATE TABLE PhieuBaoHanh (
-    maPBH VARCHAR(20) NOT NULL PRIMARY KEY,
-    ngayBD DATE NOT NULL,
-    ngayKT DATE NOT NULL,
-    trangThaiBH NVARCHAR(50) NOT NULL DEFAULT N'CON_HAN',
-    maKH VARCHAR(20) NOT NULL,
-    soVIN VARCHAR(30) NOT NULL,
-    maHoaDon VARCHAR(20) NULL,
-    maNV VARCHAR(20) NULL,
-    ghiChu NVARCHAR(255) NULL,
-    CONSTRAINT CK_PBH_Ngay CHECK (ngayKT >= ngayBD),
-    CONSTRAINT FK_PBH_KhachHang
-        FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
-    CONSTRAINT FK_PBH_PhuongTien
-        FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN),
-    CONSTRAINT FK_PBH_HoaDon
-        FOREIGN KEY (maHoaDon) REFERENCES HoaDon(maHD)
-);
-GO
-
-/* 11. CHI TIET PHIEU BAO HANH */
-CREATE TABLE ChiTietPhieuBaoHanh (
-    maPBH VARCHAR(20) NOT NULL,
-    maPT VARCHAR(20) NOT NULL,
-    lyDo NVARCHAR(255) NULL,
-    huongXuLy NVARCHAR(255) NULL,
-    CONSTRAINT PK_ChiTietPhieuBaoHanh PRIMARY KEY (maPBH, maPT),
-    CONSTRAINT FK_CTPBH_PhieuBaoHanh
-        FOREIGN KEY (maPBH) REFERENCES PhieuBaoHanh(maPBH),
-    CONSTRAINT FK_CTPBH_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
-);
-GO
-
-/* 11b. HANG MUC BAO HANH (Dung cho LapPhieuBaoHanh_UI) */
-CREATE TABLE HangMucBaoHanh (
-    maCTPBH INT IDENTITY(1,1) PRIMARY KEY,
-    maPBH VARCHAR(20) NOT NULL,
-    tenHangMuc NVARCHAR(255) NOT NULL,
-    thoiHanBaoHanh INT NOT NULL DEFAULT 6,
-    ngayHetHan DATE NULL,
-    dieuKienBaoHanh NVARCHAR(255) NULL,
-    ghiChu NVARCHAR(255) NULL,
-    CONSTRAINT FK_HMBH_PBH
-        FOREIGN KEY (maPBH) REFERENCES PhieuBaoHanh(maPBH)
-);
-GO
-
-/* 12. PHIEU NHAP KHO */
-CREATE TABLE PhieuNhapKho (
-    maPhieuNhap VARCHAR(20) NOT NULL PRIMARY KEY,
-    maNCC VARCHAR(20) NOT NULL,
-    maNV VARCHAR(20) NOT NULL,
-    ngayNhap DATE NOT NULL,
-    tongTien DECIMAL(15,2) NOT NULL DEFAULT 0,
-    CONSTRAINT CK_PNK_TongTien CHECK (tongTien >= 0),
-    CONSTRAINT FK_PNK_NCC
-        FOREIGN KEY (maNCC) REFERENCES NhaCungCap(maNCC),
-    CONSTRAINT FK_PNK_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
-);
-GO
-
-/* 13. CHI TIET PHIEU NHAP KHO */
-CREATE TABLE ChiTietPhieuNhapKho (
-    maPhieuNhap VARCHAR(20) NOT NULL,
-    maPT VARCHAR(20) NOT NULL,
-    tenPT NVARCHAR(150) NOT NULL,
-    soLuong INT NOT NULL,
-    donGia DECIMAL(15,2) NOT NULL,
-    CONSTRAINT PK_ChiTietPhieuNhapKho
-        PRIMARY KEY (maPhieuNhap, maPT),
-    CONSTRAINT CK_CTPNK_SoLuong CHECK (soLuong > 0),
-    CONSTRAINT CK_CTPNK_DonGia CHECK (donGia >= 0),
-    CONSTRAINT FK_CTPNK_PhieuNhap
-        FOREIGN KEY (maPhieuNhap)
-        REFERENCES PhieuNhapKho(maPhieuNhap),
-    CONSTRAINT FK_CTPNK_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
-);
-GO
-
-/* 14. PHIEU TIEP NHAN */
+/* 8. PHIEU TIEP NHAN */
 CREATE TABLE PhieuTiepNhan (
     maPTN VARCHAR(20) NOT NULL PRIMARY KEY,
     maNV VARCHAR(20) NOT NULL,
@@ -235,18 +129,16 @@ CREATE TABLE PhieuTiepNhan (
     ngayTN DATETIME2 NOT NULL,
     yeuCauSC NVARCHAR(MAX) NOT NULL,
     trangThaiXe NVARCHAR(100) NOT NULL DEFAULT N'DA_TIEP_NHAN',
-    CONSTRAINT FK_PTN_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
-    CONSTRAINT FK_PTN_KhachHang
-        FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
-    CONSTRAINT FK_PTN_PhuongTien
-        FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN)
+    CONSTRAINT FK_PTN_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
+    CONSTRAINT FK_PTN_KhachHang FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
+    CONSTRAINT FK_PTN_PhuongTien FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN)
 );
 GO
 
-/* 15. PHIEU SUA CHUA */
+/* 9. PHIEU SUA CHUA */
 CREATE TABLE PhieuSuaChua (
     maPSC VARCHAR(20) NOT NULL PRIMARY KEY,
+    maPTN VARCHAR(20) NULL,
     maNV VARCHAR(20) NOT NULL,
     maKH VARCHAR(20) NOT NULL,
     soVIN VARCHAR(30) NOT NULL,
@@ -257,16 +149,14 @@ CREATE TABLE PhieuSuaChua (
         ngayHoanThanhDuKien IS NULL
         OR ngayHoanThanhDuKien >= CAST(ngayBD AS DATE)
     ),
-    CONSTRAINT FK_PSC_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
-    CONSTRAINT FK_PSC_KhachHang
-        FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
-    CONSTRAINT FK_PSC_PhuongTien
-        FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN)
+    CONSTRAINT FK_PSC_PTN FOREIGN KEY (maPTN) REFERENCES PhieuTiepNhan(maPTN),
+    CONSTRAINT FK_PSC_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
+    CONSTRAINT FK_PSC_KhachHang FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
+    CONSTRAINT FK_PSC_PhuongTien FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN)
 );
 GO
 
-/* 16. CHI TIET SUA CHUA */
+/* 10. CHI TIET SUA CHUA (Phụ tùng sử dụng) */
 CREATE TABLE ChiTietSuaChua (
     maPSC VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
@@ -278,96 +168,195 @@ CREATE TABLE ChiTietSuaChua (
     CONSTRAINT PK_ChiTietSuaChua PRIMARY KEY (maPSC, maPT),
     CONSTRAINT CK_CTSC_SoLuong CHECK (soLuong > 0),
     CONSTRAINT CK_CTSC_DonGia CHECK (donGia >= 0),
-    CONSTRAINT FK_CTSC_PhieuSuaChua
-        FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
-    CONSTRAINT FK_CTSC_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+    CONSTRAINT FK_CTSC_PhieuSuaChua FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
+    CONSTRAINT FK_CTSC_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
 );
 GO
 
-/* 16b. CHI TIET CONG VIEC SUA CHUA (Tien cong & tho dam nhan) */
+/* 11. CHI TIET CONG VIEC SUA CHUA (Tiền công & kỹ thuật viên) */
 CREATE TABLE ChiTietCongViecSuaChua (
     maPSC VARCHAR(20) NOT NULL,
     stt INT NOT NULL,
     noiDungCongViec NVARCHAR(255) NOT NULL,
     tenKTV NVARCHAR(100) NULL,
     tienCong DECIMAL(15,2) NOT NULL DEFAULT 0,
-
-    CONSTRAINT PK_ChiTietCongViecSuaChua
-        PRIMARY KEY (maPSC, stt),
-
-    CONSTRAINT FK_CTCV_PSC
-        FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
-
-    CONSTRAINT CK_CTCV_TienCong
-        CHECK (tienCong >= 0)
+    CONSTRAINT PK_ChiTietCongViecSuaChua PRIMARY KEY (maPSC, stt),
+    CONSTRAINT CK_CTCV_TienCong CHECK (tienCong >= 0),
+    CONSTRAINT FK_CTCV_PSC FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC)
 );
 GO
 
-/* 17. PHIEU XUAT KHO
-   Một phiếu xuất kho liên kết với một phiếu sửa chữa.
-   Không lưu maPTN ở đây vì theo mô hình lớp, PXK liên kết với PhieuSuaChua.
-*/
+/* 12. HOA DON */
+CREATE TABLE HoaDon (
+    maHD VARCHAR(20) NOT NULL PRIMARY KEY,
+    maKH VARCHAR(20) NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
+    ngayLap DATE NOT NULL,
+    hinhThucThanhToan NVARCHAR(50) NOT NULL DEFAULT N'TIEN_MAT',
+    soPhieuSC VARCHAR(20) NULL,
+    tienDichVu DECIMAL(15,2) DEFAULT 0,
+    tienPhuTung DECIMAL(15,2) DEFAULT 0,
+    giamGia DECIMAL(5,2) DEFAULT 0,
+    tongTien DECIMAL(15,2) DEFAULT 0,
+    ghiChu NVARCHAR(255) NULL,
+    trangThai NVARCHAR(50) DEFAULT N'DA_THANH_TOAN',
+    CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
+    CONSTRAINT FK_HoaDon_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
+    CONSTRAINT FK_HoaDon_PhieuSuaChua FOREIGN KEY (soPhieuSC) REFERENCES PhieuSuaChua(maPSC)
+);
+GO
+
+/* 13. CHI TIET HOA DON (Phụ tùng) */
+CREATE TABLE ChiTietHoaDon (
+    maHD VARCHAR(20) NOT NULL,
+    maPT VARCHAR(20) NOT NULL,
+    tenPhuTung NVARCHAR(150) NOT NULL,
+    soLuong INT NOT NULL,
+    donGia DECIMAL(15,2) NOT NULL,
+    CONSTRAINT PK_ChiTietHoaDon PRIMARY KEY (maHD, maPT),
+    CONSTRAINT CK_CTHD_SoLuong CHECK (soLuong > 0),
+    CONSTRAINT CK_CTHD_DonGia CHECK (donGia >= 0),
+    CONSTRAINT FK_CTHD_HoaDon FOREIGN KEY (maHD) REFERENCES HoaDon(maHD),
+    CONSTRAINT FK_CTHD_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+);
+GO
+
+/* 14. CHI TIET DICH VU HOA DON (Dịch vụ & Tiền công) */
+CREATE TABLE ChiTietDichVuHoaDon (
+    maHD VARCHAR(20) NOT NULL,
+    stt INT NOT NULL,
+    tenDichVu NVARCHAR(255) NOT NULL,
+    soLuong INT NOT NULL CHECK (soLuong > 0),
+    donGia DECIMAL(15,2) NOT NULL CHECK (donGia >= 0),
+    CONSTRAINT PK_ChiTietDichVuHoaDon PRIMARY KEY (maHD, stt),
+    CONSTRAINT FK_CTDVHD_HoaDon FOREIGN KEY (maHD) REFERENCES HoaDon(maHD)
+);
+GO
+
+/* 15. PHIEU BAO HANH */
+CREATE TABLE PhieuBaoHanh (
+    maPBH VARCHAR(20) NOT NULL PRIMARY KEY,
+    ngayLap DATE NOT NULL DEFAULT (CONVERT(date, GETDATE())),
+    ngayBD DATE NOT NULL,
+    ngayKT DATE NOT NULL,
+    trangThaiBH NVARCHAR(50) NOT NULL DEFAULT N'CON_HAN',
+    maKH VARCHAR(20) NOT NULL,
+    soVIN VARCHAR(30) NOT NULL,
+    maHoaDon VARCHAR(20) NULL,
+    maNV VARCHAR(20) NULL,
+    ghiChu NVARCHAR(MAX) NULL,
+    CONSTRAINT CK_PBH_Ngay CHECK (ngayKT >= ngayBD),
+    CONSTRAINT FK_PBH_KhachHang FOREIGN KEY (maKH) REFERENCES KhachHang(maKH),
+    CONSTRAINT FK_PBH_PhuongTien FOREIGN KEY (soVIN) REFERENCES PhuongTien(soVIN),
+    CONSTRAINT FK_PBH_HoaDon FOREIGN KEY (maHoaDon) REFERENCES HoaDon(maHD),
+    CONSTRAINT FK_PBH_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
+);
+GO
+
+/* 16. CHI TIET PHIEU BAO HANH */
+CREATE TABLE ChiTietPhieuBaoHanh (
+    maPBH VARCHAR(20) NOT NULL,
+    maPT VARCHAR(20) NOT NULL,
+    lyDo NVARCHAR(255) NULL,
+    huongXuLy NVARCHAR(255) NULL,
+    CONSTRAINT PK_ChiTietPhieuBaoHanh PRIMARY KEY (maPBH, maPT),
+    CONSTRAINT FK_CTPBH_PhieuBaoHanh FOREIGN KEY (maPBH) REFERENCES PhieuBaoHanh(maPBH) ON DELETE CASCADE,
+    CONSTRAINT FK_CTPBH_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+);
+GO
+
+/* 17. HANG MUC BAO HANH (Dùng cho Lập và Tra cứu Phiếu bảo hành) */
+CREATE TABLE HangMucBaoHanh (
+    maCTPBH INT IDENTITY(1,1) PRIMARY KEY,
+    maPBH VARCHAR(20) NOT NULL,
+    tenHangMuc NVARCHAR(255) NOT NULL,
+    thoiHanBaoHanh INT NOT NULL CHECK (thoiHanBaoHanh > 0),
+    ngayHetHan DATE NOT NULL,
+    dieuKienBaoHanh NVARCHAR(MAX) NULL,
+    ghiChu NVARCHAR(MAX) NULL,
+    CONSTRAINT FK_HMBH_PBH FOREIGN KEY (maPBH) REFERENCES PhieuBaoHanh(maPBH) ON DELETE CASCADE
+);
+GO
+
+/* 18. PHIEU NHAP KHO */
+CREATE TABLE PhieuNhapKho (
+    maPhieuNhap VARCHAR(20) NOT NULL PRIMARY KEY,
+    maNCC VARCHAR(20) NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
+    ngayNhap DATE NOT NULL,
+    tongTien DECIMAL(15,2) NOT NULL DEFAULT 0,
+    trangThai VARCHAR(20) NOT NULL DEFAULT 'DA_NHAP',
+    ngayDuKienGiao DATE NULL,
+    ghiChu NVARCHAR(255) NULL,
+    CONSTRAINT CK_PNK_TongTien CHECK (tongTien >= 0),
+    CONSTRAINT CK_PNK_TrangThai CHECK (trangThai IN ('CHO_NHAP', 'DA_NHAP', 'DA_HUY')),
+    CONSTRAINT FK_PNK_NCC FOREIGN KEY (maNCC) REFERENCES NhaCungCap(maNCC),
+    CONSTRAINT FK_PNK_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV)
+);
+GO
+
+/* 19. CHI TIET PHIEU NHAP KHO */
+CREATE TABLE ChiTietPhieuNhapKho (
+    maPhieuNhap VARCHAR(20) NOT NULL,
+    maPT VARCHAR(20) NOT NULL,
+    tenPT NVARCHAR(150) NOT NULL,
+    soLuong INT NOT NULL,
+    donGia DECIMAL(15,2) NOT NULL,
+    CONSTRAINT PK_ChiTietPhieuNhapKho PRIMARY KEY (maPhieuNhap, maPT),
+    CONSTRAINT CK_CTPNK_SoLuong CHECK (soLuong > 0),
+    CONSTRAINT CK_CTPNK_DonGia CHECK (donGia >= 0),
+    CONSTRAINT FK_CTPNK_PhieuNhap FOREIGN KEY (maPhieuNhap) REFERENCES PhieuNhapKho(maPhieuNhap),
+    CONSTRAINT FK_CTPNK_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+);
+GO
+
+/* 20. PHIEU XUAT KHO */
 CREATE TABLE PhieuXuatKho (
     maPhieuXuat VARCHAR(20) NOT NULL PRIMARY KEY,
     maPSC VARCHAR(20) NOT NULL,
     maNV VARCHAR(20) NOT NULL,
     ngayXuat DATETIME NOT NULL DEFAULT GETDATE(),
     trangThai NVARCHAR(30) NOT NULL DEFAULT N'Chờ xuất',
-    lyDoXuat NVARCHAR(255) NOT NULL
-        DEFAULT N'Xuất vật tư thay thế theo phiếu sửa chữa',
-
+    lyDoXuat NVARCHAR(255) NOT NULL DEFAULT N'Xuất vật tư thay thế theo phiếu sửa chữa',
     CONSTRAINT UQ_PXK_maPSC UNIQUE (maPSC),
-    CONSTRAINT FK_PXK_PhieuSuaChua
-        FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
-    CONSTRAINT FK_PXK_NhanVien
-        FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
-    CONSTRAINT CK_PXK_TrangThai CHECK (
-        trangThai IN (N'Chờ xuất', N'Đã xuất', N'Đã hủy')
-    )
+    CONSTRAINT FK_PXK_PhieuSuaChua FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
+    CONSTRAINT FK_PXK_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
+    CONSTRAINT CK_PXK_TrangThai CHECK (trangThai IN (N'Chờ xuất', N'Đã xuất', N'Đã hủy'))
 );
 GO
 
-/* 18. CHI TIET PHIEU XUAT KHO */
+/* 21. CHI TIET PHIEU XUAT KHO */
 CREATE TABLE ChiTietPhieuXuatKho (
     maPhieuXuat VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
     soLuongYeuCau INT NOT NULL,
-    soLuongXuat INT NOT NULL DEFAULT 0,
+    soLuongXuat INT NOT NULL,
     donGia DECIMAL(15,2) NOT NULL,
     tinhTrangXuat NVARCHAR(50) NOT NULL DEFAULT N'Chờ xuất',
-
-    CONSTRAINT PK_ChiTietPhieuXuatKho
-        PRIMARY KEY (maPhieuXuat, maPT),
+    CONSTRAINT PK_ChiTietPhieuXuatKho PRIMARY KEY (maPhieuXuat, maPT),
     CONSTRAINT CK_CTPXK_SoLuongYeuCau CHECK (soLuongYeuCau > 0),
-    CONSTRAINT CK_CTPXK_SoLuongXuat CHECK (
-        soLuongXuat >= 0 AND soLuongXuat <= soLuongYeuCau
-    ),
+    CONSTRAINT CK_CTPXK_SoLuongXuat CHECK (soLuongXuat >= 0 AND soLuongXuat <= soLuongYeuCau),
     CONSTRAINT CK_CTPXK_DonGia CHECK (donGia >= 0),
-    CONSTRAINT CK_CTPXK_TinhTrang CHECK (
-        tinhTrangXuat IN (N'Chờ xuất', N'Đã xuất', N'Xuất một phần', N'Không đủ tồn kho')
-    ),
-    CONSTRAINT FK_CTPXK_PhieuXuat
-        FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuatKho(maPhieuXuat),
-    CONSTRAINT FK_CTPXK_PhuTung
-        FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
+    CONSTRAINT CK_CTPXK_TinhTrang CHECK (tinhTrangXuat IN (N'Chờ xuất', N'Đã xuất', N'Xuất một phần', N'Không đủ tồn kho')),
+    CONSTRAINT FK_CTPXK_PhieuXuat FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuatKho(maPhieuXuat),
+    CONSTRAINT FK_CTPXK_PhuTung FOREIGN KEY (maPT) REFERENCES PhuTung(maPT)
 );
 GO
 
-/*============================================================
-  DU LIEU MAU
-============================================================*/
+-- ============================================================
+-- PHẦN II: DỮ LIỆU MẪU CƠ BẢN (KHỞI TẠO HỆ THỐNG)
+-- ============================================================
 
 USE QuanLySuaChuaXe;
 GO
 
 /* 1. Nhan vien */
-INSERT INTO NhanVien (maNV, hoTen, chucVu, soDT) VALUES
-('NV01', N'Nguyen Van Tiep Tan', N'Nhân viên tiếp tân', '0901234561'),
-('NV02', N'Tran Van Sua Chua', N'Nhân viên sửa chữa', '0901234562'),
-('NV03', N'Nguyen Van Kho', N'Nhân viên kho', '0901234563'),
-('NV04', N'Quan Ly Tong', N'Quản lý', '0901234564'),
-('NV05', N'Tran Thi Thu Ngan', N'Nhân viên thu ngân', '0901234565');
+INSERT INTO NhanVien (maNV, hoTen, chucVu, soDT, email, bacNghe, boPhan, ngayVaoLam, trangThai) VALUES
+('NV01', N'Nguyễn Văn Tiếp Tân', N'Nhân viên tiếp tân', '0901234561', 'tieptan@gara.vn', N'Bậc 3/7', N'Tiếp tân', '01/01/2024', N'Đang làm việc'),
+('NV02', N'Trần Văn Sửa Chữa', N'Nhân viên sửa chữa', '0901234562', 'suachua@gara.vn', N'Bậc 5/7', N'Xưởng sửa chữa', '01/01/2023', N'Đang làm việc'),
+('NV03', N'Nguyễn Văn Kho', N'Nhân viên kho', '0901234563', 'kho@gara.vn', N'Bậc 4/7', N'Kho phụ tùng', '15/03/2024', N'Đang làm việc'),
+('NV04', N'Quản Lý Tổng', N'Quản lý', '0901234564', 'quanly@gara.vn', N'Bậc 7/7', N'Ban Giám đốc', '01/01/2020', N'Đang làm việc'),
+('NV05', N'Trần Thị Thu Ngân', N'Nhân viên thu ngân', '0901234565', 'thungan@gara.vn', N'Bậc 3/7', N'Kế toán thu ngân', '10/05/2024', N'Đang làm việc');
 GO
 
 /* 2. Tai khoan dang nhap he thong */
@@ -381,182 +370,136 @@ GO
 
 /* 3. Khach hang */
 INSERT INTO KhachHang (maKH, hoTen, soDT, chungMinh, diaChi, email, ghiChu, ngayDangKy) VALUES
-('KH001', N'Nguyen Minh Quan', '0912000001', '079000000001', N'123 Nguyễn Văn Cừ, Q.5, TP.HCM', 'quan.nm@gmail.com', N'Khách VIP', '01/01/2026'),
-('KH002', N'Tran Ngoc Mai', '0912000002', '079000000002', N'456 Lê Lợi, Q.1, TP.HCM', 'mai.tn@gmail.com', N'Khách thân thiết', '15/01/2026'),
-('KH003', N'Do Hoang Nam', '0912000003', '079000000003', N'789 Cách Mạng Tháng 8, Q.10, TP.HCM', 'nam.dh@gmail.com', N'Khách mới', '20/02/2026');
+('KH001', N'Nguyễn Minh Quân', '0912000001', '079000000001', N'123 Nguyễn Văn Cừ, Q.5, TP.HCM', 'quan.nm@gmail.com', N'Khách VIP', '01/01/2026'),
+('KH002', N'Trần Ngọc Mai', '0912000002', '079000000002', N'456 Lê Lợi, Q.1, TP.HCM', 'mai.tn@gmail.com', N'Khách thân thiết', '15/01/2026'),
+('KH003', N'Đỗ Hoàng Nam', '0912000003', '079000000003', N'789 Cách Mạng Tháng 8, Q.10, TP.HCM', 'nam.dh@gmail.com', N'Khách mới', '20/02/2026');
 GO
 
 /* 4. Phuong tien */
-INSERT INTO PhuongTien (soVIN, bienSoXe, hangXe, dongXe, maSX, maKH) VALUES
-('VIN001', '51A-12345', N'Honda', N'City', 2022, 'KH001'),
-('VIN002', '59A-67890', N'Toyota', N'Vios', 2021, 'KH002'),
-('VIN003', '60A-11223', N'Yamaha', N'Exciter', 2023, 'KH003');
+INSERT INTO PhuongTien (soVIN, bienSoXe, hangXe, dongXe, maSX, maKH, soMay, mauSon, odo, ngayTiepNhanGanNhat) VALUES
+('VIN001', '51A-12345', N'Honda', N'City', 2022, 'KH001', N'MAY-HD01', N'Trắng', N'15000', '10/03/2026'),
+('VIN002', '59A-67890', N'Toyota', N'Vios', 2021, 'KH002', N'MAY-TY02', N'Đen', N'28000', '10/03/2026'),
+('VIN003', '60A-11223', N'Yamaha', N'Exciter', 2023, 'KH003', N'MAY-YM03', N'Xanh GP', N'8000', '11/03/2026');
 GO
 
 /* 5. Nha cung cap */
 INSERT INTO NhaCungCap (maNCC, tenNCC, soDT, diaChi, email) VALUES
-('NCC001', N'Cong ty Phu Tung Sai Gon', '02830000001', N'Quan 5, TP HCM', 'sales1@example.com'),
-('NCC002', N'Phu Tung Mien Dong', '02830000002', N'Thu Duc, TP HCM', 'sales2@example.com');
+('NCC001', N'Công ty Phụ Tùng Sài Gòn', '02830000001', N'Quận 5, TP HCM', 'sales1@phutungsaigon.com'),
+('NCC002', N'Phụ Tùng Miền Đông', '02830000002', N'TP Thủ Đức, TP HCM', 'sales2@phutungmiendong.com');
 GO
 
 /* 6. Phu tung */
 INSERT INTO PhuTung (maPT, tenPT, donViTinh, donGiaBan) VALUES
-('PT001', N'Loc dau', N'Chiec', 150000),
-('PT002', N'Loc gio', N'Chiec', 220000),
-('PT003', N'Bugi', N'Chiec', 85000),
-('PT004', N'Dau dong co', N'Lit', 120000),
-('PT005', N'Bo phanh', N'Bo', 450000);
+('PT001', N'Lọc dầu động cơ', N'Chiếc', 150000),
+('PT002', N'Lọc gió động cơ', N'Chiếc', 220000),
+('PT003', N'Bugi đánh lửa', N'Chiếc', 85000),
+('PT004', N'Dầu động cơ cao cấp', N'Lít', 120000),
+('PT005', N'Bộ phanh trước', N'Bộ', 450000);
 GO
 
 /* 7. Kho */
 INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) VALUES
-('KHO001', 'PT001', 50, N'Ke A1', 5, 100),
-('KHO002', 'PT002', 30, N'Ke A2', 5, 80),
-('KHO003', 'PT003', 100, N'Ke B1', 10, 200),
-('KHO004', 'PT004', 80, N'Ke B2', 10, 150),
-('KHO005', 'PT005', 20, N'Ke C1', 3, 50);
+('KHO001', 'PT001', 50, N'Kệ A1', 5, 100),
+('KHO002', 'PT002', 30, N'Kệ A2', 5, 80),
+('KHO003', 'PT003', 100, N'Kệ B1', 10, 200),
+('KHO004', 'PT004', 80, N'Kệ B2', 10, 150),
+('KHO005', 'PT005', 20, N'Kệ C1', 3, 50);
 GO
 
-/* 8. Hoa don */
-INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, soPhieuSC, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
-('HD001', 'KH001', 'NV05', '2026-03-01', N'CHUYEN_KHOAN', 'SC001', 0, 780000, 0, 780000, N'Hóa đơn sửa chữa SC001', N'DA_THANH_TOAN'),
-('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 'SC002', 0, 170000, 0, 170000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN');
-GO
-
-/* 9. Chi tiet hoa don */
-INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES
-('HD001', 'PT001', N'Loc dau', 2, 150000),
-('HD001', 'PT004', N'Dau dong co', 4, 120000),
-('HD002', 'PT003', N'Bugi', 2, 85000);
-GO
-
-/* 10. Phieu bao hanh */
-INSERT INTO PhieuBaoHanh (maPBH, ngayBD, ngayKT, trangThaiBH, maKH, soVIN, maHoaDon) VALUES
-('BH001', '2026-01-10', '2027-01-10', N'CON_HAN', 'KH001', 'VIN001', 'HD001'),
-('BH002', '2026-02-15', '2027-02-15', N'CON_HAN', 'KH002', 'VIN002', 'HD002');
-GO
-
-/* 11. Chi tiet bao hanh */
-INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES
-('BH001', 'PT001', N'Bao hanh loc dau', N'Kiem tra va thay neu loi'),
-('BH002', 'PT002', N'Bao hanh loc gio', N'Kiem tra tinh trang loc');
-GO
-
-/* 11b. Hang muc bao hanh */
-INSERT INTO HangMucBaoHanh (maPBH, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) VALUES
-('BH001', N'Lọc dầu & gioăng làm kín', 12, '2027-01-10', N'Bảo hành lỗi rò rỉ do lắp ráp', N'Chính hãng'),
-('BH002', N'Bugi đánh lửa', 12, '2027-02-15', N'Bảo hành lỗi mất lửa điện tử', N'Chính hãng');
-GO
-
-/* 12. Phieu nhap kho */
-INSERT INTO PhieuNhapKho (maPhieuNhap, maNCC, maNV, ngayNhap, tongTien) VALUES
-('PN001', 'NCC001', 'NV04', '2026-03-01', 1800000),
-('PN002', 'NCC002', 'NV04', '2026-03-06', 1000000);
-GO
-
-/* 13. Chi tiet nhap kho */
-INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap, maPT, tenPT, soLuong, donGia) VALUES
-('PN001', 'PT001', N'Loc dau', 10, 100000),
-('PN001', 'PT002', N'Loc gio', 5, 160000),
-('PN002', 'PT003', N'Bugi', 20, 50000);
-GO
-
-/* 14. Phieu tiep nhan */
+/* 8. Phieu tiep nhan */
 INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES
-('TN001', 'NV01', 'KH001', 'VIN001', '2026-03-10T08:30:00', N'Thay dau va kiem tra loc gio', N'DA_TIEP_NHAN'),
-('TN002', 'NV01', 'KH002', 'VIN002', '2026-03-10T09:00:00', N'Kiem tra he thong phanh', N'DA_TIEP_NHAN'),
-('TN003', 'NV01', 'KH003', 'VIN003', '2026-03-11T10:00:00', N'Kiem tra bugi', N'DANG_KIEM_TRA');
+('TN001', 'NV01', 'KH001', 'VIN001', '2026-03-10T08:30:00', N'Thay dầu và kiểm tra lọc gió', N'Đang sửa'),
+('TN002', 'NV01', 'KH002', 'VIN002', '2026-03-10T09:00:00', N'Kiểm tra hệ thống phanh', N'Chờ sửa'),
+('TN003', 'NV01', 'KH003', 'VIN003', '2026-03-11T10:00:00', N'Kiểm tra bugi', N'Chờ tiếp nhận');
 GO
 
-/* 15. Phieu sua chua */
-INSERT INTO PhieuSuaChua (maPSC, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES
-('SC001', 'NV02', 'KH001', 'VIN001', '2026-03-10T09:00:00', '2026-03-10', N'DANG_SUA'),
-('SC002', 'NV02', 'KH002', 'VIN002', '2026-03-10T10:00:00', '2026-03-11', N'CHO_SUA');
+/* 9. Phieu sua chua */
+INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES
+('SC001', 'TN001', 'NV02', 'KH001', 'VIN001', '2026-03-10T09:00:00', '2026-03-10', N'DANG_SUA'),
+('SC002', 'TN002', 'NV02', 'KH002', 'VIN002', '2026-03-10T10:00:00', '2026-03-11', N'CHO_SUA');
 GO
 
-/* 16. Chi tiet sua chua */
+/* 10. Chi tiet sua chua (Phụ tùng) */
 INSERT INTO ChiTietSuaChua (maPSC, maPT, noiDungSC, tenPhuTung, soLuong, donGia, trangThai) VALUES
-('SC001', 'PT001', N'Thay loc dau', N'Loc dau', 1, 150000, N'DA_HOAN_THANH'),
-('SC001', 'PT004', N'Thay dau dong co', N'Dau dong co', 4, 120000, N'DA_HOAN_THANH'),
-('SC002', 'PT005', N'Kiem tra va thay bo phanh', N'Bo phanh', 1, 450000, N'CHO_THUC_HIEN');
+('SC001', 'PT001', N'Thay lọc dầu', N'Lọc dầu động cơ', 1, 150000, N'DA_HOAN_THANH'),
+('SC001', 'PT004', N'Thay dầu động cơ', N'Dầu động cơ cao cấp', 4, 120000, N'DA_HOAN_THANH'),
+('SC002', 'PT005', N'Kiểm tra và thay bộ phanh', N'Bộ phanh trước', 1, 450000, N'CHO_THUC_HIEN');
 GO
 
-/* 16b. Chi tiet cong viec sua chua (Tien cong lao dong) */
+/* 11. Chi tiet cong viec sua chua (Tiền công) */
 INSERT INTO ChiTietCongViecSuaChua (maPSC, stt, noiDungCongViec, tenKTV, tienCong) VALUES
 ('SC001', 1, N'Thay dầu động cơ & lọc nhớt', N'Trần Văn Sửa Chữa', 150000),
 ('SC001', 2, N'Kiểm tra và vệ sinh hệ thống nạp khí', N'Trần Văn Sửa Chữa', 100000),
 ('SC002', 1, N'Bảo dưỡng và thay bộ phanh 4 bánh', N'Trần Văn Sửa Chữa', 250000);
 GO
 
-/* 17. Phieu xuat kho */
-INSERT INTO PhieuXuatKho (maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) VALUES
-('PX001', 'SC001', 'NV03', '2026-03-10', N'Đã xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa'),
-('PX002', 'SC002', 'NV03', '2026-03-10', N'Chờ xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa');
+/* 12. Hoa don */
+INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, soPhieuSC, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
+('HD001', 'KH001', 'NV05', '2026-03-01', N'CHUYEN_KHOAN', 'SC001', 250000, 780000, 0, 1030000, N'Hóa đơn sửa chữa SC001', N'DA_THANH_TOAN'),
+('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 'SC002', 250000, 170000, 0, 420000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN');
 GO
 
-/* 18. Chi tiet xuat kho */
+/* 13. Chi tiet hoa don (Phụ tùng) */
+INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES
+('HD001', 'PT001', N'Lọc dầu động cơ', 2, 150000),
+('HD001', 'PT004', N'Dầu động cơ cao cấp', 4, 120000),
+('HD002', 'PT003', N'Bugi đánh lửa', 2, 85000);
+GO
+
+/* 14. Chi tiet dich vu hoa don (Dịch vụ & Tiền công) */
+INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, soLuong, donGia) VALUES
+('HD001', 1, N'Thay dầu động cơ & lọc nhớt', 1, 150000),
+('HD001', 2, N'Kiểm tra và vệ sinh hệ thống nạp khí', 1, 100000),
+('HD002', 1, N'Bảo dưỡng và thay bộ phanh 4 bánh', 1, 250000);
+GO
+
+/* 15. Phieu bao hanh */
+INSERT INTO PhieuBaoHanh (maPBH, ngayLap, ngayBD, ngayKT, trangThaiBH, maKH, soVIN, maHoaDon, maNV, ghiChu) VALUES
+('BH001', '2026-03-01', '2026-03-01', '2027-03-01', N'CON_HAN', 'KH001', 'VIN001', 'HD001', 'NV05', N'Bảo hành sửa chữa SC001'),
+('BH002', '2026-03-05', '2026-03-05', '2027-03-05', N'CON_HAN', 'KH002', 'VIN002', 'HD002', 'NV05', N'Bảo hành bảo dưỡng SC002');
+GO
+
+/* 16. Chi tiet phieu bao hanh */
+INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES
+('BH001', 'PT001', N'Bảo hành lọc dầu', N'Kiểm tra và thay mới nếu lỗi rò rỉ'),
+('BH002', 'PT002', N'Bảo hành lọc gió', N'Kiểm tra tình trạng lọc');
+GO
+
+/* 17. Hang muc bao hanh */
+INSERT INTO HangMucBaoHanh (maPBH, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) VALUES
+('BH001', N'Lọc dầu & gioăng làm kín', 12, '2027-03-01', N'Bảo hành lỗi rò rỉ do lắp ráp', N'Chính hãng'),
+('BH002', N'Bugi đánh lửa', 12, '2027-03-05', N'Bảo hành lỗi mất lửa điện tử', N'Chính hãng');
+GO
+
+/* 18. Phieu nhap kho */
+INSERT INTO PhieuNhapKho (maPhieuNhap, maNCC, maNV, ngayNhap, tongTien, trangThai, ngayDuKienGiao, ghiChu) VALUES
+('PN001', 'NCC001', 'NV04', '2026-03-01', 1800000, 'DA_NHAP', NULL, N'Nhập hàng lọc dầu và lọc gió định kỳ'),
+('PN002', 'NCC002', 'NV04', '2026-03-06', 1000000, 'DA_NHAP', NULL, N'Nhập bugi đánh lửa');
+GO
+
+/* 19. Chi tiet nhap kho */
+INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap, maPT, tenPT, soLuong, donGia) VALUES
+('PN001', 'PT001', N'Lọc dầu động cơ', 10, 100000),
+('PN001', 'PT002', N'Lọc gió động cơ', 5, 160000),
+('PN002', 'PT003', N'Bugi đánh lửa', 20, 50000);
+GO
+
+/* 20. Phieu xuat kho */
+INSERT INTO PhieuXuatKho (maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) VALUES
+('PX001', 'SC001', 'NV03', '2026-03-10T10:00:00', N'Đã xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa'),
+('PX002', 'SC002', 'NV03', '2026-03-10T10:00:00', N'Chờ xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa');
+GO
+
+/* 21. Chi tiet xuat kho */
 INSERT INTO ChiTietPhieuXuatKho (maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, donGia, tinhTrangXuat) VALUES
 ('PX001', 'PT001', 1, 1, 150000, N'Đã xuất'),
 ('PX001', 'PT004', 4, 4, 120000, N'Đã xuất'),
 ('PX002', 'PT005', 1, 0, 450000, N'Chờ xuất');
 GO
 
--- Nâng cấp schema từ main; không xóa dữ liệu hiện có. Chọn database trước khi chạy.
-SET XACT_ABORT ON;
-GO
-IF COL_LENGTH('dbo.PhieuBaoHanh', 'ngayLap') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD ngayLap DATE NOT NULL CONSTRAINT DF_PBH_NgayLap DEFAULT (CONVERT(date,GETDATE())) WITH VALUES;
-GO
-IF COL_LENGTH('dbo.PhieuBaoHanh', 'maNV') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD maNV VARCHAR(20) NULL;
-GO
-IF COL_LENGTH('dbo.PhieuBaoHanh', 'ghiChu') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD ghiChu NVARCHAR(MAX) NULL;
-GO
-IF COL_LENGTH('dbo.NhanVien', 'email') IS NULL ALTER TABLE dbo.NhanVien ADD email VARCHAR(100) NULL;
-GO
-IF COL_LENGTH('dbo.NhanVien', 'bacNghe') IS NULL ALTER TABLE dbo.NhanVien ADD bacNghe NVARCHAR(50) NULL;
-GO
-IF COL_LENGTH('dbo.NhanVien', 'boPhan') IS NULL ALTER TABLE dbo.NhanVien ADD boPhan NVARCHAR(100) NULL;
-GO
-IF COL_LENGTH('dbo.NhanVien', 'ngayVaoLam') IS NULL ALTER TABLE dbo.NhanVien ADD ngayVaoLam VARCHAR(20) NULL;
-GO
-IF COL_LENGTH('dbo.NhanVien', 'trangThai') IS NULL ALTER TABLE dbo.NhanVien ADD trangThai NVARCHAR(50) NULL;
-GO
-IF COL_LENGTH('dbo.PhieuNhapKho', 'trangThai') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD trangThai VARCHAR(20) NOT NULL CONSTRAINT DF_PNK_TrangThai DEFAULT 'DA_NHAP' WITH VALUES;
-GO
-IF COL_LENGTH('dbo.PhieuNhapKho', 'ngayDuKienGiao') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD ngayDuKienGiao DATE NULL;
-GO
-IF COL_LENGTH('dbo.PhieuNhapKho', 'ghiChu') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD ghiChu NVARCHAR(255) NULL;
-GO
-IF OBJECT_ID('dbo.HangMucBaoHanh','U') IS NULL
-CREATE TABLE dbo.HangMucBaoHanh (
- maCTPBH INT IDENTITY PRIMARY KEY, maPBH VARCHAR(20) NOT NULL,
- tenHangMuc NVARCHAR(255) NOT NULL, thoiHanBaoHanh INT NOT NULL CHECK(thoiHanBaoHanh>0),
- ngayHetHan DATE NOT NULL, dieuKienBaoHanh NVARCHAR(MAX), ghiChu NVARCHAR(MAX),
- FOREIGN KEY(maPBH) REFERENCES dbo.PhieuBaoHanh(maPBH));
-GO
-IF OBJECT_ID('dbo.ChiTietCongViecSuaChua','U') IS NULL
-CREATE TABLE dbo.ChiTietCongViecSuaChua (
- maPSC VARCHAR(20) NOT NULL, stt INT NOT NULL, noiDungCongViec NVARCHAR(255) NOT NULL,
- tenKTV NVARCHAR(100), tienCong DECIMAL(15,2) NOT NULL CHECK(tienCong>=0),
- PRIMARY KEY(maPSC,stt), FOREIGN KEY(maPSC) REFERENCES dbo.PhieuSuaChua(maPSC));
-GO
-IF OBJECT_ID('dbo.ChiTietDichVuHoaDon','U') IS NULL
-CREATE TABLE dbo.ChiTietDichVuHoaDon (
- maHD VARCHAR(20) NOT NULL, stt INT NOT NULL, tenDichVu NVARCHAR(255) NOT NULL,
- soLuong INT NOT NULL CHECK(soLuong>0), donGia DECIMAL(15,2) NOT NULL CHECK(donGia>=0),
- PRIMARY KEY(maHD,stt), FOREIGN KEY(maHD) REFERENCES dbo.HoaDon(maHD));
-GO
-
-
--- Liên kết tường minh, không suy đoán mã sửa chữa từ số phiếu tiếp nhận.
-IF COL_LENGTH('dbo.PhieuSuaChua','maPTN') IS NULL
- ALTER TABLE dbo.PhieuSuaChua ADD maPTN VARCHAR(20) NULL REFERENCES dbo.PhieuTiepNhan(maPTN);
-GO
-UPDATE sc SET maPTN=tn.maPTN FROM PhieuSuaChua sc
-JOIN PhieuTiepNhan tn ON sc.maPSC='SC'+SUBSTRING(tn.maPTN,3,18)
- AND sc.soVIN=tn.soVIN AND sc.maKH=tn.maKH WHERE sc.maPTN IS NULL;
-GO
-
--- Dữ liệu demo bổ sung, mã từ 101; chạy lại không nhân đôi hay ghi đè dữ liệu.
+-- ============================================================
+-- PHẦN III: DỮ LIỆU DEMO MỞ RỘNG (20 KHÁCH HÀNG & 20 PHIẾU SC)
+-- ============================================================
 SET XACT_ABORT ON;
 BEGIN TRANSACTION;
 IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNV=N'NV101')
@@ -820,7 +763,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN101')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN101',N'NV01',N'KH101',N'VINDEMO101',N'2026-10-15T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC101')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC101',N'NV101',N'KH101',N'VINDEMO101',N'2026-10-15T09:00:00',N'2026-10-16',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC101',N'TN101',N'NV101',N'KH101',N'VINDEMO101',N'2026-10-15T09:00:00',N'2026-10-16',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC101' AND maPT=N'PT101')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC101',N'PT101',N'Thay thế theo kết quả kiểm tra',N'Lọc dầu động cơ',1,150000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC101' AND stt=1)
@@ -845,7 +788,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH101' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN102')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN102',N'NV01',N'KH102',N'VINDEMO102',N'2026-10-16T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC102')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC102',N'NV102',N'KH102',N'VINDEMO102',N'2026-10-16T09:00:00',N'2026-10-17',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC102',N'TN102',N'NV102',N'KH102',N'VINDEMO102',N'2026-10-16T09:00:00',N'2026-10-17',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC102' AND maPT=N'PT102')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC102',N'PT102',N'Thay thế theo kết quả kiểm tra',N'Lọc gió động cơ',1,220000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC102' AND stt=1)
@@ -870,7 +813,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH102' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN103')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN103',N'NV01',N'KH103',N'VINDEMO103',N'2026-10-17T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC103')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC103',N'NV101',N'KH103',N'VINDEMO103',N'2026-10-17T09:00:00',N'2026-10-18',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC103',N'TN103',N'NV101',N'KH103',N'VINDEMO103',N'2026-10-17T09:00:00',N'2026-10-18',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC103' AND maPT=N'PT103')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC103',N'PT103',N'Thay thế theo kết quả kiểm tra',N'Bugi iridium',1,250000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC103' AND stt=1)
@@ -895,7 +838,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH103' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN104')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN104',N'NV01',N'KH104',N'VINDEMO104',N'2026-10-18T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC104')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC104',N'NV102',N'KH104',N'VINDEMO104',N'2026-10-18T09:00:00',N'2026-10-19',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC104',N'TN104',N'NV102',N'KH104',N'VINDEMO104',N'2026-10-18T09:00:00',N'2026-10-19',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC104' AND maPT=N'PT104')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC104',N'PT104',N'Thay thế theo kết quả kiểm tra',N'Dầu động cơ 5W30',1,180000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC104' AND stt=1)
@@ -920,7 +863,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH104' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN105')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN105',N'NV01',N'KH105',N'VINDEMO105',N'2026-10-19T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC105')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC105',N'NV101',N'KH105',N'VINDEMO105',N'2026-10-19T09:00:00',N'2026-10-20',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC105',N'TN105',N'NV101',N'KH105',N'VINDEMO105',N'2026-10-19T09:00:00',N'2026-10-20',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC105' AND maPT=N'PT105')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC105',N'PT105',N'Thay thế theo kết quả kiểm tra',N'Má phanh trước',1,850000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC105' AND stt=1)
@@ -945,7 +888,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH105' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN106')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN106',N'NV01',N'KH106',N'VINDEMO106',N'2026-10-20T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC106')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC106',N'NV102',N'KH106',N'VINDEMO106',N'2026-10-20T09:00:00',N'2026-10-21',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC106',N'TN106',N'NV102',N'KH106',N'VINDEMO106',N'2026-10-20T09:00:00',N'2026-10-21',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC106' AND maPT=N'PT106')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC106',N'PT106',N'Thay thế theo kết quả kiểm tra',N'Lọc gió điều hòa',1,200000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC106' AND stt=1)
@@ -970,7 +913,7 @@ IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH106' AND tenHangMuc
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN107')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN107',N'NV01',N'KH107',N'VINDEMO107',N'2026-10-21T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC107')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC107',N'NV101',N'KH107',N'VINDEMO107',N'2026-10-21T09:00:00',N'2026-10-22',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC107',N'TN107',N'NV101',N'KH107',N'VINDEMO107',N'2026-10-21T09:00:00',N'2026-10-22',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC107' AND maPT=N'PT107')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC107',N'PT107',N'Thay thế theo kết quả kiểm tra',N'Ắc quy 12V 60Ah',1,1850000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC107' AND stt=1)
@@ -991,7 +934,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD107' AND stt=1)
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN108')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN108',N'NV01',N'KH108',N'VINDEMO108',N'2026-10-22T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC108')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC108',N'NV102',N'KH108',N'VINDEMO108',N'2026-10-22T09:00:00',N'2026-10-23',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC108',N'TN108',N'NV102',N'KH108',N'VINDEMO108',N'2026-10-22T09:00:00',N'2026-10-23',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC108' AND maPT=N'PT108')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC108',N'PT108',N'Thay thế theo kết quả kiểm tra',N'Lốp 205/55R16',1,1600000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC108' AND stt=1)
@@ -1012,7 +955,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD108' AND stt=1)
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN109')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN109',N'NV01',N'KH109',N'VINDEMO109',N'2026-10-23T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC109')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC109',N'NV101',N'KH109',N'VINDEMO109',N'2026-10-23T09:00:00',N'2026-10-24',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC109',N'TN109',N'NV101',N'KH109',N'VINDEMO109',N'2026-10-23T09:00:00',N'2026-10-24',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC109' AND maPT=N'PT109')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC109',N'PT109',N'Thay thế theo kết quả kiểm tra',N'Gạt mưa trước',1,350000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC109' AND stt=1)
@@ -1033,7 +976,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD109' AND stt=1)
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN110')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN110',N'NV01',N'KH110',N'VINDEMO110',N'2026-10-24T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC110')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC110',N'NV102',N'KH110',N'VINDEMO110',N'2026-10-24T09:00:00',N'2026-10-25',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC110',N'TN110',N'NV102',N'KH110',N'VINDEMO110',N'2026-10-24T09:00:00',N'2026-10-25',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC110' AND maPT=N'PT110')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC110',N'PT110',N'Thay thế theo kết quả kiểm tra',N'Nước làm mát',1,120000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC110' AND stt=1)
@@ -1054,7 +997,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD110' AND stt=1)
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN111')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN111',N'NV01',N'KH111',N'VINDEMO111',N'2026-10-25T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC111')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC111',N'NV101',N'KH111',N'VINDEMO111',N'2026-10-25T09:00:00',N'2026-10-26',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC111',N'TN111',N'NV101',N'KH111',N'VINDEMO111',N'2026-10-25T09:00:00',N'2026-10-26',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC111' AND maPT=N'PT111')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC111',N'PT111',N'Thay thế theo kết quả kiểm tra',N'Dầu phanh DOT4',1,180000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC111' AND stt=1)
@@ -1069,7 +1012,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN112')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN112',N'NV01',N'KH112',N'VINDEMO112',N'2026-10-26T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC112')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC112',N'NV102',N'KH112',N'VINDEMO112',N'2026-10-26T09:00:00',N'2026-10-27',N'HOAN_THANH');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC112',N'TN112',N'NV102',N'KH112',N'VINDEMO112',N'2026-10-26T09:00:00',N'2026-10-27',N'HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC112' AND maPT=N'PT112')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC112',N'PT112',N'Thay thế theo kết quả kiểm tra',N'Dây curoa tổng',1,450000,N'DA_HOAN_THANH');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC112' AND stt=1)
@@ -1084,7 +1027,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN113')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN113',N'NV01',N'KH113',N'VINDEMO113',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Chờ tiếp nhận');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC113')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC113',N'NV101',N'KH113',N'VINDEMO113',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC113',N'TN113',N'NV101',N'KH113',N'VINDEMO113',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC113' AND maPT=N'PT113')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC113',N'PT113',N'Thay thế theo kết quả kiểm tra',N'Bóng đèn H4',1,120000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC113' AND stt=1)
@@ -1098,7 +1041,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN114')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN114',N'NV01',N'KH114',N'VINDEMO114',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Đã phân công');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC114')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC114',N'NV102',N'KH114',N'VINDEMO114',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC114',N'TN114',N'NV102',N'KH114',N'VINDEMO114',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC114' AND maPT=N'PT114')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC114',N'PT114',N'Thay thế theo kết quả kiểm tra',N'Giảm xóc trước',1,1400000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC114' AND stt=1)
@@ -1112,7 +1055,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN115')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN115',N'NV01',N'KH115',N'VINDEMO115',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Đang sửa');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC115')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC115',N'NV101',N'KH115',N'VINDEMO115',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC115',N'TN115',N'NV101',N'KH115',N'VINDEMO115',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC115' AND maPT=N'PT115')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC115',N'PT115',N'Thay thế theo kết quả kiểm tra',N'Rotuyn lái',1,650000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC115' AND stt=1)
@@ -1126,7 +1069,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN116')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN116',N'NV01',N'KH116',N'VINDEMO116',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Chờ phụ tùng');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC116')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC116',N'NV102',N'KH116',N'VINDEMO116',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC116',N'TN116',N'NV102',N'KH116',N'VINDEMO116',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC116' AND maPT=N'PT116')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC116',N'PT116',N'Thay thế theo kết quả kiểm tra',N'Gioăng nắp máy',1,450000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC116' AND stt=1)
@@ -1140,7 +1083,7 @@ END;
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN117')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN117',N'NV01',N'KH117',N'VINDEMO117',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Chờ tiếp nhận');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC117')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC117',N'NV101',N'KH117',N'VINDEMO117',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC117',N'TN117',N'NV101',N'KH117',N'VINDEMO117',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC117' AND maPT=N'PT117')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC117',N'PT117',N'Thay thế theo kết quả kiểm tra',N'Cảm biến oxy',1,950000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC117' AND stt=1)
@@ -1148,7 +1091,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC117' AND stt
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN118')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN118',N'NV01',N'KH118',N'VINDEMO118',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Đã phân công');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC118')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC118',N'NV102',N'KH118',N'VINDEMO118',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC118',N'TN118',N'NV102',N'KH118',N'VINDEMO118',N'2026-10-27T09:00:00',N'2026-10-28',N'CHO_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC118' AND maPT=N'PT118')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC118',N'PT118',N'Thay thế theo kết quả kiểm tra',N'Bơm nước',1,1250000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC118' AND stt=1)
@@ -1156,7 +1099,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC118' AND stt
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN119')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN119',N'NV01',N'KH119',N'VINDEMO119',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Đang sửa');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC119')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC119',N'NV101',N'KH119',N'VINDEMO119',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC119',N'TN119',N'NV101',N'KH119',N'VINDEMO119',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC119' AND maPT=N'PT119')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC119',N'PT119',N'Thay thế theo kết quả kiểm tra',N'Lọc nhiên liệu',1,380000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC119' AND stt=1)
@@ -1164,7 +1107,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC119' AND stt
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN120')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN120',N'NV01',N'KH120',N'VINDEMO120',N'2026-10-27T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Chờ phụ tùng');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC120')
- INSERT INTO PhieuSuaChua (maPSC,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC120',N'NV102',N'KH120',N'VINDEMO120',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
+ INSERT INTO PhieuSuaChua (maPSC,maPTN,maNV,maKH,soVIN,ngayBD,ngayHoanThanhDuKien,trangThai) VALUES (N'SC120',N'TN120',N'NV102',N'KH120',N'VINDEMO120',N'2026-10-27T09:00:00',N'2026-10-28',N'DANG_SUA');
 IF NOT EXISTS (SELECT 1 FROM ChiTietSuaChua WHERE maPSC=N'SC120' AND maPT=N'PT120')
  INSERT INTO ChiTietSuaChua (maPSC,maPT,noiDungSC,tenPhuTung,soLuong,donGia,trangThai) VALUES (N'SC120',N'PT120',N'Thay thế theo kết quả kiểm tra',N'Dung dịch vệ sinh kim phun',1,180000,N'CHO_THUC_HIEN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietCongViecSuaChua WHERE maPSC=N'SC120' AND stt=1)
@@ -1173,6 +1116,16 @@ IF NOT EXISTS (SELECT 1 FROM PhieuNhapKho WHERE maPhieuNhap=N'PN103')
  INSERT INTO PhieuNhapKho (maPhieuNhap,maNCC,maNV,ngayNhap,tongTien,trangThai,ngayDuKienGiao,ghiChu) VALUES (N'PN103',N'NCC102',N'NV03',N'2026-10-27',1500000,N'CHO_NHAP',N'2026-10-30',N'Đặt hàng, chưa cộng tồn kho');
 IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuNhapKho WHERE maPhieuNhap=N'PN103' AND maPT=N'PT101')
  INSERT INTO ChiTietPhieuNhapKho (maPhieuNhap,maPT,tenPT,soLuong,donGia) VALUES (N'PN103',N'PT101',N'Lọc dầu động cơ',10,150000);
+
+-- Đồng bộ liên kết maPTN nếu còn sót dòng cũ
+UPDATE sc SET sc.maPTN = tn.maPTN
+FROM PhieuSuaChua sc
+JOIN PhieuTiepNhan tn ON sc.maPSC = 'SC' + SUBSTRING(tn.maPTN, 3, 18)
+WHERE sc.maPTN IS NULL;
+GO
+
 COMMIT TRANSACTION;
 GO
-SET NOEXEC OFF;
+
+PRINT N'Hoàn tất nạp CSDL QuanLySuaChuaXe thành công!';
+GO

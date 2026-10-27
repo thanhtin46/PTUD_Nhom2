@@ -485,6 +485,8 @@ public class Main_UI extends JFrame {
                     -> new QuanLyKhachHang_UI();
             case "Tra cứu khách hàng"
                     -> new TraCuuKhachHang_UI();
+            case "Tra cứu lịch sử sửa chữa", "Lịch sử sửa chữa", "Lịch sử sửa chữa của khách hàng", "Lịch sử sửa chữa người dùng", "Tra cứu lịch sử sửa chữa người dùng"
+                    -> new TraCuuLichSuSuaChua_UI();
 
             // 2. Phương tiện
             case "Phương tiện", "Quản lý phương tiện", "Danh sách phương tiện"
@@ -662,7 +664,8 @@ public class Main_UI extends JFrame {
         // 1. Khách hàng
         ds.add(MucMenu.nhom("Khách hàng", UiIcon.USERS, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Quản lý khách hàng"))
-                .them(MucMenu.con("Tra cứu khách hàng")));
+                .them(MucMenu.con("Tra cứu khách hàng"))
+                .them(MucMenu.con("Lịch sử sửa chữa")));
 
         // 2. Phương tiện
         ds.add(MucMenu.nhom("Phương tiện", UiIcon.CAR, TIEP_TAN + "," + THU_NGAN)
@@ -678,7 +681,8 @@ public class Main_UI extends JFrame {
         ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu sửa chữa"))
                 .them(MucMenu.con("Phân công KTV"))
-                .them(MucMenu.con("Cập nhật tiến độ")));
+                .them(MucMenu.con("Cập nhật tiến độ"))
+                .them(MucMenu.con("Tra cứu lịch sử sửa chữa")));
 
         // 5. Hóa đơn
         ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)

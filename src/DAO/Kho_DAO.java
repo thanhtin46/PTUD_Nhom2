@@ -53,6 +53,30 @@ public class Kho_DAO {
                 pk.getChiTiet().addAll(layChiTietPhieuNhap(con, soPhieu));
                 ds.add(pk);
             }
+        } catch (SQLException ex) {
+            // Dự phòng nếu DB cũ chưa có các cột mới trangThai, ngayDuKienGiao, ghiChu
+            String sqlPNCu = "SELECT pn.maPhieuNhap, pn.ngayNhap, pn.tongTien, " +
+                    "ISNULL(nv.hoTen, pn.maNV) AS nguoiLap, " +
+                    "ISNULL(ncc.tenNCC, pn.maNCC) AS nhaCungCap " +
+                    "FROM PhieuNhapKho pn " +
+                    "LEFT JOIN NhanVien nv ON pn.maNV = nv.maNV " +
+                    "LEFT JOIN NhaCungCap ncc ON pn.maNCC = ncc.maNCC " +
+                    "ORDER BY pn.ngayNhap DESC, pn.maPhieuNhap DESC";
+            try (PreparedStatement stmtCu = con.prepareStatement(sqlPNCu);
+                 ResultSet rsCu = stmtCu.executeQuery()) {
+                while (rsCu.next()) {
+                    String soPhieu = rsCu.getString("maPhieuNhap");
+                    Date ngayDate = rsCu.getDate("ngayNhap");
+                    String ngayStr = ngayDate != null ? ngayDate.toLocalDate().format(FMT_DDMMYYYY) : "";
+                    String nguoiLap = rsCu.getString("nguoiLap");
+                    String ncc = rsCu.getString("nhaCungCap");
+                    PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.NHAP, ngayStr, nguoiLap, "", ncc, "", "DA_NHAP");
+                    pk.getChiTiet().addAll(layChiTietPhieuNhap(con, soPhieu));
+                    ds.add(pk);
+                }
+            } catch (SQLException ex2) {
+                System.err.println("Lỗi nạp lịch sử phiếu nhập kho: " + ex2.getMessage());
+            }
         }
 
         // 2. Truy vấn lịch sử Phiếu xuất kho
