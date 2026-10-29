@@ -59,12 +59,14 @@ public class ThanhToan_DAO {
             int index = 0;
             for (ChiTietDichVu ct : details) {
                 boolean service = "Tiền công".equalsIgnoreCase(ct.getLoai());
-                String sql = service ? "INSERT INTO ChiTietDichVuHoaDon(maHD,stt,tenDichVu,soLuong,donGia) VALUES(?,?,?,?,?)"
-                        : "INSERT INTO ChiTietHoaDon(maHD,maPT,tenPhuTung,soLuong,donGia) VALUES(?,?,?,?,?)";
+                String sql = service ? "INSERT INTO ChiTietDichVuHoaDon(maHD,stt,tenDichVu,donViTinh,soLuong,donGia) VALUES(?,?,?,?,?,?)"
+                        : "INSERT INTO ChiTietHoaDon(maHD,maPT,tenPhuTung,donViTinh,soLuong,donGia) VALUES(?,?,?,?,?,?)";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
                     ps.setString(1,hd.getMaHD());
                     if (service) ps.setInt(2,++index); else ps.setString(2,ct.getMaPT());
-                    ps.setString(3,ct.getTenHangMuc()); ps.setInt(4,ct.getSoLuong()); ps.setLong(5,ct.getDonGia()); ps.executeUpdate();
+                    ps.setString(3,ct.getTenHangMuc());
+                    ps.setString(4,ct.getDonVi() != null && !ct.getDonVi().isBlank() ? ct.getDonVi() : (service ? "Lần" : "Cái"));
+                    ps.setInt(5,ct.getSoLuong()); ps.setLong(6,ct.getDonGia()); ps.executeUpdate();
                 }
             }
             con.commit();

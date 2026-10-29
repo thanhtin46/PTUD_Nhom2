@@ -476,7 +476,7 @@ public class Main_UI extends JFrame {
             case "Trang chủ"
                     -> (nhanVienHienTai != null && nhanVienHienTai.getVaiTro() != null && nhanVienHienTai.getVaiTro().toLowerCase().contains("tiếp tân"))
                             ? new TrangChuTiepTan_UI(nhanVienHienTai)
-                            : new TrangChu_UI();
+                            : new TrangChu_UI(this, nhanVienHienTai);
             case "Quản trị hệ thống (Admin)", "Quản trị hệ thống", "Admin Hub"
                     -> new AdminHub_UI(nhanVienHienTai, this);
 
@@ -664,8 +664,8 @@ public class Main_UI extends JFrame {
         // 1. Khách hàng
         ds.add(MucMenu.nhom("Khách hàng", UiIcon.USERS, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Quản lý khách hàng"))
-                .them(MucMenu.con("Tra cứu khách hàng"))
-                .them(MucMenu.con("Lịch sử sửa chữa")));
+                .them(MucMenu.con("Tra cứu khách hàng")));
+
 
         // 2. Phương tiện
         ds.add(MucMenu.nhom("Phương tiện", UiIcon.CAR, TIEP_TAN + "," + THU_NGAN)

@@ -110,11 +110,14 @@ public class ConnectDB {
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'ngayVaoLam') IS NULL ALTER TABLE dbo.NhanVien ADD ngayVaoLam VARCHAR(20) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'trangThai') IS NULL ALTER TABLE dbo.NhanVien ADD trangThai NVARCHAR(30) NOT NULL CONSTRAINT DF_NV_TrangThai DEFAULT N'Đang làm việc' WITH VALUES;");
 
-            // PhieuTiepNhan / PhieuSuaChua: liên kết tường minh maPTN
+            // PhieuTiepNhan / PhieuSuaChua: liên kết tường minh maPTN và maPhieuXuat
             stmt.execute("IF COL_LENGTH('dbo.PhieuSuaChua', 'maPTN') IS NULL BEGIN " +
                          "  ALTER TABLE dbo.PhieuSuaChua ADD maPTN VARCHAR(20) NULL CONSTRAINT FK_PSC_PTN REFERENCES dbo.PhieuTiepNhan(maPTN); " +
                          "  EXEC('UPDATE sc SET sc.maPTN = tn.maPTN FROM dbo.PhieuSuaChua sc JOIN dbo.PhieuTiepNhan tn ON sc.maPSC = ''SC'' + SUBSTRING(tn.maPTN, 3, 18) WHERE sc.maPTN IS NULL'); " +
                          "END;");
+            stmt.execute("IF COL_LENGTH('dbo.PhieuSuaChua', 'maPhieuXuat') IS NULL ALTER TABLE dbo.PhieuSuaChua ADD maPhieuXuat VARCHAR(20) NULL;");
+            stmt.execute("IF OBJECT_ID('dbo.FK_PSC_PhieuXuatKho', 'F') IS NULL AND OBJECT_ID('dbo.PhieuXuatKho', 'U') IS NOT NULL " +
+                         "ALTER TABLE dbo.PhieuSuaChua ADD CONSTRAINT FK_PSC_PhieuXuatKho FOREIGN KEY (maPhieuXuat) REFERENCES dbo.PhieuXuatKho(maPhieuXuat);");
 
             // PhieuNhapKho: trạng thái, ngày giao, ghi chú
             stmt.execute("IF COL_LENGTH('dbo.PhieuNhapKho', 'trangThai') IS NULL ALTER TABLE dbo.PhieuNhapKho ADD trangThai VARCHAR(20) NOT NULL CONSTRAINT DF_PNK_TrangThai DEFAULT 'DA_NHAP' WITH VALUES;");
@@ -126,13 +129,42 @@ public class ConnectDB {
             stmt.execute("IF COL_LENGTH('dbo.PhieuBaoHanh', 'maNV') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD maNV VARCHAR(20) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.PhieuBaoHanh', 'ghiChu') IS NULL ALTER TABLE dbo.PhieuBaoHanh ADD ghiChu NVARCHAR(MAX) NULL;");
 
-            // HangMucBaoHanh
-            stmt.execute("IF OBJECT_ID('dbo.HangMucBaoHanh', 'U') IS NULL " +
-                         "CREATE TABLE dbo.HangMucBaoHanh (" +
-                         "  maCTPBH INT IDENTITY(1,1) PRIMARY KEY, maPBH VARCHAR(20) NOT NULL, " +
-                         "  tenHangMuc NVARCHAR(255) NOT NULL, thoiHanBaoHanh INT NOT NULL CHECK (thoiHanBaoHanh > 0), " +
+            // ChiTietPhieuBaoHanh: Hợp nhất Hạng mục bảo hành vào ChiTietPhieuBaoHanh (khóa chính maPBH, maPT)
+            stmt.execute("IF OBJECT_ID('dbo.ChiTietPhieuBaoHanh', 'U') IS NULL " +
+                         "CREATE TABLE dbo.ChiTietPhieuBaoHanh (" +
+                         "  maPBH VARCHAR(20) NOT NULL, maPT VARCHAR(20) NOT NULL, " +
+                         "  tenHangMuc NVARCHAR(255) NOT NULL, thoiHanBaoHanh INT NOT NULL DEFAULT 6 CHECK (thoiHanBaoHanh > 0), " +
                          "  ngayHetHan DATE NOT NULL, dieuKienBaoHanh NVARCHAR(MAX) NULL, ghiChu NVARCHAR(MAX) NULL, " +
-                         "  CONSTRAINT FK_HMBH_PBH FOREIGN KEY (maPBH) REFERENCES dbo.PhieuBaoHanh(maPBH) ON DELETE CASCADE);");
+                         "  lyDo NVARCHAR(255) NULL, huongXuLy NVARCHAR(255) NULL, " +
+                         "  CONSTRAINT PK_ChiTietPhieuBaoHanh PRIMARY KEY (maPBH, maPT), " +
+                         "  CONSTRAINT FK_CTPBH_PhieuBaoHanh FOREIGN KEY (maPBH) REFERENCES dbo.PhieuBaoHanh(maPBH) ON DELETE CASCADE, " +
+                         "  CONSTRAINT FK_CTPBH_PhuTung FOREIGN KEY (maPT) REFERENCES dbo.PhuTung(maPT));");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'tenHangMuc') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD tenHangMuc NVARCHAR(255) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'thoiHanBaoHanh') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD thoiHanBaoHanh INT NOT NULL CONSTRAINT DF_CTPBH_ThoiHan DEFAULT 6 WITH VALUES;");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'ngayHetHan') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD ngayHetHan DATE NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'dieuKienBaoHanh') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD dieuKienBaoHanh NVARCHAR(MAX) NULL;");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'ghiChu') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD ghiChu NVARCHAR(MAX) NULL;");
+
+            // Chuyển dữ liệu từ bảng cũ HangMucBaoHanh sang ChiTietPhieuBaoHanh nếu bảng cũ còn tồn tại dưới dạng Table
+            stmt.execute("IF OBJECT_ID('dbo.HangMucBaoHanh', 'U') IS NOT NULL BEGIN " +
+                         "  UPDATE ct SET " +
+                         "    ct.tenHangMuc = COALESCE(ct.tenHangMuc, hm.tenHangMuc), " +
+                         "    ct.thoiHanBaoHanh = COALESCE(ct.thoiHanBaoHanh, hm.thoiHanBaoHanh, 6), " +
+                         "    ct.ngayHetHan = COALESCE(ct.ngayHetHan, hm.ngayHetHan), " +
+                         "    ct.dieuKienBaoHanh = COALESCE(ct.dieuKienBaoHanh, hm.dieuKienBaoHanh), " +
+                         "    ct.ghiChu = COALESCE(ct.ghiChu, hm.ghiChu) " +
+                         "  FROM dbo.ChiTietPhieuBaoHanh ct JOIN dbo.HangMucBaoHanh hm ON ct.maPBH = hm.maPBH; " +
+                         "  INSERT INTO dbo.ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) " +
+                         "  SELECT hm.maPBH, COALESCE((SELECT TOP 1 maPT FROM dbo.PhuTung WHERE tenPT = hm.tenHangMuc), 'PT001'), " +
+                         "         hm.tenHangMuc, hm.thoiHanBaoHanh, hm.ngayHetHan, hm.dieuKienBaoHanh, hm.ghiChu " +
+                         "  FROM dbo.HangMucBaoHanh hm " +
+                         "  WHERE NOT EXISTS (SELECT 1 FROM dbo.ChiTietPhieuBaoHanh ct WHERE ct.maPBH = hm.maPBH); " +
+                         "  DROP TABLE dbo.HangMucBaoHanh; " +
+                         "END;");
+
+            // Tạo VIEW HangMucBaoHanh tương thích ngược
+            stmt.execute("IF OBJECT_ID('dbo.HangMucBaoHanh', 'V') IS NULL AND OBJECT_ID('dbo.HangMucBaoHanh', 'U') IS NULL " +
+                         "EXEC('CREATE VIEW dbo.HangMucBaoHanh AS SELECT maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu FROM dbo.ChiTietPhieuBaoHanh');");
 
             // ChiTietCongViecSuaChua
             stmt.execute("IF OBJECT_ID('dbo.ChiTietCongViecSuaChua', 'U') IS NULL " +
@@ -141,12 +173,15 @@ public class ConnectDB {
                          "  tenKTV NVARCHAR(100) NULL, tienCong DECIMAL(15,2) NOT NULL DEFAULT 0 CHECK (tienCong >= 0), " +
                          "  PRIMARY KEY (maPSC, stt), CONSTRAINT FK_CTCV_PSC FOREIGN KEY (maPSC) REFERENCES dbo.PhieuSuaChua(maPSC));");
 
-            // ChiTietDichVuHoaDon
+            // ChiTietHoaDon & ChiTietDichVuHoaDon: Bổ sung donViTinh
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietHoaDon', 'donViTinh') IS NULL ALTER TABLE dbo.ChiTietHoaDon ADD donViTinh NVARCHAR(50) NULL CONSTRAINT DF_CTHD_DonViTinh DEFAULT N'Cái' WITH VALUES;");
             stmt.execute("IF OBJECT_ID('dbo.ChiTietDichVuHoaDon', 'U') IS NULL " +
                          "CREATE TABLE dbo.ChiTietDichVuHoaDon (" +
                          "  maHD VARCHAR(20) NOT NULL, stt INT NOT NULL, tenDichVu NVARCHAR(255) NOT NULL, " +
+                         "  donViTinh NVARCHAR(50) NULL CONSTRAINT DF_CTDVHD_DVT DEFAULT N'Lần', " +
                          "  soLuong INT NOT NULL CHECK (soLuong > 0), donGia DECIMAL(15,2) NOT NULL CHECK (donGia >= 0), " +
                          "  PRIMARY KEY (maHD, stt), CONSTRAINT FK_CTDVHD_HoaDon FOREIGN KEY (maHD) REFERENCES dbo.HoaDon(maHD));");
+            stmt.execute("IF COL_LENGTH('dbo.ChiTietDichVuHoaDon', 'donViTinh') IS NULL ALTER TABLE dbo.ChiTietDichVuHoaDon ADD donViTinh NVARCHAR(50) NULL CONSTRAINT DF_CTDVHD_DonViTinh DEFAULT N'Lần' WITH VALUES;");
 
             // HoaDon: Đảm bảo không có FK_HoaDon_PhieuSuaChua và không có cột soPhieuSC
             stmt.execute("IF OBJECT_ID('dbo.FK_HoaDon_PhieuSuaChua', 'F') IS NOT NULL ALTER TABLE dbo.HoaDon DROP CONSTRAINT FK_HoaDon_PhieuSuaChua;");

@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- HỆ THỐNG QUẢN LÝ GARA Ô TÔ
 -- CƠ SỞ DỮ LIỆU: QuanLySuaChuaXe
 -- Script chuẩn hóa toàn diện: Bảng, Ràng buộc, Dữ liệu mẫu
@@ -139,6 +139,7 @@ GO
 CREATE TABLE PhieuSuaChua (
     maPSC VARCHAR(20) NOT NULL PRIMARY KEY,
     maPTN VARCHAR(20) NULL,
+    maPhieuXuat VARCHAR(20) NULL,
     maNV VARCHAR(20) NOT NULL,
     maKH VARCHAR(20) NOT NULL,
     soVIN VARCHAR(30) NOT NULL,
@@ -209,6 +210,7 @@ CREATE TABLE ChiTietHoaDon (
     maHD VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
     tenPhuTung NVARCHAR(150) NOT NULL,
+    donViTinh NVARCHAR(50) NULL DEFAULT N'Cái',
     soLuong INT NOT NULL,
     donGia DECIMAL(15,2) NOT NULL,
     CONSTRAINT PK_ChiTietHoaDon PRIMARY KEY (maHD, maPT),
@@ -224,6 +226,7 @@ CREATE TABLE ChiTietDichVuHoaDon (
     maHD VARCHAR(20) NOT NULL,
     stt INT NOT NULL,
     tenDichVu NVARCHAR(255) NOT NULL,
+    donViTinh NVARCHAR(50) NULL DEFAULT N'Lần',
     soLuong INT NOT NULL CHECK (soLuong > 0),
     donGia DECIMAL(15,2) NOT NULL CHECK (donGia >= 0),
     CONSTRAINT PK_ChiTietDichVuHoaDon PRIMARY KEY (maHD, stt),
@@ -251,10 +254,15 @@ CREATE TABLE PhieuBaoHanh (
 );
 GO
 
-/* 16. CHI TIET PHIEU BAO HANH */
+/* 16. CHI TIET PHIEU BAO HANH (Hạng mục bảo hành) */
 CREATE TABLE ChiTietPhieuBaoHanh (
     maPBH VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
+    tenHangMuc NVARCHAR(255) NOT NULL,
+    thoiHanBaoHanh INT NOT NULL DEFAULT 6 CHECK (thoiHanBaoHanh > 0),
+    ngayHetHan DATE NOT NULL,
+    dieuKienBaoHanh NVARCHAR(MAX) NULL,
+    ghiChu NVARCHAR(MAX) NULL,
     lyDo NVARCHAR(255) NULL,
     huongXuLy NVARCHAR(255) NULL,
     CONSTRAINT PK_ChiTietPhieuBaoHanh PRIMARY KEY (maPBH, maPT),
@@ -263,17 +271,10 @@ CREATE TABLE ChiTietPhieuBaoHanh (
 );
 GO
 
-/* 17. HANG MUC BAO HANH (Dùng cho Lập và Tra cứu Phiếu bảo hành) */
-CREATE TABLE HangMucBaoHanh (
-    maCTPBH INT IDENTITY(1,1) PRIMARY KEY,
-    maPBH VARCHAR(20) NOT NULL,
-    tenHangMuc NVARCHAR(255) NOT NULL,
-    thoiHanBaoHanh INT NOT NULL CHECK (thoiHanBaoHanh > 0),
-    ngayHetHan DATE NOT NULL,
-    dieuKienBaoHanh NVARCHAR(MAX) NULL,
-    ghiChu NVARCHAR(MAX) NULL,
-    CONSTRAINT FK_HMBH_PBH FOREIGN KEY (maPBH) REFERENCES PhieuBaoHanh(maPBH) ON DELETE CASCADE
-);
+/* View tương thích ngược cho HangMucBaoHanh */
+CREATE VIEW HangMucBaoHanh AS
+SELECT maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu
+FROM ChiTietPhieuBaoHanh;
 GO
 
 /* 18. PHIEU NHAP KHO */
@@ -323,7 +324,9 @@ CREATE TABLE PhieuXuatKho (
 );
 GO
 
-/* 21. CHI TIET PHIEU XUAT KHO */
+/* Khóa ngoại PhieuSuaChua -> PhieuXuatKho (Tạo sau khi bảng PhieuXuatKho đã tồn tại) */
+ALTER TABLE PhieuSuaChua ADD CONSTRAINT FK_PSC_PhieuXuatKho FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuatKho(maPhieuXuat);
+GO
 CREATE TABLE ChiTietPhieuXuatKho (
     maPhieuXuat VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
@@ -438,17 +441,17 @@ INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, ti
 GO
 
 /* 13. Chi tiet hoa don (Phụ tùng) */
-INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, soLuong, donGia) VALUES
-('HD001', 'PT001', N'Lọc dầu động cơ', 2, 150000),
-('HD001', 'PT004', N'Dầu động cơ cao cấp', 4, 120000),
-('HD002', 'PT003', N'Bugi đánh lửa', 2, 85000);
+INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES
+('HD001', 'PT001', N'Lọc dầu động cơ', N'Chiếc', 2, 150000),
+('HD001', 'PT004', N'Dầu động cơ cao cấp', N'Lít', 4, 120000),
+('HD002', 'PT003', N'Bugi đánh lửa', N'Chiếc', 2, 85000);
 GO
 
 /* 14. Chi tiet dich vu hoa don (Dịch vụ & Tiền công) */
-INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, soLuong, donGia) VALUES
-('HD001', 1, N'Thay dầu động cơ & lọc nhớt', 1, 150000),
-('HD001', 2, N'Kiểm tra và vệ sinh hệ thống nạp khí', 1, 100000),
-('HD002', 1, N'Bảo dưỡng và thay bộ phanh 4 bánh', 1, 250000);
+INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES
+('HD001', 1, N'Thay dầu động cơ & lọc nhớt', N'Lần', 1, 150000),
+('HD001', 2, N'Kiểm tra và vệ sinh hệ thống nạp khí', N'Lần', 1, 100000),
+('HD002', 1, N'Bảo dưỡng và thay bộ phanh 4 bánh', N'Lần', 1, 250000);
 GO
 
 /* 15. Phieu bao hanh */
@@ -458,15 +461,9 @@ INSERT INTO PhieuBaoHanh (maPBH, ngayLap, ngayBD, ngayKT, trangThaiBH, maKH, soV
 GO
 
 /* 16. Chi tiet phieu bao hanh */
-INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES
-('BH001', 'PT001', N'Bảo hành lọc dầu', N'Kiểm tra và thay mới nếu lỗi rò rỉ'),
-('BH002', 'PT002', N'Bảo hành lọc gió', N'Kiểm tra tình trạng lọc');
-GO
-
-/* 17. Hang muc bao hanh */
-INSERT INTO HangMucBaoHanh (maPBH, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) VALUES
-('BH001', N'Lọc dầu & gioăng làm kín', 12, '2027-03-01', N'Bảo hành lỗi rò rỉ do lắp ráp', N'Chính hãng'),
-('BH002', N'Bugi đánh lửa', 12, '2027-03-05', N'Bảo hành lỗi mất lửa điện tử', N'Chính hãng');
+INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy) VALUES
+('BH001', 'PT001', N'Lọc dầu & gioăng làm kín', 12, '2027-03-01', N'Bảo hành lỗi rò rỉ do lắp ráp', N'Chính hãng', N'Bảo hành lọc dầu', N'Kiểm tra và thay mới nếu lỗi rò rỉ'),
+('BH002', 'PT002', N'Bugi đánh lửa', 12, '2027-03-05', N'Bảo hành lỗi mất lửa điện tử', N'Chính hãng', N'Bảo hành lọc gió', N'Kiểm tra tình trạng lọc');
 GO
 
 /* 18. Phieu nhap kho */
@@ -486,6 +483,11 @@ GO
 INSERT INTO PhieuXuatKho (maPhieuXuat, maPSC, maNV, ngayXuat, trangThai, lyDoXuat) VALUES
 ('PX001', 'SC001', 'NV03', '2026-03-10T10:00:00', N'Đã xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa'),
 ('PX002', 'SC002', 'NV03', '2026-03-10T10:00:00', N'Chờ xuất', N'Xuất vật tư thay thế theo phiếu sửa chữa');
+GO
+
+/* Cập nhật maPhieuXuat cho PhieuSuaChua */
+UPDATE PhieuSuaChua SET maPhieuXuat = 'PX001' WHERE maPSC = 'SC001';
+UPDATE PhieuSuaChua SET maPhieuXuat = 'PX002' WHERE maPSC = 'SC002';
 GO
 
 /* 21. Chi tiet xuat kho */
@@ -781,8 +783,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD101' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD101',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH101')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH101',N'2026-10-15',N'2027-04-15',N'CON_HAN',N'KH101',N'VINDEMO101',N'HD101',N'NV01',N'2026-10-15',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH101' AND tenHangMuc=N'Lọc dầu động cơ')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH101',N'Lọc dầu động cơ',6,N'2027-04-15',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH101' AND maPT=N'PT101')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH101',N'PT101',N'Lọc dầu động cơ',6,N'2027-04-15',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN102')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN102',N'NV01',N'KH102',N'VINDEMO102',N'2026-10-16T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC102')
@@ -806,8 +808,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD102' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD102',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH102')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH102',N'2026-10-16',N'2027-04-16',N'CON_HAN',N'KH102',N'VINDEMO102',N'HD102',N'NV01',N'2026-10-16',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH102' AND tenHangMuc=N'Lọc gió động cơ')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH102',N'Lọc gió động cơ',6,N'2027-04-16',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH102' AND maPT=N'PT102')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH102',N'PT102',N'Lọc gió động cơ',6,N'2027-04-16',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN103')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN103',N'NV01',N'KH103',N'VINDEMO103',N'2026-10-17T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC103')
@@ -831,8 +833,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD103' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD103',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH103')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH103',N'2026-10-17',N'2027-04-17',N'CON_HAN',N'KH103',N'VINDEMO103',N'HD103',N'NV01',N'2026-10-17',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH103' AND tenHangMuc=N'Bugi iridium')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH103',N'Bugi iridium',6,N'2027-04-17',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH103' AND maPT=N'PT103')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH103',N'PT103',N'Bugi iridium',6,N'2027-04-17',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN104')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN104',N'NV01',N'KH104',N'VINDEMO104',N'2026-10-18T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC104')
@@ -856,8 +858,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD104' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD104',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH104')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH104',N'2026-10-18',N'2027-04-18',N'CON_HAN',N'KH104',N'VINDEMO104',N'HD104',N'NV01',N'2026-10-18',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH104' AND tenHangMuc=N'Dầu động cơ 5W30')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH104',N'Dầu động cơ 5W30',6,N'2027-04-18',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH104' AND maPT=N'PT104')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH104',N'PT104',N'Dầu động cơ 5W30',6,N'2027-04-18',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN105')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN105',N'NV01',N'KH105',N'VINDEMO105',N'2026-10-19T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC105')
@@ -881,8 +883,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD105' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD105',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH105')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH105',N'2026-10-19',N'2027-04-19',N'CON_HAN',N'KH105',N'VINDEMO105',N'HD105',N'NV01',N'2026-10-19',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH105' AND tenHangMuc=N'Má phanh trước')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH105',N'Má phanh trước',6,N'2027-04-19',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH105' AND maPT=N'PT105')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH105',N'PT105',N'Má phanh trước',6,N'2027-04-19',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN106')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN106',N'NV01',N'KH106',N'VINDEMO106',N'2026-10-20T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC106')
@@ -906,8 +908,8 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD106' AND stt=1)
  INSERT INTO ChiTietDichVuHoaDon (maHD,stt,tenDichVu,soLuong,donGia) VALUES (N'HD106',1,N'Kiểm tra, thay thế và chạy thử',1,200000);
 IF NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maPBH=N'PBH106')
  INSERT INTO PhieuBaoHanh (maPBH,ngayBD,ngayKT,trangThaiBH,maKH,soVIN,maHoaDon,maNV,ngayLap,ghiChu) VALUES (N'PBH106',N'2026-10-20',N'2027-04-20',N'CON_HAN',N'KH106',N'VINDEMO106',N'HD106',N'NV01',N'2026-10-20',N'Bảo hành vật tư thay thế');
-IF NOT EXISTS (SELECT 1 FROM HangMucBaoHanh WHERE maPBH=N'PBH106' AND tenHangMuc=N'Lọc gió điều hòa')
- INSERT INTO HangMucBaoHanh (maPBH,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH106',N'Lọc gió điều hòa',6,N'2027-04-20',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
+IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuBaoHanh WHERE maPBH=N'PBH106' AND maPT=N'PT106')
+ INSERT INTO ChiTietPhieuBaoHanh (maPBH,maPT,tenHangMuc,thoiHanBaoHanh,ngayHetHan,dieuKienBaoHanh,ghiChu) VALUES (N'PBH106',N'PT106',N'Lọc gió điều hòa',6,N'2027-04-20',N'Lỗi nhà sản xuất',N'Giữ hóa đơn để đối chiếu');
 IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN=N'TN107')
  INSERT INTO PhieuTiepNhan (maPTN,maNV,maKH,soVIN,ngayTN,yeuCauSC,trangThaiXe) VALUES (N'TN107',N'NV01',N'KH107',N'VINDEMO107',N'2026-10-21T08:00:00',N'Bảo dưỡng định kỳ và kiểm tra an toàn',N'Hoàn thành');
 IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC=N'SC107')
@@ -1120,6 +1122,12 @@ UPDATE sc SET sc.maPTN = tn.maPTN
 FROM PhieuSuaChua sc
 JOIN PhieuTiepNhan tn ON sc.maPSC = 'SC' + SUBSTRING(tn.maPTN, 3, 18)
 WHERE sc.maPTN IS NULL;
+
+-- Đồng bộ liên kết maPhieuXuat từ PhieuXuatKho
+UPDATE sc SET sc.maPhieuXuat = px.maPhieuXuat
+FROM PhieuSuaChua sc
+JOIN PhieuXuatKho px ON sc.maPSC = px.maPSC
+WHERE sc.maPhieuXuat IS NULL;
 GO
 
 COMMIT TRANSACTION;

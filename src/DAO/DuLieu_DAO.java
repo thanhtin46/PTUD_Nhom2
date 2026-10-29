@@ -702,7 +702,7 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null || maHD == null) return list;
 
-        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(pt.donViTinh, N'Cái') AS donViTinh " +
+        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh " +
                      "FROM ChiTietHoaDon ct " +
                      "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
                      "WHERE ct.maHD = ?";
@@ -838,12 +838,13 @@ public class DuLieu_DAO {
             }
 
             // Thêm chi tiết bảo hành mẫu
-            String sqlCT = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES (?, ?, ?, ?)";
+            String sqlCT = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy) VALUES (?, ?, ?, 12, DATEADD(year, 1, CAST(GETDATE() AS DATE)), N'Bảo hành chính hãng', N'Theo phiếu sửa chữa', ?, ?)";
             try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
                 stmt.setString(1, pbh.getSoPhieu());
                 stmt.setString(2, "PT001");
                 stmt.setString(3, pbh.getNoiDung() != null ? pbh.getNoiDung() : "Bảo hành linh kiện xe");
-                stmt.setString(4, "Kiểm tra và thay thế miễn phí");
+                stmt.setString(4, pbh.getNoiDung() != null ? pbh.getNoiDung() : "Bảo hành linh kiện xe");
+                stmt.setString(5, "Kiểm tra và thay thế miễn phí");
                 stmt.executeUpdate();
             }
             return true;
