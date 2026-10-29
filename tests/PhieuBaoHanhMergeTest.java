@@ -1,3 +1,5 @@
+package tests;
+
 import DAO.PhieuBaoHanh_DAO;
 import java.lang.reflect.*;
 import java.sql.*;

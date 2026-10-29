@@ -1,3 +1,5 @@
+package tests;
+
 import ConnectDB.ConnectDB;
 import DAO.*;
 import UI.*;
