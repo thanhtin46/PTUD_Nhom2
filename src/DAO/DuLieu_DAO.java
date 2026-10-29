@@ -600,7 +600,7 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        String sql = "SELECT hd.maHD, hd.soPhieuSC, hd.maKH, kh.hoTen, kh.soDT, " +
+        String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
                      "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
@@ -610,8 +610,7 @@ public class DuLieu_DAO {
                      "FROM HoaDon hd " +
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
-                     "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
-                     "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
+                     "LEFT JOIN (SELECT maKH, MIN(bienSoXe) AS bienSoXe FROM PhuongTien GROUP BY maKH) pt ON pt.maKH = hd.maKH " +
                      "ORDER BY hd.maHD ASC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
@@ -622,7 +621,7 @@ public class DuLieu_DAO {
                 if (daXem.contains(maHD)) continue;
                 daXem.add(maHD);
 
-                String soPhieuSC = rs.getString("soPhieuSC");
+                String soPhieuSC = rs.getString("maKH");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");

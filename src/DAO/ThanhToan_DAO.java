@@ -17,17 +17,12 @@ public class ThanhToan_DAO {
             auto = con.getAutoCommit();
             con.setAutoCommit(false);
             String repair = hd.getSoPhieuSC();
-            if (repair == null || repair.isBlank()) throw new SQLException("Chưa chọn phiếu sửa chữa");
-            repair = LienKetPhieu.maSuaChua(con, repair);
-            try (PreparedStatement ps = con.prepareStatement("SELECT maKH FROM PhieuSuaChua WITH (UPDLOCK,HOLDLOCK) WHERE maPSC=?")) {
-                ps.setString(1, repair);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next() || !rs.getString(1).equals(hd.getMaKH())) throw new SQLException("Phiếu sửa chữa không khớp khách hàng");
-                }
+            if (repair != null && !repair.isBlank()) {
+                repair = LienKetPhieu.maSuaChua(con, repair);
             }
-            try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM HoaDon WHERE soPhieuSC IN (?,?) AND trangThai NOT IN ('DA_HUY',N'Đã hủy')")) {
-                ps.setString(1, repair); ps.setString(2, "TN" + repair.substring(2));
-                try (ResultSet rs = ps.executeQuery()) { rs.next(); if (rs.getInt(1)>0) throw new SQLException("Phiếu đã thanh toán"); }
+            try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM HoaDon WHERE maHD=? AND trangThai NOT IN ('DA_HUY',N'Đã hủy')")) {
+                ps.setString(1, hd.getMaHD());
+                try (ResultSet rs = ps.executeQuery()) { rs.next(); if (rs.getInt(1)>0) throw new SQLException("Mã hóa đơn đã tồn tại"); }
             }
             long labour = 0, parts = 0;
             HashSet<String> partIds = new HashSet<>();
@@ -47,10 +42,19 @@ public class ThanhToan_DAO {
             String payment = hd.getPhuongThuc() == null ? "" : hd.getPhuongThuc().toLowerCase();
             payment = payment.contains("chuyển") || payment.contains("qr") ? "CHUYEN_KHOAN"
                     : payment.contains("thẻ") || payment.contains("pos") ? "THE_POS" : "TIEN_MAT";
-            try (PreparedStatement ps = con.prepareStatement("INSERT INTO HoaDon(maHD,maKH,maNV,ngayLap,hinhThucThanhToan,soPhieuSC,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES(?,?,?,CAST(GETDATE() AS date),?,?,?,?,?,?,?,'DA_THANH_TOAN')")) {
+            try (PreparedStatement ps = con.prepareStatement("INSERT INTO HoaDon(maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES(?,?,?,CAST(GETDATE() AS date),?,?,?,?,?,?,'DA_THANH_TOAN')")) {
+                String ghiChu = hd.getGhiChu();
+                if ((ghiChu == null || ghiChu.isBlank()) && repair != null && !repair.isBlank()) {
+                    ghiChu = "Thanh toán " + repair;
+                }
                 ps.setString(1,hd.getMaHD()); ps.setString(2,hd.getMaKH()); ps.setString(3,maNV);
-                ps.setString(4,payment); ps.setString(5,repair); ps.setLong(6,labour); ps.setLong(7,parts);
-                ps.setDouble(8,discount); ps.setLong(9,hd.getTongTien()); ps.setString(10,hd.getGhiChu()); ps.executeUpdate();
+                ps.setString(4,payment); ps.setLong(5,labour); ps.setLong(6,parts);
+                ps.setDouble(7,discount); ps.setLong(8,hd.getTongTien()); ps.setString(9,ghiChu); ps.executeUpdate();
+                if (repair != null && !repair.isBlank()) {
+                    try (PreparedStatement psUpdate = con.prepareStatement("UPDATE PhieuSuaChua SET trangThai='HOAN_THANH' WHERE maPSC=? OR maPTN=?")) {
+                        psUpdate.setString(1, repair); psUpdate.setString(2, repair); psUpdate.executeUpdate();
+                    }
+                }
             }
             int index = 0;
             for (ChiTietDichVu ct : details) {

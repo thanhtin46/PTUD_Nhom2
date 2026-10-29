@@ -330,7 +330,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         String sql = "SELECT k.hoTen, h.tongTien, pt.bienSoXe "
                 + "FROM dbo.HoaDon h "
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
-                + "LEFT JOIN dbo.PhieuSuaChua sc ON sc.maPSC = h.soPhieuSC " + "LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH AND (h.soPhieuSC IS NULL OR pt.soVIN = sc.soVIN) "
+                + "LEFT JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH "
                 + "WHERE h.maHD = ? "
                 + "ORDER BY pt.bienSoXe";
 

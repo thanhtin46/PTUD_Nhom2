@@ -148,6 +148,10 @@ public class ConnectDB {
                          "  soLuong INT NOT NULL CHECK (soLuong > 0), donGia DECIMAL(15,2) NOT NULL CHECK (donGia >= 0), " +
                          "  PRIMARY KEY (maHD, stt), CONSTRAINT FK_CTDVHD_HoaDon FOREIGN KEY (maHD) REFERENCES dbo.HoaDon(maHD));");
 
+            // HoaDon: Đảm bảo không có FK_HoaDon_PhieuSuaChua và không có cột soPhieuSC
+            stmt.execute("IF OBJECT_ID('dbo.FK_HoaDon_PhieuSuaChua', 'F') IS NOT NULL ALTER TABLE dbo.HoaDon DROP CONSTRAINT FK_HoaDon_PhieuSuaChua;");
+            stmt.execute("IF COL_LENGTH('dbo.HoaDon', 'soPhieuSC') IS NOT NULL ALTER TABLE dbo.HoaDon DROP COLUMN soPhieuSC;");
+
             daDongBoCauTruc = true;
         } catch (SQLException ex) {
             System.err.println("Cảnh báo đồng bộ cấu trúc CSDL: " + ex.getMessage());

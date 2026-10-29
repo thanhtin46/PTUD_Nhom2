@@ -253,7 +253,7 @@ public class TraCuuLichSuSuaChua_DAO {
           .append("JOIN PhuongTien pt ON tn.soVIN = pt.soVIN ")
           .append("LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC) ")
           .append("LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV ")
-          .append("LEFT JOIN HoaDon hd ON (hd.soPhieuSC = sc.maPSC OR hd.soPhieuSC = tn.maPTN) ")
+          .append("OUTER APPLY (SELECT TOP 1 maHD, tienDichVu, tienPhuTung, tongTien, trangThai, hinhThucThanhToan FROM HoaDon h WHERE h.maKH = tn.maKH AND h.ngayLap = CAST(tn.ngayTN AS DATE)) hd ")
           .append("WHERE 1=1 ");
 
         ArrayList<Object> params = new ArrayList<>();

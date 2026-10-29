@@ -296,8 +296,7 @@ public class PhieuBaoHanh_DAO {
                 + "(maPBH, maHoaDon, maNV, ngayBD, ngayKT, trangThaiBH, ghiChu, maKH, soVIN) "
                 + "SELECT ?, h.maHD, ?, ?, ?, ?, ?, h.maKH, pt.soVIN FROM dbo.HoaDon h "
                 + "JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH AND pt.bienSoXe = ? "
-                + "LEFT JOIN dbo.PhieuSuaChua sc ON sc.maPSC = h.soPhieuSC "
-                + "WHERE h.maHD = ? AND (h.soPhieuSC IS NULL OR sc.soVIN = pt.soVIN)";
+                + "WHERE h.maHD = ?";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, maPBH); ps.setString(2, maNV);
             ps.setDate(3, ngayBatDau); ps.setDate(4, ngayKetThuc);
