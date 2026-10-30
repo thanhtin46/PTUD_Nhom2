@@ -10,6 +10,15 @@ public class KhachHang {
     private String ghiChu;
     private String ngayDangKy;
 
+    public KhachHang( String maKH,String hoTen, String sdt,
+                     String diaChi, String email) {
+        this.maKH = maKH;
+        this.hoTen = hoTen;
+        this.sdt = sdt;
+        this.diaChi = diaChi;
+        this.email = email;
+    }
+
     public KhachHang(String maKH, String hoTen, String sdt, String cccd,
                      String diaChi, String email, String ghiChu, String ngayDangKy) {
         this.maKH = maKH;

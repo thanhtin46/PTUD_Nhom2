@@ -52,8 +52,8 @@ public class HoaDonBanHang_DAO {
                             rs.getString("maKH"),
                             rs.getString("hoTen"),
                             rs.getString("soDT"),
-                            rs.getString("diaChi"),
-                            rs.getString("email"), sql, sql, sql
+                            rs.getString("email"),
+                            rs.getString("diaChi")
                     );
 
                     danhSach.add(kh);

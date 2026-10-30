@@ -207,16 +207,18 @@ public class HoaDonBanHang_UI extends JPanel {
         });
 
         txtSDT = createTextField();
-        txtEmail = createTextField();
         txtDiaChi = createTextField();
+        txtEmail = createTextField();
+
         txtSDT.setEditable(false);
         txtEmail.setEditable(false);
+        txtDiaChi.setEditable(false);
         txtDiaChi.setEditable(false);
 
         addFormRow(panel, "Khách hàng:", cbKhachHang);
         addFormRow(panel, "Số điện thoại:", txtSDT);
-        addFormRow(panel, "Email:", txtEmail);
         addFormRow(panel, "Địa chỉ:", txtDiaChi);
+        addFormRow(panel, "Email:", txtEmail);
 
         cbKhachHang.addActionListener(e -> {
             KhachHang kh = (KhachHang) cbKhachHang.getSelectedItem();
