@@ -32,7 +32,7 @@ public class HoaDon_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return fallbackCache();
 
-        String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
+        String sql = "SELECT hd.maHD, hd.soPhieuSC, hd.maKH, kh.hoTen, kh.soDT, " +
                      "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
@@ -42,7 +42,8 @@ public class HoaDon_DAO {
                      "FROM HoaDon hd " +
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
-                     "LEFT JOIN (SELECT maKH, MIN(bienSoXe) AS bienSoXe FROM PhuongTien GROUP BY maKH) pt ON pt.maKH = hd.maKH " +
+                     "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
+                     "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
                      "ORDER BY hd.maHD DESC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
@@ -53,7 +54,7 @@ public class HoaDon_DAO {
                 if (daXem.contains(maHD)) continue;
                 daXem.add(maHD);
 
-                String soPhieuSC = rs.getString("maKH");
+                String soPhieuSC = rs.getString("soPhieuSC");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
@@ -185,12 +186,6 @@ public class HoaDon_DAO {
      * @param locTrangThai "TAT_CA", "Đã thanh toán", "Đã hủy"
      * @param locPhuongThuc "TAT_CA", "Chuyển khoản QR", "Tiền mặt", "Quẹt thẻ POS"
      */
-        private boolean isTatCa(String s) {
-        if (s == null || s.trim().isEmpty()) return true;
-        String lower = s.trim().toLowerCase();
-        return lower.equals("tat_ca") || lower.contains("tất cả") || lower.contains("tat ca") || lower.contains("t?t c?");
-    }
-
     public ArrayList<HoaDon> traCuuHoaDon(String tuKhoa, int tieuChi, String locTrangThai, String locPhuongThuc) {
         ArrayList<HoaDon> list = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
@@ -199,7 +194,7 @@ public class HoaDon_DAO {
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
 
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, ")
+        sql.append("SELECT hd.maHD, hd.soPhieuSC, hd.maKH, kh.hoTen, kh.soDT, ")
            .append("ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, ")
            .append("CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, ")
            .append("hd.hinhThucThanhToan, nv.hoTen AS tenNV, ")
@@ -209,16 +204,17 @@ public class HoaDon_DAO {
            .append("FROM HoaDon hd " +
                    "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                    "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
-                   "LEFT JOIN (SELECT maKH, MIN(bienSoXe) AS bienSoXe FROM PhuongTien GROUP BY maKH) pt ON pt.maKH = hd.maKH " +
+                   "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
+                   "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
                    "WHERE 1=1 ");
 
         // Lọc trạng thái
-        if (!isTatCa(locTrangThai)) {
+        if (locTrangThai != null && !locTrangThai.isEmpty() && !"TAT_CA".equalsIgnoreCase(locTrangThai) && !"Tất cả trạng thái".equalsIgnoreCase(locTrangThai)) {
             sql.append("AND LOWER(hd.trangThai) LIKE ? ");
         }
 
         // Lọc phương thức
-        if (!isTatCa(locPhuongThuc)) {
+        if (locPhuongThuc != null && !locPhuongThuc.isEmpty() && !"TAT_CA".equalsIgnoreCase(locPhuongThuc) && !"Tất cả phương thức".equalsIgnoreCase(locPhuongThuc)) {
             if (locPhuongThuc.contains("QR") || locPhuongThuc.contains("khoản")) {
                 sql.append("AND (hd.hinhThucThanhToan = 'CHUYEN_KHOAN' OR LOWER(hd.hinhThucThanhToan) LIKE '%qr%') ");
             } else if (locPhuongThuc.contains("Tiền mặt")) {
@@ -232,13 +228,13 @@ public class HoaDon_DAO {
         if (!q.isEmpty()) {
             switch (tieuChi) {
                 case 1 -> sql.append("AND LOWER(hd.maHD) LIKE ? ");
-                case 2 -> sql.append("AND LOWER(hd.maKH) LIKE ? ");
+                case 2 -> sql.append("AND LOWER(hd.soPhieuSC) LIKE ? ");
                 case 3 -> sql.append("AND LOWER(pt.bienSoXe) LIKE ? ");
                 case 4 -> sql.append("AND (LOWER(kh.hoTen) LIKE ? OR LOWER(kh.soDT) LIKE ? OR LOWER(hd.maKH) LIKE ?) ");
                 case 5 -> sql.append("AND LOWER(nv.hoTen) LIKE ? ");
                 default -> {
                     sql.append("AND (LOWER(hd.maHD) LIKE ? ")
-                       .append("OR LOWER(hd.maKH) LIKE ? ")
+                       .append("OR LOWER(hd.soPhieuSC) LIKE ? ")
                        .append("OR LOWER(pt.bienSoXe) LIKE ? ")
                        .append("OR LOWER(kh.hoTen) LIKE ? ")
                        .append("OR LOWER(kh.soDT) LIKE ? ")
@@ -252,7 +248,7 @@ public class HoaDon_DAO {
 
         try (PreparedStatement stmt = con.prepareStatement(sql.toString())) {
             int pIdx = 1;
-            if (!isTatCa(locTrangThai)) {
+            if (locTrangThai != null && !locTrangThai.isEmpty() && !"TAT_CA".equalsIgnoreCase(locTrangThai) && !"Tất cả trạng thái".equalsIgnoreCase(locTrangThai)) {
                 stmt.setString(pIdx++, "%" + locTrangThai.trim().toLowerCase() + "%");
             }
 
@@ -280,7 +276,7 @@ public class HoaDon_DAO {
                     if (daXem.contains(maHD)) continue;
                     daXem.add(maHD);
 
-                    String soPhieuSC = rs.getString("maKH");
+                    String soPhieuSC = rs.getString("soPhieuSC");
                     String maKH = rs.getString("maKH");
                     String tenKH = rs.getString("hoTen");
                     String sdt = rs.getString("soDT");
@@ -319,11 +315,11 @@ public class HoaDon_DAO {
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
 
         for (HoaDon hd : KhoDuLieu.get().getHoaDons()) {
-            if (!isTatCa(locTrangThai)) {
+            if (locTrangThai != null && !locTrangThai.isEmpty() && !"TAT_CA".equalsIgnoreCase(locTrangThai) && !"Tất cả trạng thái".equalsIgnoreCase(locTrangThai)) {
                 if (!locTrangThai.equalsIgnoreCase(hd.getTrangThai())) continue;
             }
 
-            if (!isTatCa(locPhuongThuc)) {
+            if (locPhuongThuc != null && !locPhuongThuc.isEmpty() && !"TAT_CA".equalsIgnoreCase(locPhuongThuc) && !"Tất cả phương thức".equalsIgnoreCase(locPhuongThuc)) {
                 if (!hd.getPhuongThuc().toLowerCase().contains(locPhuongThuc.toLowerCase())) continue;
             }
 

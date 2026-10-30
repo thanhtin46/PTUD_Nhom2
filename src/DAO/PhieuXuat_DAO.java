@@ -173,13 +173,6 @@ public class PhieuXuat_DAO {
                 ps.executeBatch();
             }
 
-            try (PreparedStatement psUpdatePSC = conn.prepareStatement(
-                    "UPDATE PhieuSuaChua SET maPhieuXuat = ? WHERE maPSC = ?")) {
-                psUpdatePSC.setString(1, maPX);
-                psUpdatePSC.setString(2, maPSC);
-                psUpdatePSC.executeUpdate();
-            }
-
             conn.commit();
             return maPX;
 
@@ -736,13 +729,6 @@ public class PhieuXuat_DAO {
                 if (ps.executeUpdate() != 1) {
                     throw new SQLException("Không cập nhật được trạng thái phiếu xuất.");
                 }
-            }
-
-            try (PreparedStatement psUpdatePSC = conn.prepareStatement(
-                    "UPDATE PhieuSuaChua SET maPhieuXuat = ? WHERE maPSC = ?")) {
-                psUpdatePSC.setString(1, maPX);
-                psUpdatePSC.setString(2, maPSC);
-                psUpdatePSC.executeUpdate();
             }
 
             conn.commit();

@@ -253,7 +253,7 @@ public class TraCuuLichSuSuaChua_DAO {
           .append("JOIN PhuongTien pt ON tn.soVIN = pt.soVIN ")
           .append("LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC) ")
           .append("LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV ")
-          .append("OUTER APPLY (SELECT TOP 1 maHD, tienDichVu, tienPhuTung, tongTien, trangThai, hinhThucThanhToan FROM HoaDon h WHERE h.maKH = tn.maKH AND h.ngayLap = CAST(tn.ngayTN AS DATE)) hd ")
+          .append("LEFT JOIN HoaDon hd ON (hd.soPhieuSC = sc.maPSC OR hd.soPhieuSC = tn.maPTN) ")
           .append("WHERE 1=1 ");
 
         ArrayList<Object> params = new ArrayList<>();
@@ -425,7 +425,7 @@ public class TraCuuLichSuSuaChua_DAO {
         if (maPSC != null && !maPSC.trim().isEmpty() && !"—".equals(maPSC)) {
             String sql = "SELECT ct.maPT, " +
                          "ISNULL(ct.tenPhuTung, pt.tenPT) AS tenPT, " +
-                         "ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh, " +
+                         "ISNULL(pt.donViTinh, N'Cái') AS donViTinh, " +
                          "ct.soLuong, ct.donGia, (ct.soLuong * ct.donGia) AS thanhTien, " +
                          "ISNULL(ct.trangThai, N'DA_HOAN_THANH') AS trangThai " +
                          "FROM ChiTietSuaChua ct " +
@@ -457,7 +457,7 @@ public class TraCuuLichSuSuaChua_DAO {
         // Ưu tiên 2: ChiTietHoaDon theo maHD nếu ChiTietSuaChua rỗng
         if (list.isEmpty() && maHD != null && !maHD.trim().isEmpty() && !"—".equals(maHD)) {
             String sql = "SELECT ct.maPT, ISNULL(ct.tenPhuTung, pt.tenPT) AS tenPT, " +
-                         "ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh, " +
+                         "ISNULL(pt.donViTinh, N'Cái') AS donViTinh, " +
                          "ct.soLuong, ct.donGia, (ct.soLuong * ct.donGia) AS thanhTien " +
                          "FROM ChiTietHoaDon ct " +
                          "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
@@ -501,7 +501,7 @@ public class TraCuuLichSuSuaChua_DAO {
                      "ISNULL(hm.thoiHanBaoHanh, 12) AS thoiHan, " +
                      "ISNULL(hm.dieuKienBaoHanh, N'Theo tiêu chuẩn nhà sản xuất') AS dieuKien " +
                      "FROM PhieuBaoHanh pbh " +
-                     "LEFT JOIN ChiTietPhieuBaoHanh hm ON pbh.maPBH = hm.maPBH " +
+                     "LEFT JOIN HangMucBaoHanh hm ON pbh.maPBH = hm.maPBH " +
                      "WHERE (pbh.maHoaDon = ? AND ? <> '') OR (pbh.soVIN = ? AND ? <> '') OR (pbh.maKH = ? AND ? <> '')";
 
         try (PreparedStatement stmt = con.prepareStatement(sql)) {

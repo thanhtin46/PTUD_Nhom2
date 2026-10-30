@@ -90,7 +90,6 @@ public class DanhSachPhuTung_UI extends JPanel {
         UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
         UiHelper.themDong(form, 1, "Tên phụ tùng *", txtTen);
         UiHelper.themDong(form, 2, "Đơn vị tính", txtDonVi);
-        UiHelper.themDong(form, 3, "Số lượng tồn *", txtTon);
         UiHelper.themDong(form, 4, "Đơn giá (VNĐ) *", txtGia);
 
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
@@ -345,7 +344,6 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         pt.setTen(txtTen.getText().trim());
         pt.setDonVi(txtDonVi.getText().trim());
-        pt.setSoLuongTon(Integer.parseInt(txtTon.getText().trim()));
         pt.setDonGia(Long.parseLong(txtGia.getText().trim().replace(",", "")));
         boolean ok = kho.capNhatPhuTung(pt);
         napBang();
@@ -356,7 +354,6 @@ public class DanhSachPhuTung_UI extends JPanel {
         txtMa.setText("");
         txtTen.setText("");
         txtDonVi.setText("");
-        txtTon.setText("");
         txtGia.setText("");
         txtMa.setEditable(true);
         table.clearSelection();
@@ -368,7 +365,6 @@ public class DanhSachPhuTung_UI extends JPanel {
         txtMa.setText(table.getValueAt(dong, 0).toString());
         txtTen.setText(table.getValueAt(dong, 1).toString());
         txtDonVi.setText(table.getValueAt(dong, 3).toString());
-        txtTon.setText(table.getValueAt(dong, 4).toString());
         txtGia.setText(table.getValueAt(dong, 5).toString().replace(",", ""));
         txtMa.setEditable(false);
     }
@@ -378,8 +374,8 @@ public class DanhSachPhuTung_UI extends JPanel {
             UiHelper.loi(this, "Mã và tên phụ tùng không được để trống!", txtMa);
             return false;
         }
-        if (!txtTon.getText().trim().matches("\\d+") || !txtGia.getText().trim().replace(",", "").matches("\\d+")) {
-            UiHelper.loi(this, "Tồn kho và đơn giá phải là số nguyên dương hợp lệ!", txtTon);
+        if (!txtGia.getText().trim().replace(",", "").matches("\\d+")) {
+            UiHelper.loi(this, " đơn giá phải là số nguyên dương hợp lệ!", txtTon);
             return false;
         }
         if (them && kho.timPhuTung(txtMa.getText().trim()) != null) {

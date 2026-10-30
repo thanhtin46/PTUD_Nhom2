@@ -1,5 +1,3 @@
-package tests;
-
 import ConnectDB.ConnectDB;
 import Entity.KhoDuLieu;
 import DAO.*;

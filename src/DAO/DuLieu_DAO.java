@@ -600,7 +600,7 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
+        String sql = "SELECT hd.maHD, hd.soPhieuSC, hd.maKH, kh.hoTen, kh.soDT, " +
                      "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
@@ -610,7 +610,8 @@ public class DuLieu_DAO {
                      "FROM HoaDon hd " +
                      "JOIN KhachHang kh ON hd.maKH = kh.maKH " +
                      "LEFT JOIN NhanVien nv ON hd.maNV = nv.maNV " +
-                     "LEFT JOIN (SELECT maKH, MIN(bienSoXe) AS bienSoXe FROM PhuongTien GROUP BY maKH) pt ON pt.maKH = hd.maKH " +
+                     "LEFT JOIN PhieuTiepNhan ptn ON (ptn.maPTN = hd.soPhieuSC OR ('SC' + SUBSTRING(ptn.maPTN, 3, 10)) = hd.soPhieuSC) " +
+                     "LEFT JOIN PhieuSuaChua sc ON sc.maPSC = hd.soPhieuSC LEFT JOIN PhuongTien pt ON pt.soVIN = COALESCE(sc.soVIN, ptn.soVIN) " +
                      "ORDER BY hd.maHD ASC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
@@ -621,7 +622,7 @@ public class DuLieu_DAO {
                 if (daXem.contains(maHD)) continue;
                 daXem.add(maHD);
 
-                String soPhieuSC = rs.getString("maKH");
+                String soPhieuSC = rs.getString("soPhieuSC");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
@@ -702,7 +703,7 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null || maHD == null) return list;
 
-        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh " +
+        String sql = "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, ct.donGia, ISNULL(pt.donViTinh, N'Cái') AS donViTinh " +
                      "FROM ChiTietHoaDon ct " +
                      "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
                      "WHERE ct.maHD = ?";
@@ -838,13 +839,12 @@ public class DuLieu_DAO {
             }
 
             // Thêm chi tiết bảo hành mẫu
-            String sqlCT = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy) VALUES (?, ?, ?, 12, DATEADD(year, 1, CAST(GETDATE() AS DATE)), N'Bảo hành chính hãng', N'Theo phiếu sửa chữa', ?, ?)";
+            String sqlCT = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES (?, ?, ?, ?)";
             try (PreparedStatement stmt = con.prepareStatement(sqlCT)) {
                 stmt.setString(1, pbh.getSoPhieu());
                 stmt.setString(2, "PT001");
                 stmt.setString(3, pbh.getNoiDung() != null ? pbh.getNoiDung() : "Bảo hành linh kiện xe");
-                stmt.setString(4, pbh.getNoiDung() != null ? pbh.getNoiDung() : "Bảo hành linh kiện xe");
-                stmt.setString(5, "Kiểm tra và thay thế miễn phí");
+                stmt.setString(4, "Kiểm tra và thay thế miễn phí");
                 stmt.executeUpdate();
             }
             return true;

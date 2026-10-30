@@ -35,7 +35,7 @@ public class TraCuuHoaDon_UI extends JPanel {
 
     private final JTextField txtTuKhoa = new JTextField();
     private final JComboBox<String> cboTieuChi = new JComboBox<>(new String[]{
-            "Tất cả tiêu chí (Tự động)", "Mã hóa đơn", "Mã khách hàng",
+            "Tất cả tiêu chí (Tự động)", "Mã hóa đơn", "Số phiếu sửa chữa",
             "Biển số xe", "Khách hàng (Tên / SĐT)", "Thu ngân"
     });
     private final JComboBox<String> cboPhuongThuc = new JComboBox<>(new String[]{
@@ -84,7 +84,7 @@ public class TraCuuHoaDon_UI extends JPanel {
         bangPanel.add(taoKhungTimKiem(), BorderLayout.NORTH);
 
         model = UiHelper.model(
-                "Mã hóa đơn", "Mã KH", "Khách hàng", "Số ĐT", "Biển số xe",
+                "Mã hóa đơn", "Số phiếu", "Khách hàng", "Số ĐT", "Biển số xe",
                 "Ngày lập", "Phương thức", "Tiền công", "Phụ tùng", "Giảm giá",
                 "Tổng tiền", "Thu ngân", "Trạng thái"
         );
@@ -93,7 +93,7 @@ public class TraCuuHoaDon_UI extends JPanel {
 
         // Căn chỉnh các cột thẳng hàng giữa Tiêu đề và Dữ liệu
         dinhDangCot(0, SwingConstants.CENTER, 100);  // Mã hóa đơn
-        dinhDangCot(1, SwingConstants.CENTER, 95);   // Mã KH
+        dinhDangCot(1, SwingConstants.CENTER, 105);  // Số phiếu
         dinhDangCot(2, SwingConstants.LEFT, 150);    // Khách hàng
         dinhDangCot(3, SwingConstants.CENTER, 105);  // Số ĐT
         dinhDangCot(4, SwingConstants.CENTER, 110);  // Biển số xe
@@ -407,7 +407,7 @@ public class TraCuuHoaDon_UI extends JPanel {
         for (HoaDon hd : dsHienTai) {
             model.addRow(new Object[]{
                     hd.getMaHD(),
-                    hd.getMaKH(),
+                    hd.getSoPhieuSC(),
                     hd.getTenKH(),
                     hd.getSdtKH(),
                     hd.getBienSo(),
@@ -450,7 +450,7 @@ public class TraCuuHoaDon_UI extends JPanel {
         String html = "<html><div style='width:580px;font-family:Segoe UI;font-size:12px'>"
                 + "<h3 style='color:#0F172A;margin-bottom:8px;'>CHI TIẾT HÓA ĐƠN: " + hd.getMaHD() + "</h3>"
                 + "<table cellpadding='4' width='100%'>"
-                + dong("Mã hóa đơn", hd.getMaHD()) + dong("Mã khách hàng", hd.getMaKH())
+                + dong("Mã hóa đơn", hd.getMaHD()) + dong("Số phiếu sửa chữa", hd.getSoPhieuSC())
                 + dong("Ngày thanh toán", hd.getNgayThanhToan()) + dong("Trạng thái", hd.getTrangThai())
                 + dong("Khách hàng", hd.getTenKH()) + dong("Số điện thoại", hd.getSdtKH())
                 + dong("Biển số xe", hd.getBienSo()) + dong("Thu ngân", hd.getNguoiThu())
@@ -503,7 +503,7 @@ public class TraCuuHoaDon_UI extends JPanel {
                 + "</div>"
                 + "<table style='width:100%;margin-top:12px;font-size:12px;' cellpadding='3'>"
                 + "<tr><td width='50%'><b>Khách hàng:</b> " + hd.getTenKH() + "</td><td><b>Biển số xe:</b> " + hd.getBienSo() + "</td></tr>"
-                + "<tr><td><b>Điện thoại:</b> " + hd.getSdtKH() + "</td><td><b>Mã khách hàng:</b> " + hd.getMaKH() + "</td></tr>"
+                + "<tr><td><b>Điện thoại:</b> " + hd.getSdtKH() + "</td><td><b>Phiếu sửa chữa:</b> " + hd.getSoPhieuSC() + "</td></tr>"
                 + "<tr><td><b>Phương thức:</b> " + hd.getPhuongThuc() + "</td><td><b>Thu ngân:</b> " + hd.getNguoiThu() + "</td></tr>"
                 + "</table>"
                 + "<h4 style='margin:14px 0 6px 0;'>CHI TIẾT HẠNG MỤC DỊCH VỤ & PHỤ TÙNG</h4>"

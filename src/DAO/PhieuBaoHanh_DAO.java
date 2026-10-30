@@ -60,6 +60,14 @@ public class PhieuBaoHanh_DAO {
         public Date ngayHetHan;
         public String dieuKien;
         public String ghiChu;
+		public String getMaPT() {
+			
+			return null;
+		}
+		public int getSoLuong() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
     }
 
     // =========================================================
@@ -296,7 +304,8 @@ public class PhieuBaoHanh_DAO {
                 + "(maPBH, maHoaDon, maNV, ngayBD, ngayKT, trangThaiBH, ghiChu, maKH, soVIN) "
                 + "SELECT ?, h.maHD, ?, ?, ?, ?, ?, h.maKH, pt.soVIN FROM dbo.HoaDon h "
                 + "JOIN dbo.PhuongTien pt ON pt.maKH = h.maKH AND pt.bienSoXe = ? "
-                + "WHERE h.maHD = ?";
+                + "LEFT JOIN dbo.PhieuSuaChua sc ON sc.maPSC = h.soPhieuSC "
+                + "WHERE h.maHD = ? AND (h.soPhieuSC IS NULL OR sc.soVIN = pt.soVIN)";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, maPBH); ps.setString(2, maNV);
             ps.setDate(3, ngayBatDau); ps.setDate(4, ngayKetThuc);
@@ -309,11 +318,9 @@ public class PhieuBaoHanh_DAO {
     private void luuChiTiet(Connection c, String maPBH, List<Object[]> dsChiTiet)
             throws SQLException {
 
-        String sql = "INSERT INTO dbo.ChiTietPhieuBaoHanh "
-                + "(maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        java.util.Set<String> daDungMaPT = new java.util.HashSet<>();
+        String sql = "INSERT INTO dbo.HangMucBaoHanh "
+                + "(maPBH, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = c.prepareStatement(sql)) {
 
@@ -333,68 +340,18 @@ public class PhieuBaoHanh_DAO {
                     throw new SQLException("Tên hạng mục bảo hành không được để trống.");
                 }
                 if (thoiHan <= 0) {
-                    throw new SQLException("Th\u1EDDi h\u1EA1n b\u1EA3o h\u00E0nh ph\u1EA3i l\u1EDBn h\u01A1n 0.");
+                    throw new SQLException("Thời hạn bảo hành phải lớn hơn 0.");
                 }
                 if (ngayHetHan == null) {
-                    throw new SQLException("Ng\u00E0y h\u1EBFt h\u1EA1n b\u1EA3o h\u00E0nh kh\u00F4ng \u0111\u01B0\u1EE3c \u0111\u1EC3 tr\u1ED1ng.");
+                    throw new SQLException("Ngày hết hạn bảo hành không được để trống.");
                 }
-
-                String maPT = null;
-                if (ct.length >= 6 && ct[5] instanceof String s && !s.isBlank()) {
-                    maPT = s.trim();
-                }
-
-                if (maPT == null || daDungMaPT.contains(maPT)) {
-                    try (PreparedStatement psPT = c.prepareStatement("SELECT TOP 1 maPT FROM PhuTung WHERE tenPT = ?")) {
-                        psPT.setString(1, tenHangMuc);
-                        try (ResultSet rsPT = psPT.executeQuery()) {
-                            if (rsPT.next()) {
-                                String found = rsPT.getString("maPT");
-                                if (!daDungMaPT.contains(found)) maPT = found;
-                            }
-                        }
-                    }
-                }
-
-                if (maPT == null || daDungMaPT.contains(maPT)) {
-                    try (PreparedStatement psPT = c.prepareStatement("SELECT TOP 1 maPT FROM PhuTung WHERE ? LIKE '%' + tenPT + '%' OR tenPT LIKE '%' + ? + '%'")) {
-                        psPT.setString(1, tenHangMuc);
-                        psPT.setString(2, tenHangMuc);
-                        try (ResultSet rsPT = psPT.executeQuery()) {
-                            if (rsPT.next()) {
-                                String found = rsPT.getString("maPT");
-                                if (!daDungMaPT.contains(found)) maPT = found;
-                            }
-                        }
-                    }
-                }
-
-                if (maPT == null || daDungMaPT.contains(maPT)) {
-                    try (PreparedStatement psPT = c.prepareStatement("SELECT maPT FROM PhuTung ORDER BY maPT")) {
-                        try (ResultSet rsPT = psPT.executeQuery()) {
-                            while (rsPT.next()) {
-                                String cand = rsPT.getString("maPT");
-                                if (!daDungMaPT.contains(cand)) {
-                                    maPT = cand;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (maPT == null) {
-                    maPT = "PT001";
-                }
-                daDungMaPT.add(maPT);
 
                 ps.setString(1, maPBH);
-                ps.setString(2, maPT);
-                ps.setString(3, tenHangMuc);
-                ps.setInt(4, thoiHan);
-                ps.setDate(5, ngayHetHan);
-                ps.setString(6, dieuKien);
-                ps.setString(7, ghiChuCT);
+                ps.setString(2, tenHangMuc);
+                ps.setInt(3, thoiHan);
+                ps.setDate(4, ngayHetHan);
+                ps.setString(5, dieuKien);
+                ps.setString(6, ghiChuCT);
 
                 ps.addBatch();
             }
@@ -428,9 +385,9 @@ public class PhieuBaoHanh_DAO {
 
         String sqlCT = "SELECT tenHangMuc, thoiHanBaoHanh, ngayHetHan, "
                 + "dieuKienBaoHanh, ghiChu "
-                + "FROM dbo.ChiTietPhieuBaoHanh "
+                + "FROM dbo.HangMucBaoHanh "
                 + "WHERE maPBH = ? "
-                + "ORDER BY maPT";
+                + "ORDER BY maCTPBH";
 
         Connection c = getConnection();
         ThongTinIn t = new ThongTinIn();
@@ -527,7 +484,7 @@ public class PhieuBaoHanh_DAO {
         String sql = "SELECT bh.maPBH, pt.bienSoXe, CONVERT(VARCHAR(10), bh.ngayBD, 103) AS ngayBD, " +
                 "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ngayKT, bh.trangThaiBH, COALESCE(ct.lyDo, hm.noiDung, bh.ghiChu) AS lyDo " +
                 "FROM PhieuBaoHanh bh JOIN PhuongTien pt ON pt.soVIN = bh.soVIN " +
-                "OUTER APPLY (SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, lyDo, bh.ghiChu) AS nvarchar(max)), N'; ') AS noiDung FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
+                "OUTER APPLY (SELECT STRING_AGG(CAST(lyDo AS nvarchar(max)), N'; ') AS lyDo FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) ct " + "OUTER APPLY (SELECT STRING_AGG(CAST(tenHangMuc AS nvarchar(max)), N'; ') AS noiDung FROM HangMucBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
         try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String status = rs.getString("trangThaiBH");
@@ -616,8 +573,8 @@ public class PhieuBaoHanh_DAO {
                 ps.setString(3, toDatabaseStatus(pbh.getTinhTrang())); ps.setString(4, pbh.getBienSo()); ps.setString(5, pbh.getSoPhieu());
                 if (ps.executeUpdate() == 0) { con.rollback(); return false; }
             }
-            try (PreparedStatement ps = con.prepareStatement("UPDATE ChiTietPhieuBaoHanh SET lyDo = ?, tenHangMuc = ? WHERE maPBH = ?")) {
-                ps.setString(1, pbh.getNoiDung()); ps.setString(2, pbh.getNoiDung()); ps.setString(3, pbh.getSoPhieu());
+            try (PreparedStatement ps = con.prepareStatement("UPDATE ChiTietPhieuBaoHanh SET lyDo = ? WHERE maPBH = ?")) {
+                ps.setString(1, pbh.getNoiDung()); ps.setString(2, pbh.getSoPhieu());
                 if (ps.executeUpdate() == 0) themChiTietMacDinh(con, pbh);
             }
             con.commit(); return true;
@@ -632,6 +589,9 @@ public class PhieuBaoHanh_DAO {
         if (con == null) return false;
         try {
             con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HangMucBaoHanh WHERE maPBH = ?")) {
+                ps.setString(1, soPhieu); ps.executeUpdate();
+            }
             try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH = ?")) {
                 ps.setString(1, soPhieu); ps.executeUpdate();
             }
@@ -645,14 +605,11 @@ public class PhieuBaoHanh_DAO {
     }
 
     private void themChiTietMacDinh(Connection con, PhieuBaoHanh pbh) throws SQLException {
-        String sql = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy) " +
-                "VALUES (?, ?, ?, 6, DATEADD(month, 6, TRY_CONVERT(date, ?, 103)), N'B\u1EA3o h\u00E0nh ch\u00EDnh h\u00E3ng', N'Theo phi\u1EBFu s\u1EEDa ch\u1EEFa', ?, ?)";
+        String sql = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, lyDo, huongXuLy) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, pbh.getSoPhieu()); ps.setString(2, "PT001");
-            ps.setString(3, pbh.getNoiDung() == null || pbh.getNoiDung().isBlank() ? "B\u1EA3o h\u00E0nh linh ki\u1EC7n xe" : pbh.getNoiDung());
-            ps.setString(4, pbh.getNgayBatDau());
-            ps.setString(5, pbh.getNoiDung() == null ? "B\u1EA3o h\u00E0nh linh ki\u1EC7n xe" : pbh.getNoiDung());
-            ps.setString(6, "Ki\u1EC3m tra v\u00E0 thay th\u1EBF mi\u1EC5n ph\u00ED"); ps.executeUpdate();
+            ps.setString(3, pbh.getNoiDung() == null ? "Bảo hành linh kiện xe" : pbh.getNoiDung());
+            ps.setString(4, "Kiểm tra và thay thế miễn phí"); ps.executeUpdate();
         }
     }
 

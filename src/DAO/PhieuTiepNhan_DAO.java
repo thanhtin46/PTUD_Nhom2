@@ -216,7 +216,16 @@ public class PhieuTiepNhan_DAO {
 
         try {
             // 1. Xóa chi tiết hóa đơn & hóa đơn liên quan (nếu có)
-            // HoaDon khong co soPhieuSC
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHD IN (SELECT maHD FROM HoaDon WHERE soPhieuSC = ? OR soPhieuSC = ?)")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HoaDon WHERE soPhieuSC = ? OR soPhieuSC = ?")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
+                ps.executeUpdate();
+            }
 
             // 2. Xóa chi tiết sửa chữa & phiếu sửa chữa
             try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC = ?")) {

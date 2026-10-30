@@ -234,7 +234,7 @@ public class TraCuuPhuongTien_DAO {
                      "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
                      "LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) " +
                      "LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV " +
-                     "OUTER APPLY (SELECT TOP 1 tongTien FROM HoaDon hd WHERE hd.maKH = pt.maKH AND hd.ngayLap = CAST(tn.ngayTN AS DATE)) hd " +
+                     "LEFT JOIN HoaDon hd ON (hd.soPhieuSC = tn.maPTN OR hd.soPhieuSC = sc.maPSC) " +
                      "WHERE LOWER(pt.bienSoXe) = ? " +
                      "ORDER BY tn.ngayTN DESC";
 
