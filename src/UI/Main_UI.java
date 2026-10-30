@@ -475,8 +475,8 @@ public class Main_UI extends JFrame {
         return switch (tenMenu) {
             case "Trang chủ"
                     -> (nhanVienHienTai != null && nhanVienHienTai.getVaiTro() != null && nhanVienHienTai.getVaiTro().toLowerCase().contains("tiếp tân"))
-                            ? new TrangChuTiepTan_UI(nhanVienHienTai)
-                            : new TrangChu_UI(this, nhanVienHienTai);
+                    ? new TrangChuTiepTan_UI(nhanVienHienTai)
+                    : new TrangChu_UI();
             case "Quản trị hệ thống (Admin)", "Quản trị hệ thống", "Admin Hub"
                     -> new AdminHub_UI(nhanVienHienTai, this);
 
@@ -513,7 +513,8 @@ public class Main_UI extends JFrame {
                     -> new ThanhToanHoaDon_UI(nhanVienHienTai);
             case "Tra cứu hóa đơn"
                     -> new TraCuuHoaDon_UI(nhanVienHienTai);
-
+            case "Lập hóa đơn bán hàng"
+                    ->new HoaDonBanHang_UI(nhanVienHienTai);
             // 6. Kho phụ tùng
             case "Kho phụ tùng", "Quản lý phụ tùng", "Danh sách phụ tùng"
                     -> new DanhSachPhuTung_UI();
@@ -545,10 +546,10 @@ public class Main_UI extends JFrame {
                     -> new BaoCaoDoanhThu_UI();
             case "Xu hướng doanh thu (Đường)", "Biểu đồ đường xu hướng"
                     -> {
-                        BaoCaoDoanhThu_UI ui = new BaoCaoDoanhThu_UI();
-                        ui.datCheDoBieuDo(1);
-                        yield ui;
-                    }
+                BaoCaoDoanhThu_UI ui = new BaoCaoDoanhThu_UI();
+                ui.datCheDoBieuDo(1);
+                yield ui;
+            }
 
             default -> {
                 JLabel lbl = new JLabel("Chức năng đang mở: " + tenMenu, SwingConstants.CENTER);
@@ -664,8 +665,8 @@ public class Main_UI extends JFrame {
         // 1. Khách hàng
         ds.add(MucMenu.nhom("Khách hàng", UiIcon.USERS, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Quản lý khách hàng"))
-                .them(MucMenu.con("Tra cứu khách hàng")));
-
+                .them(MucMenu.con("Tra cứu khách hàng"))
+                .them(MucMenu.con("Lịch sử sửa chữa")));
 
         // 2. Phương tiện
         ds.add(MucMenu.nhom("Phương tiện", UiIcon.CAR, TIEP_TAN + "," + THU_NGAN)
@@ -687,7 +688,8 @@ public class Main_UI extends JFrame {
         // 5. Hóa đơn
         ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Lập hóa đơn"))
-                .them(MucMenu.con("Tra cứu hóa đơn")));
+                .them(MucMenu.con("Tra cứu hóa đơn"))
+                .them(MucMenu.con("Lập hóa đơn bán hàng")));
 
         // 6. Kho phụ tùng
         ds.add(MucMenu.nhom("Kho phụ tùng", UiIcon.BOX, KHO)
