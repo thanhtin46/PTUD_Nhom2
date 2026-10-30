@@ -90,7 +90,6 @@ public class DanhSachPhuTung_UI extends JPanel {
         UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
         UiHelper.themDong(form, 1, "Tên phụ tùng *", txtTen);
         UiHelper.themDong(form, 2, "Đơn vị tính", txtDonVi);
-        UiHelper.themDong(form, 3, "Số lượng tồn *", txtTon);
         UiHelper.themDong(form, 4, "Đơn giá (VNĐ) *", txtGia);
 
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
