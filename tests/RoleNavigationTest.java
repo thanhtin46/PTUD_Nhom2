@@ -1,3 +1,4 @@
+package tests;
 import UI.*;
 import Entity.*;
 import javax.swing.*;

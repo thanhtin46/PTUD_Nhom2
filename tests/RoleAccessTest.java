@@ -1,3 +1,5 @@
+package tests;
+
 import Entity.*;
 import DAO.PhanQuyen_DAO;
 import java.util.*;
