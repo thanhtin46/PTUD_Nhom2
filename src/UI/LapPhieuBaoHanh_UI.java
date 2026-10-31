@@ -8,6 +8,7 @@ import ConnectDB.ConnectDB;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.print.PrinterException;
@@ -71,6 +72,11 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         add(taoNoiDung(), BorderLayout.CENTER);
 
         moKhoaInput();
+
+        if (spThoiHan.getEditor() instanceof JSpinner.DefaultEditor editor) {
+            editor.getTextField().setHorizontalAlignment(JTextField.LEFT);
+            editor.getTextField().setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        }
 
         cboHoaDon.addActionListener(e -> {
             if (!dangNap) {
@@ -201,6 +207,12 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                 new Font("Segoe UI", Font.BOLD, 12)
         );
 
+        DefaultTableCellRenderer rCenter = new DefaultTableCellRenderer();
+        rCenter.setHorizontalAlignment(SwingConstants.CENTER);
+        tblChiTiet.getColumnModel().getColumn(0).setCellRenderer(rCenter);
+        tblChiTiet.getColumnModel().getColumn(2).setCellRenderer(rCenter);
+        tblChiTiet.getColumnModel().getColumn(3).setCellRenderer(rCenter);
+
         // Khi sửa cột "Thời hạn" thì tự tính lại "Ngày hết hạn"
         model.addTableModelListener(e -> {
             if (e.getType()
@@ -214,8 +226,13 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
 
+        JPanel pnlThoiHan = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pnlThoiHan.setOpaque(false);
+        spThoiHan.setPreferredSize(new Dimension(160, 30));
+        pnlThoiHan.add(spThoiHan);
+
         themTruong(form, 0, "Tên hạng mục", txtTenHangMuc);
-        themTruong(form, 1, "Thời hạn (tháng)", spThoiHan);
+        themTruong(form, 1, "Thời hạn (tháng)", pnlThoiHan);
         themTruong(form, 2, "Điều kiện", txtDieuKien);
         themTruong(form, 3, "Ghi chú hạng mục", txtGhiChuCT);
 
