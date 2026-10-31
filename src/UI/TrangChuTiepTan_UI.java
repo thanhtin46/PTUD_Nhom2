@@ -433,6 +433,7 @@ public class TrangChuTiepTan_UI extends JPanel {
             Main_UI main = Main_UI.getInstance();
             if (main != null) main.chuyenTrang("Lập phiếu tiếp nhận");
         });
+        BaoVeQuyen.ganQuyen(btnLapPhieu, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
 
         JButton btnKhachHang = UiHelper.nut("  Quản lý khách hàng", UiIcon.of(UiIcon.USERS, 15), UiHelper.XANH_TRUNG, e -> {
             Main_UI main = Main_UI.getInstance();

@@ -320,6 +320,7 @@ public class TrangChuThuNgan_UI extends JPanel {
 
         JButton btnTTSC = UiHelper.nut("  Thanh toán sửa chữa xe", UiIcon.of(UiIcon.BILL, 15), UiHelper.XANH_DAM, e -> chuyenTrang("Thanh toán hóa đơn"));
         JButton btnTTBL = UiHelper.nut("  Lập hóa đơn bán lẻ Shop", UiIcon.of(UiIcon.BOX, 15), UiHelper.CAM, true, e -> chuyenTrangBanLe());
+        BaoVeQuyen.ganQuyen(btnTTBL, Entity.QuyenTruyCap.Quyen.THANH_TOAN);
         JButton btnTraCuuHD = UiHelper.nut("  Tra cứu & In lại hóa đơn", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> chuyenTrang("Tra cứu hóa đơn"));
         JButton btnBaoCao = UiHelper.nut("  Báo cáo doanh thu xưởng", UiIcon.of(UiIcon.CHART, 15), UiHelper.XAM, true, e -> chuyenTrang("Báo cáo — Thống kê"));
 

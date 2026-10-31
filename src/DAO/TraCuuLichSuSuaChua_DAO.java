@@ -225,8 +225,9 @@ public class TraCuuLichSuSuaChua_DAO {
     // =========================================================================
     //                        TRUY VẤN DANH SÁCH LỊCH SỬ
     // =========================================================================
-    public ArrayList<LichSuRecord> traCuuLichSu(String tuKhoa, int tieuChi, String locTrangThai, String locThanhToan, String locThoiGian) {
+    public ArrayList<LichSuRecord> traCuuLichSu(Entity.NhanVien viewer, String tuKhoa, int tieuChi, String locTrangThai, String locThanhToan, String locThoiGian) {
         ArrayList<LichSuRecord> list = new ArrayList<>();
+        if (!Entity.QuyenTruyCap.co(viewer, Entity.QuyenTruyCap.Quyen.LICH_SU)) return list;
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
@@ -260,7 +261,6 @@ public class TraCuuLichSuSuaChua_DAO {
           .append("WHERE 1=1 ");
 
         ArrayList<Object> params = new ArrayList<>();
-        Entity.NhanVien viewer=UI.BaoVeQuyen.hienTai();
         if(viewer!=null && Entity.QuyenTruyCap.vaiTro(viewer.getVaiTro())==Entity.QuyenTruyCap.VaiTro.SUA_CHUA
                 && !Entity.QuyenTruyCap.co(viewer,Entity.QuyenTruyCap.Quyen.PHAN_CONG)) {
             sb.append("AND EXISTS (SELECT 1 FROM PhieuSuaChua own WHERE own.soVIN=tn.soVIN AND own.maNV=?) ");

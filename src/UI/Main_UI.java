@@ -426,7 +426,7 @@ public class Main_UI extends JFrame {
                         "Không tạo được giao diện: " + tenMenu);
             }
 
-            BaoVeQuyen.locNut(manHinh, QuyenTruyCap.chuanTrang(tenMenu));
+            BaoVeQuyen.locNut(manHinh);
             contentPanel.add(manHinh, BorderLayout.CENTER);
             contentPanel.revalidate();
             contentPanel.repaint();

@@ -124,6 +124,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         JButton btnTao = UiHelper.nut("Tạo phiếu", UiIcon.of(UiIcon.PLUS, 16), UiHelper.XANH_LA, true, e -> tao());
         JButton btnSua = UiHelper.nut("Sửa phiếu", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_TRUNG, true, e -> sua());
         JButton btnXoa = UiHelper.nut("Xóa phiếu", UiIcon.of(UiIcon.CLOSE, 16), UiHelper.CHU_CHAY, true, e -> xoa());
+        BaoVeQuyen.ganQuyen(btnXoa, Entity.QuyenTruyCap.Quyen.KH_XOA);
         JButton btnLamMoi = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 16), UiHelper.XAM, false, e -> lamMoi());
 
         nut.add(btnTao);
@@ -522,8 +523,11 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         // Xóa an toàn qua PhieuTiepNhan_DAO
-        boolean ok = phieuTiepNhanDAO.xoaPhieuTiepNhan(soPhieu);
-        kho.getPhieuTiepNhans().removeIf(p -> p.getSoPhieu().equalsIgnoreCase(soPhieu));
+        boolean ok = kho.xoaPhieuTiepNhan(soPhieu);
+        if (!ok) {
+            JOptionPane.showMessageDialog(this, "Không thể xóa phiếu. Phiếu có thể đang có giao dịch liên quan.");
+            return;
+        }
 
         napBang();
         lamMoi();

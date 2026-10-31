@@ -59,19 +59,39 @@ public class KhoDuLieu {
     }
 
     public void setNhanViens(ArrayList<NhanVien> danhSach) {
-        this.nhanViens = danhSach;
+        this.nhanViens = new ArrayList<>(danhSach);
     }
 
-    public ArrayList<NhanVien> getNhanViens() { return nhanViens; }
-    public ArrayList<KhachHang> getKhachHangs() { return khachHangs; }
-    public ArrayList<PhuongTien> getPhuongTiens() { return phuongTiens; }
-    public ArrayList<PhuTung> getPhuTungs() { return phuTungs; }
-    public ArrayList<PhieuTiepNhan> getPhieuTiepNhans() { return phieuTiepNhans; }
-    public ArrayList<PhieuBaoHanh> getPhieuBaoHanhs() { return phieuBaoHanhs; }
-    public ArrayList<PhieuKho> getPhieuKhos() { return phieuKhos; }
-    public ArrayList<HoaDon> getHoaDons() { return hoaDons; }
+    // Trả bản sao cấu trúc danh sách; các entity bên trong vẫn là đối tượng dùng chung.
+    public ArrayList<NhanVien> getNhanViens() { return new ArrayList<>(nhanViens); }
+    public ArrayList<KhachHang> getKhachHangs() { return new ArrayList<>(khachHangs); }
+    public ArrayList<PhuongTien> getPhuongTiens() { return new ArrayList<>(phuongTiens); }
+    public ArrayList<PhuTung> getPhuTungs() { return new ArrayList<>(phuTungs); }
+    public ArrayList<PhieuTiepNhan> getPhieuTiepNhans() { return new ArrayList<>(phieuTiepNhans); }
+    public ArrayList<PhieuBaoHanh> getPhieuBaoHanhs() { return new ArrayList<>(phieuBaoHanhs); }
+    public ArrayList<PhieuKho> getPhieuKhos() { return new ArrayList<>(phieuKhos); }
+    public ArrayList<HoaDon> getHoaDons() { return new ArrayList<>(hoaDons); }
+    /** Làm mới riêng danh sách bảo hành sau khi lưu thành công. */
+    public void taiLaiBaoHanh() {
+        ArrayList<PhieuBaoHanh> moi = phieuBaoHanhDAO.layTatCa();
+        phieuBaoHanhs.clear();
+        phieuBaoHanhs.addAll(moi);
+    }
+
+    public void capNhatDanhSachKhachHang(java.util.List<KhachHang> danhSach) {
+        ArrayList<KhachHang> moi = new ArrayList<>(danhSach);
+        khachHangs.clear();
+        khachHangs.addAll(moi);
+    }
+
+    public boolean xoaPhieuTiepNhan(String soPhieu) {
+        if (!phieuTiepNhanDAO.xoaPhieuTiepNhan(soPhieu)) return false;
+        phieuTiepNhans.removeIf(p -> p.getSoPhieu().equalsIgnoreCase(soPhieu));
+        return true;
+    }
+
     public CauHinhHeThong getCauHinh() { return cauHinh; }
-    public ArrayList<NhatKyHeThong> getNhatKyList() { return nhatKyList; }
+    public ArrayList<NhatKyHeThong> getNhatKyList() { return new ArrayList<>(nhatKyList); }
     public KhachHang_DAO getKhachHangDAO() { return khachHangDAO; }
     public TraCuuKhachHang_DAO getTraCuuKhachHangDAO() { return traCuuKhachHangDAO; }
     public PhuongTien_DAO getPhuongTienDAO() { return phuongTienDAO; }
@@ -349,8 +369,8 @@ public class KhoDuLieu {
     }
 
     // 7. NHÂN VIÊN & TÀI KHOẢN
-    public boolean themNhanVien(NhanVien nv, String sdt) {
-        boolean dbOk = nhanVienDAO.themNhanVien(nv, sdt);
+    public boolean themNhanVien(NhanVien actor, NhanVien nv, String sdt) {
+        boolean dbOk = nhanVienDAO.themNhanVien(actor, nv, sdt);
         if (!dbOk) return false;
         nhanViens.add(nv);
         ghiNhatKy("Quản lý", "Quản lý", "Thêm nhân viên", NhatKyHeThong.INFO,
@@ -358,26 +378,29 @@ public class KhoDuLieu {
         return dbOk;
     }
 
-    public boolean capNhatNhanVien(NhanVien nv) {
-        boolean dbOk = nhanVienDAO.capNhatNhanVien(nv);
+    public boolean capNhatNhanVien(NhanVien actor, NhanVien nv) {
+        boolean dbOk = nhanVienDAO.capNhatNhanVien(actor, nv);
+        if (!dbOk) return false;
+        nhanViens.replaceAll(cu -> cu.getMaNV().equals(nv.getMaNV()) ? nv : cu);
         ghiNhatKy("Quản lý", "Quản lý", "Cập nhật nhân viên", NhatKyHeThong.INFO,
                 "Cập nhật nhân sự [" + nv.getMaNV() + "] " + nv.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
-    public boolean doiTrangThaiNhanVien(String maNV, String trangThaiMoi) {
+    public boolean doiTrangThaiNhanVien(NhanVien actor, String maNV, String trangThaiMoi) {
         NhanVien nv = timNhanVienTheoMa(maNV);
+        boolean dbOk = nhanVienDAO.capNhatTrangThaiTaiKhoan(actor, maNV, trangThaiMoi);
+        if (!dbOk) return false;
         if (nv != null) nv.setTrangThai(trangThaiMoi);
-        boolean dbOk = nhanVienDAO.capNhatTrangThaiTaiKhoan(maNV, trangThaiMoi);
         ghiNhatKy("Quản lý", "Quản lý", "Đổi trạng thái tài khoản", NhatKyHeThong.WARN,
                 "Đổi trạng thái [" + maNV + "] -> " + trangThaiMoi + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
-    public boolean xoaNhanVien(String maNV) {
+    public boolean xoaNhanVien(NhanVien actor, String maNV) {
         NhanVien nv = timNhanVienTheoMa(maNV);
         String ten = nv != null ? nv.getHoTen() : maNV;
-        boolean dbOk = nhanVienDAO.xoaNhanVien(maNV);
+        boolean dbOk = nhanVienDAO.xoaNhanVien(actor, maNV);
         // Nếu xóa cứng được trong DB thì bỏ khỏi list, nếu DB chuyển sang thôi việc thì cập nhật lại trạng thái
         if (dbOk) {
             NhanVien nvSau = timNhanVienTheoMa(maNV);

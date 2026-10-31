@@ -374,6 +374,7 @@ public class TrangChu_UI extends JPanel {
         headerRight.setOpaque(false);
 
         JButton btnThemTN = UiHelper.nut("+ Tiếp nhận xe", UiIcon.of(UiIcon.PLUS, 12), UiHelper.XANH_TRUNG, e -> dieuHuong("Lập phiếu tiếp nhận"));
+        BaoVeQuyen.ganQuyen(btnThemTN, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
         btnThemTN.setFont(new Font("Segoe UI", Font.BOLD, 11));
         btnThemTN.setPreferredSize(new Dimension(115, 30));
 

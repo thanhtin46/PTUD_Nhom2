@@ -123,6 +123,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
 
         JButton btnXemChiTiet = UiHelper.nut("Xem chi tiết phiếu", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemChiTietPhieu());
         JButton btnTaoMoi = UiHelper.nut("Lập phiếu tiếp nhận mới", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> chuyenTrangLapPhieu());
+        BaoVeQuyen.ganQuyen(btnTaoMoi, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
 
         boxNut.add(btnXemChiTiet);
         boxNut.add(btnTaoMoi);

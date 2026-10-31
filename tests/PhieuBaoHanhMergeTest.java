@@ -58,9 +58,9 @@ public class PhieuBaoHanhMergeTest {
     static void check(boolean value,String msg) { if(!value) throw new AssertionError(msg); }
     static void save(Db db, boolean badDate) throws SQLException {
         LocalDate start=LocalDate.now();
-        List<Object[]> details=new ArrayList<>();
-        details.add(new Object[]{"Lọc dầu", 6, java.sql.Date.valueOf(start.plusMonths(6)), "", ""});
-        details.add(new Object[]{"Động cơ", 12, java.sql.Date.valueOf(start.plusMonths(badDate ? 11 : 12)), "", ""});
+        List<Entity.ChiTietPhieuBaoHanh> details=new ArrayList<>();
+        details.add(new Entity.ChiTietPhieuBaoHanh("", "", "Lọc dầu", 6, start.plusMonths(6), "", "", "", ""));
+        details.add(new Entity.ChiTietPhieuBaoHanh("", "", "Động cơ", 12, start.plusMonths(badDate ? 11 : 12), "", "", "", ""));
         new PhieuBaoHanh_DAO(db.connection()).themPhieuBaoHanh(
             "PBH00001","HD001","NV001","51A-12345",java.sql.Date.valueOf(start),"Tạm ngưng","Ghi chú",details);
     }

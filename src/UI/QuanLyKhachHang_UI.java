@@ -75,7 +75,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         nut.setBorder(new EmptyBorder(16, 0, 0, 0));
         nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
         nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+        nut.add(BaoVeQuyen.ganQuyen(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()), Entity.QuyenTruyCap.Quyen.KH_XOA));
         nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
         UiHelper.ganNoiDungForm(formPanel, form, nut);
@@ -122,8 +122,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         if (ds.isEmpty()) {
             ds = kho.getKhachHangs();
         } else {
-            kho.getKhachHangs().clear();
-            kho.getKhachHangs().addAll(ds);
+            kho.capNhatDanhSachKhachHang(ds);
         }
 
         for (KhachHang kh : ds) {

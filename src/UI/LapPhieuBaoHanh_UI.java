@@ -563,7 +563,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                 return;
             }
 
-            List<Object[]> ds = new ArrayList<>();
+            List<Entity.ChiTietPhieuBaoHanh> ds = new ArrayList<>();
 
             for (int i = 0; i < model.getRowCount(); i++) {
                 String ten = String.valueOf(
@@ -592,9 +592,8 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                                 ? "" : model.getValueAt(i, 5)
                 );
 
-                ds.add(new Object[]{
-                        ten, thang, hetHan, dieuKien, ghiChuCT
-                });
+                ds.add(new Entity.ChiTietPhieuBaoHanh("", "", ten, thang,
+                        hetHan.toLocalDate(), dieuKien, ghiChuCT, "", ""));
             }
 
             String maPBH = dao.taoMaPhieuMoi();
@@ -633,8 +632,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
             txtMaPBH.setText(maPBH);
             maPhieuVuaLuu = maPBH;
-            Entity.KhoDuLieu.get().getPhieuBaoHanhs().clear();
-            Entity.KhoDuLieu.get().getPhieuBaoHanhs().addAll(dao.layTatCa());
+            Entity.KhoDuLieu.get().taiLaiBaoHanh();
 
             JOptionPane.showMessageDialog(
                     this,

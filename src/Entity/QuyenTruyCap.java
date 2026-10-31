@@ -7,9 +7,36 @@ import java.util.*;
 public final class QuyenTruyCap {
     private QuyenTruyCap() {}
     public enum VaiTro { QUAN_LY, TIEP_TAN, SUA_CHUA, KHO, THU_NGAN, KHONG_RO }
-    public enum Quyen { KH_XEM, KH_SUA, KH_XOA, XE_XEM, XE_SUA, XE_XOA, TIEP_NHAN,
-        LICH_SU, SC, TIEN_DO, PHAN_CONG, KHO_XEM, PHU_TUNG, NHAP, XUAT,
-        THANH_TOAN, HD_XEM, HD_HUY, BAO_HANH, BAO_CAO, NHAN_VIEN, PHAN_QUYEN, CAU_HINH }
+    public enum Quyen {
+        KH_XEM("Xem khách hàng"),
+        KH_SUA("Thêm sửa khách hàng"),
+        KH_XOA("Xóa khách hàng"),
+        XE_XEM("Xem phương tiện"),
+        XE_SUA("Thêm sửa phương tiện"),
+        XE_XOA("Xóa phương tiện"),
+        TIEP_NHAN("Tiếp nhận xe"),
+        LICH_SU("Xem lịch sử sửa chữa"),
+        SC("Lập sửa chữa"),
+        TIEN_DO("Cập nhật tiến độ"),
+        PHAN_CONG("Phân công và điều hành"),
+        KHO_XEM("Xem kho"),
+        PHU_TUNG("Quản lý phụ tùng"),
+        NHAP("Nhập kho"),
+        XUAT("Xuất kho"),
+        THANH_TOAN("Thanh toán"),
+        HD_XEM("Xem và in hóa đơn"),
+        HD_HUY("Hủy hóa đơn"),
+        BAO_HANH("Bảo hành"),
+        BAO_CAO("Báo cáo quản trị"),
+        NHAN_VIEN("Quản lý tài khoản"),
+        PHAN_QUYEN("Phân quyền"),
+        CAU_HINH("Cấu hình hệ thống");
+
+        private final String tenHienThi;
+
+        Quyen(String tenHienThi) { this.tenHienThi = tenHienThi; }
+        public String getTenHienThi() { return tenHienThi; }
+    }
     public static VaiTro vaiTro(String s) {
         String v = Normalizer.normalize(s == null ? "" : s, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").replace('đ','d').toLowerCase(Locale.ROOT).trim();

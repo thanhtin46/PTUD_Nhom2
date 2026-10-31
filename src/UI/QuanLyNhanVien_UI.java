@@ -798,7 +798,11 @@ public class QuanLyNhanVien_UI extends JPanel {
             String vaiTro = (String) cboVaiTroTK.getSelectedItem();
 
             NhanVien nvMoi = new NhanVien(ma, ten, tk, mk, vaiTro, trangThai, null, sdt, email, bacNghe, boPhan, ngayVao);
-            boolean dbOk = kho.themNhanVien(nvMoi, sdt);
+            boolean dbOk = kho.themNhanVien(BaoVeQuyen.hienTai(), nvMoi, sdt);
+            if (!dbOk) {
+                JOptionPane.showMessageDialog(dlg, "Không thêm được nhân viên. Kiểm tra dữ liệu và kết nối SQL.");
+                return;
+            }
 
             napBang();
             dlg.dispose();
@@ -951,25 +955,30 @@ public class QuanLyNhanVien_UI extends JPanel {
                 return;
             }
 
-            nv.setHoTen(ten);
-            nv.setSoDT(txtSdt.getText().trim());
-            nv.setEmail(txtEmail.getText().trim());
-            nv.setVaiTro((String) cboChucVu.getSelectedItem());
-            nv.setBoPhan((String) cboBoPhanForm.getSelectedItem());
-            nv.setBacNghe((String) cboBacNgheForm.getSelectedItem());
-            nv.setNgayVaoLam(txtNgayVao.getText().trim());
+            NhanVien banSua = new NhanVien(nv);
+            banSua.setHoTen(ten);
+            banSua.setSoDT(txtSdt.getText().trim());
+            banSua.setEmail(txtEmail.getText().trim());
+            banSua.setVaiTro((String) cboChucVu.getSelectedItem());
+            banSua.setBoPhan((String) cboBoPhanForm.getSelectedItem());
+            banSua.setBacNghe((String) cboBacNgheForm.getSelectedItem());
+            banSua.setNgayVaoLam(txtNgayVao.getText().trim());
 
             String ttStr = (String) cboTrangThaiForm.getSelectedItem();
-            if ("Đang làm việc".equals(ttStr)) nv.setTrangThai(NhanVien.DANG_LAM);
-            else if ("Nghỉ phép".equals(ttStr)) nv.setTrangThai(NhanVien.NGHI_PHEP);
-            else if ("Thử việc".equals(ttStr)) nv.setTrangThai(NhanVien.THU_VIEC);
-            else nv.setTrangThai(NhanVien.NGUNG);
+            if ("Đang làm việc".equals(ttStr)) banSua.setTrangThai(NhanVien.DANG_LAM);
+            else if ("Nghỉ phép".equals(ttStr)) banSua.setTrangThai(NhanVien.NGHI_PHEP);
+            else if ("Thử việc".equals(ttStr)) banSua.setTrangThai(NhanVien.THU_VIEC);
+            else banSua.setTrangThai(NhanVien.NGUNG);
 
-            nv.setTaiKhoan(txtTaiKhoan.getText().trim());
+            banSua.setTaiKhoan(txtTaiKhoan.getText().trim());
             String mkMoi = new String(txtMatKhau.getPassword()).trim();
-            if (!mkMoi.isEmpty()) nv.setMatKhau(mkMoi);
+            if (!mkMoi.isEmpty()) banSua.setMatKhau(mkMoi);
 
-            boolean dbOk = kho.capNhatNhanVien(nv);
+            boolean dbOk = kho.capNhatNhanVien(BaoVeQuyen.hienTai(), banSua);
+            if (!dbOk) {
+                JOptionPane.showMessageDialog(dlg, "Không lưu được hồ sơ. Kiểm tra dữ liệu và quyền quản lý.");
+                return;
+            }
             napBang();
             dlg.dispose();
             JOptionPane.showMessageDialog(this,
@@ -1129,7 +1138,11 @@ public class QuanLyNhanVien_UI extends JPanel {
             ttMoi = NhanVien.DANG_LAM;
         }
 
-        boolean ok = kho.doiTrangThaiNhanVien(nv.getMaNV(), ttMoi);
+        boolean ok = kho.doiTrangThaiNhanVien(BaoVeQuyen.hienTai(), nv.getMaNV(), ttMoi);
+        if (!ok) {
+            JOptionPane.showMessageDialog(this, "Không đổi được trạng thái. Phải giữ ít nhất một quản lý đang hoạt động.");
+            return;
+        }
         napBang();
         JOptionPane.showMessageDialog(this,
                 (NhanVien.DANG_LAM.equals(ttMoi) ? "Đã kích hoạt hoạt động lại cho " : "Đã chuyển sang thôi việc / khóa tài khoản của ")

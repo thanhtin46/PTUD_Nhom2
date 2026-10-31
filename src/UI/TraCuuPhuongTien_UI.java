@@ -120,6 +120,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         JButton btnXemChiTiet = UiHelper.nut("Xem chi tiết xe", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemChiTiet());
         JButton btnXemLichSu = UiHelper.nut("Xem lịch sử sửa chữa", UiIcon.of(UiIcon.CLOCK, 15), UiHelper.CAM, e -> xemLichSuSuaChua());
         JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 15), UiHelper.XANH_LA, e -> lapPhieuTiepNhan());
+        BaoVeQuyen.ganQuyen(btnTiepNhan, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
 
         boxNut.add(btnXemChiTiet);
         boxNut.add(btnXemLichSu);

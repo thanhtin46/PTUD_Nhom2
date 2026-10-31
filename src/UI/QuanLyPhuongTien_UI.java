@@ -74,10 +74,11 @@ public class QuanLyPhuongTien_UI extends JPanel {
         hangNut1.setOpaque(false);
         hangNut1.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
         hangNut1.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        hangNut1.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+        hangNut1.add(BaoVeQuyen.ganQuyen(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()), Entity.QuyenTruyCap.Quyen.XE_XOA));
         hangNut1.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
         JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 16), UiHelper.XANH_TRUNG, true, e -> lapPhieuTiepNhan());
+        BaoVeQuyen.ganQuyen(btnTiepNhan, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
         btnTiepNhan.setPreferredSize(new Dimension(btnTiepNhan.getPreferredSize().width, 38));
 
         panelNut.add(hangNut1, BorderLayout.NORTH);

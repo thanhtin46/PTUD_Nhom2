@@ -44,8 +44,8 @@ public class SqlSyncIntegrationTest {
         check(scalar("SELECT COUNT(*) FROM ChiTietDichVuHoaDon WHERE maHD='HD_TEST_FAIL'")==0,"Rollback labour detail");
         PhieuBaoHanh_DAO warranty=new PhieuBaoHanh_DAO();
         java.sql.Date start=java.sql.Date.valueOf(LocalDate.now());
-        List<Object[]> warrantyLines=new ArrayList<>();
-        warrantyLines.add(new Object[]{"Nước làm mát",6,java.sql.Date.valueOf(LocalDate.now().plusMonths(6)),"Lỗi sản phẩm","Test"});
+        List<Entity.ChiTietPhieuBaoHanh> warrantyLines=new ArrayList<>();
+        warrantyLines.add(new Entity.ChiTietPhieuBaoHanh("", "", "Nước làm mát", 6, LocalDate.now().plusMonths(6), "Lỗi sản phẩm", "Test", "", ""));
         warranty.themPhieuBaoHanh("PBH_TEST_SYNC","HD110","NV01","51A-20110",start,"Còn hạn","Test",warrantyLines);
         check(warranty.layThongTinIn("PBH_TEST_SYNC").chiTiet.size()==1,"Warranty round trip");
         check(warranty.xoa("PBH_TEST_SYNC"),"Warranty deletes item details on non-cascade schema");

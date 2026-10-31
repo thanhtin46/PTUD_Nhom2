@@ -201,6 +201,7 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         JButton btnXemHoSo = UiHelper.nut("Xem hồ sơ đầy đủ", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemHoSoDayDu());
         JButton btnInPhieu = UiHelper.nut("In phiếu tóm tắt", UiIcon.of(UiIcon.PRINT, 15), new Color(14, 116, 144), e -> inPhieuTomTat());
         JButton btnTiepNhanMoi = UiHelper.nut("Lập phiếu tiếp nhận mới", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> lapPhieuTiepNhanMoi());
+        BaoVeQuyen.ganQuyen(btnTiepNhanMoi, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
         JButton btnLamMoi = UiHelper.nut("Làm mới dữ liệu", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
 
         boxNut.add(btnXemHoSo);
@@ -605,7 +606,7 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         int tieuChi = cboTieuChi.getSelectedIndex();
         modelMaster.setRowCount(0);
 
-        dsHienTai = dao.traCuuLichSu(tuKhoa, tieuChi, locTrangThai, locThanhToan, locThoiGian);
+        dsHienTai = dao.traCuuLichSu(BaoVeQuyen.hienTai(), tuKhoa, tieuChi, locTrangThai, locThanhToan, locThoiGian);
 
         long tongTienThucThu = 0;
         int countHoanThanh = 0;

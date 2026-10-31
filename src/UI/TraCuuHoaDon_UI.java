@@ -128,6 +128,7 @@ public class TraCuuHoaDon_UI extends JPanel {
         JButton btnXemChiTiet = UiHelper.nut("Xem chi tiết", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemChiTiet());
         JButton btnInLai = UiHelper.nut("In hóa đơn", UiIcon.of(UiIcon.PRINT, 15), UiHelper.XANH_TRUNG, true, e -> inLaiHoaDon());
         JButton btnLapMoi = UiHelper.nut("Lập hóa đơn mới", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> chuyenTrangLapHoaDon());
+        BaoVeQuyen.ganQuyen(btnLapMoi, Entity.QuyenTruyCap.Quyen.THANH_TOAN);
 
         actions.add(btnXemChiTiet);
         actions.add(btnInLai);

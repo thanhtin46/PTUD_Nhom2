@@ -354,10 +354,10 @@ public class NhanVien_DAO {
     }
 
     /**
-     * Xóa an toàn nhân viên: Thử xóa cứng nếu chưa có giao dịch, nếu có FK thì chuyển sang Thôi việc (Soft-delete)
+     * Ngừng tài khoản, giữ hồ sơ và các giao dịch đã phát sinh.
      */
-    public boolean xoaNhanVien(String maNV) {
-        return capNhatTrangThaiTaiKhoan(maNV, NhanVien.NGUNG);
+    public boolean xoaNhanVien(NhanVien actor, String maNV) {
+        return capNhatTrangThaiTaiKhoan(actor, maNV, NhanVien.NGUNG);
     }
 
     /**
@@ -384,12 +384,11 @@ public class NhanVien_DAO {
         ArrayList<NhanVien> list = dao.layTatCaNhanVien();
         System.out.println("Tong so nhan vien trong SQL Server: " + list.size());
         for (NhanVien nv : list) {
-            System.out.println("-> Ma: " + nv.getMaNV() + " | HoTen: " + nv.getHoTen() + " | TK: " + nv.getTaiKhoan() + " | MK: " + nv.getMatKhau() + " | ChucVu: " + nv.getVaiTro());
+            System.out.println("-> Ma: " + nv.getMaNV() + " | HoTen: " + nv.getHoTen() + " | TK: " + nv.getTaiKhoan() + " | ChucVu: " + nv.getVaiTro());
         }
     }
 
-    public boolean capNhatNhanVien(NhanVien nv) {
-        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+    public boolean capNhatNhanVien(NhanVien actor, NhanVien nv) {
         if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
         synchronized(ConnectDB.getInstance()) {
             Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
@@ -402,8 +401,7 @@ public class NhanVien_DAO {
         }
     }
 
-    public boolean capNhatTrangThaiTaiKhoan(String maNV, String trangThaiMoi) {
-        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+    public boolean capNhatTrangThaiTaiKhoan(NhanVien actor, String maNV, String trangThaiMoi) {
         if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
         synchronized(ConnectDB.getInstance()) {
             Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
@@ -416,8 +414,7 @@ public class NhanVien_DAO {
         }
     }
 
-    public boolean themNhanVien(NhanVien nv, String sdt) {
-        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+    public boolean themNhanVien(NhanVien actor, NhanVien nv, String sdt) {
         if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
         synchronized(ConnectDB.getInstance()) {
             Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
@@ -430,8 +427,7 @@ public class NhanVien_DAO {
         }
     }
 
-    public boolean doiMatKhau(String maNV, String matKhauMoi) {
-        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+    public boolean doiMatKhau(NhanVien actor, String maNV, String matKhauMoi) {
         if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
         synchronized(ConnectDB.getInstance()) {
             Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;

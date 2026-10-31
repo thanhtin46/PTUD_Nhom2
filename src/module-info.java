@@ -6,4 +6,5 @@ module HeThongQuanLyGaraOto {
     exports DAO;
     exports Entity;
     exports UI;
+    exports Service;
 }

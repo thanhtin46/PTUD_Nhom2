@@ -1,37 +1,132 @@
 package UI;
-import Entity.*;
+
+import DAO.NhanVien_DAO;
 import DAO.PhanQuyen_DAO;
+import Entity.NhanVien;
+import Entity.QuyenTruyCap;
+import Entity.QuyenTruyCap.Quyen;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.*;
-import java.awt.*;
-import java.util.*;
+
+/** Form chọn vai trò và các quyền bổ sung của nhân viên. */
 public class PhanQuyen_UI extends JPanel {
-    private static final String[] NHAN = {"Xem khách hàng","Thêm sửa khách hàng","Xóa khách hàng","Xem phương tiện","Thêm sửa phương tiện","Xóa phương tiện","Tiếp nhận xe","Xem lịch sử sửa chữa","Lập sửa chữa","Cập nhật tiến độ","Phân công và điều hành","Xem kho","Quản lý phụ tùng","Nhập kho","Xuất kho","Thanh toán","Xem và in hóa đơn","Hủy hóa đơn","Bảo hành","Báo cáo quản trị","Quản lý tài khoản","Phân quyền","Cấu hình hệ thống"};
-    private final JComboBox<String> staff=new JComboBox<>();
-    private final JComboBox<String> role=new JComboBox<>(new String[]{"Quản lý","Nhân viên tiếp tân","Nhân viên sửa chữa","Nhân viên kho","Nhân viên thu ngân"});
-    private final Map<QuyenTruyCap.Quyen,JCheckBox> checks=new LinkedHashMap<>();
-    private final java.util.List<NhanVien> people=new ArrayList<>();
+    private final JComboBox<String> cboNhanVien = new JComboBox<>();
+    private final JComboBox<String> cboVaiTro = new JComboBox<>(new String[]{
+        "Quản lý", "Nhân viên tiếp tân", "Nhân viên sửa chữa", "Nhân viên kho", "Nhân viên thu ngân"
+    });
+    private final Map<Quyen, JCheckBox> oQuyen = new EnumMap<>(Quyen.class);
+    private final List<NhanVien> nhanViens = new ArrayList<>();
+    private final PhanQuyen_DAO phanQuyenDAO = new PhanQuyen_DAO();
+    private final JButton btnLuu;
+
     public PhanQuyen_UI() {
-        setLayout(new BorderLayout(10,10));setBorder(BorderFactory.createEmptyBorder(24,24,24,24));
-        JPanel top=new JPanel(new GridLayout(0,1,5,5));top.add(UiHelper.tieuDeTrang("Vai trò và quyền bổ sung"));top.add(staff);top.add(role);
-        top.add(new JLabel("Quyền mặc định được giữ theo vai trò. Thay đổi có hiệu lực từ lần đăng nhập tiếp theo."));add(top,BorderLayout.NORTH);
-        JPanel grid=new JPanel(new GridLayout(0,3,8,8));
-        for(QuyenTruyCap.Quyen q:QuyenTruyCap.Quyen.values()){JCheckBox c=new JCheckBox(NHAN[q.ordinal()]);checks.put(q,c);grid.add(c);}add(new JScrollPane(grid));
-        JPanel bottom=new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));bottom.setOpaque(false);JButton reset=UiHelper.nut("Khôi phục theo vai trò", UiIcon.of(UiIcon.REFRESH, 14), UiHelper.XAM, e->{checks.values().forEach(c->c.setSelected(false));defaults();});JButton save=UiHelper.nut("Lưu thay đổi", UiIcon.of(UiIcon.CHECK, 14), UiHelper.XANH_TRUNG, e->save());bottom.add(reset);bottom.add(save);add(bottom,BorderLayout.SOUTH);
-        people.addAll(new DAO.NhanVien_DAO().layTatCaNhanVien());for(NhanVien n:people)staff.addItem(n.getMaNV()+" — "+n.getHoTen());
-        staff.addActionListener(e->select());role.addActionListener(e->defaults());reset.addActionListener(e->{checks.values().forEach(c->c.setSelected(false));defaults();});
-        save.addActionListener(e->save());select();
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        JPanel tren = new JPanel(new GridLayout(0, 1, 5, 5));
+        tren.add(UiHelper.tieuDeTrang("Vai trò và quyền bổ sung"));
+        tren.add(cboNhanVien);
+        tren.add(cboVaiTro);
+        tren.add(new JLabel("Quyền mặc định được giữ theo vai trò. Thay đổi có hiệu lực từ lần đăng nhập tiếp theo."));
+        add(tren, BorderLayout.NORTH);
+        JPanel luoi = new JPanel(new GridLayout(0, 3, 8, 8));
+        for (Quyen quyen : Quyen.values()) {
+            JCheckBox oChon = new JCheckBox(quyen.getTenHienThi());
+            oQuyen.put(quyen, oChon);
+            luoi.add(oChon);
+        }
+        add(new JScrollPane(luoi), BorderLayout.CENTER);
+        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        duoi.setOpaque(false);
+        // UiHelper.nut đã gắn listener; không đăng ký lần thứ hai.
+        duoi.add(UiHelper.nut("Khôi phục theo vai trò", UiIcon.of(UiIcon.REFRESH, 14),
+                UiHelper.XAM, e -> khoiPhucMacDinh()));
+        btnLuu = UiHelper.nut("Lưu thay đổi", UiIcon.of(UiIcon.CHECK, 14),
+                UiHelper.XANH_TRUNG, e -> luu());
+        duoi.add(btnLuu);
+        add(duoi, BorderLayout.SOUTH);
+        nhanViens.addAll(new NhanVien_DAO().layTatCaNhanVien());
+        for (NhanVien nv : nhanViens) cboNhanVien.addItem(nv.getMaNV() + " — " + nv.getHoTen());
+        cboNhanVien.addActionListener(e -> chonNhanVien());
+        cboVaiTro.addActionListener(e -> apDungMacDinh());
+        chonNhanVien();
     }
-    private void defaults(){Set<QuyenTruyCap.Quyen> base=QuyenTruyCap.macDinh((String)role.getSelectedItem());checks.forEach((q,c)->{
-        boolean fixed=base.contains(q);if(!c.isEnabled())c.setSelected(false);c.setEnabled(!fixed && q!=QuyenTruyCap.Quyen.PHAN_QUYEN && q!=QuyenTruyCap.Quyen.NHAN_VIEN && q!=QuyenTruyCap.Quyen.CAU_HINH);if(fixed)c.setSelected(true);
-    });}
-    private void select(){int i=staff.getSelectedIndex();if(i<0)return;NhanVien n=people.get(i);role.setSelectedItem(n.getVaiTro());checks.values().forEach(c->c.setSelected(false));
-        try{new PhanQuyen_DAO().napQuyen(n);if(n.getCacQuyen()!=null)for(String q:n.getCacQuyen())try{checks.get(QuyenTruyCap.Quyen.valueOf(q)).setSelected(true);}catch(IllegalArgumentException ignored){}defaults();}
-        catch(Exception e){JOptionPane.showMessageDialog(this,"Không tải được quyền: "+e.getMessage());}
+
+    private void khoiPhucMacDinh() {
+        oQuyen.values().forEach(o -> o.setSelected(false));
+        apDungMacDinh();
     }
-    private void save(){if(!BaoVeQuyen.yeuCau(this,QuyenTruyCap.Quyen.PHAN_QUYEN))return;int i=staff.getSelectedIndex();if(i<0)return;
-        if(JOptionPane.showConfirmDialog(this,"Lưu vai trò và quyền mới?","Xác nhận",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION)return;
-        Set<String> extra=new HashSet<>();checks.forEach((q,c)->{if(c.isEnabled()&&c.isSelected())extra.add(q.name());});
-        try{new PhanQuyen_DAO().luu(BaoVeQuyen.hienTai(),people.get(i).getMaNV(),(String)role.getSelectedItem(),extra);JOptionPane.showMessageDialog(this,"Đã lưu SQL. Có hiệu lực từ lần đăng nhập tiếp theo.");}
-        catch(Exception e){JOptionPane.showMessageDialog(this,"Không lưu được quyền. Kiểm tra migration và dữ liệu.\n"+e.getMessage());}
+
+    private void apDungMacDinh() {
+        Set<Quyen> macDinh = QuyenTruyCap.macDinh((String) cboVaiTro.getSelectedItem());
+        oQuyen.forEach((quyen, oChon) -> {
+            boolean batBuoc = macDinh.contains(quyen);
+            if (!oChon.isEnabled()) oChon.setSelected(false);
+            boolean chiQuanLy = quyen == Quyen.PHAN_QUYEN || quyen == Quyen.NHAN_VIEN || quyen == Quyen.CAU_HINH;
+            oChon.setEnabled(!batBuoc && !chiQuanLy);
+            if (batBuoc) oChon.setSelected(true);
+        });
+    }
+
+    private void chonNhanVien() {
+        int viTri = cboNhanVien.getSelectedIndex();
+        btnLuu.setEnabled(false);
+        if (viTri < 0) return;
+        NhanVien nv = nhanViens.get(viTri);
+        String vaiTro = switch (QuyenTruyCap.vaiTro(nv.getVaiTro())) {
+            case QUAN_LY -> "Quản lý";
+            case TIEP_TAN -> "Nhân viên tiếp tân";
+            case SUA_CHUA -> "Nhân viên sửa chữa";
+            case KHO -> "Nhân viên kho";
+            case THU_NGAN -> "Nhân viên thu ngân";
+            default -> null;
+        };
+        cboVaiTro.setSelectedItem(vaiTro);
+        oQuyen.values().forEach(o -> { o.setEnabled(true); o.setSelected(false); });
+        try {
+            phanQuyenDAO.napQuyen(nv);
+            if (nv.getCacQuyen() != null) {
+                for (String tenQuyen : nv.getCacQuyen()) {
+                    try {
+                        oQuyen.get(Quyen.valueOf(tenQuyen)).setSelected(true);
+                    } catch (IllegalArgumentException ignored) {
+                        // Bỏ qua mã quyền cũ không có trong danh mục hiện tại.
+                    }
+                }
+            }
+            apDungMacDinh();
+            btnLuu.setEnabled(true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Không tải được quyền: " + ex.getMessage());
+        }
+    }
+
+    private void luu() {
+        if (!BaoVeQuyen.yeuCau(this, Quyen.PHAN_QUYEN)) return;
+        int viTri = cboNhanVien.getSelectedIndex();
+        if (viTri < 0) return;
+        if (JOptionPane.showConfirmDialog(this, "Lưu vai trò và quyền mới?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        Set<String> boSung = new HashSet<>();
+        oQuyen.forEach((quyen, oChon) -> {
+            if (oChon.isEnabled() && oChon.isSelected()) boSung.add(quyen.name());
+        });
+        try {
+            NhanVien nv = nhanViens.get(viTri);
+            String vaiTro = (String) cboVaiTro.getSelectedItem();
+            phanQuyenDAO.luu(BaoVeQuyen.hienTai(), nv.getMaNV(), vaiTro, boSung);
+            nv.setVaiTro(vaiTro);
+            nv.setCacQuyen(boSung.toArray(new String[0]));
+            JOptionPane.showMessageDialog(this, "Đã lưu. Có hiệu lực từ lần đăng nhập tiếp theo.");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Không lưu được quyền: " + ex.getMessage());
+        }
     }
 }

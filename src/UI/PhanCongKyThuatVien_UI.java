@@ -144,7 +144,9 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         napComboKtv();
         cboKtv.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         JButton btnPhanCong = UiHelper.nut("Phân công", UiIcon.of(UiIcon.CHECK, 15), new Color(37, 99, 168), e -> phanCong());
+        BaoVeQuyen.ganQuyen(btnPhanCong, Entity.QuyenTruyCap.Quyen.PHAN_CONG);
         JButton btnBoPhanCong = UiHelper.nut("Bỏ phân công", UiIcon.of(UiIcon.TRASH, 15), new Color(220, 80, 80), e -> boPhanCong());
+        BaoVeQuyen.ganQuyen(btnBoPhanCong, Entity.QuyenTruyCap.Quyen.PHAN_CONG);
         pcPanel.add(lblKtv);
         pcPanel.add(cboKtv);
         pcPanel.add(btnPhanCong);

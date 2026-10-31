@@ -10,16 +10,14 @@ public class ChiTietDichVu {
     private String donVi;       // "Lần", "Can", "Bộ", "Cái", "Lít", ...
     private int soLuong;
     private long donGia;
-    private long thanhTien;
 
     public ChiTietDichVu(String loai, String maPT, String tenHangMuc, String donVi, int soLuong, long donGia) {
         this.loai = loai != null ? loai : "Phụ tùng";
         this.maPT = maPT != null ? maPT : "";
         this.tenHangMuc = tenHangMuc != null ? tenHangMuc : "";
         this.donVi = donVi != null && !donVi.trim().isEmpty() ? donVi : ("Tiền công".equalsIgnoreCase(this.loai) ? "Lần" : "Cái");
-        this.soLuong = Math.max(1, soLuong);
-        this.donGia = donGia;
-        this.thanhTien = (long) this.soLuong * donGia;
+        setSoLuong(soLuong);
+        setDonGia(donGia);
     }
 
     public String getLoai() { return loai; }
@@ -36,15 +34,17 @@ public class ChiTietDichVu {
 
     public int getSoLuong() { return soLuong; }
     public void setSoLuong(int soLuong) {
+        if (soLuong <= 0) throw new IllegalArgumentException("Số lượng phải lớn hơn 0.");
+        Math.multiplyExact((long) soLuong, donGia);
         this.soLuong = soLuong;
-        this.thanhTien = (long) this.soLuong * this.donGia;
     }
 
     public long getDonGia() { return donGia; }
     public void setDonGia(long donGia) {
+        if (donGia < 0) throw new IllegalArgumentException("Đơn giá không được âm.");
+        Math.multiplyExact((long) soLuong, donGia);
         this.donGia = donGia;
-        this.thanhTien = (long) this.soLuong * this.donGia;
     }
 
-    public long getThanhTien() { return thanhTien; }
+    public long getThanhTien() { return Math.multiplyExact((long) soLuong, donGia); }
 }

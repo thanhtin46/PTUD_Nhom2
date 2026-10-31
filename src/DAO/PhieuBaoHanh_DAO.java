@@ -1,5 +1,7 @@
 package DAO;
 
+import Entity.ChiTietPhieuBaoHanh;
+
 import ConnectDB.ConnectDB;
 import Entity.KhoDuLieu;
 import Entity.PhieuBaoHanh;
@@ -206,12 +208,7 @@ public class PhieuBaoHanh_DAO {
 
     // =========================================================
     // 7. THÊM PHIẾU BẢO HÀNH VÀ CÁC HẠNG MỤC
-    // dsChiTiet: mỗi phần tử là Object[] gồm 5 giá trị:
-    //   [0] tenHangMuc (String)
-    //   [1] thoiHan    (Number)
-    //   [2] ngayHetHan (java.sql.Date)
-    //   [3] dieuKien   (String)
-    //   [4] ghiChu     (String)
+    // Mỗi hạng mục dùng một đối tượng có tên thuộc tính rõ ràng.
     // =========================================================
     public void themPhieuBaoHanh(
             String maPBH,
@@ -221,7 +218,7 @@ public class PhieuBaoHanh_DAO {
             Date ngayBatDau,
             String trangThai,
             String ghiChu,
-            List<Object[]> dsChiTiet) throws SQLException {
+            List<ChiTietPhieuBaoHanh> dsChiTiet) throws SQLException {
 
         // --- Kiểm tra dữ liệu đầu vào ---
         if (rong(maPBH)) {
@@ -261,11 +258,11 @@ public class PhieuBaoHanh_DAO {
             kiemTraNgayBatDau(c, ngayBatDau);
 
             Date ngayKetThuc = ngayBatDau;
-            for (Object[] ct : dsChiTiet) {
-                if (ct == null || ct.length < 5 || !(ct[1] instanceof Number)
-                        || !(ct[2] instanceof Date)) throw new SQLException("Chi tiết bảo hành không hợp lệ.");
-                int thang = ((Number) ct[1]).intValue();
-                Date hetHan = (Date) ct[2];
+            for (ChiTietPhieuBaoHanh ct : dsChiTiet) {
+                if (ct == null || ct.getNgayHetHan() == null)
+                    throw new SQLException("Chi tiết bảo hành không hợp lệ.");
+                int thang = ct.getThoiHanBaoHanh();
+                Date hetHan = Date.valueOf(ct.getNgayHetHan());
                 if (thang <= 0 || !hetHan.equals(Date.valueOf(ngayBatDau.toLocalDate().plusMonths(thang))))
                     throw new SQLException("Ngày hết hạn phải khớp ngày bắt đầu và số tháng bảo hành. Hãy nhập lại hạng mục.");
                 if (hetHan.after(ngayKetThuc)) ngayKetThuc = hetHan;
@@ -307,7 +304,7 @@ public class PhieuBaoHanh_DAO {
         }
     }
     // Lưu các hạng mục vào bảng ChiTietPhieuBaoHanh
-    private void luuChiTiet(Connection c, String maPBH, List<Object[]> dsChiTiet)
+    private void luuChiTiet(Connection c, String maPBH, List<ChiTietPhieuBaoHanh> dsChiTiet)
             throws SQLException {
 
         String sql = "INSERT INTO dbo.ChiTietPhieuBaoHanh "
@@ -318,17 +315,14 @@ public class PhieuBaoHanh_DAO {
 
         try (PreparedStatement ps = c.prepareStatement(sql)) {
 
-            for (Object[] ct : dsChiTiet) {
+            for (ChiTietPhieuBaoHanh ct : dsChiTiet) {
 
-                if (ct == null || ct.length < 5) {
-                    throw new SQLException("Dữ liệu chi tiết phiếu bảo hành không hợp lệ.");
-                }
-
-                String tenHangMuc = (String) ct[0];
-                int thoiHan = ((Number) ct[1]).intValue();
-                Date ngayHetHan = (Date) ct[2];
-                String dieuKien = (String) ct[3];
-                String ghiChuCT = (String) ct[4];
+                if (ct == null) throw new SQLException("Thiếu hạng mục bảo hành.");
+                String tenHangMuc = ct.getTenHangMuc();
+                int thoiHan = ct.getThoiHanBaoHanh();
+                Date ngayHetHan = ct.getNgayHetHan() == null ? null : Date.valueOf(ct.getNgayHetHan());
+                String dieuKien = ct.getDieuKienBaoHanh();
+                String ghiChuCT = ct.getGhiChu();
 
                 if (rong(tenHangMuc)) {
                     throw new SQLException("Tên hạng mục bảo hành không được để trống.");
@@ -340,10 +334,7 @@ public class PhieuBaoHanh_DAO {
                     throw new SQLException("Ng\u00E0y h\u1EBFt h\u1EA1n b\u1EA3o h\u00E0nh kh\u00F4ng \u0111\u01B0\u1EE3c \u0111\u1EC3 tr\u1ED1ng.");
                 }
 
-                String maPT = null;
-                if (ct.length >= 6 && ct[5] instanceof String s && !s.isBlank()) {
-                    maPT = s.trim();
-                }
+                String maPT = ct.getMaPT().isBlank() ? null : ct.getMaPT().trim();
 
                 if (maPT == null || daDungMaPT.contains(maPT)) {
                     try (PreparedStatement psPT = c.prepareStatement("SELECT TOP 1 maPT FROM PhuTung WHERE tenPT = ?")) {

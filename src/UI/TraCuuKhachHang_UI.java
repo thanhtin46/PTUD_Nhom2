@@ -113,6 +113,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         JButton btnXemChiTiet = UiHelper.nut("Xem chi tiết & Xe", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemChiTiet());
         JButton btnXemLichSu = UiHelper.nut("Xem lịch sử sửa chữa", UiIcon.of(UiIcon.CLOCK, 15), UiHelper.CAM, e -> xemLichSuSuaChua());
         JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho khách", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> lapPhieuTiepNhanChoKhach());
+        BaoVeQuyen.ganQuyen(btnTiepNhan, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
 
         boxNut.add(btnXemChiTiet);
         boxNut.add(btnXemLichSu);

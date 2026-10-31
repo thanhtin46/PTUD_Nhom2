@@ -30,6 +30,13 @@ public class NhanVien {
     public NhanVien() {
     }
 
+    /** Bản nháp để sửa form, tránh đổi dữ liệu đang dùng trước khi lưu SQL. */
+    public NhanVien(NhanVien nguon) {
+        this(nguon.maNV, nguon.hoTen, nguon.taiKhoan, nguon.matKhau,
+                nguon.vaiTro, nguon.trangThai, nguon.cacQuyen, nguon.soDT,
+                nguon.email, nguon.bacNghe, nguon.boPhan, nguon.ngayVaoLam);
+    }
+
     public NhanVien(String maNV) {
         this.maNV = maNV;
     }
@@ -62,7 +69,7 @@ public class NhanVien {
         this.matKhau = matKhau;
         this.vaiTro = vaiTro;
         this.trangThai = trangThai == null ? DANG_LAM : trangThai;
-        this.cacQuyen = cacQuyen;
+        setCacQuyen(cacQuyen);
         this.soDT = soDT;
         this.email = email;
         this.bacNghe = bacNghe;
@@ -97,8 +104,10 @@ public class NhanVien {
         return true;
     }
 
-    public String[] getCacQuyen() { return cacQuyen; }
-    public void setCacQuyen(String[] cacQuyen) { this.cacQuyen = cacQuyen; }
+    public String[] getCacQuyen() { return cacQuyen == null ? null : cacQuyen.clone(); }
+    public void setCacQuyen(String[] cacQuyen) {
+        this.cacQuyen = cacQuyen == null ? null : cacQuyen.clone();
+    }
 
     public String getSoDT() {
         if (soDT == null || soDT.trim().isEmpty()) {
