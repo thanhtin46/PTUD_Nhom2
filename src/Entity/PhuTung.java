@@ -1,8 +1,7 @@
 package Entity;
 
 /**
- * Phụ tùng trong kho.
- * UC009: thêm mức tồn tối thiểu để cảnh báo khi tồn thấp / hết hàng.
+ * Lớp thực thể Phụ tùng.
  */
 public class PhuTung {
     private String maPT;
@@ -10,7 +9,7 @@ public class PhuTung {
     private String donVi;
     private int soLuongTon;
     private long donGia;
-    private int soLuongToiThieu;     // mức cảnh báo real-time (UC009)
+    private int soLuongToiThieu;     // Mức tồn tối thiểu để cảnh báo hết hàng
 
     public PhuTung(String maPT, String ten, String donVi, int soLuongTon, long donGia) {
         this(maPT, ten, donVi, soLuongTon, donGia, 5);   // mặc định cảnh báo khi ≤5
@@ -44,7 +43,7 @@ public class PhuTung {
     public int getSoLuongToiThieu() { return soLuongToiThieu; }
     public void setSoLuongToiThieu(int soLuongToiThieu) { this.soLuongToiThieu = soLuongToiThieu; }
 
-    /** Cảnh báo theo 3 mức: HET, SAP_HET (<=min), sap_hoac_binh_thuong */
+    // Kiểm tra mức cảnh báo tồn kho
     public String getMucCanhBao() {
         if (soLuongTon == 0) return "HẾT HÀNG";
         if (soLuongTon <= soLuongToiThieu) return "SẮP HẾT";

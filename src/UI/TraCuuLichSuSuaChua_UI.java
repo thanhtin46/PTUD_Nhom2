@@ -19,16 +19,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
- * TraCuuLichSuSuaChua_UI — Màn hình tra cứu lịch sử sửa chữa của người dùng / khách hàng:
- * - Tra cứu đa tiêu chí kết hợp SQL Server: Tên khách hàng, SĐT, Biển số xe, Mã phiếu TN, Mã phiếu SC, CCCD/Mã KH
- * - Thống kê nhanh KPI trực quan (Tổng lượt, Đã hoàn thành, Đang trong xưởng, Tổng chi phí)
- * - Bộ lọc trạng thái tiến độ & trạng thái thanh toán linh hoạt
- * - Bảng Master hiển thị đầy đủ lịch sử tiếp nhận và sửa chữa
- * - Panel Detail (TabbedPane) bên dưới hiển thị chi tiết từng lần sửa chữa:
- *   + Tab 1: Công việc sửa chữa & tiền công thực tế
- *   + Tab 2: Phụ tùng, linh kiện đã thay thế kèm đơn vị tính, số lượng, đơn giá
- *   + Tab 3: Hóa đơn thanh toán & Phiếu bảo hành liên quan
- * - Hỗ trợ xem hồ sơ kỹ thuật đầy đủ và liên kết lập phiếu tiếp nhận mới
+ * Màn hình tra cứu lịch sử sửa chữa của khách hàng và phương tiện.
  */
 public class TraCuuLichSuSuaChua_UI extends JPanel {
 
@@ -233,7 +224,7 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
 
         JLabel tde = UiHelper.tieuDeTrang("Tra cứu lịch sử sửa chữa của khách hàng");
-        JLabel phu = new JLabel("Theo dõi toàn diện lịch sử tiếp nhận, dịch vụ sửa chữa, phụ tùng thay thế, hóa đơn và bảo hành theo khách hàng hoặc phương tiện");
+        JLabel phu = new JLabel("Tra cứu lịch sử tiếp nhận, sửa chữa, phụ tùng và bảo hành theo khách hàng hoặc phương tiện");
         phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         phu.setForeground(new Color(100, 116, 139));
 
@@ -1045,22 +1036,22 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
                     // Cột Tiến độ sửa chữa (cột 9)
                     if (c == 9) {
                         if (strVal.contains("Hoàn thành")) {
-                            comp.setForeground(new Color(22, 163, 74));   // Green 600
+                            comp.setForeground(new Color(22, 163, 74));
                             comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else if (strVal.contains("Đang sửa")) {
-                            comp.setForeground(new Color(217, 119, 6));   // Amber 600
+                            comp.setForeground(new Color(217, 119, 6));
                             comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else if (strVal.contains("Chờ phụ tùng")) {
                             comp.setForeground(new Color(225, 29, 72));   // Rose 600
                             comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else {
-                            comp.setForeground(new Color(71, 85, 105));   // Slate 600
+                            comp.setForeground(new Color(71, 85, 105));
                         }
                     }
                     // Cột Thanh toán (cột 13)
                     else if (c == 13) {
                         if (strVal.contains("Đã thanh toán")) {
-                            comp.setForeground(new Color(22, 163, 74));   // Green 600
+                            comp.setForeground(new Color(22, 163, 74));
                             comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else {
                             comp.setForeground(new Color(225, 29, 72));   // Rose 600

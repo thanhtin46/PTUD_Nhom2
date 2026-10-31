@@ -19,13 +19,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 /**
- * TrangChuTiepTan_UI — Bảng điều khiển nghiệp vụ dành riêng cho Nhân viên Tiếp tân:
- * - Tích hợp TrangChuTiepTan_DAO để truy vấn số liệu trực tiếp từ SQL Server.
- * - 8 thẻ chỉ số KPI chính: Tiếp nhận hôm nay, Xe đang sửa chữa, Xe hoàn thành, Xe chờ tiếp nhận,
- *   Khách hàng, Phương tiện, Phiếu bảo hành, Hóa đơn & doanh thu dịch vụ.
- * - Bảng danh sách phiếu tiếp nhận phương tiện gần đây với khả năng xem chi tiết nhanh.
- * - Khối phân bổ tiến độ xe trong xưởng dịch vụ và phím tắt thao tác nhanh dành cho tiếp tân.
- * - Hỗ trợ nút làm mới dữ liệu thời gian thực.
+ * Màn hình trang chủ dành cho nhân viên tiếp tân.
  */
 public class TrangChuTiepTan_UI extends JPanel {
     private final NhanVien nvHienTai;

@@ -16,13 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * TrangChuTiepTan_DAO — Lớp DAO chuyên trách phục vụ xử lý và tổng hợp thông tin hoạt động
- * trên Trang chủ dành riêng cho Nhân viên Tiếp tân:
- * - Thống kê KPI nghiệp vụ tiếp nhận: Tiếp nhận hôm nay, Xe trong xưởng, Xe chờ, Xe hoàn thành, Khách hàng, Bảo hành, Doanh thu tiếp nhận.
- * - Danh sách các phiếu tiếp nhận mới nhất trong ngày / gần đây để tiếp tân xử lý.
- * - Danh sách phương tiện đang được xử lý trong xưởng dịch vụ.
- * - Phân bổ tiến độ xe trong xưởng dịch vụ.
- * - Cơ chế fallback tự động đọc từ KhoDuLieu đảm bảo hệ thống luôn ổn định khi mất kết nối CSDL.
+ * Lớp DAO truy vấn dữ liệu thống kê cho trang chủ bộ phận tiếp tân.
  */
 public class TrangChuTiepTan_DAO {
 
@@ -204,7 +198,7 @@ public class TrangChuTiepTan_DAO {
     }
 
     // ===============================================================
-    // PHƯƠNG THỨC FALLBACK ĐỌC TỪ BỘ NHỚ KHODULIEU
+    // Đọc dữ liệu từ bộ nhớ KhoDuLieu khi không có kết nối CSDL
     // ===============================================================
     private ThongKeTiepTan fallbackThongKeCache() {
         KhoDuLieu kho = KhoDuLieu.get();

@@ -11,12 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * PhuongTien_DAO — Lớp DAO chuyên trách phục vụ Quản lý phương tiện (CRUD):
- * - Đọc danh sách phương tiện trực tiếp từ bảng PhuongTien trong SQL Server
- * - Thêm mới xe, cập nhật thông tin xe, xóa xe an toàn với CSDL
- * - Kiểm tra trùng biển số, trùng số khung (VIN)
- * - Kiểm tra ràng buộc tiếp nhận / sửa chữa trước khi xóa
- * - Tự động đồng bộ và có cơ chế fallback mượt mà
+ * Lớp DAO xử lý dữ liệu phương tiện với CSDL SQL Server.
  */
 public class PhuongTien_DAO {
 

@@ -1,12 +1,7 @@
 package Entity;
 
 /**
- * Chi tiết hạng mục công việc sửa chữa hoặc phụ tùng thay thế.
- * Dùng chung đồng bộ giữa:
- * - Phiếu sửa chữa (LapPhieuSuaChua_UI)
- * - Tiến độ sửa chữa (CapNhatTienDo_UI)
- * - Quầy thanh toán & In hóa đơn (ThanhToanHoaDon_UI)
- * - Bảng kê chi tiết CSDL (ChiTietSuaChua & ChiTietHoaDon)
+ * Lớp lưu thông tin chi tiết công việc hoặc phụ tùng trong phiếu sửa chữa.
  */
 public class ChiTietDichVu {
     private String loai;        // "Tiền công" hoặc "Phụ tùng"

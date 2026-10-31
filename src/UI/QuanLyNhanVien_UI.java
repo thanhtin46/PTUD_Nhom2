@@ -25,40 +25,31 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * QuanLyNhanVien_UI — Phân hệ Quản Lý Danh Mục Nhân Viên & Hồ Sơ Nhân Sự Chuẩn ERP Gara Ô Tô:
- * - Tinh chỉnh sát 100% theo bản thiết kế mẫu:
- *   1. Header ERP: Breadcrumbs, Tiêu đề, Badge số lượng, Subtitle, 3 nút hành động (+ Thêm F2, Phân quyền, Tải lại F5)
- *   2. Thanh lọc: Ô tìm kiếm đa năng có icon kính lúp & placeholder, Lọc theo Bộ phận, Lọc theo Trạng thái, Nút Đặt lại
- *   3. Bảng hồ sơ chuẩn 11 cột: STT (01, 02..), Mã NV, Họ và tên (Initials Avatar), Chức vụ / Bộ phận (2 dòng),
- *      Bậc nghề / Trình độ (Chip tag màu), Số điện thoại, Email công vụ, Ngày vào làm, Tài khoản & Quyền hạn (2 dòng),
- *      Trạng thái (Pill badge), Thao tác (3 nút vector: Xem chi tiết, Chỉnh sửa, Khóa/Mở)
- *   4. Chân trang chuyên nghiệp: Đèn trạng thái CSDL kết nối trực tuyến, phím tắt F2, F3, F5, Esc
- *   5. Hộp thoại nghiệp vụ: Thêm mới (tự sinh mã), Sửa hồ sơ, Xem thẻ nhân sự, Ma trận phân quyền vai trò, Xuất file CSV UTF-8
- *   6. Tự động đồng bộ CSDL SQL Server (QuanLySuaChuaXe)
+ * Giao diện quản lý danh sách nhân viên và tài khoản.
  */
 public class QuanLyNhanVien_UI extends JPanel {
 
-    // ==== MÀU SẮC CHỦ ĐẠO FIGMA ERP ====
-    private static final Color XANH_CHINH       = new Color(37, 99, 235);     // Blue 600
-    private static final Color XANH_DAM         = new Color(15, 23, 42);      // Slate 900
-    private static final Color NEN_APP          = new Color(248, 250, 252);   // Slate 50
+    // Bảng màu giao diện
+    private static final Color XANH_CHINH       = new Color(37, 99, 235);
+    private static final Color XANH_DAM         = new Color(15, 23, 42);
+    private static final Color NEN_APP          = new Color(248, 250, 252);
     private static final Color NEN_CARD         = Color.WHITE;
-    private static final Color VIEN_CARD        = new Color(226, 232, 240);   // Slate 200
-    private static final Color CHU_TIEU_DE      = new Color(15, 23, 42);      // Slate 900
-    private static final Color CHU_PHU          = new Color(100, 116, 139);   // Slate 500
-    private static final Color XANH_LA          = new Color(22, 163, 74);     // Green 600
-    private static final Color CAM              = new Color(217, 119, 6);     // Amber 600
+    private static final Color VIEN_CARD        = new Color(226, 232, 240);
+    private static final Color CHU_TIEU_DE      = new Color(15, 23, 42);
+    private static final Color CHU_PHU          = new Color(100, 116, 139);
+    private static final Color XANH_LA          = new Color(22, 163, 74);
+    private static final Color CAM              = new Color(217, 119, 6);
     private static final Color XANH_DUONG_NHAT  = new Color(2, 132, 199);     // Sky 600
 
     private static final Color[] AVATAR_COLORS = {
-            new Color(30, 41, 59),    // Slate dark (như NV-0091 trong mẫu)
+            new Color(30, 41, 59),
             new Color(37, 99, 235),   // Blue
             new Color(16, 185, 129),  // Emerald
-            new Color(139, 92, 246),  // Violet
-            new Color(245, 158, 11),  // Amber
+            new Color(139, 92, 246),
+            new Color(245, 158, 11),
             new Color(6, 182, 212),   // Cyan
             new Color(236, 72, 153),  // Pink
-            new Color(71, 85, 105)    // Slate muted
+            new Color(71, 85, 105)
     };
 
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -116,7 +107,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     }
 
     // ===============================================================
-    // 1. HEADER PANEL CHUẨN ERP
+    // 1. Tiêu đề trang
     // ===============================================================
     private JPanel taoHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
@@ -167,7 +158,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         right.setOpaque(false);
 
-        // Nút 1: + Thêm nhân viên mới (F2) — Custom paint chống bị Windows Look & Feel đè màu
+        // Nút thêm nhân viên mới (F2)
         JButton btnThem = new JButton("+ Thêm nhân viên mới (F2)", UiIcon.of(UiIcon.PLUS, 13, Color.WHITE)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -335,7 +326,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     }
 
     // ===============================================================
-    // 3. BẢNG DANH SÁCH NHÂN SỰ GARA (11 CỘT CHUẨN MOCKUP)
+    // 3. Bảng danh sách nhân viên
     // ===============================================================
     private JPanel taoBangCard() {
         JPanel card = taoCardContainer(new BorderLayout(0, 8));
@@ -369,7 +360,7 @@ public class QuanLyNhanVien_UI extends JPanel {
 
         card.add(subHeader, BorderLayout.NORTH);
 
-        // 11 Cột khớp 100% Mockup ERP
+        // Danh sách các cột hiển thị
         String[] columns = {
                 "STT", "Mã NV", "Họ và tên", "Chức vụ / Bộ phận", "Bậc nghề / Trình độ",
                 "Số điện thoại", "Email công vụ", "Ngày vào làm", "Tài khoản & Quyền hạn", "Trạng thái", "Thao tác"
@@ -619,6 +610,7 @@ public class QuanLyNhanVien_UI extends JPanel {
      * Dialog Thêm nhân viên mới
      */
     private void hienDialogThem() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.NHAN_VIEN)) return;
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm Nhân Viên Mới", true);
         dlg.setLayout(new BorderLayout());
         dlg.getContentPane().setBackground(Color.WHITE);
@@ -652,6 +644,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         JTextField txtMa = taoInput(maTiepTheo);
         JTextField txtTen = taoInput("");
         JTextField txtSdt = taoInput("");
+        UiHelper.chiChoNhapSo(txtSdt, 10);
         JTextField txtEmail = taoInput("");
 
         JComboBox<String> cboChucVu = new JComboBox<>(new String[]{
@@ -862,6 +855,7 @@ public class QuanLyNhanVien_UI extends JPanel {
 
         JTextField txtTen = taoInput(nv.getHoTen());
         JTextField txtSdt = taoInput(nv.getSoDT());
+        UiHelper.chiChoNhapSo(txtSdt, 10);
         JTextField txtEmail = taoInput(nv.getEmail());
 
         JComboBox<String> cboChucVu = new JComboBox<>(new String[]{
@@ -1280,7 +1274,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     }
 
     // ===============================================================
-    // CÁC COMPONENT CUSTOM TABLE CELL RENDERER THEO MẪU ERP
+    // Định dạng hiển thị cho các ô trong bảng
     // ===============================================================
 
     /** Cột 0: STT (01, 02.. Centered) */
@@ -1296,20 +1290,20 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 1: Mã NV (Bold Navy Blue NV-0091) */
+    /** Cột 1: Mã NV */
     private static class MaNVCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable t, Object val, boolean isSel, boolean hasFoc, int r, int c) {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, val, isSel, hasFoc, r, c);
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            lbl.setForeground(new Color(30, 58, 138)); // Blue 900
+            lbl.setForeground(new Color(30, 58, 138));
             lbl.setBackground(isSel ? t.getSelectionBackground() : (r % 2 == 0 ? Color.WHITE : new Color(250, 250, 250)));
             return lbl;
         }
     }
 
-    /** Cột 2: Họ và tên (Tên đầy đủ, sạch đẹp, không kèm ký hiệu) */
+    /** Cột 2: Họ và tên */
     private static class HoTenCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable t, Object val, boolean isSel, boolean hasFoc, int r, int c) {
@@ -1327,7 +1321,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 3: Chức vụ / Bộ phận (2 dòng) */
+    /** Cột 3: Chức vụ / Bộ phận */
     private static class ChucVuBoPhanCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JLabel lblChucVu = new JLabel();
         private final JLabel lblBoPhan = new JLabel();
@@ -1359,7 +1353,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 4: Bậc nghề / Trình độ (Chip tag màu chuẩn ERP) */
+    /** Cột 4: Bậc nghề / Trình độ */
     private static class BacNgheCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JLabel lblChip = new JLabel("", SwingConstants.CENTER);
 
@@ -1380,22 +1374,22 @@ public class QuanLyNhanVien_UI extends JPanel {
 
             String low = txt.toLowerCase();
             if (low.contains("kỹ sư") || low.contains("cử nhân") || low.contains("thạc sĩ")) {
-                lblChip.setBackground(new Color(239, 246, 255)); // Blue 50
-                lblChip.setForeground(new Color(29, 78, 216));   // Blue 700
+                lblChip.setBackground(new Color(239, 246, 255));
+                lblChip.setForeground(new Color(29, 78, 216));
                 lblChip.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(191, 219, 254), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
                 ));
             } else if (low.contains("bậc")) {
-                lblChip.setBackground(new Color(254, 243, 199)); // Amber 100
-                lblChip.setForeground(new Color(180, 83, 9));    // Amber 700
+                lblChip.setBackground(new Color(254, 243, 199));
+                lblChip.setForeground(new Color(180, 83, 9));
                 lblChip.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(253, 230, 138), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
                 ));
             } else {
-                lblChip.setBackground(new Color(241, 245, 249)); // Slate 100
-                lblChip.setForeground(new Color(71, 85, 105));   // Slate 600
+                lblChip.setBackground(new Color(241, 245, 249));
+                lblChip.setForeground(new Color(71, 85, 105));
                 lblChip.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(203, 213, 225), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
@@ -1405,7 +1399,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 5: Số điện thoại (Format chuẩn chấm cách e.g. 0903.118.892) */
+    /** Cột 5: Số điện thoại */
     private static class SdtCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable t, Object val, boolean isSel, boolean hasFoc, int r, int c) {
@@ -1438,7 +1432,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 7: Ngày vào làm (dd/MM/yyyy Centered) */
+    /** Cột 7: Ngày vào làm */
     private static class NgayVaoLamCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable t, Object val, boolean isSel, boolean hasFoc, int r, int c) {
@@ -1451,7 +1445,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 8: Tài khoản & Quyền hạn (2 dòng: Icon + Role bold, Subline UID + Quyền) */
+    /** Cột 8: Tài khoản & Quyền hạn */
     private static class TaiKhoanQuyenCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JLabel lblRole = new JLabel();
         private final JLabel lblUid = new JLabel();
@@ -1482,23 +1476,23 @@ public class QuanLyNhanVien_UI extends JPanel {
 
                 if (vt.contains("QUẢN LÝ") || vt.contains("ADMIN")) {
                     roleTitle = "Admin Hệ Thống";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Quyền tối cao";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Toàn quyền";
                     lblRole.setIcon(UiIcon.of(UiIcon.SHIELD, 12, new Color(126, 34, 206)));
                 } else if (vt.contains("TRƯỞNG TỔ") || vt.contains("KTV TRƯỞNG")) {
                     roleTitle = "KTV Trưởng";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Giao lệnh xưởng";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Sửa chữa";
                     lblRole.setIcon(UiIcon.of(UiIcon.WRENCH, 12, new Color(217, 119, 6)));
                 } else if (vt.contains("THU NGÂN") || vt.contains("KẾ TOÁN")) {
                     roleTitle = "Thu ngân & Kế toán";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Thu tiền, Hóa đơn";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Hóa đơn";
                     lblRole.setIcon(UiIcon.of(UiIcon.BILL, 12, new Color(22, 163, 74)));
                 } else if (vt.contains("TIẾP TÂN") || vt.contains("CỐ VẤN")) {
                     roleTitle = "Cố vấn dịch vụ";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Tiếp nhận xe";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Tiếp nhận";
                     lblRole.setIcon(UiIcon.of(UiIcon.USER, 12, new Color(3, 105, 161)));
                 } else if (vt.contains("KHO")) {
                     roleTitle = "Thủ kho vật tư";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Xuất nhập kho";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Kho hàng";
                     lblRole.setIcon(UiIcon.of(UiIcon.BOX, 12, new Color(180, 83, 9)));
                 } else if (vt.contains("HỌC VIỆC") || vt.contains("THỬ VIỆC")) {
                     roleTitle = "Chưa cấp tài khoản";
@@ -1506,7 +1500,7 @@ public class QuanLyNhanVien_UI extends JPanel {
                     lblRole.setIcon(UiIcon.of(UiIcon.LOCK, 12, new Color(148, 163, 184)));
                 } else {
                     roleTitle = "Kỹ thuật viên";
-                    desc = "UID: " + nv.getTaiKhoan() + " / Cập nhật tiến độ";
+                    desc = "Tài khoản: " + nv.getTaiKhoan() + " / Kỹ thuật";
                     lblRole.setIcon(UiIcon.of(UiIcon.WRENCH, 12, new Color(37, 99, 235)));
                 }
 
@@ -1517,7 +1511,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 9: Trạng thái (Pill badge chuẩn ERP) */
+    /** Cột 9: Trạng thái nhân viên */
     private static class TrangThaiCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JLabel lblPill = new JLabel("", SwingConstants.CENTER);
 
@@ -1537,32 +1531,32 @@ public class QuanLyNhanVien_UI extends JPanel {
 
             if (NhanVien.DANG_LAM.equalsIgnoreCase(tt)) {
                 lblPill.setText("● Đang làm việc");
-                lblPill.setBackground(new Color(220, 252, 231)); // Green 100
-                lblPill.setForeground(new Color(21, 128, 61));   // Green 700
+                lblPill.setBackground(new Color(220, 252, 231));
+                lblPill.setForeground(new Color(21, 128, 61));
                 lblPill.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(134, 239, 172), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
                 ));
             } else if (NhanVien.NGHI_PHEP.equalsIgnoreCase(tt)) {
                 lblPill.setText("● Nghỉ phép (Phép năm)");
-                lblPill.setBackground(new Color(254, 243, 199)); // Amber 100
-                lblPill.setForeground(new Color(180, 83, 9));    // Amber 700
+                lblPill.setBackground(new Color(254, 243, 199));
+                lblPill.setForeground(new Color(180, 83, 9));
                 lblPill.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(253, 230, 138), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
                 ));
             } else if (NhanVien.THU_VIEC.equalsIgnoreCase(tt)) {
                 lblPill.setText("● Học việc / Thử việc");
-                lblPill.setBackground(new Color(224, 242, 254)); // Sky 100
-                lblPill.setForeground(new Color(3, 105, 161));   // Sky 700
+                lblPill.setBackground(new Color(224, 242, 254)); 
+                lblPill.setForeground(new Color(3, 105, 161));   
                 lblPill.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(125, 211, 252), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
                 ));
             } else {
                 lblPill.setText("● Đã thôi việc");
-                lblPill.setBackground(new Color(241, 245, 249)); // Slate 100
-                lblPill.setForeground(new Color(100, 116, 139)); // Slate 500
+                lblPill.setBackground(new Color(241, 245, 249));
+                lblPill.setForeground(new Color(100, 116, 139));
                 lblPill.setBorder(BorderFactory.createCompoundBorder(
                         new LineBorder(new Color(203, 213, 225), 1, true),
                         new EmptyBorder(3, 8, 3, 8)
@@ -1572,7 +1566,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         }
     }
 
-    /** Cột 10: Thao tác (3 icon button vector: Xem Eye, Sửa Edit, Khóa Lock/Key) */
+    /** Cột 10: Thao tác */
     private static class ThaoTacCellRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JLabel btnXem = new JLabel("", SwingConstants.CENTER);
         private final JLabel btnSua = new JLabel("", SwingConstants.CENTER);
@@ -1648,29 +1642,60 @@ public class QuanLyNhanVien_UI extends JPanel {
     }
 
     private JButton taoNutPrimary(String text, ActionListener al) {
-        JButton btn = new JButton(text);
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean pressed = getModel().isPressed();
+                boolean hover = getModel().isRollover();
+                Color c = pressed ? UiHelper.darken(XANH_CHINH, 0.15f) : (hover ? UiHelper.lighten(XANH_CHINH, 0.12f) : XANH_CHINH);
+                if (!pressed) {
+                    g2.setColor(new Color(0, 0, 0, 20));
+                    g2.fillRoundRect(0, 2, getWidth(), getHeight() - 2, 8, 8);
+                }
+                g2.setColor(c);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setForeground(Color.WHITE);
-        btn.setBackground(XANH_CHINH);
         btn.setFocusPainted(false);
         btn.setBorder(new EmptyBorder(8, 16, 8, 16));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(al);
+        if (al != null) btn.addActionListener(al);
         return btn;
     }
 
     private JButton taoNutOutline(String text, ActionListener al) {
-        JButton btn = new JButton(text);
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean pressed = getModel().isPressed();
+                boolean hover = getModel().isRollover();
+                Color bg = pressed ? new Color(226, 232, 240) : (hover ? new Color(241, 245, 249) : Color.WHITE);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(VIEN_CARD);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setForeground(new Color(51, 65, 85));
-        btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(VIEN_CARD, 1, true),
-                new EmptyBorder(7, 14, 7, 14)
-        ));
+        btn.setBorder(new EmptyBorder(8, 16, 8, 16));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(al);
+        if (al != null) btn.addActionListener(al);
         return btn;
     }
 

@@ -525,9 +525,9 @@ public class PhieuBaoHanh_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return ds;
         String sql = "SELECT bh.maPBH, pt.bienSoXe, CONVERT(VARCHAR(10), bh.ngayBD, 103) AS ngayBD, " +
-                "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ngayKT, bh.trangThaiBH, COALESCE(ct.lyDo, hm.noiDung, bh.ghiChu) AS lyDo " +
+                "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ngayKT, bh.trangThaiBH, COALESCE(hm.noiDung, bh.ghiChu, N'') AS lyDo " +
                 "FROM PhieuBaoHanh bh JOIN PhuongTien pt ON pt.soVIN = bh.soVIN " +
-                "OUTER APPLY (SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, lyDo, bh.ghiChu) AS nvarchar(max)), N'; ') AS noiDung FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
+                "OUTER APPLY (SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, ghiChu) AS nvarchar(max)), N'; ') AS noiDung FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
         try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String status = rs.getString("trangThaiBH");

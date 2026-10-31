@@ -5,12 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Nhân viên của gara.
- * - Có vaiTro để phân quyền: "Nhân viên tiếp tân" / "Nhân viên sửa chữa"
- *   / "Nhân viên kho" / "Quản lý".
- * - UC013: thay vì xóa cứng, hỗ trợ "vô hiệu hóa" tài khoản qua
- *   trangThai = "NGUNG" (giữ lại lịch sử). "DANG_LAM" = đang hoạt động.
- * - UC014: cacQuyen = danh sách mã module được phép truy cập.
+ * Lớp thực thể Nhân viên.
  */
 public class NhanVien {
     public static final String DANG_LAM  = "DANG_LAM";
@@ -24,10 +19,10 @@ public class NhanVien {
     private String matKhau;
     private String vaiTro;
     private String trangThai;        // DANG_LAM | NGHI_PHEP | THU_VIEC | NGUNG
-    private String[] cacQuyen;       // UC014: mã module, vd {"KH","PT","BH"}
+    private String[] cacQuyen;       // Danh sách quyền bổ sung
     private String soDT;
     private String email;
-    private String bacNghe;          // Bậc 4/7, Kỹ sư Ô tô ĐHBK, Cử nhân...
+    private String bacNghe;          // Bậc nghề
     private String boPhan;           // Ban Cố Vấn Dịch Vụ, Xưởng Sửa Chữa...
     private String ngayVaoLam;
 
@@ -87,7 +82,7 @@ public class NhanVien {
 
     public boolean dangHoatDong() {
         if (trangThai == null || trangThai.trim().isEmpty()) return true;
-        String tt = trangThai.trim().toUpperCase();
+        String tt = java.text.Normalizer.normalize(trangThai, java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "").replace("đ", "d").trim().toUpperCase(java.util.Locale.ROOT);
         if (tt.contains("NGUNG") || tt.contains("KHOA") || tt.contains("THOI") || tt.contains("THÔI")) {
             return false;
         }
@@ -153,6 +148,14 @@ public class NhanVien {
         return ngayVaoLam;
     }
     public void setNgayVaoLam(String ngayVaoLam) { this.ngayVaoLam = ngayVaoLam; }
+
+    @Override
+    public String toString() {
+        if (hoTen != null && !hoTen.trim().isEmpty()) {
+            return (maNV != null && !maNV.trim().isEmpty()) ? (maNV + " - " + hoTen) : hoTen;
+        }
+        return maNV != null ? maNV : "";
+    }
 
     /** Kiểm tra có quyền truy cập 1 module không. */
     public boolean coQuyen(String maModule) {

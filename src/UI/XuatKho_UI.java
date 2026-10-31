@@ -15,9 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 
 /**
- * Giao diện lập phiếu xuất kho phụ tùng cho hệ thống quản lý gara.
- * Phiên bản giao diện: không nạp dữ liệu demo, bảng bắt đầu trống.
- * Phần lưu/xuất kho cần được kết nối DAO và SQL Server sau.
+ * Giao diện lập phiếu xuất kho phụ tùng.
  */
 public class XuatKho_UI extends JPanel {
 
@@ -513,16 +511,11 @@ public class XuatKho_UI extends JPanel {
         total.add(totalLabel, BorderLayout.WEST);
         total.add(lblTongGiaTri, BorderLayout.EAST);
 
-        JButton btnXacNhan = new JButton("Xác nhận & Xuất kho",
-                UiIcon.of(UiIcon.CHECK, 20, Color.WHITE));
-        btnXacNhan.setIconTextGap(10);
-        btnXacNhan.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnXacNhan.setForeground(Color.WHITE);
-        btnXacNhan.setBackground(NAVY);
-        btnXacNhan.setFocusPainted(false);
-        btnXacNhan.setBorder(new EmptyBorder(12, 10, 12, 10));
-        btnXacNhan.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnXacNhan.addActionListener(e -> xacNhanXuat());
+        JButton btnXacNhan = UiHelper.nut("  Xác nhận & Xuất kho",
+                UiIcon.of(UiIcon.CHECK, 18, Color.WHITE),
+                NAVY, true, e -> xacNhanXuat());
+        btnXacNhan.setPreferredSize(new Dimension(0, 46));
+        btnXacNhan.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
         JPanel body = new JPanel(new BorderLayout(5, 5));
         body.setBackground(Color.WHITE);
@@ -565,15 +558,30 @@ public class XuatKho_UI extends JPanel {
     }
 
     private JButton taoNut(String text, String iconType, Color bg, Color fg) {
-        JButton button = new JButton(text, UiIcon.of(iconType, 15, fg));
+        JButton button = new JButton(text, UiIcon.of(iconType, 15, fg)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean pressed = getModel().isPressed();
+                boolean hover = getModel().isRollover();
+                Color c = pressed ? (bg.equals(Color.WHITE) ? new Color(226, 232, 240) : bg.darker())
+                                  : (hover ? (bg.equals(Color.WHITE) ? new Color(241, 245, 249) : bg.brighter()) : bg);
+                g2.setColor(c);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         button.setIconTextGap(7);
-        button.setBackground(bg);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
         button.setForeground(fg);
         button.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(7, 9, 7, 9)));
+        button.setBorder(new EmptyBorder(7, 9, 7, 9));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setHorizontalTextPosition(SwingConstants.RIGHT);
         return button;
@@ -713,7 +721,7 @@ public class XuatKho_UI extends JPanel {
     }
 
     private void inPhieu() {
-        // Giữ biểu tượng in trên giao diện phục vụ chấm đồ án sinh viên, không gọi máy in vật lý
+        // Xem trước phiếu xuất kho
     }
 
     private void huyPhieu() {
@@ -728,6 +736,7 @@ public class XuatKho_UI extends JPanel {
 
 
     private void xacNhanXuat() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XUAT)) return;
         if (table.isEditing()) {
             table.getCellEditor().stopCellEditing();
         }
@@ -808,7 +817,7 @@ public class XuatKho_UI extends JPanel {
 // Quay về màn hình phiếu sửa chữa
         Main_UI mainUI = Main_UI.getInstance();
 
-        if (mainUI != null) {
+        if (mainUI != null && mainUI.coQuyenTrang("Phiếu sửa chữa")) {
             mainUI.chuyenTrang("Phiếu sửa chữa");
         }
     }

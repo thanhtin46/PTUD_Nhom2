@@ -96,10 +96,7 @@ public class ConnectDB {
         }
     }
 
-    /**
-     * Tự động kiểm tra và bổ sung các bảng/cột mới nếu CSDL của thành viên chưa chạy script nâng cấp.
-     * Chạy đúng 1 lần khi kết nối thành công, không làm chậm ứng dụng.
-     */
+    // Kiểm tra và cập nhật cấu trúc bảng khi khởi động
     private static synchronized void damBaoCauTrucDatabase(Connection c) {
         if (c == null || daDongBoCauTruc) return;
         try (Statement stmt = c.createStatement()) {
@@ -186,6 +183,42 @@ public class ConnectDB {
             // HoaDon: Đảm bảo không có FK_HoaDon_PhieuSuaChua và không có cột soPhieuSC
             stmt.execute("IF OBJECT_ID('dbo.FK_HoaDon_PhieuSuaChua', 'F') IS NOT NULL ALTER TABLE dbo.HoaDon DROP CONSTRAINT FK_HoaDon_PhieuSuaChua;");
             stmt.execute("IF COL_LENGTH('dbo.HoaDon', 'soPhieuSC') IS NOT NULL ALTER TABLE dbo.HoaDon DROP COLUMN soPhieuSC;");
+
+            // Dữ liệu mẫu hóa đơn bán lẻ phụ tùng shop (HD201, HD202, HD203)
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.HoaDon WHERE maHD = 'HD201') " +
+                         "INSERT INTO dbo.HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) " +
+                         "VALUES ('HD201', 'KH101', 'NV05', '2026-10-25', 'CHUYEN_KHOAN', 0, 420000, 0, 420000, N'Bán lẻ phụ tùng tại shop', 'DA_THANH_TOAN');");
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.ChiTietHoaDon WHERE maHD = 'HD201' AND maPT = 'PT101') " +
+                         "INSERT INTO dbo.ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES " +
+                         "('HD201', 'PT101', N'Lọc dầu động cơ', N'Chiếc', 1, 150000), " +
+                         "('HD201', 'PT103', N'Bugi Denso Iridium', N'Cái', 2, 85000), " +
+                         "('HD201', 'PT110', N'Nước làm mát cao cấp', N'Can', 1, 100000);");
+
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.HoaDon WHERE maHD = 'HD202') " +
+                         "INSERT INTO dbo.HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) " +
+                         "VALUES ('HD202', 'KH102', 'NV05', '2026-10-26', 'TIEN_MAT', 0, 480000, 5, 456000, N'Bán lẻ dầu nhớt động cơ (Chiết khấu 5%)', 'DA_THANH_TOAN');");
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.ChiTietHoaDon WHERE maHD = 'HD202' AND maPT = 'PT104') " +
+                         "INSERT INTO dbo.ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES " +
+                         "('HD202', 'PT104', N'Dầu động cơ Castrol Magnatec', N'Lít', 4, 120000);");
+
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.HoaDon WHERE maHD = 'HD203') " +
+                         "INSERT INTO dbo.HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) " +
+                         "VALUES ('HD203', 'KH103', 'NV05', '2026-10-27', 'TIEN_MAT', 0, 350000, 0, 350000, N'Khách đổi ý trả hàng hủy hóa đơn', 'DA_HUY');");
+            stmt.execute("IF NOT EXISTS (SELECT 1 FROM dbo.ChiTietHoaDon WHERE maHD = 'HD203' AND maPT = 'PT109') " +
+                         "INSERT INTO dbo.ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES " +
+                         "('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);");
+
+            // QuyenBoSung & NhatKyQuyen
+            stmt.execute("IF OBJECT_ID('dbo.QuyenBoSung', 'U') IS NULL " +
+                         "CREATE TABLE dbo.QuyenBoSung (" +
+                         "  maNV VARCHAR(20) NOT NULL, maQuyen VARCHAR(40) NOT NULL, " +
+                         "  CONSTRAINT PK_QuyenBoSung PRIMARY KEY(maNV, maQuyen), " +
+                         "  CONSTRAINT FK_QBS_NhanVien FOREIGN KEY (maNV) REFERENCES dbo.NhanVien(maNV) ON DELETE CASCADE);");
+            stmt.execute("IF OBJECT_ID('dbo.NhatKyQuyen', 'U') IS NULL " +
+                         "CREATE TABLE dbo.NhatKyQuyen (" +
+                         "  id BIGINT IDENTITY(1,1) PRIMARY KEY, thoiGian DATETIME2 NOT NULL DEFAULT SYSDATETIME(), " +
+                         "  nguoiThucHien VARCHAR(20) NOT NULL, doiTuong VARCHAR(20) NOT NULL, " +
+                         "  noiDung NVARCHAR(2000) NOT NULL);");
 
             daDongBoCauTruc = true;
         } catch (SQLException ex) {

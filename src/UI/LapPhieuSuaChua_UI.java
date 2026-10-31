@@ -16,12 +16,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * LapPhieuSuaChua_UI - Phiếu sửa chữa phương tiện tinh gọn, thực tế và đồng bộ:
- * - Chọn xe tiếp nhận từ danh sách có sẵn
- * - Phân công Kỹ thuật viên & Cập nhật tiến độ
- * - Bảng công việc / tiền công & Bảng phụ tùng xuất kho
- * - Tự động tính toán chi phí tài chính (Tiền công + Phụ tùng + VAT)
- * - Đồng bộ 2 chiều tức thì với CSDL và màn hình "Tra cứu phiếu sửa chữa"
+ * Màn hình lập phiếu sửa chữa cho xe.
+ * Phân công kỹ thuật viên, chọn công việc sửa chữa và phụ tùng thay thế.
  */
 public class LapPhieuSuaChua_UI extends JPanel {
 
@@ -44,6 +40,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     private String maPSC;
     private JTextField txtMaPSC;
+    private JLabel lblMa;
 
     // Khối 1: Tiếp nhận xe & Phân công
     private JComboBox<String> cboPhieuTN;
@@ -79,7 +76,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     public LapPhieuSuaChua_UI(NhanVien nv) {
         this.nvHienTai = nv;
-        this.maPSC = taoMaPSCNgauNhien();
+        this.maPSC = sinhMaPSCMoi();
 
         setLayout(new BorderLayout());
         setBackground(UiHelper.NEN);
@@ -166,7 +163,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         left.setOpaque(false);
         JLabel lblTde = UiHelper.tieuDeTrang("Phiếu sửa chữa phương tiện");
-        JLabel lblMa = new JLabel("[" + maPSC + "]");
+        lblMa = new JLabel("[" + maPSC + "]");
         lblMa.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblMa.setForeground(UiHelper.XANH_TRUNG);
         left.add(lblTde);
@@ -297,12 +294,53 @@ public class LapPhieuSuaChua_UI extends JPanel {
         return card;
     }
 
-    private String taoMaPSCNgauNhien() {
-        return "PSC" + java.util.UUID.randomUUID()
-                .toString()
-                .replace("-", "")
-                .substring(0, 8)
-                .toUpperCase();
+    public static String sinhMaPSCTuDong(String maPTN) {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con != null && maPTN != null && !maPTN.isBlank()) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT TOP 1 maPSC FROM PhieuSuaChua WHERE maPTN = ? ORDER BY ngayBD DESC")) {
+                ps.setString(1, maPTN.trim());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String existing = rs.getString(1);
+                        if (existing != null && !existing.isBlank()) return existing;
+                    }
+                }
+            } catch (SQLException ignored) {}
+        }
+        return sinhMaPSCMoi();
+    }
+
+    public static String sinhMaPSCMoi() {
+        Connection con = ConnectDB.getInstance().getConnection();
+        java.util.HashSet<Integer> dsSo = new java.util.HashSet<>();
+        if (con != null) {
+            try (Statement st = con.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT maPSC FROM PhieuSuaChua")) {
+                while (rs.next()) {
+                    String ma = rs.getString(1);
+                    if (ma != null && ma.toUpperCase().startsWith("SC")) {
+                        try {
+                            int so = Integer.parseInt(ma.replaceAll("[^0-9]", ""));
+                            dsSo.add(so);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } catch (SQLException ignored) {}
+        }
+        for (Entity.PhieuTiepNhan p : KhoDuLieu.get().getPhieuTiepNhans()) {
+            if (p.getSoPhieu() != null) {
+                try {
+                    int so = Integer.parseInt(p.getSoPhieu().replaceAll("[^0-9]", ""));
+                    dsSo.add(so);
+                } catch (Exception ignored) {}
+            }
+        }
+        int soMoi = 1;
+        while (dsSo.contains(soMoi)) {
+            soMoi++;
+        }
+        return String.format("SC%03d", soMoi);
     }
 
     // ===============================================================
@@ -479,6 +517,8 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
 
     private void hoanTatPhieuSuaChua() {
+        if (!BaoVeQuyen.phieu(maPSC)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.SC)) return;
         if (maPSC == null || maPSC.isBlank()) {
             JOptionPane.showMessageDialog(this, "Mã phiếu sửa chữa không hợp lệ.");
             return;
@@ -570,6 +610,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
 
     private void napPhieuSuaChuaTuCSDL(String maPSCCanMo) {
+        if (!BaoVeQuyen.phieu(maPSCCanMo)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
         String sqlPSC =
                 "SELECT maPSC, maNV, soVIN, ngayBD, ngayHoanThanhDuKien " +
                         "FROM PhieuSuaChua WHERE maPSC = ?";
@@ -597,6 +638,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     soVIN = rs.getString("soVIN");
 
                     txtMaPSC.setText(maPSC);
+                    if (lblMa != null) lblMa.setText("[" + maPSC + "]");
 
                     Timestamp ngayBD = rs.getTimestamp("ngayBD");
                     if (ngayBD != null) {
@@ -792,6 +834,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         cboPhieuTN.removeAllItems();
         cboPhieuTN.addItem("-- Chọn phiếu tiếp nhận sửa chữa --");
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
+            if (!BaoVeQuyen.phieu(p.getSoPhieu())) continue;
             cboPhieuTN.addItem(p.getSoPhieu() + " - " + p.getHoTen() + " (" + p.getBienSo() + ")");
         }
     }
@@ -841,6 +884,9 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         String sel = String.valueOf(cboPhieuTN.getSelectedItem());
         String soPhieu = sel.split(" - ")[0].trim();
+        this.maPSC = sinhMaPSCTuDong(soPhieu);
+        if (txtMaPSC != null) txtMaPSC.setText(this.maPSC);
+        if (lblMa != null) lblMa.setText("[" + this.maPSC + "]");
         PhieuTiepNhan p = kho.timPhieuTiepNhan(soPhieu);
         if (p == null) return;
 
@@ -1153,12 +1199,14 @@ public class LapPhieuSuaChua_UI extends JPanel {
     // ===============================================================
 
     private void luuPhieuSuaChua() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.SC)) return;
         if (!kiemTraDuLieuTruocKhiLuu()) {
             return;
         }
 
         String selPTN = String.valueOf(cboPhieuTN.getSelectedItem());
         String maPTN = selPTN.split(" - ")[0].trim();
+        if (!BaoVeQuyen.phieu(maPTN)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
 
         String selKTV = String.valueOf(cboKtvPhuTrach.getSelectedItem());
         if (selKTV.startsWith("--") || !selKTV.contains(" - ")) {
@@ -1166,6 +1214,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
             return;
         }
         String maNV = selKTV.split(" - ")[0].trim();
+        if (!Entity.QuyenTruyCap.co(BaoVeQuyen.hienTai(),Entity.QuyenTruyCap.Quyen.PHAN_CONG) && !maNV.equals(BaoVeQuyen.hienTai().getMaNV())) { JOptionPane.showMessageDialog(this,"Không được đổi người phụ trách."); return; }
 
         // Chuyển ngày hẹn sang kiểu SQL DATE.
         Date ngayHen;
@@ -1411,12 +1460,12 @@ public class LapPhieuSuaChua_UI extends JPanel {
             );
 
             Main_UI mainUI = Main_UI.getInstance();
-            if (mainUI != null) {
+            if (mainUI != null && mainUI.coQuyenTrang("Xuất kho")) {
                 mainUI.chuyenTrang("Xuất kho");
             } else {
                 JOptionPane.showMessageDialog(
                         this,
-                        "Không tìm thấy Main_UI để mở màn hình Xuất kho."
+                        "Yêu cầu đã lưu. Bộ phận kho sẽ xử lý xuất phụ tùng."
                 );
             }
             return;
@@ -1432,9 +1481,12 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
 
     private void lamMoi() {
-        this.maPSC = taoMaPSCNgauNhien();
+        this.maPSC = sinhMaPSCMoi();
         if (txtMaPSC != null) {
             txtMaPSC.setText(this.maPSC);
+        }
+        if (lblMa != null) {
+            lblMa.setText("[" + this.maPSC + "]");
         }
         txtNgayLap.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         txtNgayHenGiao.setText(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));

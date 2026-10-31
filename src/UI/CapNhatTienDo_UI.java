@@ -19,11 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Tra cứu phiếu sửa chữa & Cập nhật tiến độ sửa chữa:
- * - Tra cứu theo từ khóa: Số phiếu, Biển số, Tên khách hàng, SĐT, KTV phụ trách
- * - Bộ lọc trạng thái tiến độ thời gian thực
- * - Đồng bộ 2 chiều với màn hình "Lập phiếu sửa chữa"
- * - Cho phép cập nhật tiến độ nhanh hoặc mở chi tiết phiếu sửa chữa
+ * Màn hình tra cứu và cập nhật tiến độ phiếu sửa chữa.
  */
 public class CapNhatTienDo_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -97,15 +93,15 @@ public class CapNhatTienDo_UI extends JPanel {
                 if (!isSel) {
                     String td = val != null ? val.toString() : "";
                     if (td.contains("Hoàn thành")) {
-                        l.setForeground(new Color(22, 163, 74));   // Green 600
+                        l.setForeground(new Color(22, 163, 74));
                     } else if (td.contains("Đang sửa")) {
-                        l.setForeground(new Color(37, 99, 235));   // Blue 600
+                        l.setForeground(new Color(37, 99, 235));
                     } else if (td.contains("Chờ phụ tùng")) {
                         l.setForeground(new Color(225, 29, 72));   // Rose 600
                     } else if (td.contains("phân công")) {
-                        l.setForeground(new Color(217, 119, 6));   // Amber 600
+                        l.setForeground(new Color(217, 119, 6));
                     } else {
-                        l.setForeground(new Color(100, 116, 139)); // Slate 500
+                        l.setForeground(new Color(100, 116, 139));
                     }
                 }
                 return l;
@@ -235,6 +231,7 @@ public class CapNhatTienDo_UI extends JPanel {
         int dem = 0;
 
         for (PhieuTiepNhan p : ds) {
+            if (!BaoVeQuyen.phieu(p.getSoPhieu())) continue;
             String so = p.getSoPhieu().toLowerCase();
             String bienSo = p.getBienSo().toLowerCase();
             String khach = p.getHoTen().toLowerCase();
@@ -269,12 +266,14 @@ public class CapNhatTienDo_UI extends JPanel {
     }
 
     private void capNhatTienDo() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.TIEN_DO)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn phiếu cần cập nhật tiến độ trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         String soPhieu = model.getValueAt(dong, 0).toString();
+        if (!BaoVeQuyen.phieu(soPhieu)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
         String tienDoMoi = String.valueOf(cboTienDoMoi.getSelectedItem());
 
         boolean ok = kho.capNhatTienDoPhieuTiepNhan(soPhieu, tienDoMoi, null);
@@ -352,6 +351,7 @@ public class CapNhatTienDo_UI extends JPanel {
             return;
         }
         String soPhieu = model.getValueAt(dong, 0).toString();
+        if (!BaoVeQuyen.phieu(soPhieu)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
         PhieuTiepNhan p = kho.timPhieuTiepNhan(soPhieu);
         if (p == null) return;
 

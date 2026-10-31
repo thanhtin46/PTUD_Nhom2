@@ -11,14 +11,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 
 /**
- * KhachHang_DAO — Lớp xử lý dữ liệu cho phân hệ Quản lý khách hàng.
- * Phục vụ nghiệp vụ của Nhân viên tiếp tân và Quản lý gara:
- * - Lấy danh sách toàn bộ khách hàng
- * - Thêm mới khách hàng vào SQL Server
- * - Cập nhật thông tin hồ sơ khách hàng
- * - Xóa khách hàng (xử lý ràng buộc khóa ngoại an toàn)
- * - Kiểm tra trùng mã KH, trùng số điện thoại
- * - Tự động sinh mã khách hàng mới (KH001, KH002...)
+ * Lớp DAO xử lý dữ liệu khách hàng với CSDL SQL Server.
  */
 public class KhachHang_DAO {
 

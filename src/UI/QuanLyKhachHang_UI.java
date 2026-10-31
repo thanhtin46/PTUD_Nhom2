@@ -12,11 +12,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * QuanLyKhachHang_UI — Giao diện Quản Lý Khách Hàng dành cho Nhân viên Tiếp tân:
- * - CRUD Khách hàng: Thêm, Sửa, Xóa, Làm mới
- * - Tự động sinh mã khách hàng mới (KH001, KH002...) thông qua KhachHang_DAO
- * - Kiểm tra hợp lệ dữ liệu và kiểm tra trùng số điện thoại, trùng mã bằng DAO
- * - Đồng bộ trực tiếp 2 chiều với CSDL Microsoft SQL Server và KhoDuLieu
+ * Màn hình quản lý thông tin khách hàng (thêm, sửa, xóa, làm mới).
  */
 public class QuanLyKhachHang_UI extends JPanel {
     private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail;
@@ -52,6 +48,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtTen = new JTextField();
         txtSdt = new JTextField();
         txtCccd = new JTextField();
+        UiHelper.chiChoNhapSo(txtSdt, 10);
+        UiHelper.chiChoNhapSo(txtCccd, 12);
         txtDiaChi = new JTextField();
         txtEmail = new JTextField();
         txtGhiChu = new JTextArea(3, 20);
@@ -135,6 +133,7 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private void them() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_SUA)) return;
         if (!kiemTraForm(true)) return;
         String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         KhachHang kh = new KhachHang(
@@ -149,6 +148,7 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private void xoa() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_XOA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
@@ -169,6 +169,7 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private void sua() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_SUA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);

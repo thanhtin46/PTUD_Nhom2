@@ -1,223 +1,37 @@
 package UI;
-
-import Entity.KhoDuLieu;
-import Entity.NhanVien;
-
+import Entity.*;
+import DAO.PhanQuyen_DAO;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-/**
- * UC014: Phân quyền người dùng.
- * Quyền ứng với từng module. Khi chọn vai trò, mặc định tick theo vai trò.
- * Có thể tick thêm/bớt quyền chi tiết.
- */
+import java.util.*;
 public class PhanQuyen_UI extends JPanel {
-    private static final String[][] MODULES = {
-            {"KH",       "Quản lý khách hàng"},
-            {"PT",       "Quản lý phương tiện"},
-            {"BH",       "Quản lý bảo hành"},
-            {"SC",       "Lập phiếu sửa chữa"},
-            {"TD",       "Cập nhật tiến độ"},
-            {"PHUTUNG",  "Quản lý phụ tùng"},
-            {"NHAPKHO",  "Nhập kho"},
-            {"XUATKHO",  "Xuất kho"},
-            {"LSKHO",    "Lịch sử nhập xuất kho"},
-            {"TONKHO",   "Báo cáo tồn kho"},
-            {"NV",       "Quản lý nhân viên"},
-            {"PQ",       "Phân quyền"},
-            {"HD",       "Thanh toán hóa đơn"},
-            {"BCDT",     "Báo cáo doanh thu"},
-    };
-
-    /** Quyền mặc định theo vai trò */
-    private static final String[][] QUYEN_MAC_DINH = {
-            {"Quản lý",            "KH,PT,BH,SC,TD,PHUTUNG,NHAPKHO,XUATKHO,LSKHO,TONKHO,NV,PQ,HD,BCDT"},
-            {"Nhân viên tiếp tân", "KH,PT,BH,HD"},
-            {"Nhân viên thu ngân", "HD,BCDT,KH,PT"},
-            {"Nhân viên sửa chữa", "SC,TD,TONKHO"},
-            {"Nhân viên kho",      "PHUTUNG,NHAPKHO,XUATKHO,LSKHO,TONKHO"},
-    };
-
-    private final KhoDuLieu kho = KhoDuLieu.get();
-    private final JTextField txtMa = new JTextField();
-    private final JTextField txtTen = new JTextField();
-    private final JTextField txtTk = new JTextField();
-    private final JLabel lblVaiTro = new JLabel("—");
-    private final JCheckBox[] chkQuyen = new JCheckBox[MODULES.length];
-    private JTable table;
-    private DefaultTableModel model;
-
+    private static final String[] NHAN = {"Xem khách hàng","Thêm sửa khách hàng","Xóa khách hàng","Xem phương tiện","Thêm sửa phương tiện","Xóa phương tiện","Tiếp nhận xe","Xem lịch sử sửa chữa","Lập sửa chữa","Cập nhật tiến độ","Phân công và điều hành","Xem kho","Quản lý phụ tùng","Nhập kho","Xuất kho","Thanh toán","Xem và in hóa đơn","Hủy hóa đơn","Bảo hành","Báo cáo quản trị","Quản lý tài khoản","Phân quyền","Cấu hình hệ thống"};
+    private final JComboBox<String> staff=new JComboBox<>();
+    private final JComboBox<String> role=new JComboBox<>(new String[]{"Quản lý","Nhân viên tiếp tân","Nhân viên sửa chữa","Nhân viên kho","Nhân viên thu ngân"});
+    private final Map<QuyenTruyCap.Quyen,JCheckBox> checks=new LinkedHashMap<>();
+    private final java.util.List<NhanVien> people=new ArrayList<>();
     public PhanQuyen_UI() {
-        JPanel root = UiHelper.nen();
-        setLayout(new BorderLayout());
-        setBackground(UiHelper.NEN);
-        add(root, BorderLayout.CENTER);
-
-        JPanel north = new JPanel();
-        north.setOpaque(false);
-        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        JLabel tde = UiHelper.tieuDeTrang("🔐 Phân quyền người dùng");
-        JLabel phu = new JLabel("Gán / thu hồi quyền truy cập cho từng tài khoản");
-        phu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        phu.setForeground(new Color(110, 120, 135));
-        tde.setAlignmentX(Component.LEFT_ALIGNMENT);
-        phu.setAlignmentX(Component.LEFT_ALIGNMENT);
-        north.add(tde);
-        north.add(phu);
-        root.add(north, BorderLayout.NORTH);
-
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoBang(), taoForm());
-        split.setResizeWeight(0.45);
-        split.setDividerLocation(540);
-        split.setBorder(null);
-        split.setOpaque(false);
-        root.add(split, BorderLayout.CENTER);
-        napBang();
+        setLayout(new BorderLayout(10,10));setBorder(BorderFactory.createEmptyBorder(24,24,24,24));
+        JPanel top=new JPanel(new GridLayout(0,1,5,5));top.add(UiHelper.tieuDeTrang("Vai trò và quyền bổ sung"));top.add(staff);top.add(role);
+        top.add(new JLabel("Quyền mặc định được giữ theo vai trò. Thay đổi có hiệu lực từ lần đăng nhập tiếp theo."));add(top,BorderLayout.NORTH);
+        JPanel grid=new JPanel(new GridLayout(0,3,8,8));
+        for(QuyenTruyCap.Quyen q:QuyenTruyCap.Quyen.values()){JCheckBox c=new JCheckBox(NHAN[q.ordinal()]);checks.put(q,c);grid.add(c);}add(new JScrollPane(grid));
+        JPanel bottom=new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));bottom.setOpaque(false);JButton reset=UiHelper.nut("Khôi phục theo vai trò", UiIcon.of(UiIcon.REFRESH, 14), UiHelper.XAM, e->{checks.values().forEach(c->c.setSelected(false));defaults();});JButton save=UiHelper.nut("Lưu thay đổi", UiIcon.of(UiIcon.CHECK, 14), UiHelper.XANH_TRUNG, e->save());bottom.add(reset);bottom.add(save);add(bottom,BorderLayout.SOUTH);
+        people.addAll(new DAO.NhanVien_DAO().layTatCaNhanVien());for(NhanVien n:people)staff.addItem(n.getMaNV()+" — "+n.getHoTen());
+        staff.addActionListener(e->select());role.addActionListener(e->defaults());reset.addActionListener(e->{checks.values().forEach(c->c.setSelected(false));defaults();});
+        save.addActionListener(e->save());select();
     }
-
-    private JPanel taoBang() {
-        JPanel bangPanel = UiHelper.panelBang("Danh sách tài khoản");
-        model = UiHelper.model("Mã NV", "Họ tên", "Tài khoản", "Vai trò", "Trạng thái", "Số quyền");
-        table = UiHelper.bang(model);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        table.getColumnModel().getColumn(0).setPreferredWidth(80);  // Mã NV
-        table.getColumnModel().getColumn(1).setPreferredWidth(160); // Họ tên
-        table.getColumnModel().getColumn(2).setPreferredWidth(110); // Tài khoản
-        table.getColumnModel().getColumn(3).setPreferredWidth(120); // Vai trò
-        table.getColumnModel().getColumn(4).setPreferredWidth(110); // Trạng thái
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);  // Số quyền
-        UiHelper.canGiua(table, 0, 2, 4, 5);
-        UiHelper.canTrai(table, 1, 3);
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) hienLenForm();
-        });
-        JScrollPane sp = new JScrollPane(table);
-        UiHelper.danhSachBong(sp);
-        bangPanel.add(sp, BorderLayout.CENTER);
-        return bangPanel;
+    private void defaults(){Set<QuyenTruyCap.Quyen> base=QuyenTruyCap.macDinh((String)role.getSelectedItem());checks.forEach((q,c)->{
+        boolean fixed=base.contains(q);if(!c.isEnabled())c.setSelected(false);c.setEnabled(!fixed && q!=QuyenTruyCap.Quyen.PHAN_QUYEN && q!=QuyenTruyCap.Quyen.NHAN_VIEN && q!=QuyenTruyCap.Quyen.CAU_HINH);if(fixed)c.setSelected(true);
+    });}
+    private void select(){int i=staff.getSelectedIndex();if(i<0)return;NhanVien n=people.get(i);role.setSelectedItem(n.getVaiTro());checks.values().forEach(c->c.setSelected(false));
+        try{new PhanQuyen_DAO().napQuyen(n);if(n.getCacQuyen()!=null)for(String q:n.getCacQuyen())try{checks.get(QuyenTruyCap.Quyen.valueOf(q)).setSelected(true);}catch(IllegalArgumentException ignored){}defaults();}
+        catch(Exception e){JOptionPane.showMessageDialog(this,"Không tải được quyền: "+e.getMessage());}
     }
-
-    private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin & quyền chi tiết", 480);
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setOpaque(false);
-        txtMa.setEditable(false);
-        txtTen.setEditable(false);
-        txtTk.setEditable(false);
-        UiHelper.themDong(form, 0, "Mã NV", txtMa);
-        UiHelper.themDong(form, 1, "Họ tên", txtTen);
-        UiHelper.themDong(form, 2, "Tài khoản", txtTk);
-        lblVaiTro.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblVaiTro.setForeground(new Color(37, 99, 168));
-        UiHelper.themDong(form, 3, "Vai trò", lblVaiTro);
-
-        // Bảng checkbox quyền
-        JPanel quyenPanel = new JPanel(new GridLayout(0, 2, 10, 6));
-        quyenPanel.setOpaque(false);
-        quyenPanel.setBorder(new EmptyBorder(10, 4, 10, 4));
-        for (int i = 0; i < MODULES.length; i++) {
-            JCheckBox cb = new JCheckBox(MODULES[i][1]);
-            cb.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            cb.setOpaque(false);
-            cb.setFocusPainted(false);
-            chkQuyen[i] = cb;
-            quyenPanel.add(cb);
-        }
-        JScrollPane spQuyen = new JScrollPane(quyenPanel);
-        spQuyen.setBorder(BorderFactory.createTitledBorder(
-                new javax.swing.border.LineBorder(new Color(220, 228, 240)),
-                "Quyền truy cập các module",
-                0, 0, new Font("Segoe UI", Font.BOLD, 12), new Color(37, 99, 168)));
-        spQuyen.setPreferredSize(new Dimension(0, 260));
-
-        // Nút hành động
-        JPanel nutPanel = new JPanel(new GridLayout(1, 3, 8, 0));
-        nutPanel.setOpaque(false);
-        nutPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
-        JButton btnMacDinh = UiHelper.nut("Mặc định vai trò", UiIcon.of(UiIcon.REFRESH, 15), new Color(37, 99, 168), e -> apDungMacDinh());
-        JButton btnTatCa = UiHelper.nut("Chọn tất cả", UiIcon.of(UiIcon.PLUS, 15), new Color(46, 160, 92), e -> chonTatCa());
-        JButton btnLuu = UiHelper.nut("Lưu thay đổi", UiIcon.of(UiIcon.CHECK, 15), new Color(225, 150, 45), e -> luuQuyen());
-        btnMacDinh.setBorder(new EmptyBorder(8, 4, 8, 4));
-        btnTatCa.setBorder(new EmptyBorder(8, 4, 8, 4));
-        btnLuu.setBorder(new EmptyBorder(8, 4, 8, 4));
-        nutPanel.add(btnMacDinh);
-        nutPanel.add(btnTatCa);
-        nutPanel.add(btnLuu);
-
-        JPanel body = new JPanel(new BorderLayout(0, 8));
-        body.setOpaque(false);
-        body.add(form, BorderLayout.NORTH);
-        body.add(spQuyen, BorderLayout.CENTER);
-        body.add(nutPanel, BorderLayout.SOUTH);
-        formPanel.add(body, BorderLayout.CENTER);
-
-        return formPanel;
-    }
-
-    private void napBang() {
-        model.setRowCount(0);
-        for (NhanVien nv : kho.getNhanViens()) {
-            int soQuyen = nv.getCacQuyen() == null ? 0 : nv.getCacQuyen().length;
-            String trangThai = nv.dangHoatDong() ? "Đang làm" : "Ngưng";
-            model.addRow(new Object[]{nv.getMaNV(), nv.getHoTen(), nv.getTaiKhoan(),
-                    nv.getVaiTro(), trangThai, soQuyen + " module"});
-        }
-    }
-
-    private void hienLenForm() {
-        int dong = table.getSelectedRow();
-        if (dong < 0) return;
-        NhanVien nv = kho.timNhanVienTheoMa(model.getValueAt(dong, 0).toString());
-        if (nv == null) return;
-        txtMa.setText(nv.getMaNV());
-        txtTen.setText(nv.getHoTen());
-        txtTk.setText(nv.getTaiKhoan());
-        lblVaiTro.setText(nv.getVaiTro());
-        // Set quyền
-        Set<String> dsQuyen = new LinkedHashSet<>();
-        if (nv.getCacQuyen() != null) dsQuyen.addAll(Arrays.asList(nv.getCacQuyen()));
-        for (int i = 0; i < MODULES.length; i++) {
-            chkQuyen[i].setSelected(dsQuyen.contains(MODULES[i][0]));
-        }
-    }
-
-    private void apDungMacDinh() {
-        for (String[] vt : QUYEN_MAC_DINH) {
-            if (vt[0].equals(lblVaiTro.getText())) {
-                Set<String> ds = new LinkedHashSet<>(Arrays.asList(vt[1].split(",")));
-                for (int i = 0; i < MODULES.length; i++) {
-                    chkQuyen[i].setSelected(ds.contains(MODULES[i][0]));
-                }
-                return;
-            }
-        }
-        JOptionPane.showMessageDialog(this, "Không tìm thấy cấu hình mặc định cho vai trò này!");
-    }
-
-    private void chonTatCa() {
-        for (JCheckBox cb : chkQuyen) cb.setSelected(true);
-    }
-
-    private void luuQuyen() {
-        int dong = table.getSelectedRow();
-        if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Chọn tài khoản cần phân quyền!");
-            return;
-        }
-        NhanVien nv = kho.timNhanVienTheoMa(model.getValueAt(dong, 0).toString());
-        if (nv == null) return;
-        java.util.List<String> ds = new java.util.ArrayList<>();
-        for (int i = 0; i < MODULES.length; i++) {
-            if (chkQuyen[i].isSelected()) ds.add(MODULES[i][0]);
-        }
-        nv.setCacQuyen(ds.toArray(new String[0]));
-        napBang();
-        JOptionPane.showMessageDialog(this, "Đã lưu quyền cho " + nv.getHoTen() + "!\n" +
-                "Có " + ds.size() + " module được phép truy cập.");
+    private void save(){if(!BaoVeQuyen.yeuCau(this,QuyenTruyCap.Quyen.PHAN_QUYEN))return;int i=staff.getSelectedIndex();if(i<0)return;
+        if(JOptionPane.showConfirmDialog(this,"Lưu vai trò và quyền mới?","Xác nhận",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION)return;
+        Set<String> extra=new HashSet<>();checks.forEach((q,c)->{if(c.isEnabled()&&c.isSelected())extra.add(q.name());});
+        try{new PhanQuyen_DAO().luu(BaoVeQuyen.hienTai(),people.get(i).getMaNV(),(String)role.getSelectedItem(),extra);JOptionPane.showMessageDialog(this,"Đã lưu SQL. Có hiệu lực từ lần đăng nhập tiếp theo.");}
+        catch(Exception e){JOptionPane.showMessageDialog(this,"Không lưu được quyền. Kiểm tra migration và dữ liệu.\n"+e.getMessage());}
     }
 }

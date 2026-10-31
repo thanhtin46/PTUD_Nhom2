@@ -13,32 +13,27 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 /**
- * UiHelper - Hệ thống màu sắc, kiểu dáng, component đồng bộ theo thiết kế hiện đại Figma:
- * - Tone xanh Navy/Slate hiện đại (#0F172A, #1E293B, #2563EB)
- * - Card bo góc mượt mà, bóng đổ nhẹ tinh tế
- * - Input cao ráo, viền hover & focus ánh sáng xanh sang trọng
- * - Button hiệu ứng hover/press mượt mà với bo góc chuẩn UX
- * - Bảng dữ liệu thoáng đãng, phân tách dòng tinh tế, header nổi bật
+ * Lớp tiện ích hỗ trợ định dạng giao diện, màu sắc, font chữ và các component Swing.
  */
 public final class UiHelper {
 
-    // ==== BẢNG MÀU CHÍNH HIỆN ĐẠI (FIGMA MODERN PALETTE) ====
-    public static final Color XANH_DAM       = new Color(15, 23, 42);      // Slate 900 - Chữ chính, tiêu đề
-    public static final Color XANH_TRUNG     = new Color(37, 99, 235);     // Blue 600 - Nút chính, highlight, focus
-    public static final Color XANH_NHAT      = new Color(96, 165, 250);    // Blue 400 - Accent nhẹ
-    public static final Color XANH_SIDE      = new Color(15, 23, 42);      // Slate 900 - Sidebar nền tối cao cấp
-    public static final Color NEN            = new Color(241, 245, 249);   // Slate 100 - Nền tổng thể mềm mại dịu mắt
-    public static final Color NEN_CARD       = Color.WHITE;                // Nền card trắng tinh
-    public static final Color VIEN           = new Color(226, 232, 240);   // Slate 200 - Viền card & input
-    public static final Color VIEN_FOCUS     = new Color(37, 99, 235);     // Viền khi focus input
-    public static final Color CHU_CHAY       = new Color(239, 68, 68);     // Red 500 - Xóa, cảnh báo
-    public static final Color XANH_LA        = new Color(22, 163, 74);     // Green 600 - Thêm mới, hoàn thành
-    public static final Color CAM            = new Color(245, 158, 11);    // Amber 500 - Cảnh báo, chờ
-    public static final Color TIM            = new Color(124, 58, 237);    // Violet 600 - Khách hàng, bảo hành
-    public static final Color XAM            = new Color(100, 116, 139);   // Slate 500 - Nút phụ, nhãn phụ
-    public static final Color TEXT_MUTED     = new Color(148, 163, 184);   // Slate 400 - Mô tả mờ
+    // Bảng màu giao diện
+    public static final Color XANH_DAM       = new Color(15, 23, 42);      // Chữ chính, tiêu đề
+    public static final Color XANH_TRUNG     = new Color(37, 99, 235);     // Nút chính
+    public static final Color XANH_NHAT      = new Color(96, 165, 250);    // Màu phụ
+    public static final Color XANH_SIDE      = new Color(15, 23, 42);      // Màu menu bên trái
+    public static final Color NEN            = new Color(241, 245, 249);   // Màu nền
+    public static final Color NEN_CARD       = Color.WHITE;                // Nền khung trắng
+    public static final Color VIEN           = new Color(226, 232, 240);   // Viền khung và ô nhập
+    public static final Color VIEN_FOCUS     = new Color(37, 99, 235);     // Viền khi chọn ô nhập
+    public static final Color CHU_CHAY       = new Color(239, 68, 68);     // Xóa, cảnh báo
+    public static final Color XANH_LA        = new Color(22, 163, 74);     // Thêm mới, hoàn thành
+    public static final Color CAM            = new Color(245, 158, 11);    // Cảnh báo, chờ
+    public static final Color TIM            = new Color(124, 58, 237);    // Khách hàng, bảo hành
+    public static final Color XAM            = new Color(100, 116, 139);   // Nút phụ, nhãn phụ
+    public static final Color TEXT_MUTED     = new Color(148, 163, 184);   // Chữ mờ
 
-    // ==== FONT ĐỒNG BỘ ====
+    // Font chữ
     public static final Font FONT_BT         = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font FONT_NHAN       = new Font("Segoe UI", Font.BOLD, 13);
     public static final Font FONT_TIEU_DE     = new Font("Segoe UI", Font.BOLD, 24);
@@ -82,7 +77,7 @@ public final class UiHelper {
     }
 
     /**
-     * Lớp panel hỗ trợ cuộn dọc mượt mà nhưng luôn bám sát chiều ngang khung hình (Scrollable)
+     * Panel hỗ trợ cuộn
      */
     public static class CuonPanel extends JPanel implements Scrollable {
         public CuonPanel(LayoutManager lm) {
@@ -97,10 +92,7 @@ public final class UiHelper {
     }
 
     /**
-     * Gắn nội dung nhập liệu và các nút chức năng vào form card:
-     * - Neo sát nội dung lên phía trên (NORTH), loại bỏ khoảng trống thừa bên trên
-     * - Co giãn linh hoạt theo chiều rộng thẻ, không bị tràn hay khuất nút bên phải
-     * - Tự động cuộn dọc mượt mà khi màn hình thu nhỏ
+     * Gắn nội dung nhập liệu và các nút chức năng vào form.
      */
     public static void ganNoiDungForm(JPanel formPanel, JComponent form, JComponent nut) {
         JPanel noiDung = new JPanel(new BorderLayout(0, 14));
@@ -123,7 +115,7 @@ public final class UiHelper {
         formPanel.add(scroll, BorderLayout.CENTER);
     }
 
-    /** Tạo thẻ trắng bo góc 18px có viền mềm và đổ bóng nhẹ */
+    /** Tạo panel nền trắng có bo góc */
     public static JPanel taoThe(LayoutManager layout) {
         JPanel panel = new JPanel(layout) {
             @Override
@@ -133,17 +125,17 @@ public final class UiHelper {
                 int w = getWidth();
                 int h = getHeight();
 
-                // Đổ bóng khuếch tán mềm ở đáy
+                // Đổ bóng
                 g2.setColor(new Color(15, 23, 42, 8));
                 g2.fillRoundRect(0, 2, w, h - 2, 18, 18);
                 g2.setColor(new Color(15, 23, 42, 14));
                 g2.fillRoundRect(0, 1, w, h - 1, 18, 18);
 
-                // Nền card
+                // Nền panel
                 g2.setColor(NEN_CARD);
                 g2.fillRoundRect(0, 0, w, h - 1, 18, 18);
 
-                // Đường viền tinh tế
+                // Vẽ đường viền
                 g2.setColor(VIEN);
                 g2.drawRoundRect(0, 0, w - 1, h - 2, 18, 18);
                 g2.dispose();
@@ -167,7 +159,7 @@ public final class UiHelper {
 
         JLabel lbl = new JLabel(nhan);
         lbl.setFont(FONT_NHAN);
-        lbl.setForeground(new Color(51, 65, 85)); // Slate 700
+        lbl.setForeground(new Color(51, 65, 85));
         gbc.gridx = 0;
         gbc.weightx = 0;
         form.add(lbl, gbc);
@@ -180,12 +172,12 @@ public final class UiHelper {
         form.add(o, gbc);
     }
 
-    /** Làm đẹp ô nhập liệu hiện đại với hiệu ứng focus viền xanh */
+    /** Định dạng ô nhập liệu và hiệu ứng khi chọn */
     public static void trangTriInput(JComponent o) {
         o.setFont(FONT_BT);
         if (o instanceof JTextField tf) {
             tf.setPreferredSize(new Dimension(190, 38));
-            tf.setBackground(new Color(248, 250, 252)); // Slate 50
+            tf.setBackground(new Color(248, 250, 252));
             tf.setForeground(XANH_DAM);
             tf.setCaretColor(XANH_TRUNG);
             tf.setBorder(createInputBorder(false));
@@ -231,6 +223,53 @@ public final class UiHelper {
         );
     }
 
+    /**
+     * Ràng buộc JTextField chỉ cho phép nhập số [0-9].
+     * @param tf JTextField cần giới hạn
+     * @param doDaiToiDa Độ dài tối đa (nếu <= 0 thì không giới hạn)
+     */
+    public static void chiChoNhapSo(JTextField tf, int doDaiToiDa) {
+        if (tf == null) return;
+        javax.swing.text.AbstractDocument doc = (javax.swing.text.AbstractDocument) tf.getDocument();
+        doc.setDocumentFilter(new javax.swing.text.DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr)
+                    throws javax.swing.text.BadLocationException {
+                if (string == null) return;
+                String filtered = string.replaceAll("[^0-9]", "");
+                if (filtered.isEmpty()) return;
+                int currentLength = fb.getDocument().getLength();
+                if (doDaiToiDa > 0 && currentLength + filtered.length() > doDaiToiDa) {
+                    int remaining = doDaiToiDa - currentLength;
+                    if (remaining <= 0) return;
+                    filtered = filtered.substring(0, remaining);
+                }
+                super.insertString(fb, offset, filtered, attr);
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs)
+                    throws javax.swing.text.BadLocationException {
+                if (text == null) {
+                    super.replace(fb, offset, length, null, attrs);
+                    return;
+                }
+                String filtered = text.replaceAll("[^0-9]", "");
+                int currentLength = fb.getDocument().getLength() - length;
+                if (doDaiToiDa > 0 && currentLength + filtered.length() > doDaiToiDa) {
+                    int remaining = doDaiToiDa - currentLength;
+                    if (remaining <= 0) return;
+                    filtered = filtered.substring(0, remaining);
+                }
+                super.replace(fb, offset, length, filtered, attrs);
+            }
+        });
+    }
+
+    public static void chiChoNhapSo(JTextField tf) {
+        chiChoNhapSo(tf, 0);
+    }
+
     public static JButton nut(String text, Color mau, java.awt.event.ActionListener hanhDong) {
         return nut(text, (Icon) null, mau, false, hanhDong);
     }
@@ -243,7 +282,7 @@ public final class UiHelper {
         return nut(text, icon, mau, false, hanhDong);
     }
 
-    /** Tạo nút bấm hiện đại bo cong 12px có tương tác Hover & Click và Vector Icon chống lỗi ô vuông */
+    /** Tạo nút bấm với màu sắc và icon tương ứng */
     public static JButton nut(String text, Icon icon, Color mau, boolean full, java.awt.event.ActionListener hanhDong) {
         Icon finalIcon = icon;
         String finalText = text;
@@ -275,7 +314,7 @@ public final class UiHelper {
                     finalIcon = UiIcon.of(UiIcon.CHECK, 15);
                 }
             }
-            // Loại bỏ hoàn toàn emoji để không bao giờ bị ô vuông trên Windows
+            // Lọc bỏ ký tự đặc biệt ở đầu chuỗi
             finalText = finalText.replaceAll("^[✓✔➕+🗑⏳📥📤🖨✎🔍⏻]+", "").trim();
             finalText = finalText.replaceAll("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]", "").trim();
         }
@@ -354,7 +393,7 @@ public final class UiHelper {
                          Math.min(255, (int)(c.getBlue()  + (255 - c.getBlue())  * f)));
     }
 
-    /** Tạo JTable hiện đại với chiều cao dòng thoáng đãng, hiệu ứng chọn mượt mà */
+    /** Định dạng bảng JTable hiển thị dữ liệu */
     public static JTable bang(DefaultTableModel model) {
         JTable table = new JTable(model) {
             @Override
@@ -364,7 +403,7 @@ public final class UiHelper {
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
                     c.setForeground(new Color(30, 41, 59));
                 } else {
-                    c.setBackground(new Color(219, 234, 254)); // Blue 100
+                    c.setBackground(new Color(219, 234, 254));
                     c.setForeground(XANH_TRUNG);
                 }
                 return c;
@@ -483,7 +522,7 @@ public final class UiHelper {
         if (focus != null) focus.requestFocus();
     }
 
-    /** Border đổ bóng mềm cho card */
+    /** Border đổ bóng cho panel */
     public static class ShadowBorder extends AbstractBorder {
         private final int size;
         private final Color color;

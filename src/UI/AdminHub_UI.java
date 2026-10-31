@@ -20,14 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
- * AdminHub_UI — Trung tâm Quản trị & Điều hành Toàn diện Gara (Admin Operations Hub):
- * - Cổng điều phối tất cả các phân hệ chức năng của hệ thống (1-click Quick Launch)
- * - Giám sát vận hành & Chẩn đoán điểm nghẽn thời gian thực (Diagnostic Engine)
- * - Cấu hình tham số & Quy tắc kinh doanh gara (Business Rules Engine)
- * - Sao lưu, xuất bản báo cáo & Phục hồi cơ sở dữ liệu (Disaster Recovery Hub)
- * - Nhật ký kiểm toán an ninh & Giám sát thao tác (Audit Trail & Activity Log)
- * 
- * Toàn bộ các chức năng quản trị cấp cao này ĐỀU KHÔNG PHẢI LÀ CRUD (thêm/xóa/sửa danh mục).
+ * Màn hình quản trị hệ thống và cấu hình gara.
  */
 public class AdminHub_UI extends JPanel {
     private final NhanVien admin;
@@ -145,6 +138,7 @@ public class AdminHub_UI extends JPanel {
                 {"Lập phiếu sửa chữa", "Tiếp nhận xe vào gara, ghi nhận yêu cầu & tạm tính", kho.getPhieuTiepNhans().size() + " phiếu đã tạo"},
                 {"Phân công KTV", "Giao xe cần sửa chữa cho kỹ thuật viên phụ trách", "Điều phối nhân sự"},
                 {"Cập nhật tiến độ", "Cập nhật trạng thái sửa chữa theo thời gian thực", "Theo dõi trực tiếp"},
+                {"Điều hành sửa chữa", "Theo dõi hạn hoàn thành & Khối lượng công việc KTV", "Giám sát & Điều phối"},
                 {"Lập phiếu bảo hành", "Cấp sổ bảo hành định kỳ sau khi xe sửa chữa xong", kho.getPhieuBaoHanhs().size() + " phiếu bảo hành"},
                 {"Tra cứu bảo hành", "Kiểm tra thời hạn bảo hành theo biển số xe", "Tra cứu tức thì"}
         }));
@@ -543,6 +537,7 @@ public class AdminHub_UI extends JPanel {
     }
 
     private void luuCauHinh() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.CAU_HINH)) return;
         try {
             CauHinhHeThong ch = kho.getCauHinh();
             ch.setTenGara(txtTenGara.getText().trim());
@@ -648,7 +643,7 @@ public class AdminHub_UI extends JPanel {
         t3.setForeground(UiHelper.XANH_DAM);
         card3.add(t3, BorderLayout.NORTH);
 
-        JTextArea ta3 = new JTextArea("Phục hồi hệ thống về trạng thái dữ liệu mẫu chuẩn ban đầu của đề tài (Factory Reset).\n\nTính năng tiện dụng cho việc báo cáo, thuyết trình đồ án hoặc kiểm thử quy trình vận hành từ đầu.");
+        JTextArea ta3 = new JTextArea("Khôi phục toàn bộ hệ thống về trạng thái dữ liệu mẫu ban đầu.");
         ta3.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         ta3.setForeground(new Color(71, 85, 105));
         ta3.setWrapStyleWord(true);
@@ -657,7 +652,7 @@ public class AdminHub_UI extends JPanel {
         ta3.setEditable(false);
         card3.add(ta3, BorderLayout.CENTER);
 
-        JButton btnFactory = UiHelper.nut("Reset dữ liệu mẫu ban đầu", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.CHU_CHAY, true, e -> thucHienResetDemo());
+        JButton btnFactory = UiHelper.nut("Khôi phục dữ liệu ban đầu", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.CHU_CHAY, true, e -> thucHienResetDemo());
         card3.add(btnFactory, BorderLayout.SOUTH);
 
         wrap.add(card1);
@@ -667,6 +662,7 @@ public class AdminHub_UI extends JPanel {
     }
 
     private void thucHienSaoLuu() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.CAU_HINH)) return;
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Chọn vị trí lưu tệp sao lưu dữ liệu");
         fc.setSelectedFile(new File("Backup_GaraTheT4_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".txt"));
@@ -685,6 +681,7 @@ public class AdminHub_UI extends JPanel {
     }
 
     private void thucHienPhucHoi() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.CAU_HINH)) return;
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Chọn tệp sao lưu dữ liệu hợp lệ để phục hồi");
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -698,8 +695,9 @@ public class AdminHub_UI extends JPanel {
     }
 
     private void thucHienResetDemo() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.CAU_HINH)) return;
         if (JOptionPane.showConfirmDialog(this,
-                "Khôi phục lại toàn bộ dữ liệu mẫu ban đầu của gara (Demo Factory Reset)?\nMọi thay đổi thử nghiệm trước đó sẽ được làm mới.",
+                "Khôi phục lại toàn bộ dữ liệu mẫu ban đầu của gara?\nMọi thay đổi trước đó sẽ được đặt lại.",
                 "Xác nhận Reset", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         kho.resetDuLieuMacDinh();
         JOptionPane.showMessageDialog(this, "Đã khôi phục dữ liệu mẫu ban đầu thành công!", "Reset hoàn tất", JOptionPane.INFORMATION_MESSAGE);

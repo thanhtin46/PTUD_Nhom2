@@ -15,10 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC009: Báo cáo tồn kho với cảnh báo real-time.
- * - Cột "Cảnh báo" hiển thị "HẾT HÀNG" (đỏ) / "SẮP HẾT" (cam) / "BÌNH THƯỜNG" (xanh).
- * - Panel trên cùng: số mặt hàng hết, sắp hết, bình thường, tổng giá trị.
- * - Hỗ trợ tìm kiếm, lọc theo cảnh báo, đồng bộ dữ liệu tức thì từ SQL Server và phím tắt F5.
+ * Màn hình báo cáo tồn kho phụ tùng.
+ * Hiển thị số lượng phụ tùng còn trong kho và cảnh báo khi sắp hết hàng.
  */
 public class BaoCaoTonKho_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();

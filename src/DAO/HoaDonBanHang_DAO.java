@@ -261,10 +261,11 @@ public class HoaDonBanHang_DAO {
 
                 // Lưu tên và đơn giá để insert chi tiết
                 Map<String, String> tenMap = new LinkedHashMap<>();
+                Map<String, String> dvtMap = new LinkedHashMap<>();
                 Map<String, Double> donGiaMap = new LinkedHashMap<>();
 
                 String sqlKiemTraKho =
-                        "SELECT pt.maPT, pt.tenPT, pt.donGiaBan, k.soLuongTon "
+                        "SELECT pt.maPT, pt.tenPT, pt.donViTinh, pt.donGiaBan, k.soLuongTon "
                                 + "FROM PhuTung pt "
                                 + "INNER JOIN Kho k WITH (UPDLOCK, HOLDLOCK) "
                                 + "ON pt.maPT = k.maPT "
@@ -288,6 +289,7 @@ public class HoaDonBanHang_DAO {
                             }
 
                             String tenPT = rs.getString("tenPT");
+                            String donViTinh = rs.getString("donViTinh");
                             double donGia = rs.getDouble("donGiaBan");
                             int tonKho = rs.getInt("soLuongTon");
 
@@ -303,6 +305,7 @@ public class HoaDonBanHang_DAO {
                             }
 
                             tenMap.put(maPT, tenPT);
+                            dvtMap.put(maPT, donViTinh != null && !donViTinh.isBlank() ? donViTinh : "Cái");
                             donGiaMap.put(maPT, donGia);
 
                             tienPhuTung += donGia * soLuongBan;
@@ -317,30 +320,30 @@ public class HoaDonBanHang_DAO {
                 String sqlHoaDon =
                         "INSERT INTO HoaDon "
                                 + "(maHD, maKH, maNV, ngayLap, "
-                                + "hinhThucThanhToan, soPhieuSC, "
+                                + "hinhThucThanhToan, "
                                 + "tienDichVu, tienPhuTung, giamGia, "
                                 + "tongTien, ghiChu, trangThai) "
-                                + "VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)";
+                                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 try (PreparedStatement ps = con.prepareStatement(sqlHoaDon)) {
                     ps.setString(1, maHD.trim());
                     ps.setString(2, maKH.trim());
                     ps.setString(3, maNV.trim());
                     ps.setDate(4, Date.valueOf(LocalDate.now()));
-                    ps.setNString(5, hinhThucThanhToan.trim());
+                    ps.setString(5, hinhThucThanhToan.trim());
                     ps.setDouble(6, 0);              // tienDichVu
                     ps.setDouble(7, tienPhuTung);
                     ps.setDouble(8, giamGia);
                     ps.setDouble(9, tongTien);
                     ps.setString(10, ghiChu);
-                    ps.setNString(11, "DA_THANH_TOAN");
+                    ps.setString(11, "DA_THANH_TOAN");
                     ps.executeUpdate();
                 }
 
                 String sqlChiTiet =
                         "INSERT INTO ChiTietHoaDon "
-                                + "(maHD, maPT, tenPhuTung, soLuong, donGia) "
-                                + "VALUES (?, ?, ?, ?, ?)";
+                                + "(maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) "
+                                + "VALUES (?, ?, ?, ?, ?, ?)";
 
                 try (PreparedStatement ps = con.prepareStatement(sqlChiTiet)) {
                     for (Map.Entry<String, Integer> entry : chiTietGop.entrySet()) {
@@ -349,8 +352,9 @@ public class HoaDonBanHang_DAO {
                         ps.setString(1, maHD.trim());
                         ps.setString(2, maPT);
                         ps.setNString(3, tenMap.get(maPT));
-                        ps.setInt(4, entry.getValue());
-                        ps.setDouble(5, donGiaMap.get(maPT));
+                        ps.setNString(4, dvtMap.get(maPT));
+                        ps.setInt(5, entry.getValue());
+                        ps.setDouble(6, donGiaMap.get(maPT));
                         ps.addBatch();
                     }
                     ps.executeBatch();

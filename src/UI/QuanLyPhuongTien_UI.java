@@ -141,7 +141,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
         return bangPanel;
     }
 
-    /** Căn lề đồng bộ cho cả tiêu đề cột và nội dung dữ liệu để luôn thẳng hàng tuyệt đối */
+    /** Căn lề cho tiêu đề và nội dung dữ liệu trong bảng */
     private void dinhDangCot(int cot, int canLe, int doRong) {
         if (cot < 0 || cot >= table.getColumnCount()) return;
         TableColumn tc = table.getColumnModel().getColumn(cot);
@@ -208,6 +208,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private void them() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_SUA)) return;
         if (!kiemTraForm(true)) return;
         String maChu = maChuDangChon();
         if (maChu.isEmpty()) {
@@ -238,6 +239,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private void xoa() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_XOA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần xóa!");
@@ -265,6 +267,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private void sua() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_SUA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần sửa!");

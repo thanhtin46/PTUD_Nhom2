@@ -21,12 +21,7 @@ import java.awt.print.PrinterException;
 import java.util.ArrayList;
 
 /**
- * TraCuuHoaDon_UI — Màn hình tra cứu và quản lý hóa đơn dịch vụ Gara Ô tô:
- * - Đồng bộ giao diện hiện đại giống TraCuuPhieuTiepNhan_UI và TraCuuPhuongTien_UI.
- * - Hỗ trợ lọc nhanh theo Trạng thái (Tất cả, Đã thanh toán, Đã hủy) với chip nút giữ chữ màu đen, chỉ đổi màu nền khi hover.
- * - Lọc theo phương thức thanh toán (Tất cả, Chuyển khoản QR, Tiền mặt, Quẹt thẻ POS).
- * - Căn chỉnh các cột đồng bộ giữa tiêu đề và dữ liệu.
- * - Xem chi tiết hóa đơn và in lại hóa đơn theo mẫu chuẩn nghiệp vụ.
+ * Màn hình tra cứu và quản lý danh sách hóa đơn thanh toán.
  */
 public class TraCuuHoaDon_UI extends JPanel {
     private final HoaDon_DAO hoaDonDAO = new HoaDon_DAO();
@@ -248,10 +243,7 @@ public class TraCuuHoaDon_UI extends JPanel {
     }
 
     /**
-     * Tạo nút chip lọc nhanh:
-     * - Chữ màu đen giữ nguyên tuyệt đối, không làm mờ chữ khi hover.
-     * - Chỉ hover vào là đổi màu nền nhẹ nhàng (#F1F5F9).
-     * - Khi kích hoạt: nền xanh nhạt (#EFF6FF), viền xanh dương (#3B82F6).
+     * Tạo nút lọc nhanh theo trạng thái.
      */
     private JButton taoChipButton(String text, String value) {
         JButton btn = new JButton(text) {

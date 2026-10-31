@@ -13,11 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * PhieuTiepNhan_DAO — Lớp DAO chuyên trách phục vụ Phiếu tiếp nhận xe vào xưởng:
- * - CRUD: Lấy danh sách, Thêm mới, Sửa thông tin, Xóa an toàn từ CSDL SQL Server
- * - Tra cứu đa tiêu chí: Số phiếu, Biển số xe, Khách hàng, SĐT, Yêu cầu
- * - Lọc theo tiến độ xe trong xưởng
- * - Kiểm tra ràng buộc trước khi xóa
+ * Lớp DAO xử lý dữ liệu phiếu tiếp nhận xe với CSDL SQL Server.
  */
 public class PhieuTiepNhan_DAO {
 
@@ -399,10 +395,7 @@ public class PhieuTiepNhan_DAO {
     }
 
     /**
-     * Sinh mã số phiếu tiếp nhận tự động thông minh:
-     * - Tự động lấp khoảng trống khi xóa phiếu (trở lại số phiếu vừa xóa)
-     * - Không tăng lên vô tận khi bấm làm mới hoặc hủy
-     * - Luôn bắt đầu từ TN001 nếu chưa có phiếu nào
+     * Tự động sinh mã phiếu tiếp nhận mới (TN001, TN002...).
      */
     public String sinhMaTiepNhanTuDong() {
         Connection con = ConnectDB.getInstance().getConnection();

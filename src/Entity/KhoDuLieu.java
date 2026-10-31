@@ -301,9 +301,23 @@ public class KhoDuLieu {
     }
 
     public boolean huyHoaDon(String maHD) {
-        if (!hoaDonDAO.xoaHoaDon(maHD)) return false;
-        dongBoTuSQLServer();
-        return true;
+        if (maHD == null) return false;
+        boolean ok = hoaDonDAO.xoaHoaDon(maHD);
+        if (ok) {
+            dongBoTuSQLServer();
+            ghiNhatKy("Thu ngân", "Thu ngân", "Hủy hóa đơn", NhatKyHeThong.WARN, "Hủy hóa đơn [" + maHD + "] (Đã cập nhật SQL Server)");
+            return true;
+        } else {
+            // Trường hợp offline / không kết nối SQL Server
+            for (HoaDon hd : hoaDons) {
+                if (maHD.equalsIgnoreCase(hd.getMaHD())) {
+                    hd.setTrangThai(HoaDon.DA_HUY);
+                    ghiNhatKy("Thu ngân", "Thu ngân", "Hủy hóa đơn", NhatKyHeThong.WARN, "Hủy hóa đơn [" + maHD + "] (Lưu bộ nhớ tạm)");
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // 6. PHIẾU BẢO HÀNH
@@ -395,7 +409,7 @@ public class KhoDuLieu {
         demXuat = 1;
         demHoaDon = 2;
         seed();
-        ghiNhatKy("Quản lý", "Quản lý", "Khôi phục dữ liệu gốc", NhatKyHeThong.WARN, "Admin đã kích hoạt Factory Reset đưa hệ thống về trạng thái mẫu ban đầu");
+        ghiNhatKy("Quản lý", "Quản lý", "Khôi phục dữ liệu gốc", NhatKyHeThong.WARN, "Admin đã khôi phục dữ liệu hệ thống về trạng thái ban đầu");
     }
 
     public String taoBaoCaoBackup() {
@@ -516,7 +530,7 @@ public class KhoDuLieu {
                 }
             }
         }
-        // 4. Fallback: trả về phụ tùng đầu tiên trong kho
+        // Trả về phụ tùng đầu tiên nếu không tìm thấy
         return !phuTungs.isEmpty() ? phuTungs.get(0) : null;
     }
 
@@ -570,11 +584,8 @@ public class KhoDuLieu {
         return duLieuDAO.layDanhSachNhaCungCap();
     }
 
-    /**
-     * Nghiệp vụ Nhập kho ngay (UC_NK):
-     * [Bắt đầu transaction SQL] -> [Lưu phiếu và chi tiết] -> [Cộng tồn kho] -> [Cập nhật trạng thái DA_NHAP]
-     * -> Nếu thành công: COMMIT -> Hoàn tất nhập kho, cập nhật tồn kho bộ nhớ.
-     * -> Nếu lỗi/ngoại lệ: ROLLBACK -> Thông báo lỗi CSDL, giữ nguyên tồn kho cũ.
+        /**
+     * Lưu phiếu nhập kho và cập nhật số lượng tồn kho.
      */
     public void nhapKhoNgay(PhieuKho phieu, String maNV) throws Exception {
         if (phieu.getChiTiet() == null || phieu.getChiTiet().isEmpty()) {
@@ -637,21 +648,21 @@ public class KhoDuLieu {
         }
     }
 
-    /** UC010: chỉ lưu phiếu nhập dạng "chờ nhập" — chưa cộng tồn kho. */
+    /** Lưu phiếu nhập dạng chờ nhập (chưa cộng tồn kho). */
     public void luuPhieuChoNhap(PhieuKho phieu) {
         try { new DAO.NhapKho_DAO().luuChoNhap(phieu); }
         catch (java.sql.SQLException ex) { throw new IllegalStateException(ex.getMessage(), ex); }
         dongBoTuSQLServer();
     }
 
-    /** UC010: khi NCC giao hàng, gọi hàm này để cộng tồn kho. */
+    /** Cập nhật số lượng tồn kho khi nhận hàng từ nhà cung cấp. */
     public boolean xacNhanNhap(PhieuKho phieu) {
         if (!new DAO.NhapKho_DAO().doiTrangThai(phieu.getSoPhieu(), true)) return false;
         phieu.setTrangThai(PhieuKho.DA_NHAP);
         dongBoTuSQLServer(); return true;
     }
 
-    /** UC010: đánh dấu hủy phiếu chờ nhập. */
+    /** Hủy phiếu chờ nhập. */
     public boolean huyPhieuChoNhap(PhieuKho phieu) {
         if (!new DAO.NhapKho_DAO().doiTrangThai(phieu.getSoPhieu(), false)) return false;
         phieu.setTrangThai(PhieuKho.DA_HUY);
@@ -691,7 +702,7 @@ public class KhoDuLieu {
     }
 
     /**
-     * Tra cứu & lọc lịch sử nhập xuất kho (UC-KHO-03):
+     * Tra cứu và lọc lịch sử nhập xuất kho:
      * @param loaiPhieu "Tất cả", "Nhập kho", "Xuất kho"
      * @param tuKhoa Mã phiếu, mã phụ tùng, tên phụ tùng, người lập, NCC
      * @param tuNgay Ngày bắt đầu

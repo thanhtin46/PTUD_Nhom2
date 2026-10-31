@@ -39,7 +39,7 @@ public class NhanVien_DAO {
             }
             daKiemTraCauTruc = true;
         } catch (SQLException ignored) {
-            // Trường hợp tài khoản kết nối không có quyền DDL ALTER TABLE, hệ thống sẽ tự fallback truy vấn an toàn
+            // Nếu không có quyền cập nhật bảng, giữ nguyên truy vấn cơ bản
         }
     }
 
@@ -92,7 +92,7 @@ public class NhanVien_DAO {
             }
             return ds;
         } catch (SQLException e) {
-            // 2. Dự phòng an toàn nếu bảng NhanVien trong CSDL cũ chỉ có 4 cột cơ bản (maNV, hoTen, chucVu, soDT)
+            // Dự phòng nếu bảng NhanVien chỉ có các cột cơ bản
             String sqlCoBan = "SELECT nv.maNV, nv.hoTen, nv.chucVu, nv.soDT, " +
                               "ISNULL(tk.taiKhoan, nv.maNV) AS taiKhoan, " +
                               "tk.matKhau, tk.trangThai AS trangThaiTK " +
@@ -204,7 +204,7 @@ public class NhanVien_DAO {
     /**
      * Thêm nhân viên và tài khoản mới vào CSDL
      */
-    public boolean themNhanVien(NhanVien nv, String sdt) {
+    private boolean themNhanVienNoiBo(NhanVien nv, String sdt) {
         damBaoCauTrucBang();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
@@ -259,7 +259,7 @@ public class NhanVien_DAO {
     /**
      * Cập nhật thông tin nhân viên và tài khoản
      */
-    public boolean capNhatNhanVien(NhanVien nv) {
+    private boolean capNhatNhanVienNoiBo(NhanVien nv) {
         damBaoCauTrucBang();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
@@ -323,7 +323,7 @@ public class NhanVien_DAO {
     /**
      * Cập nhật trạng thái nhân viên và tài khoản
      */
-    public boolean capNhatTrangThaiTaiKhoan(String maNV, String trangThaiMoi) {
+    private boolean capNhatTrangThaiTaiKhoanNoiBo(String maNV, String trangThaiMoi) {
         damBaoCauTrucBang();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
@@ -357,27 +357,13 @@ public class NhanVien_DAO {
      * Xóa an toàn nhân viên: Thử xóa cứng nếu chưa có giao dịch, nếu có FK thì chuyển sang Thôi việc (Soft-delete)
      */
     public boolean xoaNhanVien(String maNV) {
-        Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return false;
-        try {
-            try (PreparedStatement stmtTK = con.prepareStatement("DELETE FROM TaiKhoan WHERE maNV = ?")) {
-                stmtTK.setString(1, maNV);
-                stmtTK.executeUpdate();
-            }
-            try (PreparedStatement stmtNV = con.prepareStatement("DELETE FROM NhanVien WHERE maNV = ?")) {
-                stmtNV.setString(1, maNV);
-                return stmtNV.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            // Có ràng buộc khóa ngoại (lịch sử tiếp nhận, hóa đơn...) -> Chuyển sang thôi việc
-            return capNhatTrangThaiTaiKhoan(maNV, NhanVien.NGUNG);
-        }
+        return capNhatTrangThaiTaiKhoan(maNV, NhanVien.NGUNG);
     }
 
     /**
      * Đổi mật khẩu tài khoản nhân viên
      */
-    public boolean doiMatKhau(String maNV, String matKhauMoi) {
+    private boolean doiMatKhauNoiBo(String maNV, String matKhauMoi) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
@@ -399,6 +385,62 @@ public class NhanVien_DAO {
         System.out.println("Tong so nhan vien trong SQL Server: " + list.size());
         for (NhanVien nv : list) {
             System.out.println("-> Ma: " + nv.getMaNV() + " | HoTen: " + nv.getHoTen() + " | TK: " + nv.getTaiKhoan() + " | MK: " + nv.getMatKhau() + " | ChucVu: " + nv.getVaiTro());
+        }
+    }
+
+    public boolean capNhatNhanVien(NhanVien nv) {
+        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+        if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
+        synchronized(ConnectDB.getInstance()) {
+            Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
+            boolean auto=true;try {auto=c.getAutoCommit();c.setAutoCommit(false);
+                PhanQuyen_DAO.baoVeQuanLyCuoi(c,nv.getMaNV(),nv.getVaiTro(),nv.dangHoatDong());
+                if(!capNhatNhanVienNoiBo(nv))throw new SQLException("Không cập nhật được tài khoản");
+                PhanQuyen_DAO.ghi(c,actor.getMaNV(),nv.getMaNV(),"capNhatNhanVien");c.commit();return true;
+            }catch(SQLException ex){try{c.rollback();}catch(SQLException ignored){}System.err.println(ex.getMessage());return false;}
+            finally{try{c.setAutoCommit(auto);}catch(SQLException ignored){}}
+        }
+    }
+
+    public boolean capNhatTrangThaiTaiKhoan(String maNV, String trangThaiMoi) {
+        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+        if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
+        synchronized(ConnectDB.getInstance()) {
+            Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
+            boolean auto=true;try {auto=c.getAutoCommit();c.setAutoCommit(false);
+                String oldRole="";try(PreparedStatement p=c.prepareStatement("SELECT chucVu FROM NhanVien WHERE maNV=?")){p.setString(1,maNV);try(ResultSet r=p.executeQuery()){if(r.next())oldRole=r.getString(1);}} PhanQuyen_DAO.baoVeQuanLyCuoi(c,maNV,oldRole,new NhanVien(maNV,"","","",oldRole,trangThaiMoi).dangHoatDong());
+                if(!capNhatTrangThaiTaiKhoanNoiBo(maNV, trangThaiMoi))throw new SQLException("Không cập nhật được tài khoản");
+                PhanQuyen_DAO.ghi(c,actor.getMaNV(),maNV,"capNhatTrangThaiTaiKhoan");c.commit();return true;
+            }catch(SQLException ex){try{c.rollback();}catch(SQLException ignored){}System.err.println(ex.getMessage());return false;}
+            finally{try{c.setAutoCommit(auto);}catch(SQLException ignored){}}
+        }
+    }
+
+    public boolean themNhanVien(NhanVien nv, String sdt) {
+        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+        if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
+        synchronized(ConnectDB.getInstance()) {
+            Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
+            boolean auto=true;try {auto=c.getAutoCommit();c.setAutoCommit(false);
+                
+                if(!themNhanVienNoiBo(nv, sdt))throw new SQLException("Không cập nhật được tài khoản");
+                PhanQuyen_DAO.ghi(c,actor.getMaNV(),nv.getMaNV(),"themNhanVien");c.commit();return true;
+            }catch(SQLException ex){try{c.rollback();}catch(SQLException ignored){}System.err.println(ex.getMessage());return false;}
+            finally{try{c.setAutoCommit(auto);}catch(SQLException ignored){}}
+        }
+    }
+
+    public boolean doiMatKhau(String maNV, String matKhauMoi) {
+        Entity.NhanVien actor=UI.BaoVeQuyen.hienTai();
+        if(!Entity.QuyenTruyCap.co(actor,Entity.QuyenTruyCap.Quyen.NHAN_VIEN))return false;
+        synchronized(ConnectDB.getInstance()) {
+            Connection c=ConnectDB.getInstance().getConnection();if(c==null)return false;
+            boolean auto=true;try {auto=c.getAutoCommit();c.setAutoCommit(false);
+                
+                if(!doiMatKhauNoiBo(maNV, matKhauMoi))throw new SQLException("Không cập nhật được tài khoản");
+                PhanQuyen_DAO.ghi(c,actor.getMaNV(),maNV,"doiMatKhau");c.commit();return true;
+            }catch(SQLException ex){try{c.rollback();}catch(SQLException ignored){}System.err.println(ex.getMessage());return false;}
+            finally{try{c.setAutoCommit(auto);}catch(SQLException ignored){}}
         }
     }
 }

@@ -13,11 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC015: Phân công việc cho kỹ thuật viên.
- * - Liệt kê phiếu sửa chữa (chưa hoàn thành).
- * - Chọn KTV từ danh sách nhân viên sửa chữa.
- * - Lưu vào PhieuTiepNhan.kyThuatVien.
- * - Tự động đổi tiến độ "Chờ tiếp nhận" → "Đã phân công".
+ * Màn hình phân công công việc sửa chữa cho kỹ thuật viên.
  */
 public class PhanCongKyThuatVien_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -197,6 +193,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
     }
 
     private void phanCong() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.PHAN_CONG)) return;
         if (phieuDangChon == null) {
             JOptionPane.showMessageDialog(this, "Chọn phiếu cần phân công!");
             return;
@@ -222,6 +219,7 @@ public class PhanCongKyThuatVien_UI extends JPanel {
     }
 
     private void boPhanCong() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.PHAN_CONG)) return;
         if (phieuDangChon == null) {
             JOptionPane.showMessageDialog(this, "Chọn phiếu cần bỏ phân công!");
             return;

@@ -15,11 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
- * Phiếu nhập / xuất kho.
- * UC010: với phiếu NHẬP, có thêm:
- *   - Nhà cung cấp, ngày dự kiến giao.
- *   - Nút "Lưu chờ nhập" để ghi nhận đơn đặt hàng, chưa cộng tồn kho.
- *   - Nút "Nhập ngay" để cộng tồn kho luôn.
+ * Màn hình lập phiếu nhập kho phụ tùng từ nhà cung cấp.
  */
 public class NhapKho_UI extends JPanel {
     private final boolean xuat;
@@ -27,8 +23,8 @@ public class NhapKho_UI extends JPanel {
     private final JTextField txtSoPhieu = new JTextField();
     private final JTextField txtNgay = new JTextField();
     private final JTextField txtGhiChu = new JTextField();
-    private final JComboBox<String> cboNcc = new JComboBox<>();   // UC010: Nhà cung cấp
-    private final JTextField txtNgayDuKien = new JTextField();    // UC010
+    private final JComboBox<String> cboNcc = new JComboBox<>();   // Nhà cung cấp
+    private final JTextField txtNgayDuKien = new JTextField();    // Ngày dự kiến giao
     private final JComboBox<String> cboPhuTung = new JComboBox<>();
     private final JTextField txtSoLuong = new JTextField("1");
     private final JTextField txtDonGia = new JTextField();
@@ -263,14 +259,7 @@ public class NhapKho_UI extends JPanel {
     }
 
     /**
-     * Nghiệp vụ Nhập kho ngay (UC_NK):
-     * [Bắt đầu] -> [Lập phiếu nhập] -> [Chọn nhà cung cấp và phụ tùng] -> [Nhập số lượng, đơn giá]
-     * -> [Dữ liệu hợp lệ?]
-     *    -> Không: [Thông báo lỗi] -> Quay lại form nhập
-     *    -> Có: [Bắt đầu transaction SQL] -> [Lưu phiếu và chi tiết] -> [Cộng tồn kho] -> [Cập nhật trạng thái DA_NHAP]
-     *       -> [Tất cả thành công?]
-     *          -> Có: [COMMIT] -> [Hoàn tất nhập kho]
-     *          -> Không: [ROLLBACK] -> [Thông báo lỗi CSDL, giữ tồn cũ]
+     * Thực hiện nhập kho phụ tùng.
      */
     private void nhapKhoNgay() {
         // 1. Ngoại lệ: Phiếu rỗng

@@ -11,11 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * TraCuuPhuongTien_DAO — Lớp DAO phục vụ chức năng Tra cứu phương tiện:
- * - Tra cứu đa tiêu chí kết hợp SQL Server: Tất cả, Biển số xe, Hãng xe, Dòng xe, Chủ xe
- * - Lọc nhanh theo nhóm tiêu chí
- * - Truy vấn lịch sử sửa chữa/bảo dưỡng của chiếc xe từ PhieuTiepNhan, PhieuSuaChua, HoaDon
- * - Thống kê số lượng phương tiện
+ * Lớp DAO tra cứu thông tin và lịch sử phương tiện.
  */
 public class TraCuuPhuongTien_DAO {
 

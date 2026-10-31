@@ -53,6 +53,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         txtSoPhieu.setText(kho.maPhieuTiepNhanMoi());
 
         // Lắng nghe sự kiện để tự động đồng bộ & tra cứu thông tin
+        UiHelper.chiChoNhapSo(txtSdt, 10);
         txtSdt.addActionListener(e -> doSdt());
         txtSdt.addFocusListener(new FocusAdapter() {
             @Override
@@ -135,7 +136,6 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu tiếp nhận chờ xử lý");
-        // Đã xóa cột Tạm tính ở bảng bên phải theo yêu cầu
         model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu", "Tiến độ");
         table = UiHelper.bang(model);
 
@@ -327,6 +327,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
     }
 
     private void tao() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.TIEP_NHAN)) return;
         String bienSo = txtBienSo.getText().trim();
         String sdt = txtSdt.getText().trim();
         String hoTen = txtHoTen.getText().trim();
@@ -408,6 +409,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
     }
 
     private void sua() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.TIEP_NHAN)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu tiếp nhận trong bảng để sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
@@ -479,6 +481,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
     }
 
     private void xoa() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_XOA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu tiếp nhận trong bảng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);

@@ -15,11 +15,7 @@ import java.awt.*;
 import java.util.ArrayList;
 
 /**
- * TraCuuKhachHang_UI đáp ứng chuẩn nghiệp vụ Nhân viên Tiếp tân:
- * - UC002: Tìm kiếm thông tin khách hàng đa năng (theo Tên, SĐT, Biển số xe, CCCD, Mã KH) qua TraCuuKhachHang_DAO
- * - Khung hướng dẫn rõ ràng, chi tiết, không gây mơ hồ cho người dùng
- * - UC003: Xem chi tiết thông tin khách hàng và danh sách xe sở hữu trực tiếp từ SQL Server
- * - UC004: Xem lịch sử sửa chữa/bảo dưỡng của khách hàng tại gara từ CSDL
+ * Màn hình tra cứu thông tin khách hàng và lịch sử sửa chữa.
  */
 public class TraCuuKhachHang_UI extends JPanel {
     private final JTextField txtTuKhoa = new JTextField();
@@ -213,9 +209,9 @@ public class TraCuuKhachHang_UI extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(239, 246, 255)); // Blue 50
+                g2.setColor(new Color(239, 246, 255));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.setColor(new Color(191, 219, 254)); // Blue 200
+                g2.setColor(new Color(191, 219, 254));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
                 g2.dispose();
                 super.paintComponent(g);
@@ -225,7 +221,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         boxHint.setBorder(new EmptyBorder(4, 10, 4, 10));
 
         lblGoiY.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGoiY.setForeground(new Color(30, 64, 175)); // Blue 800
+        lblGoiY.setForeground(new Color(30, 64, 175));
         boxHint.add(lblGoiY);
         p.add(boxHint);
 
@@ -307,7 +303,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         lblDemKetQua.setText("Tìm thấy: " + danhSach.size() + " / " + tongSo + " khách hàng");
     }
 
-    /** UC003: Xem thông tin chi tiết khách hàng và danh sách xe sở hữu */
+    /** Xem thông tin chi tiết khách hàng và danh sách xe sở hữu */
     private void xemChiTiet() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
@@ -355,7 +351,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         JOptionPane.showMessageDialog(this, msg, "Hồ sơ khách hàng", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** UC004: Xem lịch sử sửa chữa của khách hàng */
+    /** Xem lịch sử sửa chữa của khách hàng */
     private void xemLichSuSuaChua() {
         int dong = table.getSelectedRow();
         if (dong < 0) {

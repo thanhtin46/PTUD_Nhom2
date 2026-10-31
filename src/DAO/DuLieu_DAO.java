@@ -7,8 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 /**
- * DuLieu_DAO - Lớp Data Access Object chịu trách nhiệm đọc/ghi dữ liệu
- * trực tiếp với Hệ quản trị CSDL Microsoft SQL Server (Database: QuanLySuaChuaXe).
+ * Lớp DAO truy vấn dữ liệu từ CSDL SQL Server.
  */
 public class DuLieu_DAO {
 
@@ -601,7 +600,7 @@ public class DuLieu_DAO {
         if (con == null) return list;
 
         String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
-                     "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
+                     "CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
                      "hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, " +
@@ -621,7 +620,6 @@ public class DuLieu_DAO {
                 if (daXem.contains(maHD)) continue;
                 daXem.add(maHD);
 
-                String soPhieuSC = rs.getString("maKH");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
@@ -635,6 +633,7 @@ public class DuLieu_DAO {
                 long tong = (long) rs.getDouble("tongTien");
                 String ghiChu = rs.getString("ghiChu");
                 String tt = rs.getString("trangThai");
+                String soPhieuSC = tienDV == 0 ? "Bán lẻ" : (maKH != null ? maKH : "TN001");
 
                 String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                               ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
@@ -882,12 +881,7 @@ public class DuLieu_DAO {
         return list;
     }
 
-    /**
-     * Nghiệp vụ Nhập kho (Transaction SQL):
-     * [Bắt đầu transaction SQL] -> [Lưu phiếu và chi tiết] -> [Cộng tồn kho] -> [Cập nhật trạng thái DA_NHAP]
-     * -> Nếu thành công: COMMIT -> Hoàn tất nhập kho.
-     * -> Nếu thất bại: ROLLBACK -> Thông báo lỗi CSDL, giữ nguyên tồn kho cũ.
-     */
+    // Lưu phiếu nhập kho và cập nhật số lượng tồn vào CSDL
     public boolean themPhieuNhapKho(PhieuKho phieu, String maNV) throws SQLException {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) {

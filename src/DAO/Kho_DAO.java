@@ -10,8 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
- * Kho_DAO - Data Access Object phục vụ Use Case UC-KHO-03:
- * Truy vấn lịch sử nhập xuất kho và chi tiết phụ tùng từ SQL Server.
+ * Lớp DAO truy vấn lịch sử nhập xuất kho từ CSDL SQL Server.
  */
 public class Kho_DAO {
 

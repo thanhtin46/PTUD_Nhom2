@@ -12,12 +12,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 /**
- * DanhSachPhuTung_UI — Quản lý & Lọc danh mục phụ tùng Gara:
- * - Hỗ trợ lọc theo từng phân loại phụ tùng (Dầu nhớt, Phanh, Lọc, Điện - Ắc quy, Gầm, Động cơ, Lốp xe...)
- * - Hỗ trợ lọc theo tình trạng tồn kho (Còn nhiều, Trung bình, Sắp hết hàng)
- * - Thanh tìm kiếm thông minh theo Mã PT và Tên phụ tùng (tìm tức thì khi gõ)
- * - Click chọn dòng trong bảng đã lọc sẽ nạp ngay lên form để Sửa hoặc Xóa
- * - Đồng bộ 2 chiều tức thì với CSDL SQL Server và bộ nhớ KhoDuLieu
+ * Màn hình quản lý danh sách phụ tùng trong kho.
+ * Hỗ trợ tìm kiếm, lọc theo phân loại và cập nhật thông tin.
  */
 public class DanhSachPhuTung_UI extends JPanel {
     // Form nhập liệu bên trái

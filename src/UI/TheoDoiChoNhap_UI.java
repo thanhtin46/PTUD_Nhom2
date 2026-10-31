@@ -16,10 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC010: Theo dõi phụ tùng chờ nhập.
- * - Liệt kê các phiếu nhập có trangThai = CHO_NHAP.
- * - Cảnh báo trễ hạn giao hàng.
- * - Cho phép xác nhận đã nhập / hủy.
+ * Màn hình theo dõi phụ tùng đang chờ nhập từ nhà cung cấp.
  */
 public class TheoDoiChoNhap_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -212,6 +209,7 @@ public class TheoDoiChoNhap_UI extends JPanel {
     }
 
     private void xacNhanNhap() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.NHAP)) return;
         if (phieuDangChon == null) {
             JOptionPane.showMessageDialog(this, "Chọn phiếu cần xác nhận!");
             return;
@@ -232,6 +230,7 @@ public class TheoDoiChoNhap_UI extends JPanel {
     }
 
     private void huyPhieu() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.NHAP)) return;
         if (phieuDangChon == null) {
             JOptionPane.showMessageDialog(this, "Chọn phiếu cần hủy!");
             return;

@@ -23,13 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * TrangChu_UI — Màn hình Dashboard điều khiển & vận hành tổng quan Gara Ô tô The T4:
- * - Header thoáng đãng, hiển thị thời gian thực và nút làm mới dữ liệu
- * - Hệ thống 6 thẻ thống kê chỉ số KPI chính (Khách hàng, Phương tiện, Sửa chữa, Bảo hành, Tồn kho, Nhân viên)
- *   với kích thước gọn gàng, hiệu ứng hover và hỗ trợ bấm để chuyển trực tiếp đến màn hình tương ứng
- * - Cột trái (64%): Bảng tiến độ các xe đang tiếp nhận & sửa chữa gần đây trong xưởng với badge màu trực quan
- * - Cột phải (36%): Khối phím tắt thao tác nhanh (6 tác vụ chính) + Khối cảnh báo vận hành & phụ tùng sắp hết
- * - Chân trang: Banner chào mừng sang trọng kèm trạng thái kết nối SQL Server thời gian thực
+ * Màn hình trang chủ tổng quan hệ thống quản lý gara ô tô.
  */
 public class TrangChu_UI extends JPanel {
 
@@ -37,7 +31,7 @@ public class TrangChu_UI extends JPanel {
     private final NhanVien nvHienTai;
     private final TrangChuTiepTan_DAO trangChuDAO = new TrangChuTiepTan_DAO();
 
-    // Các nhãn số liệu thống kê KPI
+    // Các nhãn số liệu thống kê
     private JLabel lblSoKH, lblMoTaKH;
     private JLabel lblSoXe, lblMoTaXe;
     private JLabel lblSoSC, lblMoTaSC;
@@ -134,7 +128,7 @@ public class TrangChu_UI extends JPanel {
         text.add(phu);
         header.add(text, BorderLayout.CENTER);
 
-        // Cột phải: Ngày giờ thời gian thực & Nút làm mới
+        // Cột phải: Ngày giờ & Nút làm mới
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 4));
         right.setOpaque(false);
 
@@ -227,7 +221,7 @@ public class TrangChu_UI extends JPanel {
         return grid;
     }
 
-    /** Tạo một thẻ thống kê nhỏ gọn, có icon pastel, hiệu ứng hover và bấm chuyển trang */
+    // Tạo thẻ thống kê
     private JPanel theThongKe(Icon icon, String ten, JLabel lblGiaTri, JLabel lblMoTa, Color mau, String tenMenu) {
         JPanel p = new JPanel(new BorderLayout(12, 0)) {
             private boolean hover = false;
@@ -435,19 +429,14 @@ public class TrangChu_UI extends JPanel {
         return card;
     }
 
-    /** Cột tiện ích bên phải: Thao tác nhanh + Cảnh báo vận hành */
+    // Cột cảnh báo và thông tin phụ
     private JPanel taoPanelTienIchPhai() {
-        JPanel right = new JPanel();
+        JPanel right = new JPanel(new BorderLayout());
         right.setOpaque(false);
-        right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         right.setPreferredSize(new Dimension(340, 0));
 
-        // 1. Khối phím tắt thao tác nhanh
-        right.add(taoCardThaoTacNhanh());
-        right.add(Box.createVerticalStrut(10));
-
-        // 2. Khối cảnh báo vận hành & tồn kho
-        right.add(taoCardCanhBaoVanHanh());
+        // Khối cảnh báo vận hành & tồn kho
+        right.add(taoCardCanhBaoVanHanh(), BorderLayout.CENTER);
 
         return right;
     }
@@ -708,7 +697,7 @@ public class TrangChu_UI extends JPanel {
         loiChao.setFont(new Font("Segoe UI", Font.BOLD, 14));
         loiChao.setForeground(UiHelper.XANH_DAM);
 
-        JLabel huongDan = new JLabel("Hệ thống đã sẵn sàng phục vụ khách hàng. Vui lòng chọn chức năng từ menu bên trái hoặc dùng thao tác nhanh.");
+        JLabel huongDan = new JLabel("Hệ thống đã sẵn sàng phục vụ khách hàng. Vui lòng chọn chức năng từ thanh điều hướng bên trái.");
         huongDan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         huongDan.setForeground(new Color(100, 116, 139));
 

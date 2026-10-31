@@ -17,13 +17,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
- * TraCuuPhieuTiepNhan_UI — Tra cứu hồ sơ phiếu tiếp nhận xe vào xưởng:
- * - Giao diện đồng bộ với phong cách Tra cứu phương tiện
- * - Tìm kiếm đa tiêu chí: Tất cả, Số phiếu, Biển số, Khách hàng, Yêu cầu dịch vụ
- * - Lọc nhanh theo Tiến độ (Tất cả, Chờ tiếp nhận, Đang sửa, Chờ phụ tùng, Hoàn thành)
- * - Chữ màu đen giữ nguyên 100%, hover không mờ chữ
- * - Đã bỏ cột Kỹ thuật viên và Tạm tính theo yêu cầu
- * - Bảng danh sách các cột chia đều, căn thẳng hàng tuyệt đối giữa Tiêu đề và Dữ liệu
+ * Màn hình tra cứu danh sách phiếu tiếp nhận xe vào xưởng.
  */
 public class TraCuuPhieuTiepNhan_UI extends JPanel {
     private final PhieuTiepNhan_DAO phieuTiepNhanDAO = new PhieuTiepNhan_DAO();
@@ -88,7 +82,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         table = UiHelper.bang(model);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        // Định dạng các cột đều nhau và thẳng hàng tuyệt đối giữa Tiêu đề và Dữ liệu
+        // Định dạng căn lề các cột giữa tiêu đề và dữ liệu
         dinhDangCot(0, SwingConstants.CENTER, 100); // Số phiếu
         dinhDangCot(1, SwingConstants.CENTER, 85);  // Mã KH
         dinhDangCot(2, SwingConstants.LEFT, 150);   // Khách hàng
@@ -339,7 +333,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         }
     }
 
-    /** Căn lề đồng bộ cho cả tiêu đề cột và nội dung dữ liệu để luôn thẳng hàng tuyệt đối */
+    /** Căn lề cho tiêu đề và nội dung dữ liệu trong bảng */
     private void dinhDangCot(int cot, int canLe, int doRong) {
         if (cot < 0 || cot >= table.getColumnCount()) return;
         TableColumn tc = table.getColumnModel().getColumn(cot);
@@ -419,13 +413,13 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
                     l.setBackground(r % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
                     String td = val != null ? val.toString() : "";
                     if (td.contains("Hoàn thành")) {
-                        l.setForeground(new Color(22, 163, 74));   // Green 600
+                        l.setForeground(new Color(22, 163, 74));
                     } else if (td.contains("Đang sửa")) {
-                        l.setForeground(new Color(217, 119, 6));   // Amber 600
+                        l.setForeground(new Color(217, 119, 6));
                     } else if (td.contains("Chờ phụ tùng")) {
                         l.setForeground(new Color(225, 29, 72));   // Rose 600
                     } else {
-                        l.setForeground(new Color(71, 85, 105));   // Slate 600
+                        l.setForeground(new Color(71, 85, 105));
                     }
                 } else {
                     l.setBackground(new Color(219, 234, 254));

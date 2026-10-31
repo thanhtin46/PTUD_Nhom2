@@ -5,10 +5,7 @@ import java.awt.*;
 import java.awt.geom.*;
 
 /**
- * UiIcon — Hệ thống Vector Icon thuần Java2D sắc nét, hiện đại:
- * - 100% vẽ vector bằng Graphics2D, không phụ thuộc font hệ thống, KHÔNG BAO GIỜ bị lỗi ô vuông (tofu ▯)
- * - Tự động đồng bộ màu với foreground của Component (hoặc màu chỉ định)
- * - Khử răng cưa tối đa (Anti-aliasing + Pure Stroke Control)
+ * Lớp vẽ biểu tượng (Icon) bằng Graphics2D cho các nút bấm và nhãn.
  */
 public class UiIcon implements Icon {
     public static final String PLUS = "plus";

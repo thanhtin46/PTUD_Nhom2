@@ -18,14 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
- * UC-KHO-03: Theo dõi lịch sử nhập xuất kho.
- * Tác nhân: Nhân viên kho, Quản lý gara.
- * - Xem danh sách phiếu nhập và xuất kho.
- * - Lọc theo: Loại phiếu (Tất cả, Nhập kho, Xuất kho).
- * - Tìm kiếm theo mã phiếu hoặc mã phụ tùng / tên phụ tùng.
- * - Lọc theo khoảng thời gian: Từ ngày - Đến ngày.
- * - Xem chi tiết: danh sách phụ tùng, số lượng, đơn giá, thành tiền, đối chiếu tồn kho.
- * - Xử lý đầy đủ ngoại lệ E1, E2, E3, E4.
+ * Màn hình xem lịch sử nhập xuất kho phụ tùng.
  */
 public class LichSuNhapXuat_UI extends JPanel {
 

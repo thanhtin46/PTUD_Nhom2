@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.List;
 import java.util.HashSet;
 
-/** Lưu hóa đơn và hai loại chi tiết trong một giao dịch. Tồn kho do phiếu xuất quản lý. */
+/** Lưu hóa đơn và chi tiết hóa đơn vào CSDL. */
 public class ThanhToan_DAO {
     public boolean luu(HoaDon hd, String maNV, List<ChiTietDichVu> details) {
         Connection con = ConnectDB.getInstance().getConnection();
@@ -78,12 +78,47 @@ public class ThanhToan_DAO {
         } finally { try { con.setAutoCommit(auto); } catch (SQLException ignored) {} }
     }
 
-    /** Hủy chứng từ thanh toán không đồng nghĩa đã nhận lại phụ tùng vào kho. */
+    /** Hủy chứng từ thanh toán; nếu là bán lẻ phụ tùng (tiền dịch vụ = 0) thì hoàn lại số lượng tồn kho. */
     public boolean huy(String maHD) {
         Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return false;
-        try (PreparedStatement ps = con.prepareStatement("UPDATE HoaDon SET trangThai='DA_HUY' WHERE maHD=? AND trangThai NOT IN ('DA_HUY',N'Đã hủy') AND NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maHoaDon=HoaDon.maHD AND trangThaiBH NOT IN ('DA_HUY',N'Đã hủy'))")) {
-            ps.setString(1,maHD); return ps.executeUpdate()==1;
-        } catch (SQLException ex) { System.err.println("Không hủy được hóa đơn: " + ex.getMessage()); return false; }
+        if (con == null || maHD == null || maHD.isBlank()) return false;
+        boolean auto = true;
+        try {
+            auto = con.getAutoCommit();
+            con.setAutoCommit(false);
+
+            int updated = 0;
+            try (PreparedStatement ps = con.prepareStatement(
+                    "UPDATE HoaDon SET trangThai='DA_HUY' " +
+                    "WHERE maHD=? AND trangThai NOT IN ('DA_HUY', N'Đã hủy') " +
+                    "AND NOT EXISTS (SELECT 1 FROM PhieuBaoHanh WHERE maHoaDon=HoaDon.maHD AND trangThaiBH NOT IN ('DA_HUY', N'Đã hủy'))")) {
+                ps.setString(1, maHD.trim());
+                updated = ps.executeUpdate();
+            }
+
+            if (updated != 1) {
+                con.rollback();
+                return false;
+            }
+
+            // Hoàn lại tồn kho cho phụ tùng nếu là hóa đơn bán hàng trực tiếp (tienDichVu = 0)
+            try (PreparedStatement psKho = con.prepareStatement(
+                    "UPDATE Kho SET soLuongTon = soLuongTon + ct.soLuong " +
+                    "FROM Kho k INNER JOIN ChiTietHoaDon ct ON k.maPT = ct.maPT " +
+                    "INNER JOIN HoaDon hd ON ct.maHD = hd.maHD " +
+                    "WHERE ct.maHD = ? AND hd.tienDichVu = 0")) {
+                psKho.setString(1, maHD.trim());
+                psKho.executeUpdate();
+            } catch (SQLException ignored) {}
+
+            con.commit();
+            return true;
+        } catch (SQLException ex) {
+            try { con.rollback(); } catch (SQLException ignored) {}
+            System.err.println("Không hủy được hóa đơn: " + ex.getMessage());
+            return false;
+        } finally {
+            try { con.setAutoCommit(auto); } catch (SQLException ignored) {}
+        }
     }
 }

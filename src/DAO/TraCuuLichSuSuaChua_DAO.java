@@ -9,14 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * TraCuuLichSuSuaChua_DAO — DAO chuyên trách tra cứu lịch sử sửa chữa của khách hàng / người dùng:
- * - Tra cứu đa tiêu chí kết hợp SQL Server: Tên khách hàng, SĐT, Biển số xe, Mã phiếu TN, Mã phiếu SC, CCCD/Mã KH
- * - Lọc theo trạng thái tiến độ: Tất cả, Hoàn thành, Đang sửa chữa, Đã phân công, Chờ phụ tùng, Chờ tiếp nhận
- * - Lọc theo trạng thái thanh toán: Tất cả, Đã thanh toán, Chưa thanh toán
- * - Lọc theo thời gian: Tất cả, Hôm nay, Tháng này, Năm nay
- * - Truy vấn chi tiết công việc sửa chữa / tiền công
- * - Truy vấn chi tiết phụ tùng thay thế / đơn giá / thành tiền
- * - Truy vấn thông tin hóa đơn & thời hạn bảo hành liên quan
+ * Lớp DAO tra cứu lịch sử sửa chữa của khách hàng và phương tiện.
  */
 public class TraCuuLichSuSuaChua_DAO {
 
@@ -257,6 +250,13 @@ public class TraCuuLichSuSuaChua_DAO {
           .append("WHERE 1=1 ");
 
         ArrayList<Object> params = new ArrayList<>();
+        Entity.NhanVien viewer=UI.BaoVeQuyen.hienTai();
+        if(viewer!=null && Entity.QuyenTruyCap.vaiTro(viewer.getVaiTro())==Entity.QuyenTruyCap.VaiTro.SUA_CHUA
+                && !Entity.QuyenTruyCap.co(viewer,Entity.QuyenTruyCap.Quyen.PHAN_CONG)) {
+            sb.append("AND EXISTS (SELECT 1 FROM PhieuSuaChua own WHERE own.soVIN=tn.soVIN AND own.maNV=?) ");
+            params.add(viewer.getMaNV());
+        }
+
 
         // 1. Lọc từ khóa theo tiêu chí
         if (tuKhoa != null && !tuKhoa.trim().isEmpty()) {

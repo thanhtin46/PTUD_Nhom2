@@ -1,7 +1,7 @@
 -- ============================================================
 -- HỆ THỐNG QUẢN LÝ GARA Ô TÔ
 -- CƠ SỞ DỮ LIỆU: QuanLySuaChuaXe
--- Script chuẩn hóa toàn diện: Bảng, Ràng buộc, Dữ liệu mẫu
+-- Tạo bảng, ràng buộc khóa ngoại và dữ liệu mẫu ban đầu
 -- ============================================================
 
 USE master;
@@ -23,8 +23,8 @@ USE QuanLySuaChuaXe;
 GO
 
 -- ============================================================
--- PHẦN I: TẠO BẢNG & RÀNG BUỘC (21 BẢNG CHUẨN ĐỒ ÁN)
--- Thứ tự tạo bảng tuân thủ chặt chẽ quan hệ khóa ngoại (Foreign Key)
+-- PHẦN I: TẠO CÁC BẢNG VÀ RÀNG BUỘC
+-- Thứ tự tạo bảng theo quan hệ khóa ngoại
 -- ============================================================
 
 /* 1. NHAN VIEN */
@@ -344,6 +344,25 @@ CREATE TABLE ChiTietPhieuXuatKho (
 );
 GO
 
+/* 21. QUYEN BO SUNG (Phân quyền bổ sung theo nhân viên) */
+CREATE TABLE QuyenBoSung (
+    maNV VARCHAR(20) NOT NULL,
+    maQuyen VARCHAR(40) NOT NULL,
+    CONSTRAINT PK_QuyenBoSung PRIMARY KEY (maNV, maQuyen),
+    CONSTRAINT FK_QBS_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV) ON DELETE CASCADE
+);
+GO
+
+/* 22. NHAT KY QUYEN (Audit log nhật ký thay đổi quyền & vai trò) */
+CREATE TABLE NhatKyQuyen (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    thoiGian DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    nguoiThucHien VARCHAR(20) NOT NULL,
+    doiTuong VARCHAR(20) NOT NULL,
+    noiDung NVARCHAR(2000) NOT NULL
+);
+GO
+
 -- ============================================================
 -- PHẦN II: DỮ LIỆU MẪU CƠ BẢN (KHỞI TẠO HỆ THỐNG)
 -- ============================================================
@@ -437,14 +456,22 @@ GO
 /* 12. Hoa don */
 INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
 ('HD001', 'KH001', 'NV05', '2026-03-01', N'CHUYEN_KHOAN', 250000, 780000, 0, 1030000, N'Hóa đơn sửa chữa SC001', N'DA_THANH_TOAN'),
-('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 250000, 170000, 0, 420000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN');
+('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 250000, 170000, 0, 420000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN'),
+('HD201', 'KH101', 'NV05', '2026-10-25', N'CHUYEN_KHOAN', 0, 420000, 0, 420000, N'Bán lẻ phụ tùng tại shop', N'DA_THANH_TOAN'),
+('HD202', 'KH102', 'NV05', '2026-10-26', N'TIEN_MAT', 0, 480000, 5, 456000, N'Bán lẻ dầu nhớt động cơ', N'DA_THANH_TOAN'),
+('HD203', 'KH103', 'NV05', '2026-10-27', N'TIEN_MAT', 0, 350000, 0, 350000, N'Khách đổi ý trả hàng hủy hóa đơn', N'DA_HUY');
 GO
 
 /* 13. Chi tiet hoa don (Phụ tùng) */
 INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES
 ('HD001', 'PT001', N'Lọc dầu động cơ', N'Chiếc', 2, 150000),
 ('HD001', 'PT004', N'Dầu động cơ cao cấp', N'Lít', 4, 120000),
-('HD002', 'PT003', N'Bugi đánh lửa', N'Chiếc', 2, 85000);
+('HD002', 'PT003', N'Bugi đánh lửa', N'Chiếc', 2, 85000),
+('HD201', 'PT101', N'Lọc dầu động cơ', N'Chiếc', 1, 150000),
+('HD201', 'PT103', N'Bugi Denso Iridium', N'Cái', 2, 85000),
+('HD201', 'PT110', N'Nước làm mát cao cấp', N'Can', 1, 100000),
+('HD202', 'PT104', N'Dầu động cơ Castrol Magnatec', N'Lít', 4, 120000),
+('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);
 GO
 
 /* 14. Chi tiet dich vu hoa don (Dịch vụ & Tiền công) */
@@ -497,8 +524,20 @@ INSERT INTO ChiTietPhieuXuatKho (maPhieuXuat, maPT, soLuongYeuCau, soLuongXuat, 
 ('PX002', 'PT005', 1, 0, 450000, N'Chờ xuất');
 GO
 
+/* 22. Quyen bo sung (Dữ liệu mẫu) */
+INSERT INTO QuyenBoSung (maNV, maQuyen) VALUES
+('NV04', 'PHAN_QUYEN'),
+('NV04', 'NHAN_VIEN'),
+('NV04', 'CAU_HINH');
+GO
+
+/* 23. Nhat ky quyen (Dữ liệu mẫu) */
+INSERT INTO NhatKyQuyen (nguoiThucHien, doiTuong, noiDung) VALUES
+('SYSTEM', 'NV04', N'Khởi tạo quyền hệ thống mặc định cho Quản lý');
+GO
+
 -- ============================================================
--- PHẦN III: DỮ LIỆU DEMO MỞ RỘNG (20 KHÁCH HÀNG & 20 PHIẾU SC)
+-- PHẦN III: DỮ LIỆU MẪU BỔ SUNG
 -- ============================================================
 SET XACT_ABORT ON;
 BEGIN TRANSACTION;
@@ -519,45 +558,45 @@ IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNV=N'NV104')
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE maNV=N'NV104')
  INSERT INTO TaiKhoan (maNV,taiKhoan,matKhau,trangThai) VALUES (N'NV104',N'demo104',N'123',N'HOAT_DONG');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH101')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH101',N'Nguyễn Minh Anh',N'0918200101',N'079100000101',N'12 Nguyễn Văn Cừ, TP.HCM',N'kh101@example.com',N'Dữ liệu học phần',N'27/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH101',N'Nguyễn Minh Anh',N'0918200101',N'079100000101',N'12 Nguyễn Văn Cừ, TP.HCM',N'kh101@example.com',N'Bảo dưỡng định kỳ',N'27/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH102')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH102',N'Trần Ngọc Lan',N'0918200102',N'079100000102',N'13 Nguyễn Văn Cừ, TP.HCM',N'kh102@example.com',N'Dữ liệu học phần',N'23/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH102',N'Trần Ngọc Lan',N'0918200102',N'079100000102',N'13 Nguyễn Văn Cừ, TP.HCM',N'kh102@example.com',N'Bảo dưỡng định kỳ',N'23/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH103')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH103',N'Lê Quốc Bảo',N'0918200103',N'079100000103',N'14 Nguyễn Văn Cừ, TP.HCM',N'kh103@example.com',N'Dữ liệu học phần',N'19/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH103',N'Lê Quốc Bảo',N'0918200103',N'079100000103',N'14 Nguyễn Văn Cừ, TP.HCM',N'kh103@example.com',N'Bảo dưỡng định kỳ',N'19/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH104')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH104',N'Phạm Thu Hà',N'0918200104',N'079100000104',N'15 Nguyễn Văn Cừ, TP.HCM',N'kh104@example.com',N'Dữ liệu học phần',N'15/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH104',N'Phạm Thu Hà',N'0918200104',N'079100000104',N'15 Nguyễn Văn Cừ, TP.HCM',N'kh104@example.com',N'Bảo dưỡng định kỳ',N'15/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH105')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH105',N'Hoàng Đức Huy',N'0918200105',N'079100000105',N'16 Nguyễn Văn Cừ, TP.HCM',N'kh105@example.com',N'Dữ liệu học phần',N'11/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH105',N'Hoàng Đức Huy',N'0918200105',N'079100000105',N'16 Nguyễn Văn Cừ, TP.HCM',N'kh105@example.com',N'Bảo dưỡng định kỳ',N'11/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH106')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH106',N'Đặng Thị Mai',N'0918200106',N'079100000106',N'17 Nguyễn Văn Cừ, TP.HCM',N'kh106@example.com',N'Dữ liệu học phần',N'07/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH106',N'Đặng Thị Mai',N'0918200106',N'079100000106',N'17 Nguyễn Văn Cừ, TP.HCM',N'kh106@example.com',N'Bảo dưỡng định kỳ',N'07/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH107')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH107',N'Bùi Thanh Tùng',N'0918200107',N'079100000107',N'18 Nguyễn Văn Cừ, TP.HCM',N'kh107@example.com',N'Dữ liệu học phần',N'03/10/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH107',N'Bùi Thanh Tùng',N'0918200107',N'079100000107',N'18 Nguyễn Văn Cừ, TP.HCM',N'kh107@example.com',N'Bảo dưỡng định kỳ',N'03/10/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH108')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH108',N'Đỗ Hải Yến',N'0918200108',N'079100000108',N'19 Nguyễn Văn Cừ, TP.HCM',N'kh108@example.com',N'Dữ liệu học phần',N'29/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH108',N'Đỗ Hải Yến',N'0918200108',N'079100000108',N'19 Nguyễn Văn Cừ, TP.HCM',N'kh108@example.com',N'Bảo dưỡng định kỳ',N'29/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH109')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH109',N'Vũ Gia Hưng',N'0918200109',N'079100000109',N'20 Nguyễn Văn Cừ, TP.HCM',N'kh109@example.com',N'Dữ liệu học phần',N'25/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH109',N'Vũ Gia Hưng',N'0918200109',N'079100000109',N'20 Nguyễn Văn Cừ, TP.HCM',N'kh109@example.com',N'Bảo dưỡng định kỳ',N'25/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH110')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH110',N'Ngô Bảo Châu',N'0918200110',N'079100000110',N'21 Nguyễn Văn Cừ, TP.HCM',N'kh110@example.com',N'Dữ liệu học phần',N'21/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH110',N'Ngô Bảo Châu',N'0918200110',N'079100000110',N'21 Nguyễn Văn Cừ, TP.HCM',N'kh110@example.com',N'Bảo dưỡng định kỳ',N'21/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH111')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH111',N'Dương Tuấn Kiệt',N'0918200111',N'079100000111',N'22 Nguyễn Văn Cừ, TP.HCM',N'kh111@example.com',N'Dữ liệu học phần',N'17/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH111',N'Dương Tuấn Kiệt',N'0918200111',N'079100000111',N'22 Nguyễn Văn Cừ, TP.HCM',N'kh111@example.com',N'Bảo dưỡng định kỳ',N'17/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH112')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH112',N'Hồ Mỹ Linh',N'0918200112',N'079100000112',N'23 Nguyễn Văn Cừ, TP.HCM',N'kh112@example.com',N'Dữ liệu học phần',N'13/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH112',N'Hồ Mỹ Linh',N'0918200112',N'079100000112',N'23 Nguyễn Văn Cừ, TP.HCM',N'kh112@example.com',N'Bảo dưỡng định kỳ',N'13/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH113')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH113',N'Phan Quang Dũng',N'0918200113',N'079100000113',N'24 Nguyễn Văn Cừ, TP.HCM',N'kh113@example.com',N'Dữ liệu học phần',N'09/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH113',N'Phan Quang Dũng',N'0918200113',N'079100000113',N'24 Nguyễn Văn Cừ, TP.HCM',N'kh113@example.com',N'Bảo dưỡng định kỳ',N'09/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH114')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH114',N'Võ Khánh Ngọc',N'0918200114',N'079100000114',N'25 Nguyễn Văn Cừ, TP.HCM',N'kh114@example.com',N'Dữ liệu học phần',N'05/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH114',N'Võ Khánh Ngọc',N'0918200114',N'079100000114',N'25 Nguyễn Văn Cừ, TP.HCM',N'kh114@example.com',N'Bảo dưỡng định kỳ',N'05/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH115')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH115',N'Mai Anh Khoa',N'0918200115',N'079100000115',N'26 Nguyễn Văn Cừ, TP.HCM',N'kh115@example.com',N'Dữ liệu học phần',N'01/09/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH115',N'Mai Anh Khoa',N'0918200115',N'079100000115',N'26 Nguyễn Văn Cừ, TP.HCM',N'kh115@example.com',N'Bảo dưỡng định kỳ',N'01/09/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH116')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH116',N'Đinh Phương Thảo',N'0918200116',N'079100000116',N'27 Nguyễn Văn Cừ, TP.HCM',N'kh116@example.com',N'Dữ liệu học phần',N'28/08/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH116',N'Đinh Phương Thảo',N'0918200116',N'079100000116',N'27 Nguyễn Văn Cừ, TP.HCM',N'kh116@example.com',N'Bảo dưỡng định kỳ',N'28/08/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH117')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH117',N'Cao Nhật Minh',N'0918200117',N'079100000117',N'28 Nguyễn Văn Cừ, TP.HCM',N'kh117@example.com',N'Dữ liệu học phần',N'24/08/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH117',N'Cao Nhật Minh',N'0918200117',N'079100000117',N'28 Nguyễn Văn Cừ, TP.HCM',N'kh117@example.com',N'Bảo dưỡng định kỳ',N'24/08/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH118')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH118',N'Lý Thùy Dương',N'0918200118',N'079100000118',N'29 Nguyễn Văn Cừ, TP.HCM',N'kh118@example.com',N'Dữ liệu học phần',N'20/08/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH118',N'Lý Thùy Dương',N'0918200118',N'079100000118',N'29 Nguyễn Văn Cừ, TP.HCM',N'kh118@example.com',N'Bảo dưỡng định kỳ',N'20/08/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH119')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH119',N'Tạ Hoàng Long',N'0918200119',N'079100000119',N'30 Nguyễn Văn Cừ, TP.HCM',N'kh119@example.com',N'Dữ liệu học phần',N'16/08/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH119',N'Tạ Hoàng Long',N'0918200119',N'079100000119',N'30 Nguyễn Văn Cừ, TP.HCM',N'kh119@example.com',N'Bảo dưỡng định kỳ',N'16/08/2026');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH120')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH120',N'Trịnh Thanh Trúc',N'0918200120',N'079100000120',N'31 Nguyễn Văn Cừ, TP.HCM',N'kh120@example.com',N'Dữ liệu học phần',N'12/08/2026');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH120',N'Trịnh Thanh Trúc',N'0918200120',N'079100000120',N'31 Nguyễn Văn Cừ, TP.HCM',N'kh120@example.com',N'Bảo dưỡng định kỳ',N'12/08/2026');
 IF NOT EXISTS (SELECT 1 FROM PhuongTien WHERE soVIN=N'VINDEMO101')
  INSERT INTO PhuongTien (soVIN,bienSoXe,hangXe,dongXe,maSX,maKH,soMay,mauSon,odo,ngayTiepNhanGanNhat) VALUES (N'VINDEMO101',N'51A-20101',N'Toyota',N'Vios',2020,N'KH101',N'MAY101',N'Trắng',N'10000',N'27/10/2026');
 IF NOT EXISTS (SELECT 1 FROM PhuongTien WHERE soVIN=N'VINDEMO102')
@@ -776,7 +815,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX101' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT101';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD101')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD101',N'KH101',N'NV05',N'2026-10-15',N'TIEN_MAT',200000,150000,0,350000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD101',N'KH101',N'NV05',N'2026-10-15',N'TIEN_MAT',200000,150000,0,350000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD101' AND maPT=N'PT101')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD101',N'PT101',N'Lọc dầu động cơ',1,150000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD101' AND stt=1)
@@ -801,7 +840,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX102' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT102';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD102')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD102',N'KH102',N'NV05',N'2026-10-16',N'CHUYEN_KHOAN',200000,220000,0,420000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD102',N'KH102',N'NV05',N'2026-10-16',N'CHUYEN_KHOAN',200000,220000,0,420000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD102' AND maPT=N'PT102')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD102',N'PT102',N'Lọc gió động cơ',1,220000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD102' AND stt=1)
@@ -826,7 +865,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX103' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT103';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD103')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD103',N'KH103',N'NV05',N'2026-10-17',N'THE_POS',200000,250000,0,450000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD103',N'KH103',N'NV05',N'2026-10-17',N'THE_POS',200000,250000,0,450000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD103' AND maPT=N'PT103')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD103',N'PT103',N'Bugi iridium',1,250000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD103' AND stt=1)
@@ -851,7 +890,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX104' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT104';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD104')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD104',N'KH104',N'NV05',N'2026-10-18',N'TIEN_MAT',200000,180000,0,380000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD104',N'KH104',N'NV05',N'2026-10-18',N'TIEN_MAT',200000,180000,0,380000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD104' AND maPT=N'PT104')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD104',N'PT104',N'Dầu động cơ 5W30',1,180000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD104' AND stt=1)
@@ -876,7 +915,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX105' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT105';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD105')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD105',N'KH105',N'NV05',N'2026-10-19',N'CHUYEN_KHOAN',200000,850000,0,1050000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD105',N'KH105',N'NV05',N'2026-10-19',N'CHUYEN_KHOAN',200000,850000,0,1050000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD105' AND maPT=N'PT105')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD105',N'PT105',N'Má phanh trước',1,850000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD105' AND stt=1)
@@ -901,7 +940,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX106' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT106';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD106')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD106',N'KH106',N'NV05',N'2026-10-20',N'THE_POS',200000,200000,0,400000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD106',N'KH106',N'NV05',N'2026-10-20',N'THE_POS',200000,200000,0,400000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD106' AND maPT=N'PT106')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD106',N'PT106',N'Lọc gió điều hòa',1,200000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD106' AND stt=1)
@@ -926,7 +965,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX107' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT107';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD107')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD107',N'KH107',N'NV05',N'2026-10-21',N'TIEN_MAT',200000,1850000,0,2050000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD107',N'KH107',N'NV05',N'2026-10-21',N'TIEN_MAT',200000,1850000,0,2050000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD107' AND maPT=N'PT107')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD107',N'PT107',N'Ắc quy 12V 60Ah',1,1850000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD107' AND stt=1)
@@ -947,7 +986,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX108' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT108';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD108')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD108',N'KH108',N'NV05',N'2026-10-22',N'CHUYEN_KHOAN',200000,1600000,0,1800000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD108',N'KH108',N'NV05',N'2026-10-22',N'CHUYEN_KHOAN',200000,1600000,0,1800000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD108' AND maPT=N'PT108')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD108',N'PT108',N'Lốp 205/55R16',1,1600000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD108' AND stt=1)
@@ -968,7 +1007,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX109' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT109';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD109')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD109',N'KH109',N'NV05',N'2026-10-23',N'THE_POS',200000,350000,0,550000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD109',N'KH109',N'NV05',N'2026-10-23',N'THE_POS',200000,350000,0,550000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD109' AND maPT=N'PT109')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD109',N'PT109',N'Gạt mưa trước',1,350000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD109' AND stt=1)
@@ -989,7 +1028,7 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietPhieuXuatKho WHERE maPhieuXuat=N'PX110' AND 
 UPDATE Kho SET soLuongTon=soLuongTon-1 WHERE maPT='PT110';
 END;
 IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD=N'HD110')
- INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD110',N'KH110',N'NV05',N'2026-10-24',N'TIEN_MAT',200000,120000,0,320000,N'Dữ liệu học phần',N'DA_THANH_TOAN');
+ INSERT INTO HoaDon (maHD,maKH,maNV,ngayLap,hinhThucThanhToan,tienDichVu,tienPhuTung,giamGia,tongTien,ghiChu,trangThai) VALUES (N'HD110',N'KH110',N'NV05',N'2026-10-24',N'TIEN_MAT',200000,120000,0,320000,N'Bảo dưỡng định kỳ',N'DA_THANH_TOAN');
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD=N'HD110' AND maPT=N'PT110')
  INSERT INTO ChiTietHoaDon (maHD,maPT,tenPhuTung,soLuong,donGia) VALUES (N'HD110',N'PT110',N'Nước làm mát',1,120000);
 IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD=N'HD110' AND stt=1)
@@ -1128,6 +1167,14 @@ UPDATE sc SET sc.maPhieuXuat = px.maPhieuXuat
 FROM PhieuSuaChua sc
 JOIN PhieuXuatKho px ON sc.maPSC = px.maPSC
 WHERE sc.maPhieuXuat IS NULL;
+
+-- Đồng bộ quyền bổ sung cho tài khoản Quản lý nếu chưa có
+IF NOT EXISTS (SELECT 1 FROM QuyenBoSung WHERE maNV='NV04' AND maQuyen='PHAN_QUYEN')
+    INSERT INTO QuyenBoSung (maNV, maQuyen) VALUES ('NV04', 'PHAN_QUYEN');
+IF NOT EXISTS (SELECT 1 FROM QuyenBoSung WHERE maNV='NV04' AND maQuyen='NHAN_VIEN')
+    INSERT INTO QuyenBoSung (maNV, maQuyen) VALUES ('NV04', 'NHAN_VIEN');
+IF NOT EXISTS (SELECT 1 FROM QuyenBoSung WHERE maNV='NV04' AND maQuyen='CAU_HINH')
+    INSERT INTO QuyenBoSung (maNV, maQuyen) VALUES ('NV04', 'CAU_HINH');
 GO
 
 COMMIT TRANSACTION;

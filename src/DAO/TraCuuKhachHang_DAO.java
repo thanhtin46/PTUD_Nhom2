@@ -11,12 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * TraCuuKhachHang_DAO — Lớp DAO chuyên trách phục vụ chức năng Tra Cứu Khách Hàng:
- * - Tra cứu đa tiêu chí kết hợp SQL Server: Họ tên, Số điện thoại, Biển số xe, CCCD, Mã KH
- * - Lọc nhanh trạng thái: Khách VIP, Khách có xe đang sửa tại gara, Khách mới đăng ký
- * - Truy vấn danh sách xe khách hàng đang sở hữu từ bảng PhuongTien
- * - Truy vấn lịch sử sửa chữa/bảo dưỡng dịch vụ của khách hàng từ PhieuTiepNhan & PhieuSuaChua
- * - Thống kê số lượng phục vụ hiển thị trực quan cho Tiếp tân
+ * Lớp DAO phục vụ tra cứu thông tin khách hàng và danh sách xe sở hữu.
  */
 public class TraCuuKhachHang_DAO {
 

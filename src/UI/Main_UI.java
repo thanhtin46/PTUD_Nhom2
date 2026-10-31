@@ -2,6 +2,11 @@ package UI;
 
 import Entity.KhoDuLieu;
 import Entity.NhanVien;
+import Entity.QuyenTruyCap;
+import ConnectDB.ConnectDB;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -9,19 +14,8 @@ import java.awt.*;
 import java.util.ArrayList;
 
 /**
- * Main_UI — Cửa sổ làm việc chính của Hệ thống Quản lý Gara Ô tô The T4:
- * - Thanh menu gom nhóm 9 phân hệ chuẩn xác theo tài liệu đặc tả và ảnh thiết kế:
- *   1. Khách hàng (Quản lý khách hàng, Tra cứu khách hàng)
- *   2. Phương tiện (Quản lý phương tiện, Tra cứu phương tiện)
- *   3. Phiếu tiếp nhận (Lập phiếu tiếp nhận, Tra cứu phiếu tiếp nhận)
- *   4. Sửa chữa (Lập phiếu sửa chữa, Tra cứu phiếu sửa chữa)
- *   5. Hóa đơn (Lập hóa đơn, Tra cứu hóa đơn)
- *   6. Kho phụ tùng (Quản lý phụ tùng, Nhập kho, Xuất kho, Báo cáo tồn kho)
- *   7. Bảo hành (Lập phiếu bảo hành, Tra cứu phiếu bảo hành)
- *   8. Nhân viên (Quản lý nhân viên, Tra cứu nhân viên)
- *   9. Báo cáo – Thống kê (Thống kê doanh thu)
- * - Tích hợp Trang chủ & Trung tâm Quản trị Hệ thống (Admin Hub) cho Quản lý
- * - Giao diện thanh menu sáng (Light Sidebar) đồng bộ với ảnh thiết kế
+ * Cửa sổ chính của chương trình quản lý gara ô tô.
+ * Điều hướng giữa các chức năng và hiển thị trang chủ theo quyền người dùng.
  */
 public class Main_UI extends JFrame {
 
@@ -36,6 +30,9 @@ public class Main_UI extends JFrame {
     private MenuRow nutDangChon;
     private MenuRow nutDauTien;
     private final ArrayList<MenuRow> tatCaNutMenu = new ArrayList<>();
+    private JScrollPane menuCuon;
+    private int demThongBaoHoaDon = 0;
+    private int demThongBaoXuatKho = 0;
 
     // ==== Phân quyền ====
     private static final String TIEP_TAN = "Nhân viên tiếp tân";
@@ -47,17 +44,17 @@ public class Main_UI extends JFrame {
     // ==== Kích thước & Màu sắc ====
     private static final int W = 270;
     private static final Color NEN_SIDE = Color.WHITE;
-    private static final Color VIEN_SIDE = new Color(226, 232, 240);       // Slate 200
-    private static final Color NEN_HOVER = new Color(241, 245, 249);       // Slate 100
-    private static final Color NEN_CHON = new Color(239, 246, 255);        // Blue 50
-    private static final Color MAU_CHON = new Color(37, 99, 235);          // Blue 600
+    private static final Color VIEN_SIDE = new Color(226, 232, 240);
+    private static final Color NEN_HOVER = new Color(241, 245, 249);
+    private static final Color NEN_CHON = new Color(239, 246, 255);
+    private static final Color MAU_CHON = new Color(37, 99, 235);
     private static final Color MAU_ICON_NHOM = new Color(2, 132, 199);     // Sky 600
-    private static final Color CHU_TIEU_DE = new Color(15, 23, 42);        // Slate 900
-    private static final Color CHU_MUC_CON = new Color(71, 85, 105);       // Slate 600
-    private static final Color DUONG_KE = new Color(241, 245, 249);        // Slate 100
+    private static final Color CHU_TIEU_DE = new Color(15, 23, 42);
+    private static final Color CHU_MUC_CON = new Color(71, 85, 105);
+    private static final Color DUONG_KE = new Color(241, 245, 249);
 
     public Main_UI(NhanVien nv, ArrayList<NhanVien> danhSachNhanVien) {
-        this.nhanVienHienTai = nv;
+        this.nhanVienHienTai = new NhanVien(nv.getMaNV(),nv.getHoTen(),nv.getTaiKhoan(),nv.getMatKhau(),nv.getVaiTro(),nv.getTrangThai(),nv.getCacQuyen()==null?null:nv.getCacQuyen().clone());
         this.danhSachNhanVien = danhSachNhanVien;
         instance = this;
 
@@ -90,6 +87,12 @@ public class Main_UI extends JFrame {
         if (nutDauTien != null) {
             chonMenu(nutDauTien, nutDauTien.text);
         }
+
+        // Cập nhật số lượng thông báo badge màu đỏ (Hóa đơn, Chờ duyệt xuất kho)
+        capNhatSoLuongThongBao();
+        Timer timerThongBao = new Timer(15000, e -> capNhatSoLuongThongBao());
+        timerThongBao.setRepeats(true);
+        timerThongBao.start();
     }
 
     // ===============================================================
@@ -113,7 +116,8 @@ public class Main_UI extends JFrame {
         sidebar.add(vSpace);
 
         // 3. Danh sách menu cuộn được
-        sidebar.add(taoMenuCuon());
+        menuCuon = taoMenuCuon();
+        sidebar.add(menuCuon);
 
         // 4. Nút đăng xuất ở chân trang
         sidebar.add(taoNutDangXuat());
@@ -300,13 +304,16 @@ public class Main_UI extends JFrame {
         MenuRow nutCha = new MenuRow(muc.ten, muc.icon, 0, true);
         nutCha.addActionListener(e -> {
             if (!muc.danhSachCon.isEmpty()) {
-                chuyenTrang(muc.danhSachCon.get(0).ten);
+                muc.danhSachCon.stream().filter(c -> c.coQuyen(nhanVienHienTai)).findFirst().ifPresent(c -> chuyenTrang(c.ten));
             }
         });
         menuPanel.add(nutCha);
 
         // Các mục con thụt lề
         for (MucMenu con : muc.danhSachCon) {
+            if (!con.coQuyen(nhanVienHienTai)) {
+                continue;
+            }
             MenuRow nutCon = new MenuRow(con.ten, null, 1, false);
             nutCon.addActionListener(e -> chonMenu(nutCon, con.ten));
             menuPanel.add(nutCon);
@@ -338,7 +345,7 @@ public class Main_UI extends JFrame {
         return line;
     }
 
-    /** Nút đăng xuất tinh tế ở cuối sidebar */
+    /** Nút đăng xuất ở cuối thanh menu */
     private JPanel taoNutDangXuat() {
         JPanel box = new JPanel(new BorderLayout());
         box.setOpaque(false);
@@ -350,21 +357,29 @@ public class Main_UI extends JFrame {
                 new EmptyBorder(8, 14, 8, 14)
         ));
 
-        JButton btn = new JButton("ĐĂNG XUẤT", UiIcon.of(UiIcon.LOGOUT, 16, new Color(225, 29, 72)));
+        JButton btn = new JButton("ĐĂNG XUẤT", UiIcon.of(UiIcon.LOGOUT, 16, new Color(225, 29, 72))) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean pressed = getModel().isPressed();
+                boolean hover = getModel().isRollover();
+                Color bg = pressed ? new Color(254, 226, 226) : (hover ? new Color(255, 241, 242) : Color.WHITE);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(new Color(254, 205, 211));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setForeground(new Color(225, 29, 72));
-        btn.setBackground(Color.WHITE);
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(254, 205, 211), 1, true));
+        btn.setBorder(new EmptyBorder(6, 12, 6, 12));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                btn.setBackground(new Color(255, 241, 242));
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                btn.setBackground(Color.WHITE);
-            }
-        });
         btn.addActionListener(e -> {
             int ch = JOptionPane.showConfirmDialog(this,
                     "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
@@ -388,6 +403,7 @@ public class Main_UI extends JFrame {
     }
 
     private void chonMenu(MenuRow nut, String tenMenu, Component trang) {
+        if (!kiemTraTrang(tenMenu, trang)) return;
         try {
             if (nutDangChon != null) {
                 nutDangChon.setChon(false);
@@ -410,6 +426,7 @@ public class Main_UI extends JFrame {
                         "Không tạo được giao diện: " + tenMenu);
             }
 
+            BaoVeQuyen.locNut(manHinh, QuyenTruyCap.chuanTrang(tenMenu));
             contentPanel.add(manHinh, BorderLayout.CENTER);
             contentPanel.revalidate();
             contentPanel.repaint();
@@ -436,6 +453,7 @@ public class Main_UI extends JFrame {
     }
 
     public void chuyenTrangTiepNhan(Entity.PhuongTien xe) {
+        if (!coQuyenTrang("Lập phiếu tiếp nhận")) return;
         chuyenTrang("Lập phiếu tiếp nhận", new LapPhieuTiepNhan_UI(nhanVienHienTai, xe));
     }
 
@@ -444,39 +462,42 @@ public class Main_UI extends JFrame {
     }
 
     public void chuyenTrang(String tenMenu, Component trang) {
-        try { Entity.KhoDuLieu.get().dongBoTuSQLServer(); }
-        catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Không đồng bộ được dữ liệu", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (tenMenu == null || tenMenu.isEmpty()) return;
-
+        if (!kiemTraTrang(tenMenu, trang)) return;
+        String route = QuyenTruyCap.chuanTrang(tenMenu);
         MenuRow found = null;
         for (MenuRow row : tatCaNutMenu) {
-            if (row.text.equalsIgnoreCase(tenMenu) || row.text.contains(tenMenu) || tenMenu.contains(row.text)) {
-                found = row;
-                break;
-            }
+            if (QuyenTruyCap.chuanTrang(row.text).equals(route)) { found = row; break; }
         }
-
-        if (found != null) {
-            chonMenu(found, found.text, trang);
-        } else {
-            if (nutDangChon != null) nutDangChon.setChon(false);
-            nutDangChon = null;
-            contentPanel.removeAll();
-            contentPanel.add(trang != null ? trang : layTrangTheoTen(tenMenu), BorderLayout.CENTER);
-            contentPanel.revalidate();
-            contentPanel.repaint();
-        }
+        chonMenu(found, route, trang);
     }
 
+    public boolean coQuyenTrang(String ten) { return QuyenTruyCap.moTrang(nhanVienHienTai, ten); }
+
+    private boolean kiemTraTrang(String ten, Component trang) {
+        String route=QuyenTruyCap.chuanTrang(ten);
+        boolean componentOk=trang==null
+            || (route.equals("Lập phiếu tiếp nhận") && trang.getClass()==LapPhieuTiepNhan_UI.class)
+            || (route.equals("Tra cứu lịch sử sửa chữa") && trang.getClass()==TraCuuLichSuSuaChua_UI.class);
+        if(coQuyenTrang(route) && componentOk)return true;
+        JOptionPane.showMessageDialog(this,"Bạn không có quyền mở chức năng này hoặc màn hình không hợp lệ.","Quyền truy cập",JOptionPane.WARNING_MESSAGE);
+        return false;
+    }
     private Component layTrangTheoTen(String tenMenu) {
+        if (!coQuyenTrang(tenMenu)) throw new IllegalArgumentException("Không có quyền mở màn hình");
         return switch (tenMenu) {
-            case "Trang chủ"
-                    -> (nhanVienHienTai != null && nhanVienHienTai.getVaiTro() != null && nhanVienHienTai.getVaiTro().toLowerCase().contains("tiếp tân"))
-                    ? new TrangChuTiepTan_UI(nhanVienHienTai)
-                    : new TrangChu_UI();
+                        case "Trang chủ", "Trang chu" -> {
+                QuyenTruyCap.VaiTro vt = (nhanVienHienTai != null)
+                        ? QuyenTruyCap.vaiTro(nhanVienHienTai.getVaiTro())
+                        : QuyenTruyCap.VaiTro.QUAN_LY;
+                yield switch (vt) {
+                    case QUAN_LY -> new TrangChu_UI(this, nhanVienHienTai);
+                    case TIEP_TAN -> new TrangChuTiepTan_UI(nhanVienHienTai);
+                    case SUA_CHUA -> new TrangChuSuaChua_UI(nhanVienHienTai, this);
+                    case KHO -> new TrangChuKho_UI(nhanVienHienTai, this);
+                    case THU_NGAN -> new TrangChuThuNgan_UI(nhanVienHienTai, this);
+                    default -> new TrangChu_UI(this, nhanVienHienTai);
+                };
+            }
             case "Quản trị hệ thống (Admin)", "Quản trị hệ thống", "Admin Hub"
                     -> new AdminHub_UI(nhanVienHienTai, this);
 
@@ -507,14 +528,16 @@ public class Main_UI extends JFrame {
                     -> new PhanCongKyThuatVien_UI();
             case "Tra cứu phiếu sửa chữa", "Cập nhật tiến độ"
                     -> new CapNhatTienDo_UI();
+            case "Điều hành sửa chữa"
+                    -> new DieuHanhSuaChua_UI(nhanVienHienTai, this);
 
-            // 5. Hóa đơn
+            // 5. Hóa đơn (Tích hợp Thanh toán Sửa chữa & Bán lẻ Phụ tùng Shop)
             case "Hóa đơn", "Lập hóa đơn", "Thanh toán hóa đơn"
-                    -> new ThanhToanHoaDon_UI(nhanVienHienTai);
+                    -> new ThanhToanHoaDon_UI(nhanVienHienTai, ThanhToanHoaDon_UI.CHE_DO_SUA_CHUA);
             case "Tra cứu hóa đơn"
                     -> new TraCuuHoaDon_UI(nhanVienHienTai);
-            case "Lập hóa đơn bán hàng"
-                    ->new HoaDonBanHang_UI(nhanVienHienTai);
+            case "Lập hóa đơn bán hàng", "Hóa đơn bán hàng", "Bán lẻ phụ tùng"
+                    -> new ThanhToanHoaDon_UI(nhanVienHienTai, ThanhToanHoaDon_UI.CHE_DO_BAN_LE);
             // 6. Kho phụ tùng
             case "Kho phụ tùng", "Quản lý phụ tùng", "Danh sách phụ tùng"
                     -> new DanhSachPhuTung_UI();
@@ -591,56 +614,9 @@ public class Main_UI extends JFrame {
         }
 
         boolean coQuyen(NhanVien nv) {
-            if (vaiTro == null) return true;
-            if (nv == null) return false;
-
-            // 1. Quản lý / Admin có TOÀN QUYỀN tất cả các chức năng
-            String maNV = nv.getMaNV() != null ? nv.getMaNV().trim() : "";
-            String tk = nv.getTaiKhoan() != null ? nv.getTaiKhoan().trim() : "";
-            String vaiTroNV = nv.getVaiTro() != null ? nv.getVaiTro().trim() : "";
-            String vt = boDau(vaiTroNV);
-
-            if ("NV04".equalsIgnoreCase(maNV) || "quanLy".equalsIgnoreCase(tk) || "admin".equalsIgnoreCase(tk)
-                    || vt.contains("quan")
-                    || vt.contains("admin")
-                    || vt.contains("dieu hanh")
-                    || vt.contains("giam doc")
-                    || vt.contains("chu xuong")) {
-                return true;
-            }
-
-            // 2. Kiểm tra khớp theo danh sách quyền của từng mục menu
-            String[] vts = vaiTro.split(",");
-            for (String v : vts) {
-                String req = boDau(v);
-
-                // Khớp chính xác hoặc chứa nhau
-                if (vt.equalsIgnoreCase(req) || vt.contains(req) || req.contains(vt)) {
-                    return true;
-                }
-
-                // Nhóm Tiếp tân / Cố vấn dịch vụ / Khách hàng
-                if (req.contains("tiep tan") && (vt.contains("tiep tan") || vt.contains("co van") || vt.contains("le tan") || vt.contains("tiep nhan") || vt.contains("dich vu") || "tiepTan".equalsIgnoreCase(tk))) {
-                    return true;
-                }
-
-                // Nhóm Kỹ thuật viên / Sửa chữa
-                if (req.contains("sua chua") && (vt.contains("sua chua") || vt.contains("ktv") || vt.contains("ky thuat") || vt.contains("may") || vt.contains("gam") || vt.contains("dien") || vt.contains("son") || vt.contains("bao duong") || "suaChua".equalsIgnoreCase(tk))) {
-                    return true;
-                }
-
-                // Nhóm Kho / Vật tư / Phụ tùng
-                if (req.contains("kho") && (vt.contains("kho") || vt.contains("vat tu") || vt.contains("phu tung") || vt.contains("thu kho") || "kho".equalsIgnoreCase(tk))) {
-                    return true;
-                }
-
-                // Nhóm Thu ngân / Kế toán
-                if (req.contains("thu ngan") && (vt.contains("thu ngan") || vt.contains("ke toan") || vt.contains("thanh toan") || vt.contains("tai chinh") || "thuNgan".equalsIgnoreCase(tk))) {
-                    return true;
-                }
-            }
-            return false;
-        }
+            if (laNhom()) return danhSachCon.stream().anyMatch(c -> c.coQuyen(nv));
+            return QuyenTruyCap.moTrang(nv, ten);
+    }
 
         static MucMenu don(String ten, String icon, String vaiTro) {
             return new MucMenu(ten, icon, vaiTro);
@@ -652,6 +628,10 @@ public class Main_UI extends JFrame {
 
         static MucMenu con(String ten) {
             return new MucMenu(ten, null, null);
+        }
+
+        static MucMenu con(String ten, String vaiTro) {
+            return new MucMenu(ten, null, vaiTro);
         }
     }
 
@@ -683,13 +663,14 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Lập phiếu sửa chữa"))
                 .them(MucMenu.con("Phân công KTV"))
                 .them(MucMenu.con("Cập nhật tiến độ"))
+                .them(MucMenu.con("Điều hành sửa chữa", QUAN_LY))
                 .them(MucMenu.con("Tra cứu lịch sử sửa chữa")));
 
-        // 5. Hóa đơn
+        // 5. Hóa đơn (Tích hợp cả thanh toán sửa chữa xe & bán lẻ phụ tùng shop)
         ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)
                 .them(MucMenu.con("Lập hóa đơn"))
-                .them(MucMenu.con("Tra cứu hóa đơn"))
-                .them(MucMenu.con("Lập hóa đơn bán hàng")));
+                .them(MucMenu.con("Lập hóa đơn bán hàng"))
+                .them(MucMenu.con("Tra cứu hóa đơn")));
 
         // 6. Kho phụ tùng
         ds.add(MucMenu.nhom("Kho phụ tùng", UiIcon.BOX, KHO)
@@ -716,6 +697,58 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Xu hướng doanh thu (Đường)")));
 
         return ds;
+    }
+
+    public void capNhatSoLuongThongBao() {
+        new Thread(() -> {
+            int hd = 0;
+            int xk = 0;
+            Connection con = ConnectDB.getInstance().getConnection();
+            if (con != null) {
+                // 1. Phiếu xuất kho chờ duyệt xuất (trạng thái Chờ xuất / CHO_XUAT)
+                try (Statement s = con.createStatement();
+                     ResultSet rs = s.executeQuery(
+                         "SELECT COUNT(*) FROM PhieuXuatKho WHERE LOWER(trangThai) LIKE N'%chờ%' OR UPPER(trangThai) LIKE '%CHO_XUAT%'")) {
+                    if (rs.next()) xk = rs.getInt(1);
+                } catch (Exception ignored) {}
+
+                // 2. Thông báo hóa đơn (xe sửa xong / hoàn thành chờ lập hóa đơn thanh toán)
+                try (Statement s = con.createStatement();
+                     ResultSet rs = s.executeQuery(
+                         "SELECT COUNT(*) FROM PhieuTiepNhan ptn " +
+                         "WHERE ptn.trangThaiXe IN (N'Hoàn thành', N'Đang sửa') " +
+                         "AND NOT EXISTS (SELECT 1 FROM HoaDon hd WHERE hd.maKH = ptn.maKH AND hd.trangThai IN ('DA_THANH_TOAN', N'Đã thanh toán'))")) {
+                    if (rs.next()) hd = rs.getInt(1);
+                } catch (Exception ignored) {}
+            }
+            final int finalHd = hd;
+            final int finalXk = xk;
+            SwingUtilities.invokeLater(() -> {
+                demThongBaoHoaDon = finalHd;
+                demThongBaoXuatKho = finalXk;
+                if (menuCuon != null) {
+                    menuCuon.repaint();
+                }
+            });
+        }).start();
+    }
+
+    public static void lamMoiThongBao() {
+        if (instance != null) {
+            instance.capNhatSoLuongThongBao();
+        }
+    }
+
+    private int laySoLuongThongBao(String menuText) {
+        if (menuText == null) return 0;
+        String t = menuText.trim().toLowerCase();
+        if (t.equals("hóa đơn") || t.equals("lập hóa đơn")) {
+            return demThongBaoHoaDon;
+        }
+        if (t.equals("kho phụ tùng") || t.equals("xuất kho")) {
+            return demThongBaoXuatKho;
+        }
+        return 0;
     }
 
     // ===============================================================
@@ -821,6 +854,34 @@ public class Main_UI extends JFrame {
             FontMetrics fm = g2.getFontMetrics();
             int y = (h - fm.getHeight()) / 2 + fm.getAscent();
             g2.drawString(text, x, y);
+
+            // Dấu thông báo màu đỏ hiện số lượng (Hóa đơn / Chờ duyệt xuất kho)
+            int badgeCount = laySoLuongThongBao(text);
+            if (badgeCount > 0) {
+                String strCount = badgeCount > 99 ? "99+" : String.valueOf(badgeCount);
+                Font badgeFont = new Font("Segoe UI", Font.BOLD, 11);
+                g2.setFont(badgeFont);
+                FontMetrics bfm = g2.getFontMetrics();
+                int strW = bfm.stringWidth(strCount);
+                int bH = 18;
+                int bW = Math.max(18, strW + 10);
+                int bX = w - bW - 10;
+                int bY = (h - bH) / 2;
+
+                // Nền đỏ nổi bật
+                g2.setColor(new Color(239, 68, 68)); // #EF4444
+                g2.fillRoundRect(bX, bY, bW, bH, bH, bH);
+
+                // Viền đỏ đậm sắc nét
+                g2.setColor(new Color(220, 38, 38)); // #DC2626
+                g2.drawRoundRect(bX, bY, bW - 1, bH - 1, bH, bH);
+
+                // Chữ số màu trắng rõ ràng
+                g2.setColor(Color.WHITE);
+                int txtX = bX + (bW - strW) / 2;
+                int txtY = bY + (bH - bfm.getHeight()) / 2 + bfm.getAscent();
+                g2.drawString(strCount, txtX, txtY);
+            }
 
             g2.dispose();
         }

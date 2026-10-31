@@ -18,14 +18,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
- * TraCuuPhuongTien_UI — Giao diện tra cứu phương tiện đồng bộ với phong cách Tra cứu khách hàng:
- * - Tìm kiếm đa tiêu chí: Tất cả, Biển số xe, Hãng xe, Dòng xe, Chủ sở hữu
- * - Lọc nhanh dạng Chip Button: Tất cả, Biển số, Hãng xe, Chủ xe
- * - Khung hướng dẫn rõ ràng, chi tiết, không gây mơ hồ
- * - Bảng danh sách các cột chia đều, căn thẳng hàng tuyệt đối giữa Tiêu đề và Nội dung
- * - Xem chi tiết hồ sơ xe và chủ xe
- * - Xem lịch sử sửa chữa/bảo dưỡng của xe trực tiếp từ CSDL SQL Server
- * - Lập phiếu tiếp nhận nhanh cho xe đã chọn
+ * Màn hình tra cứu thông tin phương tiện và chủ sở hữu.
  */
 public class TraCuuPhuongTien_UI extends JPanel {
     private final JTextField txtTuKhoa = new JTextField();
@@ -86,7 +79,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         table = UiHelper.bang(model);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        // Định dạng các cột đều nhau và thẳng hàng tuyệt đối giữa Tiêu đề và Dữ liệu
+        // Định dạng căn lề các cột giữa tiêu đề và dữ liệu
         dinhDangCot(0, SwingConstants.CENTER, 125); // Biển số
         dinhDangCot(1, SwingConstants.LEFT, 120);   // Hãng xe
         dinhDangCot(2, SwingConstants.LEFT, 130);   // Dòng xe
@@ -225,9 +218,9 @@ public class TraCuuPhuongTien_UI extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(239, 246, 255)); // Blue 50
+                g2.setColor(new Color(239, 246, 255));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.setColor(new Color(191, 219, 254)); // Blue 200
+                g2.setColor(new Color(191, 219, 254));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
                 g2.dispose();
                 super.paintComponent(g);
@@ -237,7 +230,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         boxHint.setBorder(new EmptyBorder(4, 10, 4, 10));
 
         lblGoiY.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGoiY.setForeground(new Color(30, 64, 175)); // Blue 800
+        lblGoiY.setForeground(new Color(30, 64, 175));
         boxHint.add(lblGoiY);
         p.add(boxHint);
 
@@ -351,7 +344,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         }
     }
 
-    /** Căn lề đồng bộ cho cả tiêu đề cột và nội dung dữ liệu để luôn thẳng hàng tuyệt đối */
+    /** Căn lề cho tiêu đề và nội dung dữ liệu trong bảng */
     private void dinhDangCot(int cot, int canLe, int doRong) {
         if (cot < 0 || cot >= table.getColumnCount()) return;
         TableColumn tc = table.getColumnModel().getColumn(cot);

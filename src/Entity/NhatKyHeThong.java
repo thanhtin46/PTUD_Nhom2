@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Bản ghi nhật ký kiểm toán hệ thống (Audit Log / Activity Trail).
- * Lưu lại mọi hành động trọng yếu của các tài khoản để Admin giám sát và kiểm tra an ninh.
+ * Lớp lưu thông tin nhật ký hoạt động hệ thống.
  */
 public class NhatKyHeThong implements Serializable {
     private static final long serialVersionUID = 1L;

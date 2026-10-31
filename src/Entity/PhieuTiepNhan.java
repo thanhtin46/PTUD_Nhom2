@@ -1,8 +1,7 @@
 package Entity;
 
 /**
- * Phiếu tiếp nhận sửa chữa.
- * UC015: thêm kyThuatVien (mã NV) để giao việc cho KTV cụ thể.
+ * Lớp thực thể Phiếu tiếp nhận xe.
  */
 public class PhieuTiepNhan {
     private String soPhieu;
@@ -17,7 +16,7 @@ public class PhieuTiepNhan {
     private String tienDo;
     private String nguoiLap;
     private long thanhTien;
-    private String kyThuatVien;     // UC015: mã NV của KTV được phân công
+    private String kyThuatVien;     // Mã nhân viên kỹ thuật viên phụ trách
 
     public PhieuTiepNhan(String soPhieu, String maKH, String hoTen, String sdt,
                          String bienSo, String hangXe, String loaiXe,

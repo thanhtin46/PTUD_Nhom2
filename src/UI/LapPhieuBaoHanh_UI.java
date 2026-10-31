@@ -499,6 +499,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     // ================= SAVE =================
 
     private void luuPhieu() {
+        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.BAO_HANH)) return;
         if (tblChiTiet.isEditing()
                 && !tblChiTiet.getCellEditor().stopCellEditing()) {
             return;
@@ -622,7 +623,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     // ================= PRINT =================
 
     private void inPhieu() {
-        // Giữ biểu tượng thiết kế giao diện đồ án sinh viên, không gọi máy in phần cứng
+        // Xem trước phiếu bảo hành
     }
 
     private void inPhieuTheoMa(String maPBH) {
@@ -791,16 +792,31 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     }
 
     private JButton nut(String text, Color color) {
-        JButton b = new JButton(text);
+        JButton b = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean pressed = getModel().isPressed();
+                boolean hover = getModel().isRollover();
+                Color c = pressed ? UiHelper.darken(color, 0.15f) : (hover ? UiHelper.lighten(color, 0.12f) : color);
+                if (!pressed) {
+                    g2.setColor(new Color(0, 0, 0, 20));
+                    g2.fillRoundRect(0, 2, getWidth(), getHeight() - 2, 8, 8);
+                }
+                g2.setColor(c);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        b.setBackground(color);
+        b.setContentAreaFilled(false);
+        b.setOpaque(false);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
-        b.setOpaque(true);
-        b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(color),
-                new EmptyBorder(7, 10, 7, 10)
-        ));
+        b.setBorder(new EmptyBorder(8, 14, 8, 14));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return b;
     }
 

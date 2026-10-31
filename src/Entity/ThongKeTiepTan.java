@@ -3,12 +3,7 @@ package Entity;
 import java.io.Serializable;
 
 /**
- * ThongKeTiepTan — Đối tượng tổng hợp các chỉ số hoạt động quan trọng dành cho Nhân viên Tiếp tân:
- * - Tiếp nhận xe trong ngày và tổng số phiếu tiếp nhận
- * - Trạng thái phương tiện trong xưởng: Chờ tiếp nhận, Đang sửa chữa, Đã hoàn thành
- * - Khách hàng & Phương tiện quản lý
- * - Phiếu bảo hành còn hạn
- * - Hóa đơn & doanh thu dịch vụ trong ngày
+ * Lớp chứa số liệu thống kê cho trang chủ bộ phận tiếp tân.
  */
 public class ThongKeTiepTan implements Serializable {
     private static final long serialVersionUID = 1L;

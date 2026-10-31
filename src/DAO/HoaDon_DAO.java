@@ -15,12 +15,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 /**
- * HoaDon_DAO — Lớp DAO chuyên trách phục vụ Quản lý & Tra cứu Hóa đơn:
- * - CRUD: Lấy danh sách, Thêm mới hóa đơn & chi tiết, Cập nhật, Hủy/Xóa hóa đơn
- * - Sinh mã hóa đơn tự động thông minh (tự lấp khoảng trống khi xóa/hủy, không tăng lên mãi)
- * - Tra cứu đa tiêu chí: Mã HĐ, Phiếu SC, Biển số xe, Khách hàng, Thu ngân
- * - Lọc theo trạng thái và phương thức thanh toán
- * - Thống kê doanh thu & số lượng hóa đơn
+ * Lớp DAO xử lý dữ liệu hóa đơn thanh toán và bán lẻ.
  */
 public class HoaDon_DAO {
 
@@ -33,7 +28,7 @@ public class HoaDon_DAO {
         if (con == null) return fallbackCache();
 
         String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
-                     "ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, " +
+                     "CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, " +
                      "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
                      "hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, " +
@@ -53,7 +48,6 @@ public class HoaDon_DAO {
                 if (daXem.contains(maHD)) continue;
                 daXem.add(maHD);
 
-                String soPhieuSC = rs.getString("maKH");
                 String maKH = rs.getString("maKH");
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
@@ -67,6 +61,7 @@ public class HoaDon_DAO {
                 long tong = (long) rs.getDouble("tongTien");
                 String ghiChu = rs.getString("ghiChu");
                 String tt = rs.getString("trangThai");
+                String soPhieuSC = tienDV == 0 ? "Bán lẻ" : (maKH != null ? maKH : "TN001");
 
                 String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                               ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
@@ -130,12 +125,7 @@ public class HoaDon_DAO {
         return new DuLieu_DAO().layChiTietTheoHoaDon(maHD);
     }
 
-    /**
-     * Sinh mã số hóa đơn tự động thông minh:
-     * - Tự động lấp khoảng trống khi xóa/hủy hóa đơn (trở lại số hóa đơn vừa xóa)
-     * - Không tăng lên vô tận khi bấm làm mới form
-     * - Bắt đầu từ HD001 nếu chưa có hóa đơn nào
-     */
+    // Sinh mã hóa đơn tự động tăng dần (VD: HD001, HD002)
     public String sinhMaHoaDonTuDong() {
         Connection con = ConnectDB.getInstance().getConnection();
         TreeSet<Integer> dsSo = new TreeSet<>();
@@ -192,15 +182,19 @@ public class HoaDon_DAO {
     }
 
     public ArrayList<HoaDon> traCuuHoaDon(String tuKhoa, int tieuChi, String locTrangThai, String locPhuongThuc) {
+        return traCuuHoaDon(tuKhoa, tieuChi, locTrangThai, locPhuongThuc, "TAT_CA");
+    }
+
+    public ArrayList<HoaDon> traCuuHoaDon(String tuKhoa, int tieuChi, String locTrangThai, String locPhuongThuc, String locLoaiHD) {
         ArrayList<HoaDon> list = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return fallbackTraCuuCache(tuKhoa, tieuChi, locTrangThai, locPhuongThuc);
+        if (con == null) return fallbackTraCuuCache(tuKhoa, tieuChi, locTrangThai, locPhuongThuc, locLoaiHD);
 
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, ")
-           .append("ISNULL(pt.bienSoXe, N'Chưa rõ') AS bienSoXe, ")
+           .append("CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, ")
            .append("CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, ")
            .append("hd.hinhThucThanhToan, nv.hoTen AS tenNV, ")
            .append("hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, ")
@@ -212,9 +206,13 @@ public class HoaDon_DAO {
                    "LEFT JOIN (SELECT maKH, MIN(bienSoXe) AS bienSoXe FROM PhuongTien GROUP BY maKH) pt ON pt.maKH = hd.maKH " +
                    "WHERE 1=1 ");
 
-        // Lọc trạng thái
+        // Lọc trạng thái (hỗ trợ cả DA_HUY/DA_THANH_TOAN và tiếng Việt có dấu)
         if (!isTatCa(locTrangThai)) {
-            sql.append("AND LOWER(hd.trangThai) LIKE ? ");
+            if (locTrangThai.toLowerCase().contains("hủy") || locTrangThai.toLowerCase().contains("huy")) {
+                sql.append("AND (hd.trangThai IN ('DA_HUY', N'Đã hủy') OR LOWER(hd.trangThai) LIKE '%huy%') ");
+            } else {
+                sql.append("AND (hd.trangThai IN ('DA_THANH_TOAN', N'Đã thanh toán') OR LOWER(hd.trangThai) LIKE '%thanh toan%') ");
+            }
         }
 
         // Lọc phương thức
@@ -228,18 +226,27 @@ public class HoaDon_DAO {
             }
         }
 
+        // Lọc loại hóa đơn (Sửa chữa vs Bán lẻ Shop)
+        if (!isTatCa(locLoaiHD)) {
+            if (locLoaiHD.toLowerCase().contains("bán lẻ") || locLoaiHD.toLowerCase().contains("ban le") || locLoaiHD.toLowerCase().contains("shop")) {
+                sql.append("AND hd.tienDichVu = 0 ");
+            } else if (locLoaiHD.toLowerCase().contains("sửa chữa") || locLoaiHD.toLowerCase().contains("sua chua")) {
+                sql.append("AND hd.tienDichVu > 0 ");
+            }
+        }
+
         // Lọc từ khóa theo tiêu chí
         if (!q.isEmpty()) {
             switch (tieuChi) {
                 case 1 -> sql.append("AND LOWER(hd.maHD) LIKE ? ");
                 case 2 -> sql.append("AND LOWER(hd.maKH) LIKE ? ");
-                case 3 -> sql.append("AND LOWER(pt.bienSoXe) LIKE ? ");
+                case 3 -> sql.append("AND LOWER(CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END) LIKE ? ");
                 case 4 -> sql.append("AND (LOWER(kh.hoTen) LIKE ? OR LOWER(kh.soDT) LIKE ? OR LOWER(hd.maKH) LIKE ?) ");
                 case 5 -> sql.append("AND LOWER(nv.hoTen) LIKE ? ");
                 default -> {
                     sql.append("AND (LOWER(hd.maHD) LIKE ? ")
                        .append("OR LOWER(hd.maKH) LIKE ? ")
-                       .append("OR LOWER(pt.bienSoXe) LIKE ? ")
+                       .append("OR LOWER(CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END) LIKE ? ")
                        .append("OR LOWER(kh.hoTen) LIKE ? ")
                        .append("OR LOWER(kh.soDT) LIKE ? ")
                        .append("OR LOWER(hd.maKH) LIKE ? ")
@@ -252,9 +259,6 @@ public class HoaDon_DAO {
 
         try (PreparedStatement stmt = con.prepareStatement(sql.toString())) {
             int pIdx = 1;
-            if (!isTatCa(locTrangThai)) {
-                stmt.setString(pIdx++, "%" + locTrangThai.trim().toLowerCase() + "%");
-            }
 
             if (!q.isEmpty()) {
                 String pat = "%" + q + "%";
@@ -280,7 +284,6 @@ public class HoaDon_DAO {
                     if (daXem.contains(maHD)) continue;
                     daXem.add(maHD);
 
-                    String soPhieuSC = rs.getString("maKH");
                     String maKH = rs.getString("maKH");
                     String tenKH = rs.getString("hoTen");
                     String sdt = rs.getString("soDT");
@@ -294,6 +297,7 @@ public class HoaDon_DAO {
                     long tong = (long) rs.getDouble("tongTien");
                     String ghiChu = rs.getString("ghiChu");
                     String tt = rs.getString("trangThai");
+                    String soPhieuSC = tienDV == 0 ? "Bán lẻ" : (maKH != null ? maKH : "TN001");
 
                     String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                                   ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
@@ -315,16 +319,31 @@ public class HoaDon_DAO {
     }
 
     private ArrayList<HoaDon> fallbackTraCuuCache(String tuKhoa, int tieuChi, String locTrangThai, String locPhuongThuc) {
+        return fallbackTraCuuCache(tuKhoa, tieuChi, locTrangThai, locPhuongThuc, "TAT_CA");
+    }
+
+    private ArrayList<HoaDon> fallbackTraCuuCache(String tuKhoa, int tieuChi, String locTrangThai, String locPhuongThuc, String locLoaiHD) {
         ArrayList<HoaDon> list = new ArrayList<>();
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
 
         for (HoaDon hd : KhoDuLieu.get().getHoaDons()) {
             if (!isTatCa(locTrangThai)) {
-                if (!locTrangThai.equalsIgnoreCase(hd.getTrangThai())) continue;
+                boolean isHuy = locTrangThai.toLowerCase().contains("hủy") || locTrangThai.toLowerCase().contains("huy");
+                boolean hdHuy = hd.getTrangThai() != null && (hd.getTrangThai().toLowerCase().contains("hủy") || hd.getTrangThai().equalsIgnoreCase("DA_HUY"));
+                if (isHuy != hdHuy) continue;
             }
 
             if (!isTatCa(locPhuongThuc)) {
                 if (!hd.getPhuongThuc().toLowerCase().contains(locPhuongThuc.toLowerCase())) continue;
+            }
+
+            if (!isTatCa(locLoaiHD)) {
+                boolean isBanLe = hd.getTienDichVu() == 0 || "Bán lẻ (Shop)".equalsIgnoreCase(hd.getBienSo());
+                if (locLoaiHD.toLowerCase().contains("bán lẻ") || locLoaiHD.toLowerCase().contains("shop")) {
+                    if (!isBanLe) continue;
+                } else if (locLoaiHD.toLowerCase().contains("sửa chữa")) {
+                    if (isBanLe) continue;
+                }
             }
 
             boolean match = q.isEmpty();
@@ -378,7 +397,7 @@ public class HoaDon_DAO {
             return tong;
         }
 
-        String sql = "SELECT ISNULL(SUM(tongTien), 0) FROM HoaDon WHERE trangThai = N'Đã thanh toán'";
+        String sql = "SELECT ISNULL(SUM(tongTien), 0) FROM HoaDon WHERE trangThai IN ('DA_THANH_TOAN', N'Đã thanh toán')";
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) return (long) rs.getDouble(1);

@@ -16,12 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * BaoCaoDoanhThu_UI — Giao diện Báo cáo Doanh thu Tinh gọn & Cân đối:
- * - Giản lược biểu đồ, tập trung vào 1 biểu đồ doanh thu trực quan, thanh thoát
- * - Hỗ trợ chuyển đổi nhanh giữa Biểu đồ cột (Bar) và Biểu đồ đường (Line)
- * - Toàn bộ các khối (Header, 4 Thẻ KPI, Khung biểu đồ, Bảng số liệu) trải đều 100% chiều ngang
- * - Khắc phục hoàn toàn hiện tượng lệch trái, căn chỉnh lề đối xứng, thẩm mỹ chuẩn ERP
- * - Hỗ trợ đồng bộ dữ liệu thời gian thực từ CSDL SQL Server
+ * Màn hình báo cáo doanh thu của gara.
+ * Hỗ trợ xem biểu đồ doanh thu theo tháng và bảng số liệu chi tiết.
  */
 public class BaoCaoDoanhThu_UI extends JPanel {
 
@@ -148,11 +144,11 @@ public class BaoCaoDoanhThu_UI extends JPanel {
 
         JLabel lblTitle = new JLabel("BÁO CÁO DOANH THU GARA");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitle.setForeground(new Color(15, 23, 42)); // Slate 900
+        lblTitle.setForeground(new Color(15, 23, 42));
 
         JLabel lblSub = new JLabel("Biểu đồ phân tích doanh thu dịch vụ sửa chữa & phụ tùng theo thời gian thực");
         lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblSub.setForeground(new Color(100, 116, 139)); // Slate 500
+        lblSub.setForeground(new Color(100, 116, 139));
 
         pnlLeft.add(lblTitle);
         pnlLeft.add(Box.createVerticalStrut(2));

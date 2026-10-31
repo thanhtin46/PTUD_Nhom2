@@ -3,8 +3,7 @@ package Entity;
 import java.util.ArrayList;
 
 /**
- * Phiếu kho (nhập hoặc xuất).
- * UC010: trangThai = CHO_NHAP (đã đặt NCC, chưa giao) | DA_NHAP (đã nhập kho thật) | DA_HUY.
+ * Lớp thực thể Phiếu nhập xuất kho.
  */
 public class PhieuKho {
     public static final String NHAP = "NHAP";
@@ -19,9 +18,9 @@ public class PhieuKho {
     private String ngay;
     private String nguoiLap;
     private String ghiChu;
-    private String nhaCungCap;       // UC010: NCC cho phiếu nhập
-    private String ngayDuKienGiao;   // UC010: ngày dự kiến NCC giao
-    private String trangThai;        // UC010
+    private String nhaCungCap;       // Nhà cung cấp
+    private String ngayDuKienGiao;   // Ngày dự kiến giao
+    private String trangThai;        // Trạng thái phiếu kho
     private final ArrayList<ChiTietKho> chiTiet = new ArrayList<>();
 
     public PhieuKho(String soPhieu, String loai, String ngay, String nguoiLap, String ghiChu) {

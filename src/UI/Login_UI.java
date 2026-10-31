@@ -8,10 +8,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 
 /**
- * Login_UI — Màn hình Đăng nhập hiện đại chuẩn Figma:
- * - Khung hình không viền bo cong góc mềm mại 24px, hỗ trợ kéo rê
- * - Cột trái: Nền gradient Slate/Blue chiều sâu công nghệ, hình minh họa xe và giới thiệu năng động
- * - Cột phải: Form đăng nhập nền trắng tinh tế, input focus viền xanh, nút bấm nổi bật
+ * Màn hình đăng nhập hệ thống quản lý gara.
  */
 public class Login_UI extends JFrame {
     private JTextField txtTaiKhoan;
@@ -71,7 +68,7 @@ public class Login_UI extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 int w = getWidth(), h = getHeight();
 
-                // Gradient Slate 900 -> Blue 900
+                // Màu nền gradient
                 GradientPaint gp = new GradientPaint(0, 0, new Color(15, 23, 42), 0, h, new Color(30, 58, 138));
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, w, h);
@@ -88,18 +85,18 @@ public class Login_UI extends JFrame {
         trai.setBorder(new EmptyBorder(40, 48, 36, 48));
 
         JLabel badge = new JLabel("GARAGE MANAGEMENT SYSTEM");
-        badge.setForeground(new Color(96, 165, 250)); // Blue 400
+        badge.setForeground(new Color(96, 165, 250));
         badge.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
         JLabel tde = new JLabel("GARA Ô TÔ THE T4");
         tde.setForeground(Color.WHITE);
         tde.setFont(new Font("Segoe UI", Font.BOLD, 36));
 
-        JLabel phuDe = new JLabel("<html>Giải pháp toàn diện quản lý khách hàng, tiếp nhận xe,<br>tiến độ sửa chữa, phụ tùng và bảo hành chuyên nghiệp.</html>");
+        JLabel phuDe = new JLabel("<html>Hệ thống quản lý dịch vụ tiếp nhận, sửa chữa và bảo hành gara ô tô.</html>");
         phuDe.setForeground(new Color(203, 213, 225));
         phuDe.setFont(new Font("Segoe UI", Font.PLAIN, 15));
 
-        // Hình ảnh Gara chuyên nghiệp độ nét cao (Thợ sửa xe + Cầu nâng ô tô đỏ)
+        // Hình ảnh minh họa gara
         JPanel panelAnh = new JPanel() {
             private Image img = null;
             {
@@ -141,7 +138,7 @@ public class Login_UI extends JFrame {
 
                 g2.setClip(null);
 
-                // Đường viền thủy tinh tinh tế quanh ảnh
+                // Viền khung ảnh
                 g2.setColor(new Color(255, 255, 255, 50));
                 g2.setStroke(new BasicStroke(1.5f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 20, 20);
@@ -354,27 +351,16 @@ public class Login_UI extends JFrame {
         DAO.NhanVien_DAO nvDao = new DAO.NhanVien_DAO();
         NhanVien nv = nvDao.kiemTraDangNhap(tk, mk);
 
-        // 2. Dự phòng nếu danh sách trong bộ nhớ có tài khoản
-        if (nv == null && danhSachNhanVien != null) {
-            for (NhanVien n : danhSachNhanVien) {
-                if (n.getTaiKhoan() != null && n.getTaiKhoan().equals(tk) && n.getMatKhau() != null && n.getMatKhau().equals(mk)) {
-                    nv = n;
-                    break;
-                }
-            }
-        }
-
         if (nv != null) {
-            boolean laTaiKhoanHeThong = "quanLy".equalsIgnoreCase(tk) || "tiepTan".equalsIgnoreCase(tk)
-                    || "suaChua".equalsIgnoreCase(tk) || "kho".equalsIgnoreCase(tk) || "thuNgan".equalsIgnoreCase(tk)
-                    || (nv.getVaiTro() != null && nv.getVaiTro().toLowerCase().contains("quản lý"));
-            if (!laTaiKhoanHeThong && !nv.dangHoatDong()) {
+            if (!nv.dangHoatDong()) {
                 JOptionPane.showMessageDialog(this,
                         "Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ quản lý!",
                         "Không thể đăng nhập",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            try { new DAO.PhanQuyen_DAO().napQuyen(nv); }
+            catch (java.sql.SQLException ex) { JOptionPane.showMessageDialog(this,"Không tải được quyền: " + ex.getMessage()); return; }
             dispose();
             new Main_UI(nv, danhSachNhanVien).setVisible(true);
         } else {
