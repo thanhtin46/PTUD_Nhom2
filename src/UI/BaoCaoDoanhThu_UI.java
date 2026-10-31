@@ -4,6 +4,8 @@ import Entity.HoaDon;
 import Entity.KhoDuLieu;
 
 import javax.swing.*;
+import java.time.LocalDate;
+import java.util.List;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -553,25 +555,15 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         // Cộng dồn hóa đơn thực tế trong hệ thống nếu có
         for (HoaDon hd : kho.getHoaDons()) {
             if (HoaDon.DA_HUY.equalsIgnoreCase(hd.getTrangThai())) continue;
-            String ngay = hd.getNgayThanhToan();
-            if (ngay == null || ngay.isEmpty()) continue;
-            try {
-                int thang = 1, nam = namChon;
-                if (ngay.contains("/")) {
-                    String[] p = ngay.split("/");
-                    thang = Integer.parseInt(p[1]);
-                    nam = Integer.parseInt(p[2]);
-                } else if (ngay.contains("-")) {
-                    String[] p = ngay.split("-");
-                    nam = Integer.parseInt(p[0]);
-                    thang = Integer.parseInt(p[1]);
-                }
-                if (nam == namChon && thang >= 1 && thang <= 12) {
+            LocalDate date = hd.getNgayLap();
+            if (date != null && date.getYear() == namChon) {
+                int thang = date.getMonthValue();
+                if (thang >= 1 && thang <= 12) {
                     dvGoc[thang - 1] += hd.getTienDichVu();
                     ptGoc[thang - 1] += hd.getTienPhuTung();
                     hdGoc[thang - 1] += 1;
                 }
-            } catch (Exception ignored) {}
+            }
         }
 
         for (int i = 0; i < 12; i++) {
@@ -895,5 +887,32 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         } else {
             return String.valueOf(val);
         }
+    }
+
+    /**
+     * Thống kê doanh thu theo khoảng thời gian Từ ngày ... Đến ngày
+     * Sử dụng chuẩn java.time: !date.isBefore(tuNgay) && !date.isAfter(denNgay)
+     */
+    public static long tinhDoanhThuTheoKhoang(List<HoaDon> list, LocalDate tuNgay, LocalDate denNgay) {
+        long tong = 0;
+        if (list == null) return tong;
+        for (HoaDon hd : list) {
+            if (HoaDon.DA_HUY.equalsIgnoreCase(hd.getTrangThai())) continue;
+            LocalDate date = hd.getNgayLap();
+            if (date != null) {
+                if (tuNgay != null && denNgay != null) {
+                    if (!date.isBefore(tuNgay) && !date.isAfter(denNgay)) {
+                        tong += hd.getTongTien();
+                    }
+                } else if (tuNgay != null) {
+                    if (!date.isBefore(tuNgay)) tong += hd.getTongTien();
+                } else if (denNgay != null) {
+                    if (!date.isAfter(denNgay)) tong += hd.getTongTien();
+                } else {
+                    tong += hd.getTongTien();
+                }
+            }
+        }
+        return tong;
     }
 }

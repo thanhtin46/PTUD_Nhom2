@@ -52,13 +52,8 @@ public class TheoDoiChoNhap_UI extends JPanel {
             if (!pk.isChoNhap()) continue;
             soChoNhap++;
             giaTriChoNhap += pk.getTongTien();
-            if (!pk.getNgayDuKienGiao().isEmpty()) {
-                try {
-                    LocalDate d = LocalDate.parse(pk.getNgayDuKienGiao(),
-                            DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    if (ChronoUnit.DAYS.between(d, homNay) > 0) soTreHan++;
-                } catch (Exception ignored) {}
-            }
+            LocalDate d = pk.getNgayDuKienGiaoDate();
+            if (d != null && d.isBefore(homNay)) soTreHan++;
         }
         JPanel grid = new JPanel(new GridLayout(1, 3, 14, 0));
         grid.setOpaque(false);
@@ -161,18 +156,13 @@ public class TheoDoiChoNhap_UI extends JPanel {
         for (PhieuKho pk : kho.getPhieuKhos()) {
             if (!pk.isChoNhap()) continue;
             String canhBao = "";
-            if (!pk.getNgayDuKienGiao().isEmpty()) {
-                try {
-                    LocalDate d = LocalDate.parse(pk.getNgayDuKienGiao(),
-                            DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    long ngay = ChronoUnit.DAYS.between(d, homNay);
-                    if (ngay > 0)      canhBao = "TRỄ " + ngay + " ngày";
-                    else if (ngay == 0) canhBao = "ĐÚNG hẹn";
-                    else if (ngay >= -3) canhBao = "SẮP đến (" + (-ngay) + " ngày)";
-                    else canhBao = "Còn " + (-ngay) + " ngày";
-                } catch (Exception ex) {
-                    canhBao = "?";
-                }
+            LocalDate d = pk.getNgayDuKienGiaoDate();
+            if (d != null) {
+                long ngay = ChronoUnit.DAYS.between(d, homNay);
+                if (ngay > 0)       canhBao = "TRỄ " + ngay + " ngày";
+                else if (ngay == 0) canhBao = "ĐÚNG hẹn";
+                else if (ngay >= -3) canhBao = "SẮP đến (" + (-ngay) + " ngày)";
+                else canhBao = "Còn " + (-ngay) + " ngày";
             }
             model.addRow(new Object[]{pk.getSoPhieu(), pk.getNgay(), pk.getNhaCungCap(),
                     pk.getNgayDuKienGiao(), pk.getChiTiet().size(),

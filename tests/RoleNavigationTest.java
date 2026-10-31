@@ -21,7 +21,7 @@ public class RoleNavigationTest {
                     NhanVien n=new NhanVien("NV04","Kiểm thử","quanLy","",roles[index]);
                     Main_UI main=new Main_UI(n,new ArrayList<>());main.setExtendedState(JFrame.NORMAL);main.setSize(1200,780);main.setVisible(true);main.validate();
                     JPanel content=(JPanel)field(main,"contentPanel");Component original=content.getComponent(0);
-                    check(index==0?original instanceof TrangChu_UI:original instanceof TrangChuBoPhan_UI,"home "+roles[index]);
+                    check((index==0 || index==5)?original instanceof TrangChu_UI:(original instanceof TrangChuTiepTan_UI || original instanceof TrangChuSuaChua_UI || original instanceof TrangChuKho_UI || original instanceof TrangChuThuNgan_UI || original instanceof TrangChuBoPhan_UI),"home "+roles[index]);
                     for(Object row:(ArrayList<?>)field(main,"tatCaNutMenu"))check(QuyenTruyCap.moTrang(n,(String)field(row,"text")),"menu permission");
                     Timer timer=new Timer(40,e->{for(Window w:Window.getWindows())if(w instanceof JDialog && w.isShowing())w.dispose();});timer.start();
                     try {

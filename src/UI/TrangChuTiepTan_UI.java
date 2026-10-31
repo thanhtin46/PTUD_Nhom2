@@ -593,7 +593,7 @@ public class TrangChuTiepTan_UI extends JPanel {
                     p.getHoTen(),
                     p.getSdt(),
                     p.getHangXe(),
-                    p.getNgayTiepNhan(),
+                    p.getNgayTiepNhanHienThi(),
                     p.getYeuCau(),
                     p.getTienDo() != null ? p.getTienDo() : "Chờ tiếp nhận"
             });
@@ -645,7 +645,7 @@ public class TrangChuTiepTan_UI extends JPanel {
                 + "<tr><td><b>Số điện thoại:</b></td><td>" + p.getSdt() + "</td></tr>"
                 + "<tr><td><b>Biển số xe:</b></td><td><b style='color:#DC2626;'>" + p.getBienSo() + "</b></td></tr>"
                 + "<tr><td><b>Hãng xe / Dòng xe:</b></td><td>" + (p.getHangXe() != null ? p.getHangXe() : "—") + " / " + (p.getLoaiXe() != null ? p.getLoaiXe() : "—") + "</td></tr>"
-                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhan() + "</td></tr>"
+                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhanHienThi() + "</td></tr>"
                 + "<tr><td><b>Người tiếp nhận:</b></td><td>" + (p.getNguoiLap() != null ? p.getNguoiLap() : "Tiếp tân") + "</td></tr>"
                 + "<tr><td><b>Tiến độ hiện tại:</b></td><td><b style='color:#16A34A;'>" + (p.getTienDo() != null ? p.getTienDo() : "Chờ tiếp nhận") + "</b></td></tr>"
                 + "<tr><td valign='top'><b>Yêu cầu dịch vụ:</b></td><td>" + (p.getYeuCau() != null ? p.getYeuCau() : "—") + "</td></tr>"

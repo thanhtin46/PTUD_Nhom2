@@ -288,16 +288,25 @@ public class NhapKho_UI extends JPanel {
             }
         }
 
+        LocalDate ldNgay = UiHelper.chuyenChuoiSangNgay(txtNgay.getText().trim(), this, "Ngày lập phiếu");
+        if (ldNgay == null && !txtNgay.getText().trim().isEmpty()) {
+            txtNgay.requestFocus();
+            return;
+        }
+        if (ldNgay == null) ldNgay = LocalDate.now();
+
+        LocalDate ldGiao = UiHelper.chuyenChuoiSangNgay(txtNgayDuKien.getText().trim(), this, "Ngày dự kiến giao");
+
         String maNV = (nv != null && nv.getMaNV() != null && !nv.getMaNV().isEmpty()) ? nv.getMaNV() : "NV04";
         String tenNV = nv != null ? nv.getHoTen() : "Nhân viên kho";
 
         PhieuKho phieu = new PhieuKho(txtSoPhieu.getText().trim(),
                 PhieuKho.NHAP,
-                txtNgay.getText().trim(),
+                ldNgay,
                 tenNV,
                 txtGhiChu.getText().trim(),
                 ncc,
-                txtNgayDuKien.getText().trim(),
+                ldGiao,
                 PhieuKho.DA_NHAP);
         phieu.getChiTiet().addAll(dongTam);
 
@@ -370,10 +379,18 @@ public class NhapKho_UI extends JPanel {
 
         // 3. Kiểm tra ngày dự kiến giao
         String ngayDk = txtNgayDuKien.getText().trim();
-        if (!ngayDk.matches("\\d{1,2}/\\d{1,2}/\\d{4}")) {
-            UiHelper.loi(this, "Ngày dự kiến giao phải có dạng dd/MM/yyyy!", txtNgayDuKien);
+        LocalDate ldGiao = UiHelper.chuyenChuoiSangNgay(ngayDk, this, "Ngày dự kiến giao");
+        if (ldGiao == null) {
+            txtNgayDuKien.requestFocus();
             return;
         }
+
+        LocalDate ldNgay = UiHelper.chuyenChuoiSangNgay(txtNgay.getText().trim(), this, "Ngày lập phiếu");
+        if (ldNgay == null && !txtNgay.getText().trim().isEmpty()) {
+            txtNgay.requestFocus();
+            return;
+        }
+        if (ldNgay == null) ldNgay = LocalDate.now();
 
         // 4. Ngoại lệ: Mã phụ tùng không tồn tại & Số lượng không hợp lệ
         for (ChiTietKho ct : dongTam) {
@@ -390,11 +407,11 @@ public class NhapKho_UI extends JPanel {
         // Lưu phiếu CHO_NHAP
         PhieuKho phieu = new PhieuKho(txtSoPhieu.getText().trim(),
                 PhieuKho.NHAP,
-                txtNgay.getText().trim(),
+                ldNgay,
                 nv != null ? nv.getHoTen() : "Nhân viên kho",
                 txtGhiChu.getText().trim(),
                 ncc,
-                ngayDk,
+                ldGiao,
                 PhieuKho.CHO_NHAP);
         phieu.getChiTiet().addAll(dongTam);
 

@@ -257,7 +257,7 @@ public class CapNhatTienDo_UI extends JPanel {
                         p.getKyThuatVien() == null || p.getKyThuatVien().isEmpty() ? "(Chưa phân công)" : p.getKyThuatVien(),
                         td,
                         UiHelper.tien(p.getThanhTien()) + " đ",
-                        p.getNgayTiepNhan()
+                        p.getNgayTiepNhanHienThi()
                 });
             }
         }
@@ -361,7 +361,7 @@ public class CapNhatTienDo_UI extends JPanel {
                 + "<tr><td width='130'><b>Số phiếu:</b></td><td><span style='color:#2563EB;font-weight:bold;'>" + p.getSoPhieu() + "</span></td></tr>"
                 + "<tr><td><b>Biển số xe:</b></td><td><b>" + p.getBienSo() + "</b> (" + p.getHangXe() + " " + p.getLoaiXe() + ")</td></tr>"
                 + "<tr><td><b>Khách hàng:</b></td><td>" + p.getHoTen() + " — " + p.getSdt() + "</td></tr>"
-                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhan() + "</td></tr>"
+                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhanHienThi() + "</td></tr>"
                 + "<tr><td><b>Yêu cầu ban đầu:</b></td><td>" + p.getYeuCau() + "</td></tr>"
                 + "<tr><td><b>KTV phụ trách:</b></td><td><b>" + (p.getKyThuatVien() == null || p.getKyThuatVien().isEmpty() ? "Chưa giao" : p.getKyThuatVien()) + "</b></td></tr>"
                 + "<tr><td><b>Tiến độ hiện tại:</b></td><td><span style='color:#D97706;font-weight:bold;'>" + p.getTienDo() + "</span></td></tr>"

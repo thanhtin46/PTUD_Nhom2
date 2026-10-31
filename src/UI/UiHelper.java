@@ -11,6 +11,12 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 /**
  * Lớp tiện ích hỗ trợ định dạng giao diện, màu sắc, font chữ và các component Swing.
@@ -339,10 +345,11 @@ public final class UiHelper {
                 int w = getWidth();
                 int h = getHeight();
 
-                Color nenNut = pressed ? darken(mau, 0.15f) : (hover ? lighten(mau, 0.10f) : mau);
+                Color nenNut = !isEnabled() ? new Color(148, 163, 184)
+                        : (pressed ? darken(mau, 0.15f) : (hover ? lighten(mau, 0.10f) : mau));
 
                 // Bóng nhẹ dưới nút
-                if (!pressed) {
+                if (!pressed && isEnabled()) {
                     g2.setColor(new Color(0, 0, 0, 20));
                     g2.fillRoundRect(0, 2, w, h - 2, 12, 12);
                 }
@@ -353,6 +360,7 @@ public final class UiHelper {
                 super.paintComponent(g);
             }
         };
+        b.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         b.setFont(new Font("Segoe UI", Font.BOLD, 13));
         b.setForeground(Color.WHITE);
         b.setContentAreaFilled(false);
@@ -592,6 +600,46 @@ public final class UiHelper {
             sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
             sp.getVerticalScrollBar().setUnitIncrement(16);
             sp.getHorizontalScrollBar().setUnitIncrement(16);
+        }
+    }
+
+    // ==== TIỆN ÍCH ĐỊNH DẠNG & CHUYỂN ĐỔI NGÀY THÁNG (JAVA.TIME) ====
+    public static final DateTimeFormatter DINH_DANG_NGAY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    public static final DateTimeFormatter DINH_DANG_NGAY_GIO = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter BOHOA_NGAY_NGHIEM_NGAT = new DateTimeFormatterBuilder()
+            .parseStrict()
+            .appendPattern("dd/MM/uuuu")
+            .toFormatter()
+            .withResolverStyle(ResolverStyle.STRICT);
+
+    /** Định dạng LocalDate sang chuỗi dd/MM/yyyy thân thiện */
+    public static String dinhDangNgay(LocalDate date) {
+        return date != null ? date.format(DINH_DANG_NGAY) : "";
+    }
+
+    /** Định dạng LocalDateTime sang chuỗi dd/MM/yyyy HH:mm thân thiện */
+    public static String dinhDangNgayGio(LocalDateTime dateTime) {
+        return dateTime != null ? dateTime.format(DINH_DANG_NGAY_GIO) : "";
+    }
+
+    /**
+     * Chuyển đổi chuỗi ngày nhập vào (dd/MM/yyyy) sang LocalDate.
+     * Bắt lỗi nếu sai định dạng hoặc ngày không tồn tại (ví dụ 31/02) và hiển thị thông báo.
+     */
+    public static LocalDate chuyenChuoiSangNgay(String text, Component parent, String tenTruong) {
+        if (text == null || text.trim().isEmpty()) return null;
+        String s = text.trim();
+        try {
+            return LocalDate.parse(s, BOHOA_NGAY_NGHIEM_NGAT);
+        } catch (DateTimeParseException ex) {
+            String nhan = (tenTruong != null && !tenTruong.isBlank()) ? tenTruong + ": " : "";
+            JOptionPane.showMessageDialog(
+                    parent,
+                    nhan + "Ngày '" + s + "' không hợp lệ hoặc không tồn tại!\nVui lòng nhập đúng định dạng dd/MM/yyyy (ví dụ: 15/05/2026).",
+                    "Lỗi định dạng ngày",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return null;
         }
     }
 }

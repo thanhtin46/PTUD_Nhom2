@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,9 +36,7 @@ public class TrangChuTiepTan_DAO {
             // 1. Nghiệp vụ tiếp nhận: Tổng số phiếu, phiếu tiếp nhận trong ngày, trạng thái xe
             String sqlTN = "SELECT " +
                     "COUNT(*) AS tongPTN, " +
-                    "SUM(CASE WHEN CAST(ngayTN AS DATE) = CAST(GETDATE() AS DATE) " +
-                    "          OR CONVERT(VARCHAR(10), ngayTN, 103) = CONVERT(VARCHAR(10), GETDATE(), 103) " +
-                    "          OR CONVERT(VARCHAR(10), ngayTN, 120) = CONVERT(VARCHAR(10), GETDATE(), 120) THEN 1 ELSE 0 END) AS homNay, " +
+                    "SUM(CASE WHEN CAST(ngayTN AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS homNay, " +
                     "SUM(CASE WHEN trangThaiXe LIKE N'%chờ%' OR trangThaiXe IN ('DA_TIEP_NHAN','CHO_SUA','CHO_TIEP_NHAN') OR trangThaiXe IS NULL THEN 1 ELSE 0 END) AS choTN, " +
                     "SUM(CASE WHEN trangThaiXe LIKE N'%đang sửa%' OR trangThaiXe IN ('DANG_SUA','DANG_KIEM_TRA') OR trangThaiXe LIKE N'%sửa chữa%' OR trangThaiXe LIKE N'%xử lý%' OR trangThaiXe LIKE N'%bảo dưỡng%' THEN 1 ELSE 0 END) AS dangSC, " +
                     "SUM(CASE WHEN trangThaiXe IN ('HOAN_THANH','DA_HOAN_THANH') OR trangThaiXe LIKE N'%hoàn thành%' OR trangThaiXe LIKE N'%xong%' OR trangThaiXe LIKE N'%chờ giao%' THEN 1 ELSE 0 END) AS daHT " +
@@ -53,8 +53,7 @@ public class TrangChuTiepTan_DAO {
 
             // 2. Nghiệp vụ khách hàng: Tổng số khách hàng và khách hàng mới đăng ký trong ngày
             String sqlKH = "SELECT COUNT(*) AS tongKH, " +
-                    "SUM(CASE WHEN ngayDangKy = CONVERT(VARCHAR(10), GETDATE(), 103) " +
-                    "          OR ngayDangKy = CONVERT(VARCHAR(10), GETDATE(), 120) THEN 1 ELSE 0 END) AS khMoi " +
+                    "SUM(CASE WHEN CAST(ngayDangKy AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS khMoi " +
                     "FROM KhachHang";
             try (PreparedStatement ps = con.prepareStatement(sqlKH); ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -84,11 +83,9 @@ public class TrangChuTiepTan_DAO {
 
             // 5. Nghiệp vụ hóa đơn dịch vụ: Hóa đơn lập trong ngày và doanh thu tiếp nhận hôm nay
             String sqlHD = "SELECT " +
-                    "SUM(CASE WHEN CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) " +
-                    "          OR CONVERT(VARCHAR(10), ngayLap, 103) = CONVERT(VARCHAR(10), GETDATE(), 103) THEN 1 ELSE 0 END) AS hdHomNay, " +
+                    "SUM(CASE WHEN CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS hdHomNay, " +
                     "ISNULL(SUM(CASE WHEN trangThai IN (N'Đã thanh toán','DA_THANH_TOAN') AND " +
-                    "                    (CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) " +
-                    "                     OR CONVERT(VARCHAR(10), ngayLap, 103) = CONVERT(VARCHAR(10), GETDATE(), 103)) " +
+                    "                    CAST(ngayLap AS DATE) = CAST(GETDATE() AS DATE) " +
                     "               THEN tongTien ELSE 0 END), 0) AS doanhThu " +
                     "FROM HoaDon";
             try (PreparedStatement ps = con.prepareStatement(sqlHD); ResultSet rs = ps.executeQuery()) {
@@ -116,7 +113,7 @@ public class TrangChuTiepTan_DAO {
         }
 
         String sql = "SELECT TOP (?) tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
-                "CONVERT(VARCHAR(10), tn.ngayTN, 103) AS ngayTNStr, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV " +
+                "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV " +
                 "FROM PhieuTiepNhan tn " +
                 "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
                 "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
@@ -134,7 +131,8 @@ public class TrangChuTiepTan_DAO {
                     String bienSo = rs.getString("bienSoXe");
                     String hangXe = rs.getString("hangXe");
                     String loaiXe = rs.getString("dongXe");
-                    String ngayTN = rs.getString("ngayTNStr");
+                    Timestamp tsTN = rs.getTimestamp("ngayTN");
+                    LocalDateTime ngayTN = tsTN != null ? tsTN.toLocalDateTime() : null;
                     String yeuCau = rs.getString("yeuCauSC");
                     String trangThai = rs.getString("trangThaiXe");
                     String nguoiLap = rs.getString("tenNV");
@@ -204,7 +202,7 @@ public class TrangChuTiepTan_DAO {
         KhoDuLieu kho = KhoDuLieu.get();
         ThongKeTiepTan tk = new ThongKeTiepTan();
 
-        String homNayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        LocalDate homNay = LocalDate.now();
         int tongTN = kho.getPhieuTiepNhans().size();
         int tnHomNay = 0;
         int choTN = 0;
@@ -212,7 +210,7 @@ public class TrangChuTiepTan_DAO {
         int daHT = 0;
 
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
-            if (homNayStr.equals(p.getNgayTiepNhan())) {
+            if (p.getNgayTN() != null && p.getNgayTN().toLocalDate().isEqual(homNay)) {
                 tnHomNay++;
             }
             String td = p.getTienDo() == null ? "" : p.getTienDo().toLowerCase();
@@ -230,7 +228,7 @@ public class TrangChuTiepTan_DAO {
         tk.setTongKhachHang(kho.getKhachHangs().size());
         int khMoi = 0;
         for (Entity.KhachHang kh : kho.getKhachHangs()) {
-            if (homNayStr.equals(kh.getNgayDangKy())) khMoi++;
+            if (kh.getNgayDangKy() != null && kh.getNgayDangKy().isEqual(homNay)) khMoi++;
         }
         tk.setKhachHangMoiHomNay(khMoi);
 
@@ -247,7 +245,7 @@ public class TrangChuTiepTan_DAO {
         int hdHomNay = 0;
         long dtHomNay = 0;
         for (Entity.HoaDon hd : kho.getHoaDons()) {
-            if (homNayStr.equals(hd.getNgayThanhToan())) {
+            if (hd.getNgayLap() != null && hd.getNgayLap().isEqual(homNay)) {
                 hdHomNay++;
                 if (Entity.HoaDon.DA_THANH_TOAN.equals(hd.getTrangThai())) {
                     dtHomNay += hd.getTongTien();

@@ -451,7 +451,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
                 + "<tr><td><b>Màu sơn:</b></td><td>" + xe.getMauSon() + "</td></tr>"
                 + "<tr><td><b>Năm sản xuất:</b></td><td>" + xe.getNamSX() + "</td></tr>"
                 + "<tr><td><b>Số ODO hiện tại:</b></td><td>" + xe.getOdo() + " km</td></tr>"
-                + "<tr><td><b>Tiếp nhận gần nhất:</b></td><td>" + xe.getNgayTiepNhanGanNhat() + "</td></tr>"
+                + "<tr><td><b>Tiếp nhận gần nhất:</b></td><td>" + xe.getNgayTiepNhanGanNhatHienThi() + "</td></tr>"
                 + "</table>"
                 + "<hr style='border:none;border-top:1px solid #E2E8F0;margin:10px 0;'>"
                 + "<h4 style='color:#2563EB;margin-bottom:6px;'>THÔNG TIN CHỦ SỞ HỮU:</h4>"

@@ -397,19 +397,27 @@ public class TraCuuHoaDon_UI extends JPanel {
         long tongTienDoanhThu = 0;
 
         for (HoaDon hd : dsHienTai) {
+            String maKH = (hd.getKhachHang() != null) ? hd.getKhachHang().getMaKH() : "";
+            String tenKH = (hd.getKhachHang() != null) ? hd.getKhachHang().getHoTen() : "";
+            String sdtKH = (hd.getKhachHang() != null) ? hd.getKhachHang().getSdt() : "";
+            String bienSo = (hd.getPhieuSuaChua() != null && hd.getPhieuSuaChua().getPhuongTien() != null)
+                    ? hd.getPhieuSuaChua().getPhuongTien().getBienSo()
+                    : hd.getBienSo();
+            String nguoiThu = (hd.getNhanVien() != null) ? hd.getNhanVien().getHoTen() : hd.getNguoiThu();
+
             model.addRow(new Object[]{
                     hd.getMaHD(),
-                    hd.getMaKH(),
-                    hd.getTenKH(),
-                    hd.getSdtKH(),
-                    hd.getBienSo(),
-                    hd.getNgayThanhToan(),
+                    maKH,
+                    tenKH,
+                    sdtKH,
+                    bienSo,
+                    hd.getNgayLapHienThi(),
                     hd.getPhuongThuc(),
                     UiHelper.tien(hd.getTienDichVu()),
                     UiHelper.tien(hd.getTienPhuTung()),
                     hd.getGiamGiaPhanTram() + "%",
                     UiHelper.tien(hd.getTongTien()),
-                    hd.getNguoiThu(),
+                    nguoiThu,
                     hd.getTrangThai()
             });
             if (HoaDon.DA_THANH_TOAN.equals(hd.getTrangThai())) {
@@ -443,7 +451,7 @@ public class TraCuuHoaDon_UI extends JPanel {
                 + "<h3 style='color:#0F172A;margin-bottom:8px;'>CHI TIẾT HÓA ĐƠN: " + hd.getMaHD() + "</h3>"
                 + "<table cellpadding='4' width='100%'>"
                 + dong("Mã hóa đơn", hd.getMaHD()) + dong("Mã khách hàng", hd.getMaKH())
-                + dong("Ngày thanh toán", hd.getNgayThanhToan()) + dong("Trạng thái", hd.getTrangThai())
+                + dong("Ngày thanh toán", hd.getNgayLapHienThi()) + dong("Trạng thái", hd.getTrangThai())
                 + dong("Khách hàng", hd.getTenKH()) + dong("Số điện thoại", hd.getSdtKH())
                 + dong("Biển số xe", hd.getBienSo()) + dong("Thu ngân", hd.getNguoiThu())
                 + dong("Phương thức", hd.getPhuongThuc()) + "</table><hr>"
@@ -491,7 +499,7 @@ public class TraCuuHoaDon_UI extends JPanel {
                 + "<h2 style='margin:0;color:#1E3A8A;'>" + cauHinh.getTenGara() + "</h2>"
                 + "<p style='margin:3px 0;color:#475569;'>" + cauHinh.getDiaChi() + " | Hotline: " + cauHinh.getHotline() + "</p>"
                 + "<h3 style='margin:10px 0 2px 0;color:#0F172A;letter-spacing:1px;'>HÓA ĐƠN THANH TOÁN DỊCH VỤ</h3>"
-                + "<p style='margin:0;font-size:11px;color:#64748B;'>Số: <b style='color:#DC2626;'>" + hd.getMaHD() + "</b> | Ngày: " + hd.getNgayThanhToan() + "</p>"
+                + "<p style='margin:0;font-size:11px;color:#64748B;'>Số: <b style='color:#DC2626;'>" + hd.getMaHD() + "</b> | Ngày: " + hd.getNgayLapHienThi() + "</p>"
                 + "</div>"
                 + "<table style='width:100%;margin-top:12px;font-size:12px;' cellpadding='3'>"
                 + "<tr><td width='50%'><b>Khách hàng:</b> " + hd.getTenKH() + "</td><td><b>Biển số xe:</b> " + hd.getBienSo() + "</td></tr>"

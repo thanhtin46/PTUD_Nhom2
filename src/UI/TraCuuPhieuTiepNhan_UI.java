@@ -439,15 +439,22 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         dsHienTai = phieuTiepNhanDAO.traCuuPhieuTiepNhan(q, tieuChi, locTienDo);
 
         for (PhieuTiepNhan p : dsHienTai) {
+            String maKH = (p.getKhachHang() != null && !p.getKhachHang().getMaKH().isEmpty()) ? p.getKhachHang().getMaKH() : "—";
+            String hoTen = (p.getKhachHang() != null) ? p.getKhachHang().getHoTen() : p.getHoTen();
+            String sdt = (p.getKhachHang() != null) ? p.getKhachHang().getSdt() : p.getSdt();
+            String bienSo = (p.getPhuongTien() != null) ? p.getPhuongTien().getBienSo() : p.getBienSo();
+            String hangXe = (p.getPhuongTien() != null && p.getPhuongTien().getHangXe() != null) ? p.getPhuongTien().getHangXe() : "";
+            String loaiXe = (p.getPhuongTien() != null && p.getPhuongTien().getDongXe() != null) ? p.getPhuongTien().getDongXe() : "";
+
             model.addRow(new Object[]{
                     p.getSoPhieu(),
-                    p.getMaKH() != null ? p.getMaKH() : "—",
-                    p.getHoTen(),
-                    p.getSdt(),
-                    p.getBienSo(),
-                    p.getHangXe() != null ? p.getHangXe() : "",
-                    p.getLoaiXe() != null ? p.getLoaiXe() : "",
-                    p.getNgayTiepNhan(),
+                    maKH,
+                    hoTen,
+                    sdt,
+                    bienSo,
+                    hangXe,
+                    loaiXe,
+                    p.getNgayTiepNhanHienThi(),
                     p.getYeuCau(),
                     p.getTienDo()
             });
@@ -477,7 +484,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
                 + "<h3 style='color:#0F172A;margin-bottom:8px;'>CHI TIẾT PHIẾU TIẾP NHẬN XE</h3>"
                 + "<table cellpadding='3' style='font-size:12px;'>"
                 + "<tr><td width='140'><b>Số phiếu:</b></td><td><span style='color:#2563EB;font-weight:bold;font-size:13px;'>" + p.getSoPhieu() + "</span></td></tr>"
-                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhan() + "</td></tr>"
+                + "<tr><td><b>Ngày tiếp nhận:</b></td><td>" + p.getNgayTiepNhanHienThi() + "</td></tr>"
                 + "<tr><td><b>Trạng thái tiến độ:</b></td><td><b>" + p.getTienDo() + "</b></td></tr>"
                 + "<tr><td><b>Nhân viên tiếp nhận:</b></td><td>" + p.getNguoiLap() + "</td></tr>"
                 + "</table>"

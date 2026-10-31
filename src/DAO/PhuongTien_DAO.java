@@ -1,13 +1,14 @@
 package DAO;
 
 import ConnectDB.ConnectDB;
-import Entity.KhoDuLieu;
-import Entity.PhuongTien;
+import Entity.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -23,12 +24,15 @@ public class PhuongTien_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return fallbackCache();
 
-        String sql = "SELECT soVIN, bienSoXe, hangXe, dongXe, maSX, maKH, " +
-                     "ISNULL(soMay, '') AS soMay, " +
-                     "ISNULL(mauSon, '') AS mauSon, " +
-                     "ISNULL(odo, '0') AS odo, " +
-                     "ISNULL(ngayTiepNhanGanNhat, '') AS ngayTiepNhanGanNhat " +
-                     "FROM PhuongTien ORDER BY bienSoXe ASC";
+        String sql = "SELECT pt.soVIN, pt.bienSoXe, pt.hangXe, pt.dongXe, pt.maSX, pt.maKH, " +
+                     "kh.hoTen AS tenKH, kh.soDT AS sdtKH, " +
+                     "ISNULL(pt.soMay, '') AS soMay, " +
+                     "ISNULL(pt.mauSon, '') AS mauSon, " +
+                     "ISNULL(pt.odo, '0') AS odo, " +
+                     "pt.ngayTiepNhanGanNhat " +
+                     "FROM PhuongTien pt " +
+                     "LEFT JOIN KhachHang kh ON pt.maKH = kh.maKH " +
+                     "ORDER BY pt.bienSoXe ASC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -42,10 +46,14 @@ public class PhuongTien_DAO {
                 String soMay = rs.getString("soMay");
                 String mauSon = rs.getString("mauSon");
                 String odo = rs.getString("odo");
-                String ngayTN = rs.getString("ngayTiepNhanGanNhat");
+                Date dTN = rs.getDate("ngayTiepNhanGanNhat");
+                LocalDate ngayTN = dTN != null ? dTN.toLocalDate() : null;
 
+                String tenKH = rs.getString("tenKH");
+                String sdtKH = rs.getString("sdtKH");
+                KhachHang kh = new KhachHang(maKH, tenKH != null ? tenKH : "", sdtKH != null ? sdtKH : "", "", "");
                 list.add(new PhuongTien(bienSo, hangXe, dongXe, vin, soMay, mauSon,
-                        String.valueOf(namSX), odo, maKH, ngayTN));
+                        String.valueOf(namSX), odo, kh, ngayTN));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi PhuongTien_DAO.layTatCaPhuongTien: " + e.getMessage());
@@ -82,7 +90,7 @@ public class PhuongTien_DAO {
                 }
             } catch (Exception ignored) {}
 
-            String maKH = pt.getMaChuXe();
+            String maKH = pt.getKhachHang() != null ? pt.getKhachHang().getMaKH() : pt.getMaChuXe();
             if (maKH == null || maKH.trim().isEmpty()) {
                 maKH = "KH001";
             }
@@ -96,7 +104,7 @@ public class PhuongTien_DAO {
             stmt.setString(7, pt.getSoMay() != null ? pt.getSoMay().trim() : "");
             stmt.setString(8, pt.getMauSon() != null ? pt.getMauSon().trim() : "");
             stmt.setString(9, pt.getOdo() != null ? pt.getOdo().trim() : "0");
-            stmt.setString(10, pt.getNgayTiepNhanGanNhat() != null ? pt.getNgayTiepNhanGanNhat().trim() : "");
+            stmt.setDate(10, pt.getNgayTiepNhanGanNhat() != null ? Date.valueOf(pt.getNgayTiepNhanGanNhat()) : null);
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -141,7 +149,7 @@ public class PhuongTien_DAO {
             stmt.setString(5, pt.getSoMay() != null ? pt.getSoMay().trim() : "");
             stmt.setString(6, pt.getMauSon() != null ? pt.getMauSon().trim() : "");
             stmt.setString(7, pt.getOdo() != null ? pt.getOdo().trim() : "0");
-            stmt.setString(8, pt.getNgayTiepNhanGanNhat() != null ? pt.getNgayTiepNhanGanNhat().trim() : "");
+            stmt.setDate(8, pt.getNgayTiepNhanGanNhat() != null ? Date.valueOf(pt.getNgayTiepNhanGanNhat()) : null);
             stmt.setString(9, vin.trim());
             stmt.setString(10, pt.getBienSo().trim());
 
@@ -195,7 +203,8 @@ public class PhuongTien_DAO {
                     String sm = rs.getString("soMay");
                     String mau = rs.getString("mauSon");
                     String odo = rs.getString("odo");
-                    String tn = rs.getString("ngayTiepNhanGanNhat");
+                    Date dTN = rs.getDate("ngayTiepNhanGanNhat");
+                    LocalDate tn = dTN != null ? dTN.toLocalDate() : null;
 
                     return new PhuongTien(bs, hang, dong, vin, sm, mau, String.valueOf(nam), odo, maKH, tn);
                 }

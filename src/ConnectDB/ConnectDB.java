@@ -106,6 +106,17 @@ public class ConnectDB {
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'boPhan') IS NULL ALTER TABLE dbo.NhanVien ADD boPhan NVARCHAR(50) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'ngayVaoLam') IS NULL ALTER TABLE dbo.NhanVien ADD ngayVaoLam VARCHAR(20) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'trangThai') IS NULL ALTER TABLE dbo.NhanVien ADD trangThai NVARCHAR(30) NOT NULL CONSTRAINT DF_NV_TrangThai DEFAULT N'Đang làm việc' WITH VALUES;");
+            // Chuẩn hóa cột DATE cho KhachHang và PhuongTien
+            stmt.execute("IF COL_LENGTH('dbo.KhachHang', 'ngayDangKy') IS NOT NULL " +
+                         "AND (SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='KhachHang' AND COLUMN_NAME='ngayDangKy') <> 'date' BEGIN " +
+                         "  UPDATE dbo.KhachHang SET ngayDangKy = CONVERT(VARCHAR(10), CONVERT(DATE, ngayDangKy, 103), 120) WHERE ngayDangKy LIKE '__/__/____'; " +
+                         "  ALTER TABLE dbo.KhachHang ALTER COLUMN ngayDangKy DATE NULL; " +
+                         "END;");
+            stmt.execute("IF COL_LENGTH('dbo.PhuongTien', 'ngayTiepNhanGanNhat') IS NOT NULL " +
+                         "AND (SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='PhuongTien' AND COLUMN_NAME='ngayTiepNhanGanNhat') <> 'date' BEGIN " +
+                         "  UPDATE dbo.PhuongTien SET ngayTiepNhanGanNhat = CONVERT(VARCHAR(10), CONVERT(DATE, ngayTiepNhanGanNhat, 103), 120) WHERE ngayTiepNhanGanNhat LIKE '__/__/____'; " +
+                         "  ALTER TABLE dbo.PhuongTien ALTER COLUMN ngayTiepNhanGanNhat DATE NULL; " +
+                         "END;");
 
             // PhieuTiepNhan / PhieuSuaChua: liên kết tường minh maPTN và maPhieuXuat
             stmt.execute("IF COL_LENGTH('dbo.PhieuSuaChua', 'maPTN') IS NULL BEGIN " +

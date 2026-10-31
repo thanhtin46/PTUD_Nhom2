@@ -5,6 +5,7 @@ import Entity.KhoDuLieu;
 import Entity.PhieuBaoHanh;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -524,8 +525,8 @@ public class PhieuBaoHanh_DAO {
         ArrayList<PhieuBaoHanh> ds = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return ds;
-        String sql = "SELECT bh.maPBH, pt.bienSoXe, CONVERT(VARCHAR(10), bh.ngayBD, 103) AS ngayBD, " +
-                "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ngayKT, bh.trangThaiBH, COALESCE(hm.noiDung, bh.ghiChu, N'') AS lyDo " +
+        String sql = "SELECT bh.maPBH, pt.bienSoXe, bh.ngayBD, " +
+                "bh.ngayKT, bh.trangThaiBH, COALESCE(hm.noiDung, bh.ghiChu, N'') AS lyDo " +
                 "FROM PhieuBaoHanh bh JOIN PhuongTien pt ON pt.soVIN = bh.soVIN " +
                 "OUTER APPLY (SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, ghiChu) AS nvarchar(max)), N'; ') AS noiDung FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
         try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
@@ -539,8 +540,12 @@ public class PhieuBaoHanh_DAO {
                     case "DA_HUY" -> "Đã hủy";
                     default -> status == null ? "" : status;
                 };
+                Date dBD = rs.getDate("ngayBD");
+                Date dKT = rs.getDate("ngayKT");
+                LocalDate ngayBD = dBD != null ? dBD.toLocalDate() : null;
+                LocalDate ngayKT = dKT != null ? dKT.toLocalDate() : null;
                 ds.add(new PhieuBaoHanh(rs.getString("maPBH"), rs.getString("bienSoXe"),
-                        rs.getString("ngayBD"), rs.getString("ngayKT"), "", displayStatus,
+                        ngayBD, ngayKT, "", displayStatus,
                         rs.getString("lyDo") == null ? "" : rs.getString("lyDo")));
             }
         } catch (SQLException e) {
@@ -561,8 +566,8 @@ public class PhieuBaoHanh_DAO {
                 case 2 -> p.getBienSo();
                 case 3 -> p.getTinhTrang();
                 case 4 -> p.getNoiDung();
-                default -> String.join(" ", safe(p.getSoPhieu()), safe(p.getBienSo()), safe(p.getNgayBatDau()),
-                        safe(p.getNgayKetThuc()), safe(p.getTinhTrang()), safe(p.getNoiDung()));
+                default -> String.join(" ", safe(p.getSoPhieu()), safe(p.getBienSo()), safe(p.getNgayBDHienThi()),
+                        safe(p.getNgayKTHienThi()), safe(p.getTinhTrang()), safe(p.getNoiDung()));
             };
             boolean matchText = q.isEmpty() || safe(text).toLowerCase().contains(q);
             boolean matchStatus = tinhTrang == null || tinhTrang.isBlank() || "TAT_CA".equalsIgnoreCase(tinhTrang)
@@ -589,9 +594,11 @@ public class PhieuBaoHanh_DAO {
             con.setAutoCommit(false);
             String status = toDatabaseStatus(pbh.getTinhTrang());
             String insert = "INSERT INTO PhieuBaoHanh (maPBH, ngayBD, ngayKT, trangThaiBH, maKH, soVIN, maHoaDon) " +
-                    "VALUES (?, TRY_CONVERT(date, ?, 103), TRY_CONVERT(date, ?, 103), ?, ?, ?, NULL)";
+                    "VALUES (?, ?, ?, ?, ?, ?, NULL)";
             try (PreparedStatement ps = con.prepareStatement(insert)) {
-                ps.setString(1, pbh.getSoPhieu()); ps.setString(2, pbh.getNgayBatDau()); ps.setString(3, pbh.getNgayKetThuc());
+                ps.setString(1, pbh.getSoPhieu());
+                ps.setDate(2, pbh.getNgayBD() != null ? Date.valueOf(pbh.getNgayBD()) : null);
+                ps.setDate(3, pbh.getNgayKT() != null ? Date.valueOf(pbh.getNgayKT()) : null);
                 ps.setString(4, status); ps.setString(5, maKH); ps.setString(6, vin); ps.executeUpdate();
             }
             themChiTietMacDinh(con, pbh);
@@ -606,13 +613,14 @@ public class PhieuBaoHanh_DAO {
         if (pbh == null) return false;
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
-        String sql = "UPDATE bh SET ngayBD = TRY_CONVERT(date, ?, 103), ngayKT = TRY_CONVERT(date, ?, 103), " +
+        String sql = "UPDATE bh SET ngayBD = ?, ngayKT = ?, " +
                 "trangThaiBH = ?, soVIN = pt.soVIN, maKH = pt.maKH FROM PhieuBaoHanh bh " +
                 "JOIN PhuongTien pt ON pt.bienSoXe = ? WHERE bh.maPBH = ?";
         try {
             con.setAutoCommit(false);
             try (PreparedStatement ps = con.prepareStatement(sql)) {
-                ps.setString(1, pbh.getNgayBatDau()); ps.setString(2, pbh.getNgayKetThuc());
+                ps.setDate(1, pbh.getNgayBD() != null ? Date.valueOf(pbh.getNgayBD()) : null);
+                ps.setDate(2, pbh.getNgayKT() != null ? Date.valueOf(pbh.getNgayKT()) : null);
                 ps.setString(3, toDatabaseStatus(pbh.getTinhTrang())); ps.setString(4, pbh.getBienSo()); ps.setString(5, pbh.getSoPhieu());
                 if (ps.executeUpdate() == 0) { con.rollback(); return false; }
             }
@@ -646,11 +654,11 @@ public class PhieuBaoHanh_DAO {
 
     private void themChiTietMacDinh(Connection con, PhieuBaoHanh pbh) throws SQLException {
         String sql = "INSERT INTO ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy) " +
-                "VALUES (?, ?, ?, 6, DATEADD(month, 6, TRY_CONVERT(date, ?, 103)), N'B\u1EA3o h\u00E0nh ch\u00EDnh h\u00E3ng', N'Theo phi\u1EBFu s\u1EEDa ch\u1EEFa', ?, ?)";
+                "VALUES (?, ?, ?, 6, DATEADD(month, 6, ?), N'B\u1EA3o h\u00E0nh ch\u00EDnh h\u00E3ng', N'Theo phi\u1EBFu s\u1EEDa ch\u1EEFa', ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, pbh.getSoPhieu()); ps.setString(2, "PT001");
             ps.setString(3, pbh.getNoiDung() == null || pbh.getNoiDung().isBlank() ? "B\u1EA3o h\u00E0nh linh ki\u1EC7n xe" : pbh.getNoiDung());
-            ps.setString(4, pbh.getNgayBatDau());
+            ps.setDate(4, pbh.getNgayBD() != null ? Date.valueOf(pbh.getNgayBD()) : null);
             ps.setString(5, pbh.getNoiDung() == null ? "B\u1EA3o h\u00E0nh linh ki\u1EC7n xe" : pbh.getNoiDung());
             ps.setString(6, "Ki\u1EC3m tra v\u00E0 thay th\u1EBF mi\u1EC5n ph\u00ED"); ps.executeUpdate();
         }

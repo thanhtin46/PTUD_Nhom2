@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class LapPhieuTiepNhan_UI extends JPanel {
@@ -302,7 +303,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         for (PhieuTiepNhan p : ds) {
             model.addRow(new Object[]{
                     p.getSoPhieu(), p.getSdt(), p.getHoTen(), p.getBienSo(), p.getHangXe(),
-                    p.getLoaiXe(), p.getNgayTiepNhan(), p.getYeuCau(), p.getTienDo()
+                    p.getLoaiXe(), p.getNgayTiepNhanHienThi(), p.getYeuCau(), p.getTienDo()
             });
         }
     }
@@ -336,6 +337,17 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         String ngay = txtNgay.getText().trim();
         String yeuCau = txtYeuCau.getText().trim();
 
+        LocalDate ngayTN = null;
+        if (!ngay.isEmpty()) {
+            ngayTN = UiHelper.chuyenChuoiSangNgay(ngay, this, "Ngày tiếp nhận");
+            if (ngayTN == null) {
+                txtNgay.requestFocus();
+                return;
+            }
+        } else {
+            ngayTN = LocalDate.now();
+        }
+
         if (bienSo.isEmpty()) {
             UiHelper.loi(this, "Biển số xe không được để trống!", txtBienSo);
             return;
@@ -355,7 +367,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         if (kh == null) {
             maKH = kho.maKhachHangMoi();
             String tenKH = hoTen.isEmpty() ? ("Khách hàng " + sdt) : hoTen;
-            kh = new KhachHang(maKH, tenKH, sdt, "", "", "", "Khách tiếp nhận xe vào gara", ngay);
+            kh = new KhachHang(maKH, tenKH, sdt, "", "", "", "Khách tiếp nhận xe vào gara", ngayTN);
             kho.themKhachHang(kh);
         } else {
             maKH = kh.getMaKH();
@@ -372,10 +384,10 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             String dongXe = loai.isEmpty() ? "Xe con" : loai;
             String vin = "VIN-" + bienSo.replaceAll("[^a-zA-Z0-9]", "");
             xe = new PhuongTien(bienSo, hangXe, dongXe, vin, "", "Mặc định",
-                    String.valueOf(LocalDate.now().getYear()), "0", maKH, ngay);
+                    String.valueOf(LocalDate.now().getYear()), "0", maKH, ngayTN);
             kho.themPhuongTien(xe);
         } else {
-            xe.setNgayTiepNhanGanNhat(ngay);
+            xe.setNgayTiepNhanGanNhat(ngayTN);
             if (!hang.isEmpty()) xe.setHangXe(hang);
             if (!loai.isEmpty()) xe.setDongXe(loai);
             if ((xe.getMaChuXe() == null || xe.getMaChuXe().isEmpty()) && !maKH.isEmpty()) {
@@ -388,10 +400,11 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         String maPhieu = txtSoPhieu.getText().trim();
         if (maPhieu.isEmpty()) maPhieu = kho.maPhieuTiepNhanMoi();
 
+        LocalDateTime thoiGianTN = ngayTN.atTime(java.time.LocalTime.now());
         PhieuTiepNhan ptn = new PhieuTiepNhan(
                 maPhieu, maKH, kh.getHoTen(), sdt,
                 xe.getBienSo(), xe.getHangXe(), xe.getDongXe(),
-                ngay, yeuCau, "Chờ tiếp nhận",
+                thoiGianTN, yeuCau, "Chờ tiếp nhận",
                 nv != null ? nv.getHoTen() : "Tiếp tân", 0);
 
         boolean ok = phieuTiepNhanDAO.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
@@ -428,6 +441,17 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         String loai = txtLoai.getText().trim();
         String ngay = txtNgay.getText().trim();
         String yeuCau = txtYeuCau.getText().trim();
+
+        LocalDate ngayTN = null;
+        if (!ngay.isEmpty()) {
+            ngayTN = UiHelper.chuyenChuoiSangNgay(ngay, this, "Ngày tiếp nhận");
+            if (ngayTN == null) {
+                txtNgay.requestFocus();
+                return;
+            }
+        } else {
+            ngayTN = LocalDate.now();
+        }
 
         if (bienSo.isEmpty()) {
             UiHelper.loi(this, "Biển số xe không được để trống!", txtBienSo);

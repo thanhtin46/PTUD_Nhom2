@@ -4,6 +4,8 @@ import ConnectDB.ConnectDB;
 import Entity.*;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
@@ -35,7 +37,8 @@ public class DuLieu_DAO {
                 String diaChi = rs.getString("diaChi");
                 String email = rs.getString("email");
                 String ghiChu = rs.getString("ghiChu");
-                String ngayDangKy = rs.getString("ngayDangKy");
+                Date dDangKy = rs.getDate("ngayDangKy");
+                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
                 list.add(new KhachHang(ma, ten, sdt, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy));
             }
         } catch (SQLException e) {
@@ -62,7 +65,7 @@ public class DuLieu_DAO {
             stmt.setString(5, kh.getDiaChi() != null ? kh.getDiaChi() : "");
             stmt.setString(6, kh.getEmail() != null ? kh.getEmail() : "");
             stmt.setString(7, kh.getGhiChu() != null ? kh.getGhiChu() : "");
-            stmt.setString(8, kh.getNgayDangKy() != null ? kh.getNgayDangKy() : "");
+            stmt.setDate(8, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi themKhachHang: " + e.getMessage());
@@ -87,7 +90,7 @@ public class DuLieu_DAO {
             stmt.setString(4, kh.getDiaChi() != null ? kh.getDiaChi() : "");
             stmt.setString(5, kh.getEmail() != null ? kh.getEmail() : "");
             stmt.setString(6, kh.getGhiChu() != null ? kh.getGhiChu() : "");
-            stmt.setString(7, kh.getNgayDangKy() != null ? kh.getNgayDangKy() : "");
+            stmt.setDate(7, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
             stmt.setString(8, kh.getMaKH());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -152,12 +155,15 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        String sql = "SELECT soVIN, bienSoXe, hangXe, dongXe, maSX, maKH, " +
-                     "ISNULL(soMay, '') AS soMay, " +
-                     "ISNULL(mauSon, '') AS mauSon, " +
-                     "ISNULL(odo, '0') AS odo, " +
-                     "ISNULL(ngayTiepNhanGanNhat, '') AS ngayTiepNhanGanNhat " +
-                     "FROM PhuongTien ORDER BY bienSoXe ASC";
+        String sql = "SELECT pt.soVIN, pt.bienSoXe, pt.hangXe, pt.dongXe, pt.maSX, pt.maKH, " +
+                     "kh.hoTen AS tenKH, kh.soDT AS sdtKH, " +
+                     "ISNULL(pt.soMay, '') AS soMay, " +
+                     "ISNULL(pt.mauSon, '') AS mauSon, " +
+                     "ISNULL(pt.odo, '0') AS odo, " +
+                     "pt.ngayTiepNhanGanNhat " +
+                     "FROM PhuongTien pt " +
+                     "LEFT JOIN KhachHang kh ON pt.maKH = kh.maKH " +
+                     "ORDER BY pt.bienSoXe ASC";
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
@@ -170,8 +176,12 @@ public class DuLieu_DAO {
                 String soMay = rs.getString("soMay");
                 String mauSon = rs.getString("mauSon");
                 String odo = rs.getString("odo");
-                String ngayTN = rs.getString("ngayTiepNhanGanNhat");
-                list.add(new PhuongTien(bienSo, hangXe, dongXe, vin, soMay, mauSon, String.valueOf(namSX), odo, maKH, ngayTN));
+                Date dTN = rs.getDate("ngayTiepNhanGanNhat");
+                LocalDate ngayTN = dTN != null ? dTN.toLocalDate() : null;
+                String tenKH = rs.getString("tenKH");
+                String sdtKH = rs.getString("sdtKH");
+                KhachHang kh = new KhachHang(maKH, tenKH != null ? tenKH : "", sdtKH != null ? sdtKH : "", "", "");
+                list.add(new PhuongTien(bienSo, hangXe, dongXe, vin, soMay, mauSon, String.valueOf(namSX), odo, kh, ngayTN));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi layTatCaPhuongTien: " + e.getMessage());
@@ -211,7 +221,7 @@ public class DuLieu_DAO {
             stmt.setString(7, pt.getSoMay() != null ? pt.getSoMay() : "");
             stmt.setString(8, pt.getMauSon() != null ? pt.getMauSon() : "");
             stmt.setString(9, pt.getOdo() != null ? pt.getOdo() : "0");
-            stmt.setString(10, pt.getNgayTiepNhanGanNhat() != null ? pt.getNgayTiepNhanGanNhat() : "");
+            stmt.setDate(10, pt.getNgayTiepNhanGanNhat() != null ? Date.valueOf(pt.getNgayTiepNhanGanNhat()) : null);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi themPhuongTien: " + e.getMessage());
@@ -240,7 +250,7 @@ public class DuLieu_DAO {
             stmt.setString(5, pt.getSoMay() != null ? pt.getSoMay() : "");
             stmt.setString(6, pt.getMauSon() != null ? pt.getMauSon() : "");
             stmt.setString(7, pt.getOdo() != null ? pt.getOdo() : "0");
-            stmt.setString(8, pt.getNgayTiepNhanGanNhat() != null ? pt.getNgayTiepNhanGanNhat() : "");
+            stmt.setDate(8, pt.getNgayTiepNhanGanNhat() != null ? Date.valueOf(pt.getNgayTiepNhanGanNhat()) : null);
             stmt.setString(9, pt.getBienSo());
             stmt.setString(10, pt.getSoKhung() != null ? pt.getSoKhung() : pt.getBienSo());
             return stmt.executeUpdate() > 0;
@@ -453,7 +463,7 @@ public class DuLieu_DAO {
         if (con == null) return list;
 
         String sql = "SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
-                     "CONVERT(VARCHAR(10), tn.ngayTN, 103) AS ngayTNStr, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
+                     "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
                      "sc.maNV AS maNVPhanCong, ktv.hoTen AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
                      "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
@@ -472,17 +482,19 @@ public class DuLieu_DAO {
                 String bienSo = rs.getString("bienSoXe");
                 String hangXe = rs.getString("hangXe");
                 String loaiXe = rs.getString("dongXe");
-                String ngayTN = rs.getString("ngayTNStr");
+                Timestamp tsTN = rs.getTimestamp("ngayTN");
+                LocalDateTime ngayTN = tsTN != null ? tsTN.toLocalDateTime() : null;
                 String yeuCau = rs.getString("yeuCauSC");
                 String trangThai = rs.getString("trangThaiXe");
                 String nguoiLap = rs.getString("tenNV");
                 String maKtv = rs.getString("maNVPhanCong");
 
-                PhieuTiepNhan ptn = new PhieuTiepNhan(maTN, maKH, hoTen, sdt, bienSo, hangXe, loaiXe,
-                        ngayTN != null ? ngayTN : "", yeuCau, trangThai, nguoiLap != null ? nguoiLap : "", 0);
-                if (maKtv != null && !maKtv.isEmpty()) {
-                    ptn.setKyThuatVien(maKtv);
-                }
+                KhachHang kh = new KhachHang(maKH, hoTen, sdt, "", "");
+                PhuongTien pt = new PhuongTien(bienSo, hangXe, loaiXe, "VIN_" + (bienSo != null ? bienSo.replaceAll("[^A-Za-z0-9]", "") : ""), "", "", "2022", "0", kh, ngayTN != null ? ngayTN.toLocalDate() : null);
+                NhanVien nv = new NhanVien();
+                nv.setHoTen(nguoiLap != null ? nguoiLap : "");
+
+                PhieuTiepNhan ptn = new PhieuTiepNhan(maTN, nv, kh, pt, ngayTN, yeuCau, trangThai, 0, maKtv != null ? maKtv : "");
                 list.add(ptn);
             }
         } catch (SQLException e) {
@@ -507,7 +519,7 @@ public class DuLieu_DAO {
             if (soVIN.isEmpty()) {
                 soVIN = "VIN_" + ptn.getBienSo().replaceAll("[^A-Za-z0-9]", "");
                 // Nếu chưa có xe, thêm xe nhanh vào DB
-                themPhuongTien(new PhuongTien(ptn.getBienSo(), ptn.getHangXe(), ptn.getLoaiXe(), soVIN, "", "", "2022", "0", ptn.getMaKH(), ptn.getNgayTiepNhan()));
+                themPhuongTien(new PhuongTien(ptn.getBienSo(), ptn.getHangXe(), ptn.getLoaiXe(), soVIN, "", "", "2022", "0", ptn.getMaKH(), ptn.getNgayTN() != null ? ptn.getNgayTN().toLocalDate() : LocalDate.now()));
             }
 
             // 2. Xác định maKH
@@ -601,7 +613,7 @@ public class DuLieu_DAO {
 
         String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
                      "CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, " +
-                     "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
+                     "hd.ngayLap, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
                      "hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, " +
                      "ISNULL(hd.ghiChu, '') AS ghiChu, " +
@@ -624,7 +636,8 @@ public class DuLieu_DAO {
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
                 String bienSo = rs.getString("bienSoXe");
-                String ngay = rs.getString("ngayLapStr");
+                Date dLap = rs.getDate("ngayLap");
+                LocalDate ngay = dLap != null ? dLap.toLocalDate() : null;
                 String httt = rs.getString("hinhThucThanhToan");
                 String tenNV = rs.getString("tenNV");
                 long tienDV = (long) rs.getDouble("tienDichVu");
@@ -638,8 +651,18 @@ public class DuLieu_DAO {
                 String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                               ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
 
-                list.add(new HoaDon(maHD, soPhieuSC != null ? soPhieuSC : "TN001", maKH, tenKH, sdt, bienSo, ngay,
-                        tienDV, tienPT, giamGia, tong, ptTT, tenNV != null ? tenNV : "Thu ngân", ghiChu, tt));
+                KhachHang kh = new KhachHang(maKH, tenKH, sdt, "", "");
+                PhuongTien pt = (bienSo != null && !bienSo.isEmpty() && !bienSo.equals("—"))
+                        ? new PhuongTien(bienSo, "", "", "VIN_" + bienSo.replaceAll("[^A-Za-z0-9]", ""), "", "", "2022", "0", kh, ngay)
+                        : null;
+                PhieuSuaChua psc = new PhieuSuaChua(soPhieuSC != null ? soPhieuSC : "TN001");
+                psc.setKhachHang(kh);
+                psc.setPhuongTien(pt);
+                NhanVien nv = new NhanVien();
+                nv.setHoTen(tenNV != null ? tenNV : "Thu ngân");
+
+                HoaDon hd = new HoaDon(maHD, psc, kh, nv, ngay, tienDV, tienPT, giamGia, tong, ptTT, ghiChu, tt);
+                list.add(hd);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi layTatCaHoaDon: " + e.getMessage());
@@ -783,8 +806,8 @@ public class DuLieu_DAO {
         if (con == null) return list;
 
         String sql = "SELECT bh.maPBH, pt.bienSoXe, " +
-                     "CONVERT(VARCHAR(10), bh.ngayBD, 103) AS bdStr, " +
-                     "CONVERT(VARCHAR(10), bh.ngayKT, 103) AS ktStr, " +
+                     "bh.ngayBD, " +
+                     "bh.ngayKT, " +
                      "bh.trangThaiBH " +
                      "FROM PhieuBaoHanh bh " +
                      "JOIN PhuongTien pt ON bh.soVIN = pt.soVIN " +
@@ -794,8 +817,10 @@ public class DuLieu_DAO {
             while (rs.next()) {
                 String ma = rs.getString("maPBH");
                 String bienSo = rs.getString("bienSoXe");
-                String bd = rs.getString("bdStr");
-                String kt = rs.getString("ktStr");
+                Date dBD = rs.getDate("ngayBD");
+                Date dKT = rs.getDate("ngayKT");
+                LocalDate bd = dBD != null ? dBD.toLocalDate() : null;
+                LocalDate kt = dKT != null ? dKT.toLocalDate() : null;
                 String tt = rs.getString("trangThaiBH");
                 String tinhTrang = "CON_HAN".equalsIgnoreCase(tt) ? "Còn hạn" : "Hết hạn";
 

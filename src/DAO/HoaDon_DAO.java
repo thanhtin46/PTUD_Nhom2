@@ -1,14 +1,14 @@
 package DAO;
 
 import ConnectDB.ConnectDB;
-import Entity.ChiTietDichVu;
-import Entity.HoaDon;
-import Entity.KhoDuLieu;
+import Entity.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +29,7 @@ public class HoaDon_DAO {
 
         String sql = "SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, " +
                      "CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, " +
-                     "CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, " +
+                     "hd.ngayLap, " +
                      "hd.hinhThucThanhToan, nv.hoTen AS tenNV, " +
                      "hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, " +
                      "ISNULL(hd.ghiChu, '') AS ghiChu, " +
@@ -52,7 +52,8 @@ public class HoaDon_DAO {
                 String tenKH = rs.getString("hoTen");
                 String sdt = rs.getString("soDT");
                 String bienSo = rs.getString("bienSoXe");
-                String ngay = rs.getString("ngayLapStr");
+                Date dLap = rs.getDate("ngayLap");
+                LocalDate ngay = dLap != null ? dLap.toLocalDate() : null;
                 String httt = rs.getString("hinhThucThanhToan");
                 String tenNV = rs.getString("tenNV");
                 long tienDV = (long) rs.getDouble("tienDichVu");
@@ -66,8 +67,18 @@ public class HoaDon_DAO {
                 String ptTT = "TIEN_MAT".equalsIgnoreCase(httt) ? "Tiền mặt" :
                               ("CHUYEN_KHOAN".equalsIgnoreCase(httt) ? "Chuyển khoản QR" : "Quẹt thẻ POS");
 
-                list.add(new HoaDon(maHD, soPhieuSC != null ? soPhieuSC : "TN001", maKH, tenKH, sdt, bienSo, ngay,
-                        tienDV, tienPT, giamGia, tong, ptTT, tenNV != null ? tenNV : "Thu ngân", ghiChu, tt));
+                KhachHang kh = new KhachHang(maKH, tenKH, sdt, "", "");
+                PhuongTien pt = (bienSo != null && !bienSo.isEmpty() && !bienSo.equals("—"))
+                        ? new PhuongTien(bienSo, "", "", "VIN_" + bienSo.replaceAll("[^A-Za-z0-9]", ""), "", "", "2022", "0", kh, ngay)
+                        : null;
+                PhieuSuaChua psc = new PhieuSuaChua(soPhieuSC != null ? soPhieuSC : "TN001");
+                psc.setKhachHang(kh);
+                psc.setPhuongTien(pt);
+                NhanVien nv = new NhanVien();
+                nv.setHoTen(tenNV != null ? tenNV : "Thu ngân");
+
+                HoaDon hd = new HoaDon(maHD, psc, kh, nv, ngay, tienDV, tienPT, giamGia, tong, ptTT, ghiChu, tt);
+                list.add(hd);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi HoaDon_DAO.layTatCaHoaDon: " + e.getMessage());
@@ -195,7 +206,7 @@ public class HoaDon_DAO {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT hd.maHD, hd.maKH, kh.hoTen, kh.soDT, ")
            .append("CASE WHEN hd.tienDichVu = 0 THEN N'Bán lẻ (Shop)' ELSE ISNULL(pt.bienSoXe, N'—') END AS bienSoXe, ")
-           .append("CONVERT(VARCHAR(10), hd.ngayLap, 103) AS ngayLapStr, ")
+           .append("hd.ngayLap, ")
            .append("hd.hinhThucThanhToan, nv.hoTen AS tenNV, ")
            .append("hd.tienDichVu, hd.tienPhuTung, hd.giamGia, hd.tongTien, ")
            .append("ISNULL(hd.ghiChu, '') AS ghiChu, ")
@@ -288,7 +299,8 @@ public class HoaDon_DAO {
                     String tenKH = rs.getString("hoTen");
                     String sdt = rs.getString("soDT");
                     String bienSo = rs.getString("bienSoXe");
-                    String ngay = rs.getString("ngayLapStr");
+                    Date dLap = rs.getDate("ngayLap");
+                LocalDate ngay = dLap != null ? dLap.toLocalDate() : null;
                     String httt = rs.getString("hinhThucThanhToan");
                     String tenNV = rs.getString("tenNV");
                     long tienDV = (long) rs.getDouble("tienDichVu");

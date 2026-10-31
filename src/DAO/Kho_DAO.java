@@ -41,12 +41,14 @@ public class Kho_DAO {
             while (rs.next()) {
                 String soPhieu = rs.getString("maPhieuNhap");
                 Date ngayDate = rs.getDate("ngayNhap");
-                String ngayStr = ngayDate != null ? ngayDate.toLocalDate().format(FMT_DDMMYYYY) : "";
+                Date ngayGiaoDate = rs.getDate("ngayDuKienGiao");
+                LocalDate ldNhap = ngayDate != null ? ngayDate.toLocalDate() : null;
+                LocalDate ldGiao = ngayGiaoDate != null ? ngayGiaoDate.toLocalDate() : null;
                 String nguoiLap = rs.getString("nguoiLap");
                 String ncc = rs.getString("nhaCungCap");
 
-                PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.NHAP, ngayStr, nguoiLap,
-                        rs.getString("ghiChu"), ncc, rs.getDate("ngayDuKienGiao") == null ? "" : rs.getDate("ngayDuKienGiao").toLocalDate().format(FMT_DDMMYYYY), rs.getString("trangThai"));
+                PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.NHAP, ldNhap, nguoiLap,
+                        rs.getString("ghiChu"), ncc, ldGiao, rs.getString("trangThai"));
 
                 // Nạp chi tiết phiếu nhập
                 pk.getChiTiet().addAll(layChiTietPhieuNhap(con, soPhieu));
@@ -92,12 +94,12 @@ public class Kho_DAO {
             while (rs.next()) {
                 String soPhieu = rs.getString("maPhieuXuat");
                 Timestamp ts = rs.getTimestamp("ngayXuat");
-                String ngayStr = ts != null ? ts.toLocalDateTime().toLocalDate().format(FMT_DDMMYYYY) : "";
+                LocalDate ldXuat = ts != null ? ts.toLocalDateTime().toLocalDate() : null;
                 String nguoiLap = rs.getString("nguoiLap");
                 String tt = rs.getString("trangThai");
                 String lyDo = rs.getString("lyDoXuat");
 
-                PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.XUAT, ngayStr, nguoiLap, lyDo);
+                PhieuKho pk = new PhieuKho(soPhieu, PhieuKho.XUAT, ldXuat, nguoiLap, lyDo, "", null, tt);
                 pk.setTrangThai(tt);
 
                 // Nạp chi tiết phiếu xuất

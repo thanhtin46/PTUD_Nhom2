@@ -6,6 +6,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -17,9 +22,10 @@ public class TraCuuLichSuSuaChua_DAO {
      * DTO đại diện cho một bản ghi trong danh sách lịch sử sửa chữa
      */
     public static class LichSuRecord {
+        private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         private String maPTN;
         private String maPSC;
-        private String ngayTN;
+        private LocalDateTime ngayTN;
         private String maKH;
         private String tenKH;
         private String soDT;
@@ -37,7 +43,7 @@ public class TraCuuLichSuSuaChua_DAO {
         private String trangThaiHD;
         private String hinhThucTT;
 
-        public LichSuRecord(String maPTN, String maPSC, String ngayTN, String maKH, String tenKH,
+        public LichSuRecord(String maPTN, String maPSC, LocalDateTime ngayTN, String maKH, String tenKH,
                             String soDT, String chungMinh, String soVIN, String bienSoXe, String tenXe,
                             String yeuCauSC, String tenKTV, String trangThaiSC, String maHD,
                             long tienDichVu, long tienPhuTung, long tongTien, String trangThaiHD, String hinhThucTT) {
@@ -64,7 +70,8 @@ public class TraCuuLichSuSuaChua_DAO {
 
         public String getMaPTN() { return maPTN != null ? maPTN : "—"; }
         public String getMaPSC() { return maPSC != null ? maPSC : "—"; }
-        public String getNgayTN() { return ngayTN != null ? ngayTN : ""; }
+        public LocalDateTime getNgayTNObj() { return ngayTN; }
+        public String getNgayTN() { return ngayTN != null ? ngayTN.format(DATETIME_FMT) : ""; }
         public String getMaKH() { return maKH != null ? maKH : ""; }
         public String getTenKH() { return tenKH != null ? tenKH : ""; }
         public String getSoDT() { return soDT != null ? soDT : ""; }
@@ -143,15 +150,16 @@ public class TraCuuLichSuSuaChua_DAO {
      * DTO bảo hành liên quan
      */
     public static class ChiTietBaoHanhDTO {
+        private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         private String maPBH;
-        private String ngayBD;
-        private String ngayKT;
+        private LocalDate ngayBD;
+        private LocalDate ngayKT;
         private String trangThai;
         private String tenHangMuc;
         private int thoiHan;
         private String dieuKien;
 
-        public ChiTietBaoHanhDTO(String maPBH, String ngayBD, String ngayKT, String trangThai, String tenHangMuc, int thoiHan, String dieuKien) {
+        public ChiTietBaoHanhDTO(String maPBH, LocalDate ngayBD, LocalDate ngayKT, String trangThai, String tenHangMuc, int thoiHan, String dieuKien) {
             this.maPBH = maPBH;
             this.ngayBD = ngayBD;
             this.ngayKT = ngayKT;
@@ -162,8 +170,10 @@ public class TraCuuLichSuSuaChua_DAO {
         }
 
         public String getMaPBH() { return maPBH != null ? maPBH : "—"; }
-        public String getNgayBD() { return ngayBD != null ? ngayBD : ""; }
-        public String getNgayKT() { return ngayKT != null ? ngayKT : ""; }
+        public LocalDate getNgayBDObj() { return ngayBD; }
+        public LocalDate getNgayKTObj() { return ngayKT; }
+        public String getNgayBD() { return ngayBD != null ? ngayBD.format(DATE_FMT) : ""; }
+        public String getNgayKT() { return ngayKT != null ? ngayKT.format(DATE_FMT) : ""; }
         public String getTrangThai() { return trangThai != null ? trangThai : ""; }
         public String getTenHangMuc() { return tenHangMuc != null ? tenHangMuc : ""; }
         public int getThoiHan() { return thoiHan; }
@@ -224,7 +234,7 @@ public class TraCuuLichSuSuaChua_DAO {
         sb.append("SELECT ")
           .append("tn.maPTN, ")
           .append("sc.maPSC, ")
-          .append("CONVERT(VARCHAR(10), tn.ngayTN, 103) + ' ' + CONVERT(VARCHAR(5), tn.ngayTN, 108) AS ngayTNStr, ")
+          .append("tn.ngayTN, ")
           .append("kh.maKH, ")
           .append("kh.hoTen AS tenKH, ")
           .append("kh.soDT, ")
@@ -334,7 +344,8 @@ public class TraCuuLichSuSuaChua_DAO {
                 while (rs.next()) {
                     String maPTN = rs.getString("maPTN");
                     String maPSC = rs.getString("maPSC");
-                    String ngayTNStr = rs.getString("ngayTNStr");
+                    Timestamp tsTN = rs.getTimestamp("ngayTN");
+                    LocalDateTime ngayTNStr = tsTN != null ? tsTN.toLocalDateTime() : null;
                     String maKH = rs.getString("maKH");
                     String tenKH = rs.getString("tenKH");
                     String soDT = rs.getString("soDT");
@@ -494,8 +505,8 @@ public class TraCuuLichSuSuaChua_DAO {
         if (con == null) return list;
 
         String sql = "SELECT pbh.maPBH, " +
-                     "CONVERT(VARCHAR(10), pbh.ngayBD, 103) AS ngayBDStr, " +
-                     "CONVERT(VARCHAR(10), pbh.ngayKT, 103) AS ngayKTStr, " +
+                     "pbh.ngayBD, " +
+                     "pbh.ngayKT, " +
                      "pbh.trangThaiBH, " +
                      "ISNULL(hm.tenHangMuc, pbh.ghiChu) AS tenHangMuc, " +
                      "ISNULL(hm.thoiHanBaoHanh, 12) AS thoiHan, " +
@@ -516,8 +527,8 @@ public class TraCuuLichSuSuaChua_DAO {
                 while (rs.next()) {
                     list.add(new ChiTietBaoHanhDTO(
                             rs.getString("maPBH"),
-                            rs.getString("ngayBDStr"),
-                            rs.getString("ngayKTStr"),
+                            rs.getDate("ngayBD") != null ? rs.getDate("ngayBD").toLocalDate() : null,
+                            rs.getDate("ngayKT") != null ? rs.getDate("ngayKT").toLocalDate() : null,
                             chuanHoaTrangThaiBH(rs.getString("trangThaiBH")),
                             rs.getString("tenHangMuc"),
                             rs.getInt("thoiHan"),

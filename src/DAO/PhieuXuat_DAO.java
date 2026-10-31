@@ -5,6 +5,7 @@ import ConnectDB.ConnectDB;
 
 import javax.swing.table.DefaultTableModel;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -226,10 +227,12 @@ public class PhieuXuat_DAO {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
+                Timestamp tsXuat = rs.getTimestamp("ngayXuat");
+                LocalDateTime ngayXuat = tsXuat != null ? tsXuat.toLocalDateTime() : null;
                 model.addRow(new Object[]{
                         rs.getString("maPhieuXuat"),
                         rs.getString("maPSC"),
-                        rs.getTimestamp("ngayXuat"),
+                        ngayXuat != null ? ngayXuat.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—",
                         rs.getString("trangThai")
                 });
             }
@@ -564,14 +567,18 @@ public class PhieuXuat_DAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    Timestamp tsBD = rs.getTimestamp("ngayBD");
+                    Date dHen = rs.getDate("ngayHoanThanhDuKien");
+                    LocalDateTime ngayBD = tsBD != null ? tsBD.toLocalDateTime() : null;
+                    LocalDate ngayHen = dHen != null ? dHen.toLocalDate() : null;
                     model.addRow(new Object[]{
                             rs.getString("maPSC"),
                             rs.getString("maKH"),
                             rs.getString("soVIN"),
                             rs.getString("bienSoXe"),
                             rs.getString("maNV"),
-                            rs.getTimestamp("ngayBD"),
-                            rs.getTimestamp("ngayHoanThanhDuKien"),
+                            ngayBD != null ? ngayBD.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—",
+                            ngayHen != null ? ngayHen.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "—",
                             rs.getString("trangThai")
                     });
                 }

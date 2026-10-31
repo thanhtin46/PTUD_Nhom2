@@ -730,7 +730,7 @@ public class KhoDuLieu {
 
             // 2. Lọc theo khoảng thời gian
             if (tuNgay != null || denNgay != null) {
-                java.time.LocalDate d = phanTichNgay(pk.getNgay());
+                java.time.LocalDate d = pk.getNgayDate() != null ? pk.getNgayDate() : phanTichNgay(pk.getNgay());
                 if (d != null) {
                     if (tuNgay != null && d.isBefore(tuNgay)) continue;
                     if (denNgay != null && d.isAfter(denNgay)) continue;

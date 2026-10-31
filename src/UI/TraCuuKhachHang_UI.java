@@ -294,7 +294,7 @@ public class TraCuuKhachHang_UI extends JPanel {
             model.addRow(new Object[]{
                     kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
                     bienSoXe,
-                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKy()
+                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKyHienThi()
             });
         }
 
@@ -340,7 +340,7 @@ public class TraCuuKhachHang_UI extends JPanel {
                 + "<tr><td><b>CCCD/CMND:</b></td><td>" + kh.getCccd() + "</td></tr>"
                 + "<tr><td><b>Email:</b></td><td>" + kh.getEmail() + "</td></tr>"
                 + "<tr><td><b>Địa chỉ:</b></td><td>" + kh.getDiaChi() + "</td></tr>"
-                + "<tr><td><b>Ngày đăng ký:</b></td><td>" + kh.getNgayDangKy() + "</td></tr>"
+                + "<tr><td><b>Ngày đăng ký:</b></td><td>" + kh.getNgayDangKyHienThi() + "</td></tr>"
                 + "<tr><td><b>Ghi chú / Nhóm:</b></td><td>" + kh.getGhiChu() + "</td></tr>"
                 + "</table>"
                 + "<hr style='border:none;border-top:1px solid #E2E8F0;margin:10px 0;'>"

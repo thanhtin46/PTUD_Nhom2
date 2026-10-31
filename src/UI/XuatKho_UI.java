@@ -575,6 +575,7 @@ public class XuatKho_UI extends JPanel {
                 super.paintComponent(g);
             }
         };
+        button.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         button.setIconTextGap(7);
         button.setContentAreaFilled(false);
         button.setOpaque(false);

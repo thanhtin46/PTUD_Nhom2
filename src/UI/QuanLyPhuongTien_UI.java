@@ -198,12 +198,12 @@ public class QuanLyPhuongTien_UI extends JPanel {
         }
 
         for (PhuongTien xe : dsXe) {
-            KhachHang chu = kho.timKhachHangTheoMa(xe.getMaChuXe());
+            KhachHang chu = xe.getKhachHang() != null ? xe.getKhachHang() : kho.timKhachHangTheoMa(xe.getMaChuXe());
             String ten = chu != null ? chu.getHoTen() : "";
             String sdt = chu != null ? chu.getSdt() : "";
             model.addRow(new Object[]{xe.getBienSo(), xe.getHangXe(), xe.getDongXe(), xe.getSoKhung(),
                     xe.getMauSon(), xe.getNamSX(), xe.getOdo(),
-                    xe.getMaChuXe(), ten, sdt, xe.getNgayTiepNhanGanNhat()});
+                    xe.getMaChuXe(), ten, sdt, xe.getNgayTiepNhanGanNhatHienThi()});
         }
     }
 
@@ -216,7 +216,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
             return;
         }
 
-        String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        LocalDate ngayHomNay = LocalDate.now();
         PhuongTien xe = new PhuongTien(
                 txtBienSo.getText().trim(),
                 txtHangXe.getText().trim(),

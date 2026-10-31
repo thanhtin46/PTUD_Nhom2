@@ -2,6 +2,7 @@ package Entity;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -25,6 +26,13 @@ public class NhanVien {
     private String bacNghe;          // Bậc nghề
     private String boPhan;           // Ban Cố Vấn Dịch Vụ, Xưởng Sửa Chữa...
     private String ngayVaoLam;
+
+    public NhanVien() {
+    }
+
+    public NhanVien(String maNV) {
+        this.maNV = maNV;
+    }
 
     public NhanVien(String maNV, String hoTen,
                     String taiKhoan, String matKhau,
@@ -148,6 +156,19 @@ public class NhanVien {
         return ngayVaoLam;
     }
     public void setNgayVaoLam(String ngayVaoLam) { this.ngayVaoLam = ngayVaoLam; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NhanVien nhanVien = (NhanVien) o;
+        return Objects.equals(maNV, nhanVien.maNV);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(maNV);
+    }
 
     @Override
     public String toString() {

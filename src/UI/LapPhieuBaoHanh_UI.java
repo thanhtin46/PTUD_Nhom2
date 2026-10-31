@@ -299,8 +299,8 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
         try {
             txtMaPBH.setText(dao.taoMaPhieuMoi());
-            txtNgayLap.setText(LocalDate.now().toString());
-            txtNgayBatDau.setText(LocalDate.now().toString());
+            txtNgayLap.setText(UiHelper.dinhDangNgay(LocalDate.now()));
+            txtNgayBatDau.setText(UiHelper.dinhDangNgay(LocalDate.now()));
             napDanhSachNhanVien();
 
             if (nhanVien != null) {
@@ -446,11 +446,15 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             return;
         }
 
-        try {
-            LocalDate bd = LocalDate.parse(
-                    txtNgayBatDau.getText().trim()
-            );
+        LocalDate bd = UiHelper.chuyenChuoiSangNgay(
+                txtNgayBatDau.getText().trim(), this, "Ngày bắt đầu"
+        );
+        if (bd == null) {
+            txtNgayBatDau.requestFocusInWindow();
+            return;
+        }
 
+        try {
             int thang = (Integer) spThoiHan.getValue();
             LocalDate hetHan = bd.plusMonths(thang);
 
@@ -458,7 +462,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                     model.getRowCount() + 1,
                     ten,
                     thang,
-                    Date.valueOf(hetHan),
+                    UiHelper.dinhDangNgay(hetHan),
                     txtDieuKien.getText().trim(),
                     txtGhiChuCT.getText().trim()
             });
@@ -469,7 +473,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             txtTenHangMuc.requestFocusInWindow();
 
         } catch (Exception ex) {
-            thongBao("Ngày bắt đầu phải có định dạng yyyy-MM-dd.");
+            thongBao("Lỗi khi thêm hạng mục: " + ex.getMessage());
         }
     }
 
@@ -479,9 +483,12 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         }
 
         try {
-            LocalDate ngayBatDau = LocalDate.parse(
-                    txtNgayBatDau.getText().trim()
+            LocalDate ngayBatDau = UiHelper.chuyenChuoiSangNgay(
+                    txtNgayBatDau.getText().trim(), null, "Ngày bắt đầu"
             );
+            if (ngayBatDau == null) {
+                return;
+            }
 
             int thoiHan = Integer.parseInt(
                     model.getValueAt(row, 2).toString()
@@ -489,7 +496,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
             if (thoiHan > 0) {
                 LocalDate ngayHetHan = ngayBatDau.plusMonths(thoiHan);
-                model.setValueAt(Date.valueOf(ngayHetHan), row, 3);
+                model.setValueAt(UiHelper.dinhDangNgay(ngayHetHan), row, 3);
             }
 
         } catch (Exception ex) {
@@ -543,9 +550,13 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
         try {
             LocalDate ngayLap = LocalDate.now();
-            LocalDate ngayBD = LocalDate.parse(
-                    txtNgayBatDau.getText().trim()
+            LocalDate ngayBD = UiHelper.chuyenChuoiSangNgay(
+                    txtNgayBatDau.getText().trim(), this, "Ngày bắt đầu"
             );
+            if (ngayBD == null) {
+                txtNgayBatDau.requestFocusInWindow();
+                return;
+            }
 
             if (ngayBD.isBefore(ngayLap)) {
                 thongBao("Ngày bắt đầu không được trước ngày lập.");
@@ -827,6 +838,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
                 super.paintComponent(g);
             }
         };
+        b.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setContentAreaFilled(false);
         b.setOpaque(false);

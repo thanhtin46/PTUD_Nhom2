@@ -337,19 +337,19 @@ public class LichSuNhapXuat_UI extends JPanel {
         LocalDate tuNgay = null;
         LocalDate denNgay = null;
 
-        // Xử lý ngoại lệ E2: Khoảng thời gian không hợp lệ
+        // Xử lý ngoại lệ: Khoảng thời gian không hợp lệ
         if (!strTuNgay.isEmpty()) {
-            tuNgay = KhoDuLieu.phanTichNgay(strTuNgay);
-            if (tuNgay == null && kiemTraNgoaiLeThoiGian) {
-                UiHelper.loi(this, "Ngoại lệ E2: Ngày bắt đầu không hợp lệ! Vui lòng nhập đúng định dạng dd/MM/yyyy.", txtTuNgay);
+            tuNgay = UiHelper.chuyenChuoiSangNgay(strTuNgay, this, "Ngày bắt đầu");
+            if (tuNgay == null) {
+                txtTuNgay.requestFocus();
                 return;
             }
         }
 
         if (!strDenNgay.isEmpty()) {
-            denNgay = KhoDuLieu.phanTichNgay(strDenNgay);
-            if (denNgay == null && kiemTraNgoaiLeThoiGian) {
-                UiHelper.loi(this, "Ngoại lệ E2: Ngày kết thúc không hợp lệ! Vui lòng nhập đúng định dạng dd/MM/yyyy.", txtDenNgay);
+            denNgay = UiHelper.chuyenChuoiSangNgay(strDenNgay, this, "Ngày kết thúc");
+            if (denNgay == null) {
+                txtDenNgay.requestFocus();
                 return;
             }
         }

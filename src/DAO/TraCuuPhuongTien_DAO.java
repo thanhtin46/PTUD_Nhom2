@@ -8,6 +8,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -27,8 +30,9 @@ public class TraCuuPhuongTien_DAO {
         private String mauSon;
         private String namSX;
         private String odo;
+        private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         private String maChuXe;
-        private String ngayTiepNhanGanNhat;
+        private LocalDate ngayTiepNhanGanNhat;
         private String tenChuXe;
         private String sdtChuXe;
         private String diaChiChuXe;
@@ -36,7 +40,7 @@ public class TraCuuPhuongTien_DAO {
 
         public PhuongTienDTO(String bienSo, String hangXe, String dongXe, String soKhung,
                              String soMay, String mauSon, String namSX, String odo,
-                             String maChuXe, String ngayTiepNhanGanNhat,
+                             String maChuXe, LocalDate ngayTiepNhanGanNhat,
                              String tenChuXe, String sdtChuXe, String diaChiChuXe, String emailChuXe) {
             this.bienSo = bienSo;
             this.hangXe = hangXe;
@@ -63,7 +67,8 @@ public class TraCuuPhuongTien_DAO {
         public String getNamSX() { return namSX; }
         public String getOdo() { return odo; }
         public String getMaChuXe() { return maChuXe; }
-        public String getNgayTiepNhanGanNhat() { return ngayTiepNhanGanNhat; }
+        public LocalDate getNgayTiepNhanGanNhat() { return ngayTiepNhanGanNhat; }
+        public String getNgayTiepNhanGanNhatHienThi() { return ngayTiepNhanGanNhat != null ? ngayTiepNhanGanNhat.format(DATE_FORMATTER) : ""; }
         public String getTenChuXe() { return tenChuXe; }
         public String getSdtChuXe() { return sdtChuXe; }
         public String getDiaChiChuXe() { return diaChiChuXe; }
@@ -149,7 +154,8 @@ public class TraCuuPhuongTien_DAO {
                     String soMay = rs.getString("soMay");
                     String mauSon = rs.getString("mauSon");
                     String odo = rs.getString("odo");
-                    String ngayTN = rs.getString("ngayTiepNhanGanNhat");
+                    Date dTN = rs.getDate("ngayTiepNhanGanNhat");
+                    LocalDate ngayTN = dTN != null ? dTN.toLocalDate() : null;
                     String tenChu = rs.getString("tenChuXe");
                     String sdtChu = rs.getString("sdtChuXe");
                     String diaChiChu = rs.getString("diaChiChuXe");

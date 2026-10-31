@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.sql.Types;
 import java.util.ArrayList;
 
@@ -41,7 +43,8 @@ public class KhachHang_DAO {
                 String diaChi = rs.getString("diaChi");
                 String email = rs.getString("email");
                 String ghiChu = rs.getString("ghiChu");
-                String ngayDangKy = rs.getString("ngayDangKy");
+                Date dDangKy = rs.getDate("ngayDangKy");
+                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                 list.add(new KhachHang(ma, ten, sdt, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy));
             }
@@ -77,7 +80,8 @@ public class KhachHang_DAO {
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
                     String ghiChu = rs.getString("ghiChu");
-                    String ngayDangKy = rs.getString("ngayDangKy");
+                    Date dDangKy = rs.getDate("ngayDangKy");
+                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                     return new KhachHang(ma, ten, sdt, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy);
                 }
@@ -116,7 +120,8 @@ public class KhachHang_DAO {
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
                     String ghiChu = rs.getString("ghiChu");
-                    String ngayDangKy = rs.getString("ngayDangKy");
+                    Date dDangKy = rs.getDate("ngayDangKy");
+                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                     return new KhachHang(ma, ten, phone, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy);
                 }
@@ -153,7 +158,7 @@ public class KhachHang_DAO {
             stmt.setString(5, kh.getDiaChi() != null ? kh.getDiaChi().trim() : "");
             stmt.setString(6, kh.getEmail() != null ? kh.getEmail().trim() : "");
             stmt.setString(7, kh.getGhiChu() != null ? kh.getGhiChu().trim() : "");
-            stmt.setString(8, kh.getNgayDangKy() != null ? kh.getNgayDangKy().trim() : "");
+            stmt.setDate(8, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -187,7 +192,7 @@ public class KhachHang_DAO {
             stmt.setString(4, kh.getDiaChi() != null ? kh.getDiaChi().trim() : "");
             stmt.setString(5, kh.getEmail() != null ? kh.getEmail().trim() : "");
             stmt.setString(6, kh.getGhiChu() != null ? kh.getGhiChu().trim() : "");
-            stmt.setString(7, kh.getNgayDangKy() != null ? kh.getNgayDangKy().trim() : "");
+            stmt.setDate(7, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
             stmt.setString(8, kh.getMaKH().trim());
 
             return stmt.executeUpdate() > 0;

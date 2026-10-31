@@ -128,14 +128,14 @@ public class QuanLyKhachHang_UI extends JPanel {
 
         for (KhachHang kh : ds) {
             model.addRow(new Object[]{kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
-                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKy()});
+                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKyHienThi()});
         }
     }
 
     private void them() {
         if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_SUA)) return;
         if (!kiemTraForm(true)) return;
-        String ngayHomNay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        LocalDate ngayHomNay = LocalDate.now();
         KhachHang kh = new KhachHang(
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
                 txtCccd.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(),

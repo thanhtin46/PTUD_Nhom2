@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -139,7 +141,8 @@ public class TraCuuKhachHang_DAO {
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
                     String ghiChu = rs.getString("ghiChu");
-                    String ngayDangKy = rs.getString("ngayDangKy");
+                    Date dDangKy = rs.getDate("ngayDangKy");
+                    LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                     list.add(new KhachHang(ma, ten, sdt, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy));
                 }
@@ -180,7 +183,8 @@ public class TraCuuKhachHang_DAO {
                     String soMay = rs.getString("soMay");
                     String mauSon = rs.getString("mauSon");
                     String odo = rs.getString("odo");
-                    String ngayTN = rs.getString("ngayTiepNhanGanNhat");
+                    Date dTN = rs.getDate("ngayTiepNhanGanNhat");
+                    LocalDate ngayTN = dTN != null ? dTN.toLocalDate() : null;
 
                     list.add(new PhuongTien(bienSo, hangXe, dongXe, vin, soMay, mauSon, String.valueOf(namSX), odo, maChu, ngayTN));
                 }

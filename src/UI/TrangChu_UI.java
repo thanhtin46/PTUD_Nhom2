@@ -785,7 +785,7 @@ public class TrangChu_UI extends JPanel {
                     p.getBienSo(),
                     p.getHoTen(),
                     p.getYeuCau() != null && !p.getYeuCau().isEmpty() ? p.getYeuCau() : "Bảo dưỡng & sửa chữa",
-                    p.getNgayTiepNhan(),
+                    p.getNgayTiepNhanHienThi(),
                     td
             });
         }

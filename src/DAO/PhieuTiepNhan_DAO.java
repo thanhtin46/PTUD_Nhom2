@@ -1,15 +1,15 @@
 package DAO;
 
 import ConnectDB.ConnectDB;
-import Entity.KhachHang;
-import Entity.KhoDuLieu;
-import Entity.PhieuTiepNhan;
-import Entity.PhuongTien;
+import Entity.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
@@ -26,7 +26,7 @@ public class PhieuTiepNhan_DAO {
         if (con == null) return fallbackCache();
 
         String sql = "SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
-                     "CONVERT(VARCHAR(10), tn.ngayTN, 103) AS ngayTNStr, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
+                     "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
                      "sc.maNV AS maNVPhanCong, ktv.hoTen AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
                      "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
@@ -46,16 +46,21 @@ public class PhieuTiepNhan_DAO {
                 String bienSo = rs.getString("bienSoXe");
                 String hangXe = rs.getString("hangXe");
                 String loaiXe = rs.getString("dongXe");
-                String ngayTN = rs.getString("ngayTNStr");
+                Timestamp tsTN = rs.getTimestamp("ngayTN");
+                LocalDateTime ngayTN = tsTN != null ? tsTN.toLocalDateTime() : null;
                 String yeuCau = rs.getString("yeuCauSC");
                 String trangThai = rs.getString("trangThaiXe");
                 String nguoiLap = rs.getString("tenNV");
                 String maKtv = rs.getString("maNVPhanCong");
 
+                KhachHang kh = new KhachHang(maKH, hoTen, sdt, "", "");
+                PhuongTien pt = new PhuongTien(bienSo, hangXe, loaiXe, "VIN_" + (bienSo != null ? bienSo.replaceAll("[^A-Za-z0-9]", "") : ""), "", "", "2022", "0", kh, ngayTN != null ? ngayTN.toLocalDate() : null);
+                NhanVien nv = new NhanVien();
+                nv.setHoTen(nguoiLap != null ? nguoiLap : "Tiếp tân");
+
                 PhieuTiepNhan p = new PhieuTiepNhan(
-                        maTN, maKH, hoTen, sdt, bienSo, hangXe, loaiXe, ngayTN, yeuCau,
-                        trangThai != null ? trangThai : "Chờ tiếp nhận",
-                        nguoiLap != null ? nguoiLap : "Tiếp tân", 0,
+                        maTN, nv, kh, pt, ngayTN, yeuCau,
+                        trangThai != null ? trangThai : "Chờ tiếp nhận", 0,
                         maKtv != null ? maKtv : ""
                 );
                 list.add(p);
@@ -90,7 +95,7 @@ public class PhieuTiepNhan_DAO {
                 // Thêm xe nhanh vào CSDL nếu chưa có
                 new PhuongTien_DAO().themPhuongTien(new PhuongTien(
                         ptn.getBienSo(), ptn.getHangXe(), ptn.getLoaiXe(), soVIN,
-                        "", "Mặc định", "2022", "0", ptn.getMaKH(), ptn.getNgayTiepNhan()
+                        "", "Mặc định", "2022", "0", ptn.getMaKH(), ptn.getNgayTN() != null ? ptn.getNgayTN().toLocalDate() : LocalDate.now()
                 ));
             }
 
@@ -250,7 +255,7 @@ public class PhieuTiepNhan_DAO {
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, ")
-           .append("CONVERT(VARCHAR(10), tn.ngayTN, 103) AS ngayTNStr, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, ")
+           .append("tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, ")
            .append("sc.maNV AS maNVPhanCong, ktv.hoTen AS tenKtvPhanCong ")
            .append("FROM PhieuTiepNhan tn ")
            .append("JOIN KhachHang kh ON tn.maKH = kh.maKH ")
@@ -319,7 +324,8 @@ public class PhieuTiepNhan_DAO {
                     String bienSo = rs.getString("bienSoXe");
                     String hangXe = rs.getString("hangXe");
                     String loaiXe = rs.getString("dongXe");
-                    String ngayTN = rs.getString("ngayTNStr");
+                    Timestamp tsTN = rs.getTimestamp("ngayTN");
+                LocalDateTime ngayTN = tsTN != null ? tsTN.toLocalDateTime() : null;
                     String yeuCau = rs.getString("yeuCauSC");
                     String trangThai = rs.getString("trangThaiXe");
                     String nguoiLap = rs.getString("tenNV");
