@@ -218,9 +218,13 @@ public class HoaDon_DAO {
                    "WHERE 1=1 ");
 
         // Lọc trạng thái (hỗ trợ cả DA_HUY/DA_THANH_TOAN và tiếng Việt có dấu)
+        // Lọc trạng thái (hỗ trợ cả DA_HUY/DA_THANH_TOAN/CHO_THANH_TOAN và tiếng Việt có dấu)
         if (!isTatCa(locTrangThai)) {
-            if (locTrangThai.toLowerCase().contains("hủy") || locTrangThai.toLowerCase().contains("huy")) {
+            String lowerTrangThai = locTrangThai.toLowerCase();
+            if (lowerTrangThai.contains("hủy") || lowerTrangThai.contains("huy")) {
                 sql.append("AND (hd.trangThai IN ('DA_HUY', N'Đã hủy') OR LOWER(hd.trangThai) LIKE '%huy%') ");
+            } else if (lowerTrangThai.contains("chờ") || lowerTrangThai.contains("chua") || lowerTrangThai.contains("cho") || lowerTrangThai.contains("chưa")) {
+                sql.append("AND (hd.trangThai IN ('CHO_THANH_TOAN', 'CHUA_THANH_TOAN', N'Chưa thanh toán', N'Chờ thanh toán') OR LOWER(hd.trangThai) LIKE '%chưa%' OR LOWER(hd.trangThai) LIKE '%chờ%') ");
             } else {
                 sql.append("AND (hd.trangThai IN ('DA_THANH_TOAN', N'Đã thanh toán') OR LOWER(hd.trangThai) LIKE '%thanh toan%') ");
             }
@@ -340,9 +344,13 @@ public class HoaDon_DAO {
 
         for (HoaDon hd : KhoDuLieu.get().getHoaDons()) {
             if (!isTatCa(locTrangThai)) {
-                boolean isHuy = locTrangThai.toLowerCase().contains("hủy") || locTrangThai.toLowerCase().contains("huy");
-                boolean hdHuy = hd.getTrangThai() != null && (hd.getTrangThai().toLowerCase().contains("hủy") || hd.getTrangThai().equalsIgnoreCase("DA_HUY"));
-                if (isHuy != hdHuy) continue;
+                String ltt = locTrangThai.toLowerCase();
+                boolean isHuy = ltt.contains("hủy") || ltt.contains("huy");
+                boolean isCho = ltt.contains("chờ") || ltt.contains("cho") || ltt.contains("chua");
+                String hdTT = hd.getTrangThai() != null ? hd.getTrangThai().toLowerCase() : "";
+                if (isHuy && !hdTT.contains("hủy") && !hdTT.equals("da_huy")) continue;
+                if (isCho && !hdTT.contains("chờ") && !hdTT.contains("chưa") && !hdTT.contains("cho_")) continue;
+                if (!isHuy && !isCho && (hdTT.contains("hủy") || hdTT.contains("chờ") || hdTT.contains("chưa"))) continue;
             }
 
             if (!isTatCa(locPhuongThuc)) {

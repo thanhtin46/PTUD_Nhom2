@@ -8,6 +8,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -135,11 +137,17 @@ public class TrangChuKho_UI extends JPanel {
                 new Color(37, 99, 235)
         ));
 
-        grid.add(theKpiNho(
+        JPanel theChoXuat = theKpiNho(
                 UiIcon.of(UiIcon.EXPORT, 22, new Color(225, 29, 72)),
                 "CHỜ XUẤT KHO", lblChoXuat, "Yêu cầu từ xưởng sửa chữa",
                 new Color(225, 29, 72)
-        ));
+        );
+        theChoXuat.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        theChoXuat.setToolTipText("Bấm để mở phân hệ Xuất kho cho các đơn đang chờ cấp phát");
+        theChoXuat.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { moPhanHeXuatKhoDangChon(); }
+        });
+        grid.add(theChoXuat);
 
         grid.add(theKpiNho(
                 UiIcon.of(UiIcon.IMPORT, 22, new Color(245, 158, 11)),
@@ -241,11 +249,19 @@ public class TrangChuKho_UI extends JPanel {
 
         JScrollPane sp1 = new JScrollPane(tblXuat);
         UiHelper.danhSachBong(sp1);
+        tblXuat.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && tblXuat.getSelectedRow() >= 0) {
+                    moPhanHeXuatKhoDangChon();
+                }
+            }
+        });
         tab1.add(sp1, BorderLayout.CENTER);
 
         JPanel bot1 = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         bot1.setOpaque(false);
-        JButton btnMoXuat = UiHelper.nut("Mở phân hệ Xuất kho", UiIcon.of(UiIcon.EXPORT, 14), UiHelper.XANH_DAM, e -> chuyenTrang("Xuất kho"));
+        JButton btnMoXuat = UiHelper.nut("Mở phân hệ Xuất kho", UiIcon.of(UiIcon.EXPORT, 14), UiHelper.XANH_DAM, e -> moPhanHeXuatKhoDangChon());
         bot1.add(btnMoXuat);
         tab1.add(bot1, BorderLayout.SOUTH);
         tabs.addTab("Yêu cầu chờ xuất kho", tab1);
@@ -356,7 +372,13 @@ public class TrangChuKho_UI extends JPanel {
 
         boxCanhBao.add(taoTheThongBao(UiIcon.of(UiIcon.SHIELD, 18, new Color(225, 29, 72)), "Hàng chạm đáy an toàn", lblCanhBaoTonKho, new Color(254, 242, 242)));
         boxCanhBao.add(Box.createVerticalStrut(8));
-        boxCanhBao.add(taoTheThongBao(UiIcon.of(UiIcon.EXPORT, 18, new Color(245, 158, 11)), "Yêu cầu cấp phát xưởng", lblThongBaoXuatKho, new Color(254, 243, 199)));
+        JPanel theYcXuat = taoTheThongBao(UiIcon.of(UiIcon.EXPORT, 18, new Color(245, 158, 11)), "Yêu cầu cấp phát xưởng", lblThongBaoXuatKho, new Color(254, 243, 199));
+        theYcXuat.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        theYcXuat.setToolTipText("Bấm để mở phân hệ Xuất kho");
+        theYcXuat.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { moPhanHeXuatKhoDangChon(); }
+        });
+        boxCanhBao.add(theYcXuat);
         boxCanhBao.add(Box.createVerticalStrut(8));
         boxCanhBao.add(taoTheThongBao(UiIcon.of(UiIcon.BOX, 18, new Color(37, 99, 235)), "Quy chuẩn xếp dỡ kho",
                 new JLabel("<html><i>Sắp xếp đúng ô kệ (Kệ 1-4), dán nhãn mã vạch và phân loại linh kiện điện tử tránh ẩm mốc.</i></html>"), new Color(239, 246, 255)));
@@ -529,6 +551,19 @@ public class TrangChuKho_UI extends JPanel {
         worker.execute();
     }
 
+    private void moPhanHeXuatKhoDangChon() {
+        int r = tblXuat.getSelectedRow();
+        String maPSC = null;
+        if (r >= 0 && r < dsXuat.size()) {
+            maPSC = (String) dsXuat.get(r).get("maPSC");
+        } else if (!dsXuat.isEmpty()) {
+            maPSC = (String) dsXuat.get(0).get("maPSC");
+        }
+        if (maPSC != null && !maPSC.trim().isEmpty()) {
+            XuatKho_UI.datPSCCanChon(maPSC.trim());
+        }
+        chuyenTrang("Xuất kho");
+    }
     private void chuyenTrang(String tenTrang) {
         Main_UI m = mainUI != null ? mainUI : Main_UI.getInstance();
         if (m != null) {

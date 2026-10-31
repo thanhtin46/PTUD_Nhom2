@@ -42,6 +42,9 @@ public class XuatKho_UI extends JPanel {
     private JLabel lblTongGiaTri;
     private JLabel lblChietKhau;
     private static String maPSCCanChon;
+    private JPanel pnlBannerChoXuat;
+    private JLabel lblBannerChoXuat;
+    private JPanel pnlQuickPills;
 
     public static void datPSCCanChon(String maPSC) {
         maPSCCanChon = maPSC;
@@ -59,7 +62,11 @@ public class XuatKho_UI extends JPanel {
         content.setBackground(BG);
         content.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        content.add(createHeader(), BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout(0, 6));
+        topPanel.setOpaque(false);
+        topPanel.add(createHeader(), BorderLayout.NORTH);
+        topPanel.add(taoBannerThongBaoChoXuat(), BorderLayout.SOUTH);
+        content.add(topPanel, BorderLayout.NORTH);
 
         JPanel center = new JPanel(new BorderLayout(0, 8));
         center.setBackground(BG);
@@ -71,6 +78,12 @@ public class XuatKho_UI extends JPanel {
         add(content, BorderLayout.CENTER);
 
         capNhatTongTien();
+        if (maPSCCanChon != null && !maPSCCanChon.trim().isEmpty()) {
+            napLenhSuaChua(maPSCCanChon);
+            maPSCCanChon = null;
+        } else {
+            tuDongNapDonChoXuat();
+        }
     }
 
     private void setFontChu(Component c) {
@@ -199,6 +212,132 @@ public class XuatKho_UI extends JPanel {
         return panel;
     }
 
+    private JPanel taoBannerThongBaoChoXuat() {
+        pnlBannerChoXuat = new JPanel(new BorderLayout(10, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(254, 243, 199));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(new Color(245, 158, 11));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        pnlBannerChoXuat.setOpaque(false);
+        pnlBannerChoXuat.setBorder(new EmptyBorder(8, 12, 8, 12));
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        left.setOpaque(false);
+        JLabel ico = new JLabel(UiIcon.of(UiIcon.EXPORT, 20, new Color(217, 119, 6)));
+        lblBannerChoXuat = new JLabel("Đang kiểm tra các đơn yêu cầu xuất kho...");
+        lblBannerChoXuat.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblBannerChoXuat.setForeground(new Color(146, 64, 14));
+        left.add(ico);
+        left.add(lblBannerChoXuat);
+
+        pnlQuickPills = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        pnlQuickPills.setOpaque(false);
+
+        pnlBannerChoXuat.add(left, BorderLayout.WEST);
+        pnlBannerChoXuat.add(pnlQuickPills, BorderLayout.EAST);
+        return pnlBannerChoXuat;
+    }
+
+    public void napLenhSuaChua(String maPSC) {
+        if (maPSC == null || maPSC.trim().isEmpty()) return;
+        txtLenhSuaChua.setText(maPSC.trim());
+        try {
+            PhieuXuat_DAO dao = new PhieuXuat_DAO();
+            dao.layPhuTungTheoPSC(maPSC.trim(), model);
+            capNhatTongTien();
+
+            if (lblBannerChoXuat != null) {
+                lblBannerChoXuat.setText("<html><b>ĐANG XỬ LÝ XUẤT KHO:</b> Lệnh sửa chữa <b><font color='#2563EB'>"
+                        + maPSC.trim() + "</font></b> — Có <b>" + model.getRowCount() + " mặt hàng</b> phụ tùng cần xuất.</html>");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải phụ tùng cho lệnh " + maPSC + ": " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void tuDongNapDonChoXuat() {
+        try {
+            PhieuXuat_DAO dao = new PhieuXuat_DAO();
+            DefaultTableModel modelPSC = dao.layDanhSachPSCChoXuat();
+            int count = modelPSC.getRowCount();
+
+            if (pnlQuickPills != null) {
+                pnlQuickPills.removeAll();
+            }
+
+            if (count > 0) {
+                if (lblBannerChoXuat != null) {
+                    lblBannerChoXuat.setText("<html><b>YÊU CẦU XUẤT KHO:</b> Có <b><font color='#DC2626'>" 
+                            + count + " lệnh sửa chữa</font></b> đang chờ cấp phát phụ tùng:</html>");
+                }
+
+                for (int i = 0; i < Math.min(count, 5); i++) {
+                    String psc = modelPSC.getValueAt(i, 0).toString();
+                    String bienSo = modelPSC.getValueAt(i, 3) != null ? modelPSC.getValueAt(i, 3).toString() : "";
+                    String label = psc + (bienSo.isEmpty() ? "" : " (" + bienSo + ")");
+                    JButton pill = new JButton(label) {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            boolean hover = getModel().isRollover();
+                            g2.setColor(hover ? new Color(217, 119, 6) : new Color(245, 158, 11));
+                            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                            g2.dispose();
+                            super.paintComponent(g);
+                        }
+                    };
+                    pill.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+                    pill.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                    pill.setForeground(Color.WHITE);
+                    pill.setContentAreaFilled(false);
+                    pill.setOpaque(false);
+                    pill.setBorder(new EmptyBorder(4, 10, 4, 10));
+                    pill.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    pill.addActionListener(e -> napLenhSuaChua(psc));
+                    if (pnlQuickPills != null) pnlQuickPills.add(pill);
+                }
+
+                if (pnlBannerChoXuat != null) {
+                    pnlBannerChoXuat.setVisible(true);
+                    pnlBannerChoXuat.revalidate();
+                    pnlBannerChoXuat.repaint();
+                }
+
+                if (txtLenhSuaChua.getText().trim().isEmpty() || model.getRowCount() == 0) {
+                    String firstPSC = modelPSC.getValueAt(0, 0).toString();
+                    napLenhSuaChua(firstPSC);
+                }
+            } else {
+                if (lblBannerChoXuat != null) {
+                    lblBannerChoXuat.setText("Hiện không có lệnh sửa chữa nào tồn đọng chờ xuất kho.");
+                }
+                if (pnlBannerChoXuat != null) {
+                    pnlBannerChoXuat.setVisible(false);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        if (maPSCCanChon != null && !maPSCCanChon.trim().isEmpty()) {
+            napLenhSuaChua(maPSCCanChon);
+            maPSCCanChon = null;
+        } else {
+            tuDongNapDonChoXuat();
+        }
+    }
     private String taoMaPhieu() {
         return "PXK-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
     }
@@ -816,6 +955,8 @@ public class XuatKho_UI extends JPanel {
         LapPhieuSuaChua_UI.datPSCCanMoLai(maPSC);
 
 // Quay về màn hình phiếu sửa chữa
+        Main_UI.lamMoiThongBao();
+        tuDongNapDonChoXuat();
         Main_UI mainUI = Main_UI.getInstance();
 
         if (mainUI != null && mainUI.coQuyenTrang("Phiếu sửa chữa")) {

@@ -546,24 +546,20 @@ public class PhieuXuat_DAO {
                         "       p.ngayHoanThanhDuKien, p.trangThai " +
                         "FROM PhieuSuaChua p " +
                         "LEFT JOIN PhuongTien pt ON p.soVIN = pt.soVIN " +
-                        "WHERE p.trangThai = ? " +
+                        "WHERE (p.trangThai IN ('CHO_SUA', 'DANG_SUA', 'CHO_TIEP_NHAN') OR p.trangThai LIKE N'%sửa%' OR p.trangThai LIKE N'%chờ%') " +
                         "AND EXISTS ( " +
                         "    SELECT 1 FROM ChiTietSuaChua ct " +
                         "    WHERE ct.maPSC = p.maPSC " +
-                        "      AND ct.trangThai = ? " +
                         ") " +
                         "AND NOT EXISTS ( " +
                         "    SELECT 1 FROM PhieuXuatKho px " +
                         "    WHERE px.maPSC = p.maPSC " +
-                        "      AND px.trangThai = N'Đã xuất' " +
+                        "      AND px.trangThai IN (N'Đã xuất', 'DA_XUAT') " +
                         ") " +
                         "ORDER BY p.ngayBD DESC";
 
         try (PreparedStatement ps =
                      getConnection().prepareStatement(sql)) {
-
-            ps.setString(1, "CHO_SUA");
-            ps.setString(2, "CHO_THUC_HIEN");
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

@@ -40,7 +40,7 @@ public class TraCuuHoaDon_UI extends JPanel {
     private final JLabel lblGoiY = new JLabel();
     private final JLabel lblDemKetQua = new JLabel("Đang tải dữ liệu...");
     private String locTrangThai = "TAT_CA";
-    private JButton chipTatCa, chipDaThanhToan, chipDaHuy;
+    private JButton chipTatCa, chipChoThanhToan, chipDaThanhToan, chipDaHuy;
 
     private DefaultTableModel model;
     private JTable table;

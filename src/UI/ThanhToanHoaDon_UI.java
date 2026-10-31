@@ -36,6 +36,15 @@ public class ThanhToanHoaDon_UI extends JPanel {
     public static final int CHE_DO_BAN_LE = 1;
     private int cheDoHienTai = CHE_DO_SUA_CHUA;
 
+    private static String phieuCanThanhToan;
+    public static void datPhieuCanThanhToan(String ma) {
+        phieuCanThanhToan = ma;
+    }
+
+    private JPanel pnlBannerChoTT;
+    private JLabel lblBannerChoTT;
+    private JPanel pnlPillsChoTT;
+
     private final NhanVien nvHienTai;
     private final KhoDuLieu kho = KhoDuLieu.get();
     private final CauHinhHeThong cauHinh = kho.getCauHinh();
@@ -254,8 +263,9 @@ public class ThanhToanHoaDon_UI extends JPanel {
         panelNghiepVu.setOpaque(false);
 
         // Card 1: Nghiệp vụ sửa chữa
-        JPanel cardSuaChua = new JPanel(new BorderLayout(10, 0));
+        JPanel cardSuaChua = new JPanel(new BorderLayout(10, 10));
         cardSuaChua.setOpaque(false);
+        cardSuaChua.add(taoBannerThongBaoChoTT(), BorderLayout.NORTH);
         cardSuaChua.add(taoFormThongTin(), BorderLayout.WEST);
         cardSuaChua.add(taoBangChiTiet(), BorderLayout.CENTER);
         panelNghiepVu.add(cardSuaChua, "SUA_CHUA");
@@ -1138,7 +1148,9 @@ public class ThanhToanHoaDon_UI extends JPanel {
         cboKhachHang.addItem("-- Chọn khách hàng có xe cần thanh toán --");
 
         for (PhieuTiepNhan ptn : kho.getPhieuTiepNhans()) {
-            if ("Hoàn thành".equalsIgnoreCase(ptn.getTienDo()) || "Đang sửa chữa".equalsIgnoreCase(ptn.getTienDo())) {
+            String td = ptn.getTienDo() != null ? ptn.getTienDo() : "";
+            if (td.contains("Hoàn thành") || td.contains("hoàn thành") || td.contains("sửa") || td.contains("Sửa")
+                    || td.equalsIgnoreCase("HOAN_THANH") || td.equalsIgnoreCase("DANG_SUA") || td.equalsIgnoreCase("CHO_THANH_TOAN")) {
                 boolean daLap = false;
                 for (HoaDon hd : kho.getHoaDons()) {
                     if (ptn.getSoPhieu().equalsIgnoreCase(hd.getSoPhieuSC()) && !HoaDon.DA_HUY.equals(hd.getTrangThai())) {
@@ -1151,6 +1163,14 @@ public class ThanhToanHoaDon_UI extends JPanel {
                     cboKhachHang.addItem(ptn.getHoTen() + " — Xe " + ptn.getBienSo() + " (" + ptn.getSoPhieu() + ")");
                 }
             }
+        }
+
+        capNhatBannerChoTT();
+        if (phieuCanThanhToan != null && !phieuCanThanhToan.trim().isEmpty()) {
+            chonPhieuCuThe(phieuCanThanhToan);
+            phieuCanThanhToan = null;
+        } else if (cboKhachHang.getSelectedIndex() <= 0 && cboKhachHang.getItemCount() > 1) {
+            cboKhachHang.setSelectedIndex(1);
         }
 
         // 2. Nạp dữ liệu bán lẻ Shop
@@ -1803,5 +1823,112 @@ public class ThanhToanHoaDon_UI extends JPanel {
         }
 
         return sb.toString().trim();
+    }
+
+
+    // ===============================================================
+    // BANNER THÔNG BÁO XE CHỜ THANH TOÁN
+    // ===============================================================
+    private JPanel taoBannerThongBaoChoTT() {
+        pnlBannerChoTT = new JPanel(new BorderLayout(10, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(254, 243, 199)); // Amber 100
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(new Color(245, 158, 11)); // Amber 500
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        pnlBannerChoTT.setOpaque(false);
+        pnlBannerChoTT.setBorder(new EmptyBorder(8, 12, 8, 12));
+
+        lblBannerChoTT = new JLabel();
+        lblBannerChoTT.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblBannerChoTT.setForeground(new Color(146, 64, 14)); // Amber 800
+
+        pnlPillsChoTT = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        pnlPillsChoTT.setOpaque(false);
+
+        pnlBannerChoTT.add(lblBannerChoTT, BorderLayout.WEST);
+        pnlBannerChoTT.add(pnlPillsChoTT, BorderLayout.CENTER);
+        pnlBannerChoTT.setVisible(false);
+        return pnlBannerChoTT;
+    }
+
+    private void capNhatBannerChoTT() {
+        if (pnlBannerChoTT == null || lblBannerChoTT == null) return;
+        int count = dsPhieuDangChon.size();
+        if (count > 0) {
+            lblBannerChoTT.setText("<html><b>XE CHỜ THANH TOÁN:</b> Có <b><font color='#DC2626'>" 
+                    + count + " xe</font></b> đã hoàn thành cần thu tiền:</html>");
+            if (pnlPillsChoTT != null) {
+                pnlPillsChoTT.removeAll();
+                for (int i = 0; i < Math.min(count, 5); i++) {
+                    final int targetIdx = i + 1;
+                    PhieuTiepNhan p = dsPhieuDangChon.get(i);
+                    String label = (p.getBienSo() != null ? p.getBienSo() : p.getSoPhieu())
+                            + (p.getHoTen() != null ? " (" + p.getHoTen() + ")" : "");
+                    JButton pill = new JButton(label) {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            boolean hover = getModel().isRollover();
+                            g2.setColor(hover ? new Color(217, 119, 6) : new Color(245, 158, 11));
+                            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                            g2.dispose();
+                            super.paintComponent(g);
+                        }
+                    };
+                    pill.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+                    pill.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                    pill.setForeground(Color.WHITE);
+                    pill.setContentAreaFilled(false);
+                    pill.setOpaque(false);
+                    pill.setBorder(new EmptyBorder(4, 10, 4, 10));
+                    pill.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    pill.addActionListener(e -> {
+                        if (cboKhachHang.getItemCount() > targetIdx) {
+                            cboKhachHang.setSelectedIndex(targetIdx);
+                        }
+                    });
+                    pnlPillsChoTT.add(pill);
+                }
+            }
+            pnlBannerChoTT.setVisible(true);
+            pnlBannerChoTT.revalidate();
+            pnlBannerChoTT.repaint();
+        } else {
+            pnlBannerChoTT.setVisible(false);
+        }
+    }
+
+    public void chonPhieuCuThe(String ma) {
+        if (ma == null || ma.trim().isEmpty()) return;
+        String m = ma.trim().toLowerCase();
+        for (int i = 0; i < dsPhieuDangChon.size(); i++) {
+            PhieuTiepNhan p = dsPhieuDangChon.get(i);
+            String soPhieu = p.getSoPhieu() != null ? p.getSoPhieu().toLowerCase() : "";
+            String bienSo = p.getBienSo() != null ? p.getBienSo().toLowerCase() : "";
+            if (soPhieu.equals(m) || bienSo.equals(m) || soPhieu.contains(m) || bienSo.contains(m)) {
+                cboKhachHang.setSelectedIndex(i + 1);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        khoiTaoDuLieu();
+        if (phieuCanThanhToan != null && !phieuCanThanhToan.trim().isEmpty()) {
+            chonPhieuCuThe(phieuCanThanhToan);
+            phieuCanThanhToan = null;
+        } else if (cboKhachHang.getSelectedIndex() <= 0 && cboKhachHang.getItemCount() > 1) {
+            cboKhachHang.setSelectedIndex(1);
+        }
     }
 }

@@ -128,11 +128,16 @@ public class TrangChuThuNgan_UI extends JPanel {
         lblDoanhThuHomNay = new JLabel("0 đ");
         lblBanLeHomNay = new JLabel("0");
 
-        grid.add(theKpiNho(
+        JPanel cardChoTT = theKpiNho(
                 UiIcon.of(UiIcon.CAR, 22, new Color(225, 29, 72)),
                 "XE CHỜ THANH TOÁN", lblChoThanhToan, "Đã sửa xong chờ thanh toán",
                 new Color(225, 29, 72)
-        ));
+        );
+        cardChoTT.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cardChoTT.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { thanhToanXeDangChon(); }
+        });
+        grid.add(cardChoTT);
 
         grid.add(theKpiNho(
                 UiIcon.of(UiIcon.BILL, 22, new Color(37, 99, 235)),
@@ -292,7 +297,12 @@ public class TrangChuThuNgan_UI extends JPanel {
         lblThongBaoDoanhThu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblThongBaoDoanhThu.setForeground(new Color(51, 65, 85));
 
-        boxCanhBao.add(taoTheThongBao(UiIcon.of(UiIcon.CAR, 18, new Color(225, 29, 72)), "Khách đợi giao xe", lblThongBaoChoTT, new Color(254, 242, 242)));
+        JPanel theKhachDoi = taoTheThongBao(UiIcon.of(UiIcon.CAR, 18, new Color(225, 29, 72)), "Khách đợi giao xe", lblThongBaoChoTT, new Color(254, 242, 242));
+        theKhachDoi.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        theKhachDoi.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { thanhToanXeDangChon(); }
+        });
+        boxCanhBao.add(theKhachDoi);
         boxCanhBao.add(Box.createVerticalStrut(8));
         boxCanhBao.add(taoTheThongBao(UiIcon.of(UiIcon.BILL, 18, new Color(22, 163, 74)), "Doanh thu hôm nay", lblThongBaoDoanhThu, new Color(240, 253, 244)));
         boxCanhBao.add(Box.createVerticalStrut(8));
@@ -427,9 +437,20 @@ public class TrangChuThuNgan_UI extends JPanel {
     private void thanhToanXeDangChon() {
         int r = tblChoTT.getSelectedRow();
         if (r < 0 || r >= dsChoTT.size()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một xe trong bảng để lập hóa đơn thanh toán!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
+            if (dsChoTT.size() > 0) {
+                r = 0;
+            } else {
+                JOptionPane.showMessageDialog(this, "Hiện không có xe nào đang chờ thanh toán!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         }
+
+        Map<String, Object> map = dsChoTT.get(r);
+        String maPTN = map.get("maPTN") != null ? map.get("maPTN").toString() : "";
+        String maPSC = map.get("maPSC") != null ? map.get("maPSC").toString() : "";
+        String bienSo = map.get("bienSoXe") != null ? map.get("bienSoXe").toString() : "";
+        String target = !maPTN.isEmpty() ? maPTN : (!maPSC.isEmpty() ? maPSC : bienSo);
+        ThanhToanHoaDon_UI.datPhieuCanThanhToan(target);
 
         chuyenTrang("Thanh toán hóa đơn");
     }

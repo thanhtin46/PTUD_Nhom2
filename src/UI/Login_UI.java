@@ -73,7 +73,7 @@ public class Login_UI extends JFrame {
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, w, h);
 
-                // Các khối vòng tròn trang trí khuếch tán ánh sáng
+                // Họa tiết trang trí nền
                 g2.setColor(new Color(59, 130, 246, 25));
                 g2.fillOval(-80, -80, 360, 360);
                 g2.setColor(new Color(147, 51, 234, 20));
