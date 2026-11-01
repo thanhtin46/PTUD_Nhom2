@@ -42,7 +42,7 @@ File script CSDL đã được tối ưu và đặt trực tiếp tại thư m�
 Từ thư mục gốc của dự án:
 ```bash
 # 1. Biên dịch toàn bộ mã nguồn
-javac -encoding UTF-8 -cp "lib/*;bin" -d bin src/ConnectDB/*.java src/DAO/*.java src/Entity/*.java src/UI/*.java src/module-info.java
+javac -encoding UTF-8 -cp "lib/*;bin" -d bin src/ConnectDB/*.java src/DAO/*.java src/Entity/*.java src/Service/*.java src/UI/*.java src/module-info.java
 
 # 2. Khởi chạy ứng dụng
 java -cp "bin;lib/*" UI.Login_UI
