@@ -36,7 +36,7 @@ File script CSDL đã được tối ưu và đặt trực tiếp tại thư m�
 ### Cách 1: Khởi chạy từ IntelliJ IDEA / Eclipse
 1. Mở dự án trong IDE bằng cách chọn thư mục `HeThongQuanLyGaraOto (1)`.
 2. Kiểm tra Project SDK đã chọn đúng JDK 17+.
-3. Mở file **`src/UI/RunApp_UI.java`** và nhấn nút **Run** (phím tắt `Shift + F10` trên IntelliJ hoặc `Ctrl + F11` trên Eclipse).
+3. Mở file **`src/UI/Login_UI.java`** và nhấn nút **Run** (phím tắt `Shift + F10` trên IntelliJ hoặc `Ctrl + F11` trên Eclipse).
 
 ### Cách 2: Khởi chạy bằng dòng lệnh (Terminal / Command Prompt)
 Từ thư mục gốc của dự án:
@@ -45,7 +45,7 @@ Từ thư mục gốc của dự án:
 javac -encoding UTF-8 -cp "lib/*;bin" -d bin src/ConnectDB/*.java src/DAO/*.java src/Entity/*.java src/UI/*.java src/module-info.java
 
 # 2. Khởi chạy ứng dụng
-java -cp "bin;lib/*" UI.RunApp_UI
+java -cp "bin;lib/*" UI.Login_UI
 ```
 
 ---
@@ -80,8 +80,7 @@ HeThongQuanLyGaraOto/
     ├── Entity/               # Tầng thực thể (OOP Association, java.time)
     ├── DAO/                  # Tầng truy vấn dữ liệu (PreparedStatement, JOIN)
     └── UI/                   # Giao diện người dùng Java Swing hiện đại
-        ├── RunApp_UI.java    # ĐIỂM BẮT ĐẦU CHƯƠNG TRÌNH (Main entry point)
-        ├── Login_UI.java     # Màn hình đăng nhập hệ thống
+        ├── Login_UI.java     # ĐIỂM BẮT ĐẦU CHƯƠNG TRÌNH & Màn hình đăng nhập hệ thống (Main entry point)
         ├── Main_UI.java      # Khung điều hướng trung tâm
         └── ...               # Giao diện các phân hệ chuyên trách
 ```
