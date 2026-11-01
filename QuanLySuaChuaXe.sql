@@ -456,22 +456,14 @@ GO
 /* 12. Hoa don */
 INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
 ('HD001', 'KH001', 'NV05', '2026-03-01', N'CHUYEN_KHOAN', 250000, 780000, 0, 1030000, N'Hóa đơn sửa chữa SC001', N'DA_THANH_TOAN'),
-('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 250000, 170000, 0, 420000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN'),
-('HD201', 'KH101', 'NV05', '2026-10-25', N'CHUYEN_KHOAN', 0, 420000, 0, 420000, N'Bán lẻ phụ tùng tại shop', N'DA_THANH_TOAN'),
-('HD202', 'KH102', 'NV05', '2026-10-26', N'TIEN_MAT', 0, 480000, 5, 456000, N'Bán lẻ dầu nhớt động cơ', N'DA_THANH_TOAN'),
-('HD203', 'KH103', 'NV05', '2026-10-27', N'TIEN_MAT', 0, 350000, 0, 350000, N'Khách đổi ý trả hàng hủy hóa đơn', N'DA_HUY');
+('HD002', 'KH002', 'NV05', '2026-03-05', N'TIEN_MAT', 250000, 170000, 0, 420000, N'Hóa đơn bảo dưỡng Bugi SC002', N'DA_THANH_TOAN');
 GO
 
 /* 13. Chi tiet hoa don (Phụ tùng) */
 INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES
 ('HD001', 'PT001', N'Lọc dầu động cơ', N'Chiếc', 2, 150000),
 ('HD001', 'PT004', N'Dầu động cơ cao cấp', N'Lít', 4, 120000),
-('HD002', 'PT003', N'Bugi đánh lửa', N'Chiếc', 2, 85000),
-('HD201', 'PT101', N'Lọc dầu động cơ', N'Chiếc', 1, 150000),
-('HD201', 'PT103', N'Bugi Denso Iridium', N'Cái', 2, 85000),
-('HD201', 'PT110', N'Nước làm mát cao cấp', N'Can', 1, 100000),
-('HD202', 'PT104', N'Dầu động cơ Castrol Magnatec', N'Lít', 4, 120000),
-('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);
+('HD002', 'PT003', N'Bugi đánh lửa', N'Chiếc', 2, 85000);
 GO
 
 /* 14. Chi tiet dich vu hoa don (Dịch vụ & Tiền công) */
@@ -1176,6 +1168,30 @@ IF NOT EXISTS (SELECT 1 FROM QuyenBoSung WHERE maNV='NV04' AND maQuyen='NHAN_VIE
 IF NOT EXISTS (SELECT 1 FROM QuyenBoSung WHERE maNV='NV04' AND maQuyen='CAU_HINH')
     INSERT INTO QuyenBoSung (maNV, maQuyen) VALUES ('NV04', 'CAU_HINH');
 GO
+
+
+-- Hóa đơn bán lẻ phụ tùng tại shop (khách hàng KH101.. và phụ tùng PT101.. đã tồn tại)
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD='HD201')
+ INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
+ ('HD201', 'KH101', 'NV05', '2026-10-25', N'CHUYEN_KHOAN', 0, 420000, 0, 420000, N'Bán lẻ phụ tùng tại shop', N'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD201' AND maPT='PT101')
+ INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD201', 'PT101', N'Lọc dầu động cơ', N'Chiếc', 1, 150000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD201' AND maPT='PT103')
+ INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD201', 'PT103', N'Bugi Denso Iridium', N'Cái', 2, 85000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD201' AND maPT='PT110')
+ INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD201', 'PT110', N'Nước làm mát cao cấp', N'Can', 1, 100000);
+
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD='HD202')
+ INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
+ ('HD202', 'KH102', 'NV05', '2026-10-26', N'TIEN_MAT', 0, 480000, 5, 456000, N'Bán lẻ dầu nhớt động cơ', N'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD202' AND maPT='PT104')
+ INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD202', 'PT104', N'Dầu động cơ Castrol Magnatec', N'Lít', 4, 120000);
+
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD='HD203')
+ INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES
+ ('HD203', 'KH103', 'NV05', '2026-10-27', N'TIEN_MAT', 0, 350000, 0, 350000, N'Khách đổi ý trả hàng hủy hóa đơn', N'DA_HUY');
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD203' AND maPT='PT109')
+ INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);
 
 COMMIT TRANSACTION;
 GO

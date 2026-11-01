@@ -18,7 +18,17 @@ public class ConnectDB {
             "sapassword",
             "123456",
             "123",
-            "sa"
+            "sa",
+            "12345678",
+            "admin",
+            "root",
+            ""
+    };
+
+    private static final String[] DANH_SACH_BASE_URL = {
+            "jdbc:sqlserver://localhost:1433;databaseName=QuanLySuaChuaXe;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
+            "jdbc:sqlserver://localhost\\SQLEXPRESS;databaseName=QuanLySuaChuaXe;encrypt=true;trustServerCertificate=true;loginTimeout=3;",
+            "jdbc:sqlserver://127.0.0.1:1433;databaseName=QuanLySuaChuaXe;encrypt=true;trustServerCertificate=true;loginTimeout=3;"
     };
 
     private static final String BASE_URL =
@@ -54,15 +64,30 @@ public class ConnectDB {
                 damBaoCauTrucDatabase(connection);
                 return;
             }
-            // 1. Thử mật khẩu chính của máy hiện tại
-            try {
-                connection = DriverManager.getConnection(BASE_URL, USER, PASSWORD);
-                if (connection != null && !connection.isClosed()) {
-                    System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công!");
-                    damBaoCauTrucDatabase(connection);
-                    return;
+            // Thử qua từng URL (localhost:1433, SQLEXPRESS, 127.0.0.1) và các mật khẩu phổ biến
+            for (String baseUrl : DANH_SACH_BASE_URL) {
+                for (String mk : DANH_SACH_MAT_KHAU) {
+                    try {
+                        connection = DriverManager.getConnection(baseUrl, USER, mk);
+                        if (connection != null && !connection.isClosed()) {
+                            System.out.println("Kết nối CSDL SQL Server (QuanLySuaChuaXe) thành công!");
+                            damBaoCauTrucDatabase(connection);
+                            return;
+                        }
+                    } catch (SQLException ignored) {}
                 }
-            } catch (SQLException ignored) {}
+
+                // Thử Windows Authentication cho URL tương ứng
+                try {
+                    String winUrl = baseUrl + "integratedSecurity=true;";
+                    connection = DriverManager.getConnection(winUrl);
+                    if (connection != null && !connection.isClosed()) {
+                        System.out.println("Kết nối CSDL SQL Server qua Windows Authentication thành công!");
+                        damBaoCauTrucDatabase(connection);
+                        return;
+                    }
+                } catch (SQLException ignored) {}
+            }
 
             // 2. Thử các mật khẩu dự phòng khác của thành viên trong nhóm
             for (String mk : DANH_SACH_MAT_KHAU) {

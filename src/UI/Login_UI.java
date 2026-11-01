@@ -215,7 +215,9 @@ public class Login_UI extends JFrame {
         lblTk.setForeground(new Color(51, 65, 85));
         lblTk.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        txtTaiKhoan = new JTextField("quanLy");
+        txtTaiKhoan = new JTextField();
+        txtTaiKhoan.setToolTipText("Nhập tên đăng nhập hoặc mã NV (ví dụ: quanLy, tiepTan, suaChua, kho, thuNgan)");
+        txtTaiKhoan.addActionListener(e -> txtMatKhau.requestFocusInWindow());
         UiHelper.trangTriInput(txtTaiKhoan);
         txtTaiKhoan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         txtTaiKhoan.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -230,7 +232,9 @@ public class Login_UI extends JFrame {
         lblMk.setForeground(new Color(51, 65, 85));
         lblMk.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        txtMatKhau = new JPasswordField("123");
+        txtMatKhau = new JPasswordField();
+        txtMatKhau.setToolTipText("Nhập mật khẩu (mặc định: 123)");
+        txtMatKhau.addActionListener(e -> xuLyDangNhap());
         UiHelper.trangTriInput(txtMatKhau);
         txtMatKhau.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         txtMatKhau.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -252,83 +256,40 @@ public class Login_UI extends JFrame {
         center.add(btnThoat);
         center.add(Box.createVerticalStrut(20));
 
-        // Box tài khoản gợi ý (có thể bấm chọn nhanh)
-        JPanel boxGoiY = new JPanel(new BorderLayout(0, 6)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(241, 245, 249));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                g2.setColor(new Color(226, 232, 240));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-                g2.dispose();
-            }
-        };
-        boxGoiY.setOpaque(false);
-        boxGoiY.setBorder(new EmptyBorder(10, 14, 10, 14));
-        boxGoiY.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
-        boxGoiY.setAlignmentX(Component.LEFT_ALIGNMENT);
+                center.add(Box.createVerticalGlue());
 
-        JLabel lblTdeGoiY = new JLabel("Tài khoản hệ thống (bấm để chọn nhanh):");
-        lblTdeGoiY.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblTdeGoiY.setForeground(new Color(51, 65, 85));
-
-        JPanel chipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        chipPanel.setOpaque(false);
-        String[][] accs = {
-                {"quanLy", "Quản lý (Toàn quyền)"},
-                {"tiepTan", "Tiếp tân"},
-                {"suaChua", "Sửa chữa"},
-                {"kho", "Thủ kho"},
-                {"thuNgan", "Thu ngân"}
-        };
-        for (String[] item : accs) {
-            String acc = item[0];
-            String label = item[1];
-            JButton chip = new JButton(label);
-            chip.setFont(new Font("Segoe UI", Font.BOLD, 11));
-            chip.setForeground(new Color(37, 99, 235));
-            chip.setBackground(new Color(239, 246, 255));
-            chip.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(191, 219, 254), 1, true),
-                    new EmptyBorder(3, 8, 3, 8)
-            ));
-            chip.setFocusPainted(false);
-            chip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            chip.addActionListener(e -> {
-                txtTaiKhoan.setText(acc);
-                txtMatKhau.setText("123");
-            });
-            chipPanel.add(chip);
-        }
-
-        JLabel lblPassDefault = new JLabel("Mật khẩu mặc định: 123");
-        lblPassDefault.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblPassDefault.setForeground(new Color(100, 116, 139));
-
-        JPanel boxGoiYInner = new JPanel();
-        boxGoiYInner.setOpaque(false);
-        boxGoiYInner.setLayout(new BoxLayout(boxGoiYInner, BoxLayout.Y_AXIS));
-        lblTdeGoiY.setAlignmentX(Component.LEFT_ALIGNMENT);
-        chipPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lblPassDefault.setAlignmentX(Component.LEFT_ALIGNMENT);
-        boxGoiYInner.add(lblTdeGoiY);
-        boxGoiYInner.add(Box.createVerticalStrut(4));
-        boxGoiYInner.add(chipPanel);
-        boxGoiYInner.add(Box.createVerticalStrut(4));
-        boxGoiYInner.add(lblPassDefault);
-
-        boxGoiY.add(boxGoiYInner, BorderLayout.CENTER);
-        center.add(boxGoiY);
-
-        center.add(Box.createVerticalGlue());
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setOpaque(false);
+        footer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel ft = new JLabel("Hỗ trợ kỹ thuật: 0901 234 567");
         ft.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         ft.setForeground(new Color(148, 163, 184));
-        ft.setAlignmentX(Component.LEFT_ALIGNMENT);
-        center.add(ft);
+
+        JButton btnHuongDan = new JButton("<html><u>(?) Hướng dẫn tài khoản</u></html>");
+        btnHuongDan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnHuongDan.setForeground(new Color(37, 99, 235));
+        btnHuongDan.setContentAreaFilled(false);
+        btnHuongDan.setBorderPainted(false);
+        btnHuongDan.setFocusPainted(false);
+        btnHuongDan.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnHuongDan.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this,
+                    "DANH SÁCH TÀI KHOẢN HỆ THỐNG (MẬT KHẨU MẶC ĐỊNH: 123)\n\n"
+                    + "• Quản lý:       quanLy    (Toàn quyền hệ thống, xem báo cáo, phân quyền)\n"
+                    + "• Tiếp tân:      tiepTan   (Lập phiếu tiếp nhận, tra cứu khách hàng & xe)\n"
+                    + "• Sửa chữa:      suaChua   (Điều hành xưởng, phiếu sửa chữa, bảo hành)\n"
+                    + "• Thủ kho:       kho       (Nhập kho, xuất kho, quản lý phụ tùng)\n"
+                    + "• Thu ngân:      thuNgan   (Lập hóa đơn, thanh toán, in biên lai)\n\n"
+                    + "(Người dùng cũng có thể đăng nhập bằng Mã nhân viên: NV01, NV02, NV03, NV04, NV05)",
+                    "Thông tin tài khoản thử nghiệm",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        footer.add(ft, BorderLayout.WEST);
+        footer.add(btnHuongDan, BorderLayout.EAST);
+        center.add(footer);
 
         phai.add(center, new GridBagConstraints());
         getRootPane().setDefaultButton(btnDangNhap);
