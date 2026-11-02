@@ -13,7 +13,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 
 /**
- * Lớp DAO xử lý dữ liệu khách hàng với CSDL SQL Server.
+ * Lớp DAO xử lý dữ liệu khách hàng với CSDL SQL Server:
+ * - CRUD: Lấy danh sách, Tìm kiếm, Thêm mới, Cập nhật, Xóa an toàn dữ liệu liên quan.
+ * - Tự động dọn dẹp khóa ngoại cascade khi xóa khách hàng.
  */
 public class KhachHang_DAO {
 
@@ -81,7 +83,7 @@ public class KhachHang_DAO {
                     String email = rs.getString("email");
                     String ghiChu = rs.getString("ghiChu");
                     Date dDangKy = rs.getDate("ngayDangKy");
-                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
+                    LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                     return new KhachHang(ma, ten, sdt, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy);
                 }
@@ -121,7 +123,7 @@ public class KhachHang_DAO {
                     String email = rs.getString("email");
                     String ghiChu = rs.getString("ghiChu");
                     Date dDangKy = rs.getDate("ngayDangKy");
-                LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
+                    LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
                     return new KhachHang(ma, ten, phone, cccd != null ? cccd : "", diaChi, email, ghiChu, ngayDangKy);
                 }
@@ -206,12 +208,101 @@ public class KhachHang_DAO {
      * Xóa khách hàng và tự động dọn dẹp an toàn các dữ liệu liên quan (Cascade an toàn)
      */
     public boolean xoaKhachHang(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) return false;
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
-        try (PreparedStatement ps = con.prepareStatement("DELETE FROM KhachHang WHERE maKH = ?")) {
-            ps.setString(1, maKH);
-            return ps.executeUpdate() == 1;
-        } catch (SQLException ex) { System.err.println("Không thể xóa bản ghi đang có dữ liệu liên quan: " + ex.getMessage()); return false; }
+
+        boolean autoCommitGoc = true;
+        try {
+            autoCommitGoc = con.getAutoCommit();
+            con.setAutoCommit(false);
+
+            // 1. Xóa ChiTietHoaDon liên quan đến các hóa đơn của khách hàng
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM ChiTietHoaDon WHERE maHD IN (SELECT maHD FROM HoaDon WHERE maKH = ?)")) {
+                ps.setString(1, maKH);
+                ps.executeUpdate();
+            }
+
+            // 2. Xóa HoaDon của khách hàng
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM HoaDon WHERE maKH = ?")) {
+                ps.setString(1, maKH);
+                ps.executeUpdate();
+            }
+
+            // 3. Xóa ChiTietPhieuBaoHanh (theo maKH hoặc theo soVIN của các xe thuộc maKH)
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM ChiTietPhieuBaoHanh WHERE maPBH IN (" +
+                    "  SELECT maPBH FROM PhieuBaoHanh WHERE maKH = ? OR soVIN IN (SELECT soVIN FROM PhuongTien WHERE maKH = ?)" +
+                    ")")) {
+                ps.setString(1, maKH);
+                ps.setString(2, maKH);
+                ps.executeUpdate();
+            }
+
+            // 4. Xóa PhieuBaoHanh
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM PhieuBaoHanh WHERE maKH = ? OR soVIN IN (SELECT soVIN FROM PhuongTien WHERE maKH = ?)")) {
+                ps.setString(1, maKH);
+                ps.setString(2, maKH);
+                ps.executeUpdate();
+            }
+
+            // 5. Xóa ChiTietSuaChua (theo maKH hoặc theo soVIN của các xe thuộc maKH)
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM ChiTietSuaChua WHERE maPSC IN (" +
+                    "  SELECT maPSC FROM PhieuSuaChua WHERE maKH = ? OR soVIN IN (SELECT soVIN FROM PhuongTien WHERE maKH = ?)" +
+                    ")")) {
+                ps.setString(1, maKH);
+                ps.setString(2, maKH);
+                ps.executeUpdate();
+            }
+
+            // 6. Xóa PhieuSuaChua
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM PhieuSuaChua WHERE maKH = ? OR soVIN IN (SELECT soVIN FROM PhuongTien WHERE maKH = ?)")) {
+                ps.setString(1, maKH);
+                ps.setString(2, maKH);
+                ps.executeUpdate();
+            }
+
+            // 7. Xóa PhieuTiepNhan
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM PhieuTiepNhan WHERE maKH = ? OR soVIN IN (SELECT soVIN FROM PhuongTien WHERE maKH = ?)")) {
+                ps.setString(1, maKH);
+                ps.setString(2, maKH);
+                ps.executeUpdate();
+            }
+
+            // 8. Xóa PhuongTien của khách hàng
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM PhuongTien WHERE maKH = ?")) {
+                ps.setString(1, maKH);
+                ps.executeUpdate();
+            }
+
+            // 9. Xóa KhachHang
+            int rows;
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM KhachHang WHERE maKH = ?")) {
+                ps.setString(1, maKH);
+                rows = ps.executeUpdate();
+            }
+
+            con.commit();
+            return rows > 0;
+        } catch (SQLException ex) {
+            try {
+                con.rollback();
+            } catch (SQLException ignored) {}
+            System.err.println("Lỗi KhachHang_DAO.xoaKhachHang: " + ex.getMessage());
+            return false;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitGoc);
+            } catch (SQLException ignored) {}
+        }
     }
 
     /**

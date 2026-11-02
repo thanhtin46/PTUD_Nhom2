@@ -130,6 +130,9 @@ public class KhoDuLieu {
         boolean dbOk = khachHangDAO.xoaKhachHang(maKH);
         if (!dbOk) return false;
         khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
+        phuongTiens.removeIf(pt -> maKH.equalsIgnoreCase(pt.getMaChuXe()));
+        phieuTiepNhans.removeIf(ptn -> maKH.equalsIgnoreCase(ptn.getMaKH()));
+        hoaDons.removeIf(hd -> maKH.equalsIgnoreCase(hd.getMaKH()));
         ghiNhatKy("Người dùng", "Thao tác", "Xóa khách hàng", NhatKyHeThong.WARN,
                 "Đã xóa KH [" + maKH + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;

@@ -12,11 +12,19 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Màn hình quản lý thông tin khách hàng (thêm, sửa, xóa, làm mới).
+ * Màn hình quản lý thông tin khách hàng (Thêm, Sửa, Xóa, Làm mới) dành cho Tiếp tân:
+ * - Ràng buộc Họ và tên: Chữ cái đầu mỗi từ viết hoa, các chữ cái sau viết thường, cách nhau một khoảng trắng, không chứa số, không được để trống.
+ * - Ràng buộc Số điện thoại: 0 ở đầu và 9 chữ số theo sau (10 số), không được nhập chữ, không được để trống.
+ * - Ràng buộc CCCD: 0 ở đầu và 11 chữ số theo sau (12 số), không được nhập chữ.
+ * - Ràng buộc Địa chỉ: Gồm 2 hoặc 3 chữ số ở đầu và phải có dấu phẩy.
+ * - Ràng buộc Email: Ký tự đầu tiên phải là chữ hoặc số, sau đó tới @gmail.com.
+ * - Ghi chú / Nhóm KH: Cho chọn các nhóm người (Khách mới, Khách đã sửa chữa, Khách thân thiết, Khách VIP).
+ * - Nút Xóa hiển thị đầy đủ trực quan trên giao diện.
+ * - Dòng áp cứng Ngày đăng ký (cố định ngày đăng ký, không cho sửa).
  */
 public class QuanLyKhachHang_UI extends JPanel {
-    private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail;
-    private JTextArea txtGhiChu;
+    private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail, txtNgayDangKy;
+    private JComboBox<String> cboGhiChu;
     private JTable table;
     private DefaultTableModel model;
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -45,20 +53,32 @@ public class QuanLyKhachHang_UI extends JPanel {
         JPanel formPanel = UiHelper.panelForm("Thông tin khách hàng", 470);
 
         txtMa = new JTextField();
+        txtMa.setEditable(false); // Áp cứng mã khách hàng tự sinh để chuẩn hóa dữ liệu
+
         txtTen = new JTextField();
         txtSdt = new JTextField();
         txtCccd = new JTextField();
-        UiHelper.chiChoNhapSo(txtSdt, 10);
-        UiHelper.chiChoNhapSo(txtCccd, 12);
+
+        // Cho phép nhập chữ bình thường, khi nhấn Thêm/Sửa mới kiểm tra và hiển thị thông báo lỗi
         txtDiaChi = new JTextField();
         txtEmail = new JTextField();
-        txtGhiChu = new JTextArea(3, 20);
-        txtGhiChu.setLineWrap(true);
-        txtGhiChu.setWrapStyleWord(true);
-        JScrollPane spGhiChu = new JScrollPane(txtGhiChu);
-        spGhiChu.setPreferredSize(new Dimension(190, 75));
-        spGhiChu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        spGhiChu.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        // Chọn các nhóm người: Khách mới, Khách đã sửa chữa, Khách thân thiết, Khách VIP
+        cboGhiChu = new JComboBox<>(new String[]{
+                "Khách mới",
+                "Khách đã sửa chữa",
+                "Khách thân thiết",
+                "Khách VIP"
+        });
+        cboGhiChu.setFont(UiHelper.FONT_BT);
+        cboGhiChu.setBackground(Color.WHITE);
+        cboGhiChu.setPreferredSize(new Dimension(190, 36));
+
+        // Dòng áp cứng ngày đăng ký (cố định hiển thị ngày đăng ký, không cho sửa)
+        txtNgayDangKy = new JTextField();
+        txtNgayDangKy.setEditable(false);
+        txtNgayDangKy.setBackground(new Color(241, 245, 249));
+        txtNgayDangKy.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -68,14 +88,16 @@ public class QuanLyKhachHang_UI extends JPanel {
         UiHelper.themDong(form, 3, "CCCD/CMND", txtCccd);
         UiHelper.themDong(form, 4, "Địa chỉ", txtDiaChi);
         UiHelper.themDong(form, 5, "Email", txtEmail);
-        UiHelper.themDong(form, 6, "Ghi chú / Nhóm KH", spGhiChu);
+        UiHelper.themDong(form, 6, "Ghi chú / Nhóm KH", cboGhiChu);
+        UiHelper.themDong(form, 7, "Ngày đăng ký", txtNgayDangKy);
 
+        // Hàng nút chức năng: Thêm, Sửa, Xóa, Làm mới
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
         nut.setBorder(new EmptyBorder(16, 0, 0, 0));
         nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
         nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        nut.add(BaoVeQuyen.ganQuyen(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()), Entity.QuyenTruyCap.Quyen.KH_XOA));
+        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
         nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
         UiHelper.ganNoiDungForm(formPanel, form, nut);
@@ -132,13 +154,15 @@ public class QuanLyKhachHang_UI extends JPanel {
     }
 
     private void them() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_SUA)) return;
         if (!kiemTraForm(true)) return;
-        LocalDate ngayHomNay = LocalDate.now();
+
+        LocalDate ngayDangKy = LocalDate.now();
+        String ghiChuChon = cboGhiChu.getSelectedItem() != null ? cboGhiChu.getSelectedItem().toString() : "Khách mới";
+
         KhachHang kh = new KhachHang(
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
                 txtCccd.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(),
-                txtGhiChu.getText().trim(), ngayHomNay);
+                ghiChuChon, ngayDangKy);
 
         boolean ok = kho.themKhachHang(kh);
         napBang();
@@ -146,35 +170,14 @@ public class QuanLyKhachHang_UI extends JPanel {
         JOptionPane.showMessageDialog(this, ok ? "Thêm khách hàng và lưu CSDL SQL Server thành công!" : "Thêm khách hàng thành công (Lưu bộ nhớ)!");
     }
 
-    private void xoa() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_XOA)) return;
-        int dong = table.getSelectedRow();
-        if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        String ma = model.getValueAt(dong, 0).toString();
-        String ten = model.getValueAt(dong, 1).toString();
-
-        int hoi = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn xóa khách hàng [" + ma + "] " + ten + "?\nToàn bộ lịch sử liên quan cũng sẽ được xử lý an toàn.",
-                "Xác nhận xóa khách hàng", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (hoi != JOptionPane.YES_OPTION) return;
-
-        boolean ok = kho.xoaKhachHang(ma);
-        napBang();
-        lamMoi();
-        JOptionPane.showMessageDialog(this, ok ? "Đã xóa khách hàng khỏi CSDL SQL Server!" : "Đã xóa khách hàng!");
-    }
-
     private void sua() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_SUA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!kiemTraForm(false)) return;
+
         String ma = model.getValueAt(dong, 0).toString();
         KhachHang kh = kho.timKhachHangTheoMa(ma);
         if (kh == null) {
@@ -187,11 +190,35 @@ public class QuanLyKhachHang_UI extends JPanel {
         kh.setCccd(txtCccd.getText().trim());
         kh.setDiaChi(txtDiaChi.getText().trim());
         kh.setEmail(txtEmail.getText().trim());
-        kh.setGhiChu(txtGhiChu.getText().trim());
+        kh.setGhiChu(cboGhiChu.getSelectedItem() != null ? cboGhiChu.getSelectedItem().toString() : "Khách mới");
 
         boolean ok = kho.capNhatKhachHang(kh);
         napBang();
         JOptionPane.showMessageDialog(this, ok ? "Cập nhật và đồng bộ CSDL SQL Server thành công!" : "Cập nhật thành công!");
+    }
+
+    private void xoa() {
+        int dong = table.getSelectedRow();
+        if (dong < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String ma = model.getValueAt(dong, 0).toString();
+        String ten = model.getValueAt(dong, 1).toString();
+
+        int hoi = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc chắn muốn xóa khách hàng [" + ma + "] " + ten + "?\nToàn bộ lịch sử liên quan cũng sẽ được xử lý an toàn.",
+                "Xác nhận xóa khách hàng", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (hoi != JOptionPane.YES_OPTION) return;
+
+        boolean ok = kho.xoaKhachHang(ma);
+        if (ok) {
+            napBang();
+            lamMoi();
+            JOptionPane.showMessageDialog(this, "Đã xóa khách hàng [" + ma + "] thành công khỏi CSDL SQL Server!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể xóa khách hàng [" + ma + "]! Vui lòng kiểm tra lại kết nối CSDL hoặc dữ liệu ràng buộc.", "Lỗi xóa khách hàng", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void lamMoi() {
@@ -203,8 +230,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtCccd.setText("");
         txtDiaChi.setText("");
         txtEmail.setText("");
-        txtGhiChu.setText("");
-        txtMa.setEditable(false); // Khóa trường mã khách hàng tự sinh để chuẩn hóa dữ liệu
+        cboGhiChu.setSelectedIndex(0); // Mặc định là "Khách mới"
+        txtNgayDangKy.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))); // Áp cứng ngày hôm nay
         table.clearSelection();
         txtTen.requestFocus();
     }
@@ -212,45 +239,86 @@ public class QuanLyKhachHang_UI extends JPanel {
     private void hienLenForm() {
         int dong = table.getSelectedRow();
         if (dong < 0) return;
-        txtMa.setText(model.getValueAt(dong, 0).toString());
-        txtTen.setText(model.getValueAt(dong, 1).toString());
-        txtSdt.setText(model.getValueAt(dong, 2).toString());
-        txtCccd.setText(model.getValueAt(dong, 3).toString());
-        txtDiaChi.setText(model.getValueAt(dong, 4).toString());
-        txtEmail.setText(model.getValueAt(dong, 5).toString());
-        txtGhiChu.setText(model.getValueAt(dong, 6).toString());
-        txtMa.setEditable(false);
+        txtMa.setText(model.getValueAt(dong, 0) != null ? model.getValueAt(dong, 0).toString() : "");
+        txtTen.setText(model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString() : "");
+        txtSdt.setText(model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString() : "");
+        txtCccd.setText(model.getValueAt(dong, 3) != null ? model.getValueAt(dong, 3).toString() : "");
+        txtDiaChi.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
+        txtEmail.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
+
+        String ghiChu = model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "";
+        cboGhiChu.setSelectedItem(ghiChu);
+        if (cboGhiChu.getSelectedIndex() < 0) {
+            cboGhiChu.setSelectedIndex(0);
+        }
+
+        txtNgayDangKy.setText(model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
     }
 
+    /**
+     * Kiểm tra các ràng buộc dữ liệu theo đúng yêu cầu:
+     * 1. Họ và tên: Chữ cái đầu viết hoa, các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng,
+     *    sau dấu khoảng trắng đó phải là chữ cái đầu viết hoa và các chữ cái thường, không được nhập số, không được để trống.
+     * 2. Số điện thoại: 0 ở đầu và 9 chữ số phía sau, không được nhập chữ, không được để trống.
+     * 3. CCCD: 0 ở đầu và 11 chữ số phía sau, không được nhập chữ.
+     * 4. Địa chỉ: Phải có dấu phẩy, gồm 2 hoặc 3 chữ số ở đầu.
+     * 5. Email: Đầu tiên phải là chữ hoặc số, sau đó tới @gmail.com.
+     */
     private boolean kiemTraForm(boolean laThem) {
         String ma = txtMa.getText().trim();
         String ten = txtTen.getText().trim();
         String sdt = txtSdt.getText().trim();
         String cccd = txtCccd.getText().trim();
+        String diaChi = txtDiaChi.getText().trim();
         String email = txtEmail.getText().trim();
 
+        // 1. Kiểm tra Mã khách hàng
         if (ma.isEmpty()) {
             UiHelper.loi(this, "Mã khách hàng không được để trống!", txtMa);
             return false;
         }
+
+        // 2. Ràng buộc Họ và tên khách hàng
         if (ten.isEmpty()) {
             UiHelper.loi(this, "Họ và tên khách hàng không được để trống!", txtTen);
             return false;
         }
+        if (ten.matches(".*\\d.*")) {
+            UiHelper.loi(this, "Họ và tên không được chứa chữ số!", txtTen);
+            return false;
+        }
+        // Chữ cái đầu viết hoa các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng,
+        // sau dấu khoảng trắng đó phải là chữ cái đầu viết hoa và các chữ cái thường.
+        if (!ten.matches("^[\\p{Lu}][\\p{Ll}]+( [\\p{Lu}][\\p{Ll}]+)+$")) {
+            UiHelper.loi(this, "Họ và tên không hợp lệ! Chữ cái đầu mỗi từ phải viết hoa, các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng và không chứa số (Ví dụ: Nguyễn Văn An)!", txtTen);
+            return false;
+        }
+
+        // 3. Ràng buộc Số điện thoại: 0 ở đầu và 9 chữ số phía sau, không được nhập chữ, không được để trống
         if (sdt.isEmpty()) {
             UiHelper.loi(this, "Số điện thoại không được để trống!", txtSdt);
             return false;
         }
-        if (!sdt.matches("0\\d{9}")) {
-            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0!", txtSdt);
+        if (!sdt.matches("^0\\d{9}$")) {
+            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng số 0 và không được chứa chữ (Ví dụ: 0912345678)!", txtSdt);
             return false;
         }
-        if (!cccd.isEmpty() && !cccd.matches("\\d{9}|\\d{12}")) {
-            UiHelper.loi(this, "CCCD/CMND phải gồm 9 hoặc 12 chữ số!", txtCccd);
+
+        // 4. Ràng buộc CCCD: 0 ở đầu và 11 chữ số phía sau, không được nhập chữ
+        if (!cccd.isEmpty() && !cccd.matches("^0\\d{11}$")) {
+            UiHelper.loi(this, "Số CCCD phải gồm 12 chữ số, bắt đầu bằng số 0 và không được chứa chữ (Ví dụ: 079123456789)!", txtCccd);
             return false;
         }
-        if (!email.isEmpty() && !email.contains("@")) {
-            UiHelper.loi(this, "Địa chỉ Email không hợp lệ (cần có ký tự @)!", txtEmail);
+
+        // 5. Ràng buộc Địa chỉ: 2 hoặc 3 chữ số đầu tiên, phía sau là ký tự bất kỳ và có ít nhất 1 dấu phẩy
+        if (!diaChi.isEmpty() && !diaChi.matches("^\\d{2,3}(?!\\d).*,.*$")) {
+            UiHelper.loi(this, "Địa chỉ phải gồm 2 hoặc 3 chữ số đầu tiên, phía sau là ký tự bất kỳ và có ít nhất 1 dấu phẩy (Ví dụ: 123 Nguyễn Trãi, Quận 1 hoặc 45 Lê Lợi, TP.HCM)", txtDiaChi);
+            return false;
+        }
+
+        // 6. Ràng buộc Email: Đầu tiên phải là chữ hoặc số, sau đó tới @gmail.com
+        if (!email.isEmpty() && !email.matches("^[a-zA-Z0-9][a-zA-Z0-9._-]*@gmail\\.com$")) {
+            UiHelper.loi(this, "Email không hợp lệ! Ký tự đầu tiên phải là chữ hoặc số và đuôi phải là @gmail.com (Ví dụ: khachhang123@gmail.com)", txtEmail);
             return false;
         }
 
