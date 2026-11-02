@@ -83,26 +83,27 @@ public class DanhSachPhuTung_UI extends JPanel {
         napBang();
     }
 
-    private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 460);
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setOpaque(false);
-        UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
-        UiHelper.themDong(form, 1, "Tên phụ tùng *", txtTen);
-        UiHelper.themDong(form, 2, "Đơn vị tính", txtDonVi);
-        UiHelper.themDong(form, 4, "Đơn giá (VNĐ) *", txtGia);
+        private JPanel taoForm() {
+            JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 460);
+            JPanel form = new JPanel(new GridBagLayout());
+            form.setOpaque(false);
+            UiHelper.themDong(form, 0, "Mã phụ tùng *", txtMa);
+            UiHelper.themDong(form, 1, "Tên phụ tùng *", txtTen);
+            UiHelper.themDong(form, 2, "Đơn vị tính", txtDonVi);
+            UiHelper.themDong(form, 4, "Đơn giá (VNĐ) *", txtGia);
+            txtTon.setText("0");
+            txtTon.setEditable(false);
+            JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
+            nut.setOpaque(false);
+            nut.setBorder(new EmptyBorder(16, 0, 0, 0));
+            nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+            nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
+            nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
+            nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
-        JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
-        nut.setOpaque(false);
-        nut.setBorder(new EmptyBorder(16, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
-        nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
-        nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
-
-        UiHelper.ganNoiDungForm(formPanel, form, nut);
-        return formPanel;
-    }
+            UiHelper.ganNoiDungForm(formPanel, form, nut);
+            return formPanel;
+        }
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phụ tùng");
@@ -306,7 +307,7 @@ public class DanhSachPhuTung_UI extends JPanel {
     private void them() {
         if (!kiemTra(true)) return;
         PhuTung pt = new PhuTung(txtMa.getText().trim(), txtTen.getText().trim(),
-                txtDonVi.getText().trim(), Integer.parseInt(txtTon.getText().trim()),
+                txtDonVi.getText().trim(), 0,
                 Long.parseLong(txtGia.getText().trim().replace(",", "")));
         boolean ok = kho.themPhuTung(pt);
         napBang();
@@ -344,7 +345,6 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         pt.setTen(txtTen.getText().trim());
         pt.setDonVi(txtDonVi.getText().trim());
-        pt.setSoLuongTon(Integer.parseInt(txtTon.getText().trim()));
         pt.setDonGia(Long.parseLong(txtGia.getText().trim().replace(",", "")));
         boolean ok = kho.capNhatPhuTung(pt);
         napBang();
@@ -355,7 +355,7 @@ public class DanhSachPhuTung_UI extends JPanel {
         txtMa.setText("");
         txtTen.setText("");
         txtDonVi.setText("");
-        txtTon.setText("");
+        txtTon.setText("0");
         txtGia.setText("");
         txtMa.setEditable(true);
         table.clearSelection();
@@ -377,8 +377,11 @@ public class DanhSachPhuTung_UI extends JPanel {
             UiHelper.loi(this, "Mã và tên phụ tùng không được để trống!", txtMa);
             return false;
         }
-        if (!txtTon.getText().trim().matches("\\d+") || !txtGia.getText().trim().replace(",", "").matches("\\d+")) {
-            UiHelper.loi(this, "Tồn kho và đơn giá phải là số nguyên dương hợp lệ!", txtTon);
+        if (!txtTon.getText().trim().matches("\\d+")
+                || !txtGia.getText().trim().replace(",", "").matches("[1-9]\\d*")) {
+            UiHelper.loi(this,
+                    "Tồn kho phải >= 0 và đơn giá phải > 0!",
+                    txtTon);
             return false;
         }
         if (them && kho.timPhuTung(txtMa.getText().trim()) != null) {
