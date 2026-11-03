@@ -64,16 +64,16 @@ public class NhanVien {
                     String vaiTro, String trangThai, String[] cacQuyen,
                     String soDT, String email, String bacNghe, String boPhan, String ngayVaoLam) {
         this.maNV = maNV;
-        this.hoTen = hoTen;
+        this.hoTen = QuyenTruyCap.giaiMaMojibake(hoTen);
         this.taiKhoan = taiKhoan;
         this.matKhau = matKhau;
-        this.vaiTro = vaiTro;
-        this.trangThai = trangThai == null ? DANG_LAM : trangThai;
+        this.vaiTro = QuyenTruyCap.giaiMaMojibake(vaiTro);
+        this.trangThai = QuyenTruyCap.giaiMaMojibake(trangThai == null ? DANG_LAM : trangThai);
         setCacQuyen(cacQuyen);
         this.soDT = soDT;
         this.email = email;
-        this.bacNghe = bacNghe;
-        this.boPhan = boPhan;
+        this.bacNghe = QuyenTruyCap.giaiMaMojibake(bacNghe);
+        this.boPhan = QuyenTruyCap.giaiMaMojibake(boPhan);
         this.ngayVaoLam = ngayVaoLam;
     }
 
@@ -81,7 +81,7 @@ public class NhanVien {
     public void setMaNV(String maNV) { this.maNV = maNV; }
 
     public String getHoTen() { return hoTen; }
-    public void setHoTen(String hoTen) { this.hoTen = hoTen; }
+    public void setHoTen(String hoTen) { this.hoTen = QuyenTruyCap.giaiMaMojibake(hoTen); }
 
     public String getTaiKhoan() { return taiKhoan; }
     public void setTaiKhoan(String taiKhoan) { this.taiKhoan = taiKhoan; }
@@ -90,14 +90,15 @@ public class NhanVien {
     public void setMatKhau(String matKhau) { this.matKhau = matKhau; }
 
     public String getVaiTro() { return vaiTro; }
-    public void setVaiTro(String vaiTro) { this.vaiTro = vaiTro; }
+    public void setVaiTro(String vaiTro) { this.vaiTro = QuyenTruyCap.giaiMaMojibake(vaiTro); }
 
     public String getTrangThai() { return trangThai; }
-    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = QuyenTruyCap.giaiMaMojibake(trangThai); }
 
     public boolean dangHoatDong() {
         if (trangThai == null || trangThai.trim().isEmpty()) return true;
-        String tt = java.text.Normalizer.normalize(trangThai, java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "").replace("đ", "d").trim().toUpperCase(java.util.Locale.ROOT);
+        String clear = QuyenTruyCap.giaiMaMojibake(trangThai);
+        String tt = java.text.Normalizer.normalize(clear, java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "").replace("đ", "d").trim().toUpperCase(java.util.Locale.ROOT);
         if (tt.contains("NGUNG") || tt.contains("KHOA") || tt.contains("THOI") || tt.contains("THÔI")) {
             return false;
         }
@@ -140,7 +141,7 @@ public class NhanVien {
         }
         return bacNghe;
     }
-    public void setBacNghe(String bacNghe) { this.bacNghe = bacNghe; }
+    public void setBacNghe(String bacNghe) { this.bacNghe = QuyenTruyCap.giaiMaMojibake(bacNghe); }
 
     public String getBoPhan() {
         if (boPhan == null || boPhan.trim().isEmpty()) {
@@ -156,7 +157,7 @@ public class NhanVien {
         }
         return boPhan;
     }
-    public void setBoPhan(String boPhan) { this.boPhan = boPhan; }
+    public void setBoPhan(String boPhan) { this.boPhan = QuyenTruyCap.giaiMaMojibake(boPhan); }
 
     public String getNgayVaoLam() {
         if (ngayVaoLam == null || ngayVaoLam.trim().isEmpty()) {

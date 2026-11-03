@@ -28,21 +28,21 @@ public class KhachHang {
 
     public KhachHang(String maKH, String hoTen, String sdt, String diaChi, String email) {
         this.maKH = maKH;
-        this.hoTen = hoTen;
+        this.hoTen = QuyenTruyCap.giaiMaMojibake(hoTen);
         this.sdt = sdt;
-        this.diaChi = diaChi;
+        this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
         this.email = email;
     }
 
     public KhachHang(String maKH, String hoTen, String sdt, String cccd,
                      String diaChi, String email, String ghiChu, LocalDate ngayDangKy) {
         this.maKH = maKH;
-        this.hoTen = hoTen;
+        this.hoTen = QuyenTruyCap.giaiMaMojibake(hoTen);
         this.sdt = sdt;
         this.cccd = cccd;
-        this.diaChi = diaChi;
+        this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
         this.email = email;
-        this.ghiChu = ghiChu;
+        this.ghiChu = QuyenTruyCap.giaiMaMojibake(ghiChu);
         this.ngayDangKy = ngayDangKy;
     }
 
@@ -75,7 +75,7 @@ public class KhachHang {
     public void setMaKH(String maKH) { this.maKH = maKH; }
 
     public String getHoTen() { return hoTen; }
-    public void setHoTen(String hoTen) { this.hoTen = hoTen; }
+    public void setHoTen(String hoTen) { this.hoTen = QuyenTruyCap.giaiMaMojibake(hoTen); }
 
     public String getSdt() { return sdt; }
     public void setSdt(String sdt) { this.sdt = sdt; }
@@ -84,13 +84,13 @@ public class KhachHang {
     public void setCccd(String cccd) { this.cccd = cccd; }
 
     public String getDiaChi() { return diaChi; }
-    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
+    public void setDiaChi(String diaChi) { this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi); }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public String getGhiChu() { return ghiChu; }
-    public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
+    public void setGhiChu(String ghiChu) { this.ghiChu = QuyenTruyCap.giaiMaMojibake(ghiChu); }
 
     public LocalDate getNgayDangKy() { return ngayDangKy; }
     public void setNgayDangKy(LocalDate ngayDangKy) { this.ngayDangKy = ngayDangKy; }

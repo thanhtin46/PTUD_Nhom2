@@ -375,11 +375,8 @@ public class KhachHang_DAO {
             }
         }
 
-        // Định dạng KH001 nếu <= 999, hoặc KH0001
-        if (maxSo >= 99) {
-            return String.format("KH%03d", maxSo + 1);
-        }
-        return String.format("KH%02d", maxSo + 1);
+        // Định dạng chuẩn đồng bộ KH001, KH002... KH100...
+        return String.format("KH%03d", maxSo + 1);
     }
 
     /**

@@ -27,7 +27,8 @@ public class PhieuTiepNhan_DAO {
 
         String sql = "SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
                      "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
-                     "sc.maNV AS maNVPhanCong, ktv.hoTen AS tenKtvPhanCong " +
+                     "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN sc.maNV ELSE NULL END AS maNVPhanCong, " +
+                     "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN ktv.hoTen ELSE NULL END AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
                      "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
                      "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +

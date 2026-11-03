@@ -27,8 +27,8 @@ public class PhuTung {
     public PhuTung(String maPT, String ten, String donVi, int soLuongTon,
                    long donGia, int soLuongToiThieu) {
         this.maPT = maPT;
-        this.ten = ten;
-        this.donVi = donVi;
+        this.ten = QuyenTruyCap.giaiMaMojibake(ten);
+        this.donVi = QuyenTruyCap.giaiMaMojibake(donVi);
         this.soLuongTon = soLuongTon;
         this.donGia = donGia;
         this.soLuongToiThieu = soLuongToiThieu;
@@ -38,16 +38,16 @@ public class PhuTung {
     public void setMaPT(String maPT) { this.maPT = maPT; }
 
     public String getTen() { return ten; }
-    public void setTen(String ten) { this.ten = ten; }
+    public void setTen(String ten) { this.ten = QuyenTruyCap.giaiMaMojibake(ten); }
 
     public String getTenPT() { return ten; }
-    public void setTenPT(String tenPT) { this.ten = tenPT; }
+    public void setTenPT(String tenPT) { this.ten = QuyenTruyCap.giaiMaMojibake(tenPT); }
 
     public String getDonVi() { return donVi; }
-    public void setDonVi(String donVi) { this.donVi = donVi; }
+    public void setDonVi(String donVi) { this.donVi = QuyenTruyCap.giaiMaMojibake(donVi); }
 
     public String getDonViTinh() { return donVi; }
-    public void setDonViTinh(String donViTinh) { this.donVi = donViTinh; }
+    public void setDonViTinh(String donViTinh) { this.donVi = QuyenTruyCap.giaiMaMojibake(donViTinh); }
 
     public int getSoLuongTon() { return soLuongTon; }
     public void setSoLuongTon(int soLuongTon) { this.soLuongTon = soLuongTon; }

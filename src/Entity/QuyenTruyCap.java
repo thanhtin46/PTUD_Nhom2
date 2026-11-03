@@ -38,12 +38,34 @@ public final class QuyenTruyCap {
         public String getTenHienThi() { return tenHienThi; }
     }
 
+    /**
+     * Tự động nhận diện và khôi phục chuỗi tiếng Việt bị lỗi mã hóa UTF-8 sang Windows-1252 (Mojibake).
+     * Ví dụ: "Quáº£n LÃ½ Tá»•ng" -> "Quản Lý Tổng", "Quáº£n lÃ½" -> "Quản lý"
+     */
+    public static String giaiMaMojibake(String input) {
+        if (input == null || input.isEmpty()) return input;
+        if (!input.contains("Ã") && !input.contains("áº") && !input.contains("á»") &&
+            !input.contains("Æ") && !input.contains("Ä") && !input.contains("Å") &&
+            !input.contains("Â")) {
+            return input;
+        }
+        try {
+            byte[] bytes = input.getBytes(java.nio.charset.Charset.forName("Windows-1252"));
+            String decoded = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            if (!decoded.contains("\uFFFD")) {
+                return decoded;
+            }
+        } catch (Exception ignored) {}
+        return input;
+    }
+
     public static VaiTro vaiTro(String s) {
         if (s == null) return VaiTro.KHONG_RO;
-        String v = Normalizer.normalize(s, Normalizer.Form.NFD)
+        String raw = giaiMaMojibake(s).trim();
+        String v = Normalizer.normalize(raw, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").replace('đ','d').replace('Đ','D').toLowerCase(Locale.ROOT).trim();
         VaiTro vt = switch(v) {
-            case "quan_ly", "quan ly", "admin", "giam doc", "chu xuong" -> VaiTro.QUAN_LY;
+            case "quan_ly", "quan ly", "admin", "giam doc", "chu xuong", "quan tri vien" -> VaiTro.QUAN_LY;
             case "tiep_tan", "nhan vien tiep tan", "tiep tan", "le tan", "co van dich vu" -> VaiTro.TIEP_TAN;
             case "sua_chua", "nhan vien sua chua", "ky thuat vien", "ktv", "nhan vien ky thuat" -> VaiTro.SUA_CHUA;
             case "kho", "nhan vien kho", "thu kho" -> VaiTro.KHO;
@@ -52,12 +74,20 @@ public final class QuyenTruyCap {
         };
         if (vt != VaiTro.KHONG_RO) return vt;
 
-        // Dự phòng nếu chuỗi vai trò bị lỗi mã ký tự (Mojibake) hoặc biến thể viết tắt
-        if (v.contains("quan") && (v.contains("ly") || v.contains("la") || v.contains("doc"))) return VaiTro.QUAN_LY;
+        // Dự phòng nếu chuỗi vai trò có từ khóa viết tắt hoặc biến thể
+        if (v.contains("quan") || v.contains("giam doc") || v.contains("admin")) return VaiTro.QUAN_LY;
         if (v.contains("tiep") || v.contains("tan") || v.contains("le tan")) return VaiTro.TIEP_TAN;
         if (v.contains("sua") || v.contains("chua") || v.contains("ktv") || v.contains("thuat")) return VaiTro.SUA_CHUA;
         if (v.contains("kho")) return VaiTro.KHO;
         if (v.contains("ngan") || v.contains("thu") || v.contains("toan")) return VaiTro.THU_NGAN;
+
+        // Dự phòng thô dựa trên chuỗi gốc s (nếu chuỗi s vẫn còn dính mojibake chưa khử hết)
+        String sLower = s.toLowerCase(Locale.ROOT);
+        if (sLower.contains("quan") || sLower.contains("quáº") || sLower.contains("lÃ½")) return VaiTro.QUAN_LY;
+        if (sLower.contains("tiep") || sLower.contains("tiáº¿p") || sLower.contains("tÃ¢n")) return VaiTro.TIEP_TAN;
+        if (sLower.contains("sua") || sLower.contains("sá»") || sLower.contains("chá»¯a")) return VaiTro.SUA_CHUA;
+        if (sLower.contains("kho")) return VaiTro.KHO;
+        if (sLower.contains("ngan") || sLower.contains("ngÃ¢n")) return VaiTro.THU_NGAN;
 
         return VaiTro.KHONG_RO;
     }
@@ -83,7 +113,8 @@ public final class QuyenTruyCap {
 
     public static String chuanTrang(String s) {
         if(s==null)return "";
-        String v = Normalizer.normalize(s, Normalizer.Form.NFD)
+        String raw = giaiMaMojibake(s).trim();
+        String v = Normalizer.normalize(raw, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").replace('đ','d').replace('Đ','D').toLowerCase(Locale.ROOT).trim();
         return switch(v) {
             case "trang chu", "tong quan" -> "Trang chủ";

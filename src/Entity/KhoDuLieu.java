@@ -244,6 +244,12 @@ public class KhoDuLieu {
         if (maNV == null || maNV.trim().isEmpty()) return null;
         maNV = maNV.trim();
 
+        // Chỉ kiểm tra lịch sửa chữa cho nhân viên sửa chữa
+        NhanVien nvCheck = timNhanVienTheoMa(maNV);
+        if (nvCheck != null && Entity.QuyenTruyCap.vaiTro(nvCheck.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+            return null;
+        }
+
         // 1. Kiểm tra trực tiếp trong danh sách phiếu tiếp nhận trong bộ nhớ
         for (PhieuTiepNhan p : phieuTiepNhans) {
             if (maNV.equalsIgnoreCase(p.getKyThuatVien())) {
@@ -598,7 +604,7 @@ public class KhoDuLieu {
                 } catch (Exception ignored) {}
             }
         }
-        return String.format("KH%02d", max + 1);
+        return String.format("KH%03d", max + 1);
     }
 
     public PhuTung timPhuTung(String ma) {

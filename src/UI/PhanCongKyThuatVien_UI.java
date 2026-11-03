@@ -171,23 +171,23 @@ public class PhanCongKyThuatVien_UI extends JPanel {
         String maPhieuHienTai = phieuDangChon != null ? phieuDangChon.getSoPhieu() : null;
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
-            String vt = nv.getVaiTro() == null ? "" : nv.getVaiTro().toLowerCase();
-            // Lấy tất cả KTV kỹ thuật xưởng hoặc Quản lý điều hành
-            if (vt.contains("sửa chữa") || vt.contains("quản lý") || vt.contains("ktv") || vt.contains("kỹ thuật")
-                    || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện") || vt.contains("sơn") || vt.contains("bảo dưỡng")) {
-                String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), maPhieuHienTai);
-                if (lich != null) {
-                    cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
-                } else {
-                    cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
-                }
+            // Chỉ lấy Nhân viên sửa chữa (KTV xưởng), loại bỏ hoàn toàn Quản lý, Tiếp tân, Thu ngân, Thủ kho
+            if (Entity.QuyenTruyCap.vaiTro(nv.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+                continue;
+            }
+            String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), maPhieuHienTai);
+            if (lich != null) {
+                cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
+            } else {
+                cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
             }
         }
     }
 
     private String tenKtv(String maNV) {
         NhanVien nv = kho.timNhanVienTheoMa(maNV);
-        return nv == null ? "" : nv.getMaNV() + " - " + nv.getHoTen();
+        return (nv == null || Entity.QuyenTruyCap.vaiTro(nv.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA)
+                ? "" : nv.getMaNV() + " - " + nv.getHoTen();
     }
 
     private void napBang() {
@@ -197,7 +197,14 @@ public class PhanCongKyThuatVien_UI extends JPanel {
             String ktv = "";
             if (p.daPhanCong()) {
                 NhanVien nv = kho.timNhanVienTheoMa(p.getKyThuatVien());
-                ktv = nv == null ? p.getKyThuatVien() : nv.getHoTen();
+                if (nv != null && Entity.QuyenTruyCap.vaiTro(nv.getVaiTro()) == Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+                    ktv = nv.getHoTen();
+                } else if (nv != null) {
+                    // Không hiển thị nếu là Quản lý hoặc nhân sự ngoài bộ phận sửa chữa
+                    ktv = "(chưa phân công)";
+                } else {
+                    ktv = p.getKyThuatVien();
+                }
             } else {
                 ktv = "(chưa phân công)";
             }
@@ -218,6 +225,14 @@ public class PhanCongKyThuatVien_UI extends JPanel {
             return;
         }
         String maKtv = sel.toString().split(" - ")[0].trim();
+        NhanVien nvChon = kho.timNhanVienTheoMa(maKtv);
+        if (nvChon == null || Entity.QuyenTruyCap.vaiTro(nvChon.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ được phân công công việc cho Nhân viên sửa chữa (Kỹ thuật viên)!",
+                    "Nhân viên không hợp lệ",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa
         String lichDangLam = kho.layThongTinLichSuaChuaKtv(maKtv, phieuDangChon.getSoPhieu());

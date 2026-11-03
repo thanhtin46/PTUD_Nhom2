@@ -55,8 +55,8 @@ public final class DuLieuPhieuSuaChua {
             if (noiDung == null || noiDung.isBlank())
                 throw new IllegalArgumentException("Nội dung công việc không được trống.");
             if (tienCong < 0) throw new IllegalArgumentException("Tiền công không được âm.");
-            this.noiDung = noiDung.trim();
-            this.tenKyThuatVien = tenKyThuatVien == null ? "" : tenKyThuatVien.trim();
+            this.noiDung = QuyenTruyCap.giaiMaMojibake(noiDung).trim();
+            this.tenKyThuatVien = QuyenTruyCap.giaiMaMojibake(tenKyThuatVien == null ? "" : tenKyThuatVien).trim();
             this.tienCong = tienCong;
         }
 

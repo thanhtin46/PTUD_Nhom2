@@ -21,9 +21,9 @@ public class NhaCungCap {
 
     public NhaCungCap(String maNCC, String tenNCC, String soDT, String diaChi, String email) {
         this.maNCC = maNCC;
-        this.tenNCC = tenNCC;
+        this.tenNCC = QuyenTruyCap.giaiMaMojibake(tenNCC);
         this.soDT = soDT;
-        this.diaChi = diaChi;
+        this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
         this.email = email;
     }
 
@@ -40,7 +40,7 @@ public class NhaCungCap {
     }
 
     public void setTenNCC(String tenNCC) {
-        this.tenNCC = tenNCC;
+        this.tenNCC = QuyenTruyCap.giaiMaMojibake(tenNCC);
     }
 
     public String getSoDT() {
@@ -56,7 +56,7 @@ public class NhaCungCap {
     }
 
     public void setDiaChi(String diaChi) {
-        this.diaChi = diaChi;
+        this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
     }
 
     public String getEmail() {

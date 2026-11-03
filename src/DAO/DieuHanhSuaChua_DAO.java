@@ -45,7 +45,7 @@ public class DieuHanhSuaChua_DAO {
                 + "       sc.ngayHoanThanhDuKien, "
                 + "       ISNULL(sc.trangThai, 'CHO_SUA') AS trangThai "
                 + "FROM PhieuSuaChua sc "
-                + "LEFT JOIN NhanVien nv ON sc.maNV = nv.maNV "
+                + "LEFT JOIN NhanVien nv ON sc.maNV = nv.maNV AND (LOWER(nv.chucVu) LIKE N'%sửa chữa%' OR LOWER(nv.chucVu) LIKE '%ktv%') "
                 + "LEFT JOIN KhachHang kh ON sc.maKH = kh.maKH "
                 + "LEFT JOIN PhuongTien pt ON sc.soVIN = pt.soVIN "
                 + "ORDER BY "
@@ -118,8 +118,11 @@ public class DieuHanhSuaChua_DAO {
                 + "  AND (LOWER(nv.chucVu) LIKE N'%sửa chữa%' OR LOWER(nv.chucVu) LIKE '%ktv%' "
                 + "       OR LOWER(nv.chucVu) LIKE N'%kỹ thuật%' OR LOWER(nv.chucVu) LIKE N'%máy%' "
                 + "       OR LOWER(nv.chucVu) LIKE N'%gầm%' OR LOWER(nv.chucVu) LIKE N'%điện%' "
-                + "       OR LOWER(nv.chucVu) LIKE N'%sơn%' OR LOWER(nv.chucVu) LIKE N'%bảo dưỡng%' "
-                + "       OR nv.maNV IN (SELECT DISTINCT maNV FROM PhieuSuaChua WHERE maNV IS NOT NULL)) "
+                + "       OR LOWER(nv.chucVu) LIKE N'%sơn%' OR LOWER(nv.chucVu) LIKE N'%bảo dưỡng%') "
+                + "  AND LOWER(nv.chucVu) NOT LIKE N'%quản lý%' "
+                + "  AND LOWER(nv.chucVu) NOT LIKE N'%tiếp tân%' "
+                + "  AND LOWER(nv.chucVu) NOT LIKE N'%kho%' "
+                + "  AND LOWER(nv.chucVu) NOT LIKE N'%thu ngân%' "
                 + "GROUP BY nv.maNV, nv.hoTen, nv.chucVu "
                 + "ORDER BY soPhieuDangLam DESC, soPhieuQuaHen DESC, nv.maNV ASC";
 

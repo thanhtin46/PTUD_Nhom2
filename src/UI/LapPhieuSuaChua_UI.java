@@ -871,15 +871,15 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 ? String.valueOf(cboPhieuTN.getSelectedItem()).split(" - ")[0].trim() : null;
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
-            String vt = nv.getVaiTro() == null ? "" : nv.getVaiTro().toLowerCase();
-            if (vt.contains("sửa chữa") || vt.contains("quản lý") || vt.contains("ktv")
-                    || vt.contains("kỹ thuật") || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện")) {
-                String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), selPTN);
-                if (lich != null) {
-                    cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
-                } else {
-                    cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
-                }
+            // Chỉ lấy Nhân viên sửa chữa (KTV xưởng), không lấy Quản lý, Tiếp tân, Thu ngân, Thủ kho
+            if (Entity.QuyenTruyCap.vaiTro(nv.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+                continue;
+            }
+            String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), selPTN);
+            if (lich != null) {
+                cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
+            } else {
+                cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
             }
         }
     }
@@ -1247,6 +1247,14 @@ public class LapPhieuSuaChua_UI extends JPanel {
             return;
         }
         String maNV = selKTV.split(" - ")[0].trim();
+        NhanVien nvChon = kho.timNhanVienTheoMa(maNV);
+        if (nvChon == null || Entity.QuyenTruyCap.vaiTro(nvChon.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ được phân công công việc cho Nhân viên sửa chữa (Kỹ thuật viên)!",
+                    "Kỹ thuật viên không hợp lệ",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         if (!Entity.QuyenTruyCap.co(BaoVeQuyen.hienTai(),Entity.QuyenTruyCap.Quyen.PHAN_CONG) && !maNV.equals(BaoVeQuyen.hienTai().getMaNV())) { JOptionPane.showMessageDialog(this,"Không được đổi người phụ trách."); return; }
 
         // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa

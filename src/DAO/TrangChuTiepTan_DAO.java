@@ -126,16 +126,16 @@ public class TrangChuTiepTan_DAO {
                 while (rs.next()) {
                     String maTN = rs.getString("maPTN");
                     String maKH = rs.getString("maKH");
-                    String hoTen = rs.getString("hoTen");
+                    String hoTen = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("hoTen"));
                     String sdt = rs.getString("soDT");
                     String bienSo = rs.getString("bienSoXe");
-                    String hangXe = rs.getString("hangXe");
-                    String loaiXe = rs.getString("dongXe");
+                    String hangXe = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("hangXe"));
+                    String loaiXe = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("dongXe"));
                     Timestamp tsTN = rs.getTimestamp("ngayTN");
                     LocalDateTime ngayTN = tsTN != null ? tsTN.toLocalDateTime() : null;
-                    String yeuCau = rs.getString("yeuCauSC");
-                    String trangThai = rs.getString("trangThaiXe");
-                    String nguoiLap = rs.getString("tenNV");
+                    String yeuCau = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("yeuCauSC"));
+                    String trangThai = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("trangThaiXe"));
+                    String nguoiLap = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("tenNV"));
 
                     PhieuTiepNhan p = new PhieuTiepNhan(
                             maTN, maKH, hoTen, sdt, bienSo, hangXe, loaiXe, ngayTN, yeuCau,

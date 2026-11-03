@@ -65,14 +65,14 @@ public class NhanVien_DAO {
 
             while (rs.next()) {
                 String maNV = rs.getString("maNV");
-                String hoTen = rs.getString("hoTen");
-                String vaiTro = rs.getString("chucVu");
+                String hoTen = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("hoTen"));
+                String vaiTro = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("chucVu"));
                 String soDT = rs.getString("soDT");
                 String email = rs.getString("email");
-                String bacNghe = rs.getString("bacNghe");
-                String boPhan = rs.getString("boPhan");
+                String bacNghe = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("bacNghe"));
+                String boPhan = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("boPhan"));
                 String ngayVaoLam = rs.getString("ngayVaoLam");
-                String trangThaiNV = rs.getString("trangThaiNV");
+                String trangThaiNV = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("trangThaiNV"));
                 String taiKhoan = rs.getString("taiKhoan");
                 String matKhau = rs.getString("matKhau");
                 String trangThaiTK = rs.getString("trangThaiTK");
@@ -145,14 +145,14 @@ public class NhanVien_DAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String maNV = rs.getString("maNV");
-                    String hoTen = rs.getString("hoTen");
-                    String vaiTro = rs.getString("chucVu");
+                    String hoTen = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("hoTen"));
+                    String vaiTro = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("chucVu"));
                     String soDT = rs.getString("soDT");
                     String email = rs.getString("email");
-                    String bacNghe = rs.getString("bacNghe");
-                    String boPhan = rs.getString("boPhan");
+                    String bacNghe = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("bacNghe"));
+                    String boPhan = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("boPhan"));
                     String ngayVaoLam = rs.getString("ngayVaoLam");
-                    String trangThaiNV = rs.getString("trangThaiNV");
+                    String trangThaiNV = Entity.QuyenTruyCap.giaiMaMojibake(rs.getString("trangThaiNV"));
                     String tk = rs.getString("taiKhoan");
                     String mk = rs.getString("matKhau");
                     String trangThaiTK = rs.getString("trangThaiTK");

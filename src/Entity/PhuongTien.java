@@ -32,11 +32,11 @@ public class PhuongTien {
                       String soMay, String mauSon, String namSX, String odo,
                       KhachHang khachHang, LocalDate ngayTiepNhanGanNhat) {
         this.bienSo = bienSo;
-        this.hangXe = hangXe;
-        this.dongXe = dongXe;
+        this.hangXe = QuyenTruyCap.giaiMaMojibake(hangXe);
+        this.dongXe = QuyenTruyCap.giaiMaMojibake(dongXe);
         this.soKhung = soKhung;
         this.soMay = soMay;
-        this.mauSon = mauSon;
+        this.mauSon = QuyenTruyCap.giaiMaMojibake(mauSon);
         this.namSX = namSX;
         this.odo = odo;
         this.khachHang = khachHang;
@@ -86,10 +86,10 @@ public class PhuongTien {
     public void setBienSoXe(String bienSoXe) { this.bienSo = bienSoXe; }
 
     public String getHangXe() { return hangXe; }
-    public void setHangXe(String hangXe) { this.hangXe = hangXe; }
+    public void setHangXe(String hangXe) { this.hangXe = QuyenTruyCap.giaiMaMojibake(hangXe); }
 
     public String getDongXe() { return dongXe; }
-    public void setDongXe(String dongXe) { this.dongXe = dongXe; }
+    public void setDongXe(String dongXe) { this.dongXe = QuyenTruyCap.giaiMaMojibake(dongXe); }
 
     public String getSoKhung() { return soKhung; }
     public void setSoKhung(String soKhung) { this.soKhung = soKhung; }
@@ -101,7 +101,7 @@ public class PhuongTien {
     public void setSoMay(String soMay) { this.soMay = soMay; }
 
     public String getMauSon() { return mauSon; }
-    public void setMauSon(String mauSon) { this.mauSon = mauSon; }
+    public void setMauSon(String mauSon) { this.mauSon = QuyenTruyCap.giaiMaMojibake(mauSon); }
 
     public String getNamSX() { return namSX; }
     public void setNamSX(String namSX) { this.namSX = namSX; }

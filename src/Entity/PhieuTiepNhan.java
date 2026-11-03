@@ -36,7 +36,7 @@ public class PhieuTiepNhan {
         this.khachHang = khachHang;
         this.phuongTien = phuongTien;
         this.ngayTN = ngayTN;
-        this.yeuCau = yeuCau;
+        this.yeuCau = QuyenTruyCap.giaiMaMojibake(yeuCau);
         this.tienDo = chuanHoaTienDo(tienDo);
         this.thanhTien = thanhTien;
         this.kyThuatVien = kyThuatVien == null ? "" : kyThuatVien;
@@ -61,7 +61,7 @@ public class PhieuTiepNhan {
         nv.setHoTen(nguoiLap != null ? nguoiLap : "");
         this.nhanVien = nv;
         this.ngayTN = ngayTN;
-        this.yeuCau = yeuCau;
+        this.yeuCau = QuyenTruyCap.giaiMaMojibake(yeuCau);
         this.tienDo = chuanHoaTienDo(tienDo);
         this.thanhTien = thanhTien;
         this.kyThuatVien = kyThuatVien == null ? "" : kyThuatVien;
@@ -115,13 +115,23 @@ public class PhieuTiepNhan {
 
     public static String chuanHoaTienDo(String value) {
         if (value == null) return "Chờ tiếp nhận";
-        return switch (value.toUpperCase()) {
+        String s = QuyenTruyCap.giaiMaMojibake(value).trim();
+        String upper = s.toUpperCase(java.util.Locale.ROOT);
+        return switch (upper) {
             case "DA_TIEP_NHAN", "CHO_TIEP_NHAN", "CHO_SUA" -> "Chờ tiếp nhận";
             case "DA_PHAN_CONG" -> "Đã phân công";
             case "DANG_SUA", "DANG_KIEM_TRA" -> "Đang sửa";
             case "CHO_PHU_TUNG" -> "Chờ phụ tùng";
             case "HOAN_THANH", "DA_HOAN_THANH" -> "Hoàn thành";
-            default -> value;
+            default -> {
+                String lower = s.toLowerCase(java.util.Locale.ROOT);
+                if (lower.contains("chua") || lower.contains("chưa")) yield "Chưa phân công";
+                if (lower.contains("da phan") || lower.contains("đã phân")) yield "Đã phân công";
+                if (lower.contains("dang sua") || lower.contains("đang sửa")) yield "Đang sửa";
+                if (lower.contains("hoan thanh") || lower.contains("hoàn thành")) yield "Hoàn thành";
+                if (lower.contains("cho") || lower.contains("chờ") || lower.contains("tiep") || lower.contains("tiếp")) yield "Chờ tiếp nhận";
+                yield s;
+            }
         };
     }
 
@@ -163,7 +173,7 @@ public class PhieuTiepNhan {
     }
 
     public String getYeuCau() { return yeuCau; }
-    public void setYeuCau(String yeuCau) { this.yeuCau = yeuCau; }
+    public void setYeuCau(String yeuCau) { this.yeuCau = QuyenTruyCap.giaiMaMojibake(yeuCau); }
 
     public String getTienDo() { return tienDo; }
     public void setTienDo(String tienDo) { this.tienDo = chuanHoaTienDo(tienDo); }
