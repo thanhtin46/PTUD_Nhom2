@@ -138,7 +138,17 @@ public class ConnectDB {
                          "  UPDATE dbo.NhanVien SET hoTen = N'Nguyễn Văn Kho', chucVu = N'Nhân viên kho', boPhan = N'Kho phụ tùng', trangThai = N'Đang làm việc' WHERE maNV = 'NV03'; " +
                          "  UPDATE dbo.NhanVien SET hoTen = N'Quản Lý Tổng', chucVu = N'Quản lý', boPhan = N'Ban Giám đốc', trangThai = N'Đang làm việc' WHERE maNV = 'NV04'; " +
                          "  UPDATE dbo.NhanVien SET hoTen = N'Trần Thị Thu Ngân', chucVu = N'Nhân viên thu ngân', boPhan = N'Kế toán thu ngân', trangThai = N'Đang làm việc' WHERE maNV = 'NV05'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Lê Văn Cường', chucVu = N'Nhân viên sửa chữa', boPhan = N'Xưởng sửa chữa', trangThai = N'Đang làm việc' WHERE maNV = 'NV101'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Hoàng Đình Kha', chucVu = N'Nhân viên sửa chữa', boPhan = N'Xưởng sửa chữa', trangThai = N'Đang làm việc' WHERE maNV = 'NV102'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Nguyễn Thị Hạnh', chucVu = N'Nhân viên tiếp tân', boPhan = N'Tiếp tân', trangThai = N'Đang làm việc' WHERE maNV = 'NV103'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Trần Quốc Phong', chucVu = N'Nhân viên kho', boPhan = N'Kho phụ tùng', trangThai = N'Đang làm việc' WHERE maNV = 'NV104'; " +
                          "END;");
+            // Tự động chuẩn hóa trạng thái xe trong PhieuTiepNhan nếu dính mojibake
+            stmt.execute("UPDATE dbo.PhieuTiepNhan SET trangThaiXe = N'Chờ phân công' WHERE trangThaiXe LIKE N'%phÃ¢n%' OR trangThaiXe LIKE N'%Chá»  phÃ%';");
+            stmt.execute("UPDATE dbo.PhieuTiepNhan SET trangThaiXe = N'Đang sửa' WHERE trangThaiXe LIKE N'%Ä ang%' OR trangThaiXe LIKE N'%sá»­a%';");
+            stmt.execute("UPDATE dbo.PhieuTiepNhan SET trangThaiXe = N'Đã phân công' WHERE trangThaiXe LIKE N'%Ä Ã£ phÃ%';");
+            stmt.execute("UPDATE dbo.PhieuTiepNhan SET trangThaiXe = N'Chờ tiếp nhận' WHERE trangThaiXe LIKE N'%tiáº¿p%';");
+            stmt.execute("UPDATE dbo.PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' WHERE trangThaiXe LIKE N'%HoÃ n%' OR trangThaiXe LIKE N'%hoÃ n%';");
             // Chuẩn hóa cột DATE cho KhachHang và PhuongTien
             stmt.execute("IF COL_LENGTH('dbo.KhachHang', 'ngayDangKy') IS NOT NULL " +
                          "AND (SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='KhachHang' AND COLUMN_NAME='ngayDangKy') <> 'date' BEGIN " +

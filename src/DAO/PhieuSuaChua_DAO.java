@@ -141,11 +141,19 @@ public class PhieuSuaChua_DAO {
     public boolean duocPhanCong(String maNV, String maPhieu) throws SQLException {
         Connection con = ketNoiKiemThu != null ? ketNoiKiemThu : ConnectDB.getInstance().getConnection();
         if (con == null) return false;
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT 1 FROM PhieuSuaChua WHERE maNV=? AND (maPSC=? OR maPTN=?)")) {
+        String sql = "SELECT 1 FROM PhieuSuaChua WHERE maNV=? AND (maPSC=? OR maPTN=?) " +
+                     "UNION " +
+                     "SELECT 1 FROM PhieuTiepNhan tn " +
+                     "WHERE (tn.maPTN=? OR ('SC' + SUBSTRING(tn.maPTN, 3, 18))=?) " +
+                     "  AND (NOT EXISTS (SELECT 1 FROM PhieuSuaChua sc WHERE sc.maPTN=tn.maPTN) " +
+                     "       OR EXISTS (SELECT 1 FROM PhieuSuaChua sc WHERE sc.maPTN=tn.maPTN AND sc.maNV=?))";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maNV);
             ps.setString(2, maPhieu);
             ps.setString(3, maPhieu);
+            ps.setString(4, maPhieu);
+            ps.setString(5, maPhieu);
+            ps.setString(6, maNV);
             try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
         }
     }

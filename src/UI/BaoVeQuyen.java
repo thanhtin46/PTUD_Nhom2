@@ -27,9 +27,11 @@ public final class BaoVeQuyen {
         }
     }
     public static boolean phieu(String ma) {
-        NhanVien n=hienTai();if(n==null)return false;
-        if(QuyenTruyCap.co(n,QuyenTruyCap.Quyen.PHAN_CONG))return true;
-        if(!QuyenTruyCap.co(n,QuyenTruyCap.Quyen.SC) && !QuyenTruyCap.co(n,QuyenTruyCap.Quyen.TIEN_DO))return false;
+        NhanVien n = hienTai();
+        if (n == null) return false;
+        QuyenTruyCap.VaiTro vt = QuyenTruyCap.vaiTro(n.getVaiTro());
+        if (QuyenTruyCap.co(n, QuyenTruyCap.Quyen.PHAN_CONG) || vt == QuyenTruyCap.VaiTro.QUAN_LY || vt == QuyenTruyCap.VaiTro.TIEP_TAN) return true;
+        if (!QuyenTruyCap.co(n, QuyenTruyCap.Quyen.SC) && !QuyenTruyCap.co(n, QuyenTruyCap.Quyen.TIEN_DO)) return false;
         try {
             return new DAO.PhieuSuaChua_DAO().duocPhanCong(n.getMaNV(), ma);
         } catch (SQLException ex) {

@@ -408,8 +408,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
                 thoiGianTN, yeuCau, "Chờ tiếp nhận",
                 nv != null ? nv.getHoTen() : "Tiếp tân", 0);
 
-        boolean ok = phieuTiepNhanDAO.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
-        kho.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
+        boolean ok = kho.themPhieuTiepNhan(ptn, nv != null ? nv.getMaNV() : "NV01");
 
         napBang();
         napComboXeCoSan();

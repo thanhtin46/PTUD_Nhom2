@@ -587,6 +587,22 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 }
             }
 
+            // Đồng bộ trạng thái sang bảng PhieuTiepNhan
+            String sqlCapNhatPTN = "UPDATE PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' " +
+                                   "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
+                                   "   OR maPTN = ? " +
+                                   "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
+            try (PreparedStatement psPTN = con.prepareStatement(sqlCapNhatPTN)) {
+                psPTN.setString(1, maPSC);
+                psPTN.setString(2, maPSC);
+                psPTN.setString(3, maPSC);
+                psPTN.executeUpdate();
+            }
+
+            // Làm mới toàn diện bộ nhớ và thông báo badge trên thanh điều hướng
+            kho.dongBoTuSQLServer();
+            Main_UI.lamMoiThongBao();
+
             // Đồng bộ trạng thái trên giao diện
             cboTienDo.setSelectedItem("Hoàn thành");
 
@@ -851,12 +867,19 @@ public class LapPhieuSuaChua_UI extends JPanel {
     private void napDuLieuKtv() {
         cboKtvPhuTrach.removeAllItems();
         cboKtvPhuTrach.addItem("-- Chọn kỹ thuật viên phụ trách --");
+        String selPTN = (cboPhieuTN != null && cboPhieuTN.getSelectedIndex() > 0)
+                ? String.valueOf(cboPhieuTN.getSelectedItem()).split(" - ")[0].trim() : null;
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
             String vt = nv.getVaiTro() == null ? "" : nv.getVaiTro().toLowerCase();
             if (vt.contains("sửa chữa") || vt.contains("quản lý") || vt.contains("ktv")
                     || vt.contains("kỹ thuật") || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện")) {
-                cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen());
+                String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), selPTN);
+                if (lich != null) {
+                    cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
+                } else {
+                    cboKtvPhuTrach.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
+                }
             }
         }
     }
@@ -879,6 +902,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
             lblHangXeDongXe.setText("-");
             lblKhachHang.setText("-");
             lblYeuCauDauVao.setText("-");
+            napDuLieuKtv();
             return;
         }
 
@@ -895,11 +919,14 @@ public class LapPhieuSuaChua_UI extends JPanel {
         lblKhachHang.setText(p.getHoTen() + " • SĐT: " + p.getSdt());
         lblYeuCauDauVao.setText(p.getYeuCau());
 
+        // Làm mới danh sách KTV theo phiếu này
+        napDuLieuKtv();
+
         // Tự động chọn KTV nếu đã phân công
         if (p.getKyThuatVien() != null && !p.getKyThuatVien().isEmpty()) {
             for (int i = 0; i < cboKtvPhuTrach.getItemCount(); i++) {
                 String it = cboKtvPhuTrach.getItemAt(i);
-                if (it != null && (it.contains(p.getKyThuatVien()) || it.startsWith(p.getKyThuatVien()))) {
+                if (it != null && (it.startsWith(p.getKyThuatVien() + " - ") || it.contains(p.getKyThuatVien()))) {
                     cboKtvPhuTrach.setSelectedIndex(i);
                     break;
                 }
@@ -1222,6 +1249,19 @@ public class LapPhieuSuaChua_UI extends JPanel {
         String maNV = selKTV.split(" - ")[0].trim();
         if (!Entity.QuyenTruyCap.co(BaoVeQuyen.hienTai(),Entity.QuyenTruyCap.Quyen.PHAN_CONG) && !maNV.equals(BaoVeQuyen.hienTai().getMaNV())) { JOptionPane.showMessageDialog(this,"Không được đổi người phụ trách."); return; }
 
+        // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa
+        String lichKtv = kho.layThongTinLichSuaChuaKtv(maNV, maPTN);
+        if (lichKtv != null) {
+            JOptionPane.showMessageDialog(this,
+                    "Kỹ thuật viên " + selKTV + " hiện ĐÃ CÓ LỊCH SỬA CHỮA!\n\n" +
+                    "• Đang thực hiện: " + lichKtv + "\n" +
+                    "• Quy định điều phối: Mỗi kỹ thuật viên chỉ nhận 1 xe sửa chữa tại một thời điểm.\n\n" +
+                    "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng].",
+                    "Kỹ thuật viên đang có lịch",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         // Chuyển ngày hẹn sang kiểu SQL DATE.
         Date ngayHen;
         try {
@@ -1260,6 +1300,8 @@ public class LapPhieuSuaChua_UI extends JPanel {
             Entity.DuLieuPhieuSuaChua duLieu = new Entity.DuLieuPhieuSuaChua(
                     maPTN, maNV, ngayHen.toLocalDate(), phuTungs, congViecs);
             maPSC = new Service.SuaChuaService().luu(BaoVeQuyen.hienTai(), duLieu);
+            kho.dongBoTuSQLServer();
+            Main_UI.lamMoiThongBao();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Không thể lưu phiếu sửa chữa:\n" + ex.getMessage(),
                     "Lỗi lưu dữ liệu", JOptionPane.ERROR_MESSAGE);

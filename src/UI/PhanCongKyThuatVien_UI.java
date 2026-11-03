@@ -102,8 +102,14 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                     for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
                         if (p.getSoPhieu().equals(soPhieu)) {
                             phieuDangChon = p;
+                            napComboKtv();
                             if (p.daPhanCong()) {
-                                cboKtv.setSelectedItem(tenKtv(p.getKyThuatVien()));
+                                for (int i = 0; i < cboKtv.getItemCount(); i++) {
+                                    if (cboKtv.getItemAt(i).startsWith(p.getKyThuatVien() + " - ")) {
+                                        cboKtv.setSelectedIndex(i);
+                                        break;
+                                    }
+                                }
                             }
                             break;
                         }
@@ -162,13 +168,19 @@ public class PhanCongKyThuatVien_UI extends JPanel {
     private void napComboKtv() {
         cboKtv.removeAllItems();
         cboKtv.addItem("-- Chọn KTV --");
+        String maPhieuHienTai = phieuDangChon != null ? phieuDangChon.getSoPhieu() : null;
         for (NhanVien nv : kho.getNhanViens()) {
             if (!nv.dangHoatDong()) continue;
             String vt = nv.getVaiTro() == null ? "" : nv.getVaiTro().toLowerCase();
             // Lấy tất cả KTV kỹ thuật xưởng hoặc Quản lý điều hành
             if (vt.contains("sửa chữa") || vt.contains("quản lý") || vt.contains("ktv") || vt.contains("kỹ thuật")
                     || vt.contains("máy") || vt.contains("gầm") || vt.contains("điện") || vt.contains("sơn") || vt.contains("bảo dưỡng")) {
-                cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen());
+                String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), maPhieuHienTai);
+                if (lich != null) {
+                    cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [ĐÃ CÓ LỊCH: " + lich + "]");
+                } else {
+                    cboKtv.addItem(nv.getMaNV() + " - " + nv.getHoTen() + " [Sẵn sàng]");
+                }
             }
         }
     }
@@ -205,19 +217,35 @@ public class PhanCongKyThuatVien_UI extends JPanel {
             UiHelper.loi(this, "Vui lòng chọn kỹ thuật viên!", null);
             return;
         }
-        String maKtv = sel.toString().split(" - ")[0];
+        String maKtv = sel.toString().split(" - ")[0].trim();
+
+        // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa
+        String lichDangLam = kho.layThongTinLichSuaChuaKtv(maKtv, phieuDangChon.getSoPhieu());
+        if (lichDangLam != null) {
+            JOptionPane.showMessageDialog(this,
+                    "Kỹ thuật viên " + sel + " hiện ĐÃ CÓ LỊCH SỬA CHỮA!\n\n" +
+                    "• Đang thực hiện: " + lichDangLam + "\n" +
+                    "• Quy định điều phối: Mỗi kỹ thuật viên chỉ được phân công 1 xe tại một thời điểm.\n\n" +
+                    "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng] hoặc hoàn tất công việc hiện tại.",
+                    "Kỹ thuật viên đang có lịch sửa chữa",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         // Tự động đổi tiến độ: "Chờ tiếp nhận" → "Đã phân công"
         String td = phieuDangChon.getTienDo();
         if (td == null || td.isEmpty() || td.contains("Chờ") || td.contains("tiếp nhận")) {
             td = "Đã phân công";
         }
         boolean ok = kho.capNhatTienDoPhieuTiepNhan(phieuDangChon.getSoPhieu(), td, maKtv);
+        kho.dongBoTuSQLServer();
+        napBang();
+        napComboKtv();
         JOptionPane.showMessageDialog(this,
                 "Đã phân công " + sel + " cho phiếu " + phieuDangChon.getSoPhieu() + "!"
                         + (ok ? " (Đã lưu CSDL SQL Server)" : ""),
                 "Phân công thành công",
                 JOptionPane.INFORMATION_MESSAGE);
-        napBang();
     }
 
     private void boPhanCong() {
@@ -235,8 +263,10 @@ public class PhanCongKyThuatVien_UI extends JPanel {
                 "Xác nhận",
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
         boolean ok = kho.capNhatTienDoPhieuTiepNhan(phieuDangChon.getSoPhieu(), "Chờ tiếp nhận", "");
-        JOptionPane.showMessageDialog(this, ok ? "Đã hủy phân công và đồng bộ CSDL SQL Server!" : "Đã hủy phân công!");
+        kho.dongBoTuSQLServer();
         napBang();
+        napComboKtv();
+        JOptionPane.showMessageDialog(this, ok ? "Đã hủy phân công và đồng bộ CSDL SQL Server!" : "Đã hủy phân công!");
     }
 
     private JPanel the(Icon icon, String ten, String so, String phuDe, Color mau) {

@@ -112,8 +112,9 @@ public class KhoDuLieu {
     // 1. KHÁCH HÀNG
     public boolean themKhachHang(KhachHang kh) {
         boolean dbOk = khachHangDAO.themKhachHang(kh);
-        if (!dbOk) return false;
+        khachHangs.removeIf(k -> k.getMaKH().equalsIgnoreCase(kh.getMaKH()));
         khachHangs.add(kh);
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Thêm khách hàng", NhatKyHeThong.INFO,
                 "Đã thêm KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -121,6 +122,13 @@ public class KhoDuLieu {
 
     public boolean capNhatKhachHang(KhachHang kh) {
         boolean dbOk = khachHangDAO.capNhatKhachHang(kh);
+        for (int i = 0; i < khachHangs.size(); i++) {
+            if (khachHangs.get(i).getMaKH().equalsIgnoreCase(kh.getMaKH())) {
+                khachHangs.set(i, kh);
+                break;
+            }
+        }
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Cập nhật khách hàng", NhatKyHeThong.INFO,
                 "Đã cập nhật KH [" + kh.getMaKH() + "] " + kh.getHoTen() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -128,11 +136,11 @@ public class KhoDuLieu {
 
     public boolean xoaKhachHang(String maKH) {
         boolean dbOk = khachHangDAO.xoaKhachHang(maKH);
-        if (!dbOk) return false;
         khachHangs.removeIf(kh -> kh.getMaKH().equalsIgnoreCase(maKH));
         phuongTiens.removeIf(pt -> maKH.equalsIgnoreCase(pt.getMaChuXe()));
         phieuTiepNhans.removeIf(ptn -> maKH.equalsIgnoreCase(ptn.getMaKH()));
         hoaDons.removeIf(hd -> maKH.equalsIgnoreCase(hd.getMaKH()));
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Xóa khách hàng", NhatKyHeThong.WARN,
                 "Đã xóa KH [" + maKH + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -141,8 +149,9 @@ public class KhoDuLieu {
     // 2. PHƯƠNG TIỆN
     public boolean themPhuongTien(PhuongTien pt) {
         boolean dbOk = phuongTienDAO.themPhuongTien(pt);
-        if (!dbOk) return false;
+        phuongTiens.removeIf(p -> p.getBienSo().equalsIgnoreCase(pt.getBienSo()));
         phuongTiens.add(pt);
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Thêm phương tiện", NhatKyHeThong.INFO,
                 "Đã thêm xe [" + pt.getBienSo() + "] " + pt.getHangXe() + " " + pt.getDongXe() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -150,6 +159,13 @@ public class KhoDuLieu {
 
     public boolean capNhatPhuongTien(PhuongTien pt) {
         boolean dbOk = phuongTienDAO.capNhatPhuongTien(pt);
+        for (int i = 0; i < phuongTiens.size(); i++) {
+            if (phuongTiens.get(i).getBienSo().equalsIgnoreCase(pt.getBienSo())) {
+                phuongTiens.set(i, pt);
+                break;
+            }
+        }
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Cập nhật phương tiện", NhatKyHeThong.INFO,
                 "Đã cập nhật xe [" + pt.getBienSo() + "]" + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
@@ -157,8 +173,8 @@ public class KhoDuLieu {
 
     public boolean xoaPhuongTien(String bienSo) {
         boolean dbOk = phuongTienDAO.xoaPhuongTien(bienSo);
-        if (!dbOk) return false;
         phuongTiens.removeIf(xe -> xe.getBienSo().equalsIgnoreCase(bienSo));
+        dongBoTuSQLServer();
         ghiNhatKy("Người dùng", "Thao tác", "Xóa phương tiện", NhatKyHeThong.WARN,
                 "Đã xóa xe [" + bienSo + "]" + (dbOk ? " (Đã xóa khỏi SQL Server)" : " (Xóa bộ nhớ)"));
         return dbOk;
@@ -193,14 +209,16 @@ public class KhoDuLieu {
     // 4. PHIẾU TIẾP NHẬN & TIẾN ĐỘ
     public boolean themPhieuTiepNhan(PhieuTiepNhan ptn, String maNV) {
         boolean dbOk = duLieuDAO.themPhieuTiepNhan(ptn, maNV);
-        if (!dbOk) return false;
+        phieuTiepNhans.removeIf(p -> p.getSoPhieu().equalsIgnoreCase(ptn.getSoPhieu()));
         phieuTiepNhans.add(ptn);
+        dongBoTuSQLServer();
         ghiNhatKy("Tiếp tân", "Tiếp tân", "Lập phiếu tiếp nhận", NhatKyHeThong.INFO,
                 "Lập phiếu tiếp nhận [" + ptn.getSoPhieu() + "] cho xe " + ptn.getBienSo() + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
     }
 
     public boolean capNhatTienDoPhieuTiepNhan(String soPhieu, String tienDo, String maKtv) {
+        boolean dbOk = duLieuDAO.capNhatTienDoPhieuTiepNhan(soPhieu, tienDo, maKtv);
         for (PhieuTiepNhan p : phieuTiepNhans) {
             if (p.getSoPhieu().equalsIgnoreCase(soPhieu)) {
                 p.setTienDo(tienDo);
@@ -210,10 +228,71 @@ public class KhoDuLieu {
                 break;
             }
         }
-        boolean dbOk = duLieuDAO.capNhatTienDoPhieuTiepNhan(soPhieu, tienDo, maKtv);
+        dongBoTuSQLServer();
         ghiNhatKy("Kỹ thuật", "Kỹ thuật", "Cập nhật tiến độ / KTV", NhatKyHeThong.INFO,
                 "Cập nhật phiếu [" + soPhieu + "] -> " + tienDo + (dbOk ? " (Đã lưu vào SQL Server)" : " (Lưu bộ nhớ)"));
         return dbOk;
+    }
+
+    /**
+     * Lấy thông tin lịch sửa chữa hiện tại của KTV.
+     * @param maNV Mã KTV cần kiểm tra
+     * @param maPhieuBoQua Mã phiếu bỏ qua (phiếu đang mở / chỉnh sửa)
+     * @return Chuỗi mô tả công việc đang sửa, hoặc null nếu KTV đang rảnh / sẵn sàng
+     */
+    public String layThongTinLichSuaChuaKtv(String maNV, String maPhieuBoQua) {
+        if (maNV == null || maNV.trim().isEmpty()) return null;
+        maNV = maNV.trim();
+
+        // 1. Kiểm tra trực tiếp trong danh sách phiếu tiếp nhận trong bộ nhớ
+        for (PhieuTiepNhan p : phieuTiepNhans) {
+            if (maNV.equalsIgnoreCase(p.getKyThuatVien())) {
+                String td = p.getTienDo() == null ? "" : p.getTienDo().toLowerCase();
+                boolean hoanTat = td.contains("hoàn") || td.contains("hủy") || td.contains("huy") || td.contains("thanh toán");
+                if (!hoanTat) {
+                    if (maPhieuBoQua != null && (maPhieuBoQua.equalsIgnoreCase(p.getSoPhieu()) || maPhieuBoQua.equalsIgnoreCase("SC" + p.getSoPhieu().replaceAll("[^0-9]", "")))) {
+                        continue;
+                    }
+                    return "Phiếu " + p.getSoPhieu() + " (Xe " + p.getBienSo() + ") - " + p.getTienDo();
+                }
+            }
+        }
+
+        // 2. Kiểm tra trong SQL Server bảng PhieuSuaChua
+        java.sql.Connection con = ConnectDB.ConnectDB.getInstance().getConnection();
+        if (con != null) {
+            String sql = "SELECT TOP 1 sc.maPSC, ISNULL(sc.maPTN, sc.maPSC) AS maPTN, ISNULL(pt.bienSoXe, N'—') AS bienSoXe, sc.trangThai " +
+                         "FROM PhieuSuaChua sc " +
+                         "LEFT JOIN PhuongTien pt ON sc.soVIN = pt.soVIN " +
+                         "WHERE sc.maNV = ? " +
+                         "  AND sc.trangThai NOT IN ('HOAN_THANH', 'DA_HOAN_THANH', 'DA_HUY', 'HUY') " +
+                         "  AND sc.trangThai NOT LIKE N'%hoàn thành%' " +
+                         "  AND sc.trangThai NOT LIKE N'%hủy%'";
+            try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setString(1, maNV);
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String psc = rs.getString("maPSC");
+                        String ptn = rs.getString("maPTN");
+                        String bs = rs.getString("bienSoXe");
+                        String tt = rs.getString("trangThai");
+                        if (maPhieuBoQua != null && (maPhieuBoQua.equalsIgnoreCase(psc) || maPhieuBoQua.equalsIgnoreCase(ptn))) {
+                            return null;
+                        }
+                        String ttHienThi = "DANG_SUA".equalsIgnoreCase(tt) ? "Đang sửa" : ("CHO_SUA".equalsIgnoreCase(tt) ? "Chờ sửa" : tt);
+                        return "Phiếu " + psc + " (Xe " + bs + ") - " + ttHienThi;
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                System.err.println("Lỗi kiểm tra lịch KTV: " + e.getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    public boolean ktvDangCoLichSuaChua(String maNV, String maPhieuBoQua) {
+        return layThongTinLichSuaChuaKtv(maNV, maPhieuBoQua) != null;
     }
 
     public boolean capNhatPhieuSuaChua(String soPhieu, String tienDo, String maKtv, long tongTien) {

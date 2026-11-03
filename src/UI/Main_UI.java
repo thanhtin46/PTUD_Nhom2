@@ -405,6 +405,10 @@ public class Main_UI extends JFrame {
     private void chonMenu(MenuRow nut, String tenMenu, Component trang) {
         if (!kiemTraTrang(tenMenu, trang)) return;
         try {
+            // Luôn đồng bộ dữ liệu mới nhất từ CSDL khi chuyển màn hình
+            KhoDuLieu.get().dongBoTuSQLServer();
+            capNhatSoLuongThongBao();
+
             if (nutDangChon != null) {
                 nutDangChon.setChon(false);
             }

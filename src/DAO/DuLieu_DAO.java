@@ -585,16 +585,33 @@ public class DuLieu_DAO {
             String maPSC = "SC" + soPhieu.replaceAll("[^0-9]", "");
             String sqlSC = "UPDATE PhieuSuaChua SET trangThai = ?" +
                            (maKtv != null && !maKtv.isEmpty() ? ", maNV = ? " : " ") +
-                           "WHERE maPSC = ?";
+                           "WHERE maPSC = ? OR maPTN = ?";
+            int rowsUpdated = 0;
             try (PreparedStatement stmt = con.prepareStatement(sqlSC)) {
                 stmt.setString(1, tienDo);
                 if (maKtv != null && !maKtv.isEmpty()) {
                     stmt.setString(2, maKtv);
                     stmt.setString(3, maPSC);
+                    stmt.setString(4, soPhieu);
                 } else {
                     stmt.setString(2, maPSC);
+                    stmt.setString(3, soPhieu);
                 }
-                stmt.executeUpdate();
+                rowsUpdated = stmt.executeUpdate();
+            }
+
+            // Nếu PhieuSuaChua chưa có trong CSDL và có KTV phân công, tạo mới PhieuSuaChua
+            if (rowsUpdated == 0 && maKtv != null && !maKtv.isEmpty()) {
+                String sqlInsertSC = "INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) " +
+                                     "SELECT ?, tn.maPTN, ?, tn.maKH, tn.soVIN, SYSDATETIME(), CAST(DATEADD(day, 1, GETDATE()) AS DATE), ? " +
+                                     "FROM PhieuTiepNhan tn WHERE tn.maPTN = ?";
+                try (PreparedStatement ins = con.prepareStatement(sqlInsertSC)) {
+                    ins.setString(1, maPSC);
+                    ins.setString(2, maKtv);
+                    ins.setString(3, tienDo);
+                    ins.setString(4, soPhieu);
+                    ins.executeUpdate();
+                }
             }
             return true;
         } catch (SQLException e) {

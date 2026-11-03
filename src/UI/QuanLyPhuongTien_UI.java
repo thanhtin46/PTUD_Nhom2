@@ -230,9 +230,8 @@ public class QuanLyPhuongTien_UI extends JPanel {
                 maChu,
                 ngayHomNay);
 
-        // Lưu trực tiếp vào SQL Server qua PhuongTien_DAO và cập nhật cache
-        boolean ok = phuongTienDAO.themPhuongTien(xe);
-        kho.themPhuongTien(xe);
+        // Lưu vào SQL Server và đồng bộ toàn bộ kho dữ liệu
+        boolean ok = kho.themPhuongTien(xe);
 
         napBang();
         lamMoi();
