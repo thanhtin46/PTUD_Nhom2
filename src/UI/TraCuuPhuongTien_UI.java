@@ -16,9 +16,13 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Màn hình tra cứu thông tin phương tiện và chủ sở hữu.
+ * - Tìm theo: Lựa chọn tiêu chí tìm kiếm kết hợp nhập từ khóa vào ô tìm kiếm.
+ * - Lọc nhanh: Tra cứu trực tiếp ra ngay kết quả khi bấm vào (Tất cả, Đang sửa, Đã tiếp nhận, Chưa tiếp nhận, Toyota, Honda, Hyundai...), không liên kết hay phụ thuộc vào Tìm theo.
  */
 public class TraCuuPhuongTien_UI extends JPanel {
     private final JTextField txtTuKhoa = new JTextField();
@@ -33,10 +37,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
     private final JLabel lblDemKetQua = new JLabel("Đang tải dữ liệu...");
     private String boLocNhanh = "TAT_CA";
 
-    private JButton chipTatCa;
-    private JButton chipBienSo;
-    private JButton chipHang;
-    private JButton chipChuXe;
+    private final Map<JButton, String> mapChips = new LinkedHashMap<>();
 
     private final DefaultTableModel model = UiHelper.model(
             "Biển số", "Hãng xe", "Dòng xe", "Số khung (VIN)", "Màu sơn", "Năm SX", "Chủ sở hữu", "Số điện thoại", "Tiếp nhận gần nhất"
@@ -71,7 +72,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
 
         JPanel bangPanel = UiHelper.panelBang("Kết quả tra cứu phương tiện");
 
-        // KHUNG TÌM KIẾM CHI TIẾT & HƯỚNG DẪN RÕ RÀNG
+        // KHUNG TÌM KIẾM CHI TIẾT & BỘ LỌC NHANH
         JPanel searchBox = taoKhungTimKiem();
         bangPanel.add(searchBox, BorderLayout.NORTH);
 
@@ -140,7 +141,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         p.setBorder(new EmptyBorder(0, 0, 12, 0));
 
-        // Hàng 1: Tiêu chí tìm kiếm + Ô nhập + Nút tìm kiếm & làm mới
+        // Hàng 1: Tiêu chí tìm kiếm (Tìm theo) + Ô nhập từ khóa + Nút tìm kiếm & làm mới
         JPanel row1 = new JPanel(new BorderLayout(10, 0));
         row1.setOpaque(false);
 
@@ -153,7 +154,6 @@ public class TraCuuPhuongTien_UI extends JPanel {
         cboTieuChi.setFont(UiHelper.FONT_BT);
         cboTieuChi.setBackground(Color.WHITE);
         cboTieuChi.addActionListener(e -> {
-            capNhatTrangThaiChipTheoTieuChi();
             capNhatPlaceholderGoiY();
             napBang();
         });
@@ -188,7 +188,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
 
         p.add(Box.createVerticalStrut(8));
 
-        // Hàng 2: Bộ lọc nhanh (Tất cả, Biển số, Hãng xe, Chủ xe)
+        // Hàng 2: Bộ lọc nhanh - TRA CỨU TRỰC TIẾP RA NGAY, không liên kết với "Tìm theo"
         JPanel row2 = new JPanel(new BorderLayout(10, 0));
         row2.setOpaque(false);
 
@@ -199,17 +199,13 @@ public class TraCuuPhuongTien_UI extends JPanel {
         lblLocNhanh.setForeground(new Color(100, 116, 139));
         pnlChips.add(lblLocNhanh);
 
-        chipTatCa = taoChipButton("Tất cả", "TAT_CA", 0);
-        chipBienSo = taoChipButton("Biển số", "BIEN_SO", 1);
-        chipHang = taoChipButton("Hãng xe", "HANG_XE", 2);
-        chipChuXe = taoChipButton("Chủ xe", "CHU_XE", 4);
+        mapChips.clear();
+        themChip(pnlChips, "Tất cả", "TAT_CA");
+        themChip(pnlChips, "Đang sửa tại gara", "DANG_SUA");
+        themChip(pnlChips, "Đã tiếp nhận", "DA_TIEP_NHAN");
+        themChip(pnlChips, "Chưa tiếp nhận", "CHUA_TIEP_NHAN");
 
-        pnlChips.add(chipTatCa);
-        pnlChips.add(chipBienSo);
-        pnlChips.add(chipHang);
-        pnlChips.add(chipChuXe);
         row2.add(pnlChips, BorderLayout.WEST);
-
         p.add(row2);
         p.add(Box.createVerticalStrut(8));
 
@@ -239,7 +235,13 @@ public class TraCuuPhuongTien_UI extends JPanel {
         return p;
     }
 
-    private JButton taoChipButton(String text, String kieu, int mucTieuChi) {
+    private void themChip(JPanel panel, String text, String kieu) {
+        JButton btn = taoChipButton(text, kieu);
+        mapChips.put(btn, kieu);
+        panel.add(btn);
+    }
+
+    private JButton taoChipButton(String text, String kieu) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -249,7 +251,6 @@ public class TraCuuPhuongTien_UI extends JPanel {
                 boolean active = kieu.equalsIgnoreCase(boLocNhanh);
                 boolean hover = getModel().isRollover();
 
-                // Xác định màu nền: khi hover vào chỉ thay đổi màu nền, chữ màu đen giữ nguyên
                 Color bg;
                 Color border;
                 if (active) {
@@ -260,63 +261,46 @@ public class TraCuuPhuongTien_UI extends JPanel {
                     border = hover ? new Color(148, 163, 184) : new Color(203, 213, 225);
                 }
 
-                // Vẽ nền bo góc
                 g2.setColor(bg);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
 
-                // Vẽ viền
                 g2.setColor(border);
                 g2.setStroke(new BasicStroke(active ? 1.5f : 1.0f));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
 
                 g2.dispose();
-
-                // Luôn giữ chữ màu đen, không làm mờ chữ khi hover
                 setForeground(Color.BLACK);
                 super.paintComponent(g);
             }
         };
 
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        btn.setForeground(Color.BLACK); // Mặc định chữ màu đen
+        btn.setForeground(Color.BLACK);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false);
         btn.setBorder(new EmptyBorder(5, 12, 5, 12));
         btn.setRolloverEnabled(true);
 
+        // Bấm nút lọc nhanh sẽ tra cứu trực tiếp ra kết quả ngay, KHÔNG liên kết hay thay đổi "Tìm theo"
         btn.addActionListener(e -> {
             this.boLocNhanh = kieu;
-            cboTieuChi.setSelectedIndex(mucTieuChi);
             capNhatGiaoDienChip();
-            txtTuKhoa.requestFocus();
             napBang();
         });
         return btn;
     }
 
     private void capNhatGiaoDienChip() {
-        JButton[] chips = {chipTatCa, chipBienSo, chipHang, chipChuXe};
-        String[] kieus = {"TAT_CA", "BIEN_SO", "HANG_XE", "CHU_XE"};
-
-        for (int i = 0; i < chips.length; i++) {
-            if (chips[i] == null) continue;
-            boolean active = kieus[i].equalsIgnoreCase(boLocNhanh);
-            chips[i].setForeground(Color.BLACK); // Chữ màu đen giữ nguyên
-            chips[i].setFont(new Font("Segoe UI", active ? Font.BOLD : Font.PLAIN, 12));
-            chips[i].repaint();
+        for (Map.Entry<JButton, String> entry : mapChips.entrySet()) {
+            JButton chip = entry.getKey();
+            String kieu = entry.getValue();
+            if (chip == null) continue;
+            boolean active = kieu.equalsIgnoreCase(boLocNhanh);
+            chip.setForeground(Color.BLACK);
+            chip.setFont(new Font("Segoe UI", active ? Font.BOLD : Font.PLAIN, 12));
+            chip.repaint();
         }
-    }
-
-    private void capNhatTrangThaiChipTheoTieuChi() {
-        int idx = cboTieuChi.getSelectedIndex();
-        switch (idx) {
-            case 1 -> boLocNhanh = "BIEN_SO";
-            case 2 -> boLocNhanh = "HANG_XE";
-            case 4 -> boLocNhanh = "CHU_XE";
-            default -> boLocNhanh = "TAT_CA";
-        }
-        capNhatGiaoDienChip();
     }
 
     private void capNhatPlaceholderGoiY() {
@@ -324,23 +308,23 @@ public class TraCuuPhuongTien_UI extends JPanel {
         switch (idx) {
             case 1 -> {
                 txtTuKhoa.setToolTipText("Nhập biển số xe (VD: 51A-12345, 59A...)");
-                lblGoiY.setText("Nhập Biển số xe (VD: 51A-12345, 59A-67890...) để tìm kiếm xe chính xác.");
+                lblGoiY.setText("Tìm theo Biển số xe: Nhập biển số (VD: 51A-12345, 59A-67890...) vào ô tìm kiếm.");
             }
             case 2 -> {
                 txtTuKhoa.setToolTipText("Nhập tên hãng xe (VD: Toyota, Honda, Hyundai, Mazda, Kia, Ford...)");
-                lblGoiY.setText("Nhập Hãng xe (VD: Toyota, Honda, Hyundai, Mazda, Kia, Ford...) để lọc toàn bộ dòng xe thuộc hãng.");
+                lblGoiY.setText("Tìm theo Hãng xe: Nhập tên hãng xe cần tìm (hoặc bấm nút ở phần Lọc nhanh để xem ngay).");
             }
             case 3 -> {
-                txtTuKhoa.setToolTipText("Nhập tên dòng xe hoặc model (VD: Vios, Camry, Civic, CR-V, CX-5, Accent...)");
-                lblGoiY.setText("Nhập Dòng xe / Model (VD: Vios, Camry, Civic, CX-5, Accent, Morning...) để tìm theo mẫu xe cụ thể.");
+                txtTuKhoa.setToolTipText("Nhập tên dòng xe hoặc model (VD: Vios, Camry, Civic, Accent...)");
+                lblGoiY.setText("Tìm theo Dòng xe / Model: Nhập mẫu xe cụ thể (VD: Vios, Camry, Civic, Accent, Morning...).");
             }
             case 4 -> {
                 txtTuKhoa.setToolTipText("Nhập tên chủ xe, số điện thoại hoặc mã khách hàng (VD: Minh Quân, 0912..., KH001)");
-                lblGoiY.setText("Nhập Họ tên chủ sở hữu, Số điện thoại hoặc Mã khách hàng (VD: Nguyễn Minh Quân, 0912..., KH001).");
+                lblGoiY.setText("Tìm theo Chủ sở hữu: Nhập họ tên, số điện thoại hoặc mã khách hàng để tìm các xe tương ứng.");
             }
             default -> {
                 txtTuKhoa.setToolTipText("Nhập Biển số xe, Hãng xe, Dòng xe, Tên chủ, SĐT hoặc Số khung...");
-                lblGoiY.setText("Hệ thống tự động quét Biển số xe, Hãng xe, Dòng xe, Tên chủ xe, Số điện thoại và Số khung VIN.");
+                lblGoiY.setText("Mẹo: Bấm các nút 'Lọc nhanh' để xem kết quả ngay, hoặc chọn 'Tìm theo' và nhập thông tin để tìm kiếm.");
             }
         }
     }
@@ -410,7 +394,7 @@ public class TraCuuPhuongTien_UI extends JPanel {
                     xe.getNamSX(),
                     xe.getTenChuXe(),
                     xe.getSdtChuXe(),
-                    xe.getNgayTiepNhanGanNhat()
+                    xe.getNgayTiepNhanGanNhatHienThi()
             });
         }
 
@@ -468,91 +452,90 @@ public class TraCuuPhuongTien_UI extends JPanel {
         JOptionPane.showMessageDialog(this, msg, "Hồ sơ phương tiện — " + xe.getBienSo(), JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Xem lịch sử sửa chữa của chiếc xe */
+    /** Xem lịch sử bảo dưỡng và sửa chữa của xe */
     private void xemLichSuSuaChua() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn phương tiện trong bảng để xem lịch sử sửa chữa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        String bienSo = model.getValueAt(dong, 0).toString().trim();
-
-        ArrayList<TraCuuKhachHang_DAO.LichSuSuaChuaDTO> dsLs = traCuuDAO.layLichSuSuaChuaCuaXe(bienSo);
-
-        if (dsLs.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Xe mang biển số [" + bienSo + "] chưa có lịch sử tiếp nhận / sửa chữa nào trong hệ thống!",
-                    "Lịch sử sửa chữa", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một phương tiện trong bảng để xem lịch sử sửa chữa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Lịch sử sửa chữa xe — " + bienSo, true);
-        dlg.setSize(920, 500);
+        String bienSo = model.getValueAt(dong, 0).toString();
+        String hang = model.getValueAt(dong, 1).toString();
+        String dongXe = model.getValueAt(dong, 2).toString();
+        String chuXe = model.getValueAt(dong, 6).toString();
+
+        ArrayList<TraCuuKhachHang_DAO.LichSuSuaChuaDTO> dsLichSu = traCuuDAO.layLichSuSuaChuaCuaXe(bienSo);
+
+        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Lịch sử sửa chữa — Xe " + bienSo, true);
+        dlg.setSize(880, 520);
         dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
 
-        JPanel pnl = new JPanel(new BorderLayout(12, 12));
-        pnl.setBackground(UiHelper.NEN);
-        pnl.setBorder(new EmptyBorder(16, 16, 16, 16));
+        JPanel pnlHead = new JPanel(new GridLayout(2, 2, 10, 4));
+        pnlHead.setBackground(new Color(241, 245, 249));
+        pnlHead.setBorder(new EmptyBorder(12, 16, 12, 16));
+        pnlHead.add(new JLabel("Biển số: " + bienSo));
+        pnlHead.add(new JLabel("Hãng & Dòng xe: " + hang + " " + dongXe));
+        pnlHead.add(new JLabel("Chủ sở hữu: " + chuXe));
+        pnlHead.add(new JLabel("Tổng số lần vào gara: " + dsLichSu.size() + " lần"));
+        dlg.add(pnlHead, BorderLayout.NORTH);
 
-        JLabel lblTieuDe = new JLabel("Lịch sử sửa chữa của xe: " + bienSo + " (" + dsLs.size() + " lần tiếp nhận)");
-        lblTieuDe.setFont(UiHelper.FONT_TIEU_DE_PHU);
-        lblTieuDe.setForeground(UiHelper.XANH_DAM);
-        pnl.add(lblTieuDe, BorderLayout.NORTH);
+        DefaultTableModel mLS = UiHelper.model("Mã phiếu TN", "Ngày tiếp nhận", "Yêu cầu sửa chữa", "KTV phụ trách", "Trạng thái xe", "Tổng tiền (VNĐ)");
+        JTable tblLS = UiHelper.bang(mLS);
 
-        DefaultTableModel mdLs = UiHelper.model("Số phiếu", "Ngày tiếp nhận", "Biển số", "Hãng / Loại", "Yêu cầu sửa chữa", "KTV xử lý", "Tiến độ", "Chi phí");
-        for (TraCuuKhachHang_DAO.LichSuSuaChuaDTO dto : dsLs) {
-            mdLs.addRow(new Object[]{
-                    dto.getSoPhieu(), dto.getNgayTiepNhan(), dto.getBienSo(),
-                    dto.getXe(), dto.getYeuCau(), dto.getKtvXuLy(), dto.getTienDo(),
-                    UiHelper.tien(dto.getChiPhi()) + " đ"
+        for (TraCuuKhachHang_DAO.LichSuSuaChuaDTO ls : dsLichSu) {
+            mLS.addRow(new Object[]{
+                    ls.getSoPhieu(),
+                    ls.getNgayTiepNhan(),
+                    ls.getYeuCau(),
+                    ls.getKtvXuLy(),
+                    ls.getTienDo(),
+                    ls.getChiPhi() > 0 ? String.format("%,d đ", ls.getChiPhi()) : "Chưa lập HĐ"
             });
         }
 
-        JTable tblLs = UiHelper.bang(mdLs);
-        tblLs.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        UiHelper.canGiua(tblLs, 0, 1, 2, 6);
-        UiHelper.canTrai(tblLs, 3, 4, 5);
-        UiHelper.canPhai(tblLs, 7);
+        dlg.add(new JScrollPane(tblLS), BorderLayout.CENTER);
 
-        JScrollPane spLs = new JScrollPane(tblLs);
-        UiHelper.danhSachBong(spLs);
-        pnl.add(spLs, BorderLayout.CENTER);
-
-        JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, e -> dlg.dispose());
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pnlBot.setOpaque(false);
-        JButton btnMoToanManHinh = UiHelper.nut("Mở tra cứu chi tiết", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, ev -> {
-            dlg.dispose();
-            Main_UI mainUI = Main_UI.getInstance();
-            if (mainUI != null) {
-                mainUI.chuyenTrang("Tra cứu lịch sử sửa chữa", new TraCuuLichSuSuaChua_UI(bienSo, 3));
-            }
-        });
-        pnlBot.add(btnMoToanManHinh);
+        pnlBot.setBorder(new EmptyBorder(8, 12, 8, 12));
+        JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, e -> dlg.dispose());
         pnlBot.add(btnDong);
-        pnl.add(pnlBot, BorderLayout.SOUTH);
+        dlg.add(pnlBot, BorderLayout.SOUTH);
 
-        dlg.setContentPane(pnl);
         dlg.setVisible(true);
     }
 
-    /** Lập phiếu tiếp nhận cho phương tiện đã chọn */
+    /** Lập phiếu tiếp nhận trực tiếp cho phương tiện đang chọn */
     private void lapPhieuTiepNhan() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một xe trong bảng kết quả tra cứu để lập phiếu tiếp nhận!", "Chưa chọn xe", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một xe trong danh sách để lập phiếu tiếp nhận!", "Chưa chọn xe", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String bienSo = model.getValueAt(dong, 0).toString().trim();
+
+        String bienSo = model.getValueAt(dong, 0).toString();
         PhuongTien xe = kho.timXeTheoBienSo(bienSo);
+
         if (xe == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin xe với biển số: " + bienSo, "Thông báo", JOptionPane.WARNING_MESSAGE);
+            // Tạo đối tượng từ DTO nếu chưa có trong bộ nhớ
+            TraCuuPhuongTien_DAO.PhuongTienDTO dto = (dong < dsHienTai.size()) ? dsHienTai.get(dong) : null;
+            if (dto != null) {
+                xe = new PhuongTien(dto.getBienSo(), dto.getHangXe(), dto.getDongXe(), dto.getSoKhung(),
+                        dto.getSoMay(), dto.getMauSon(), dto.getNamSX(), dto.getOdo(), dto.getMaChuXe(), dto.getNgayTiepNhanGanNhat());
+            }
+        }
+
+        if (xe == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy dữ liệu phương tiện để chuyển trang tiếp nhận!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         Main_UI mainUI = Main_UI.getInstance();
         if (mainUI == null) {
             mainUI = (Main_UI) SwingUtilities.getAncestorOfClass(Main_UI.class, this);
         }
+
         if (mainUI != null) {
             mainUI.chuyenTrangTiepNhan(xe);
         } else {
