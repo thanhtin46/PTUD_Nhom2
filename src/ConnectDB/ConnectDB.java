@@ -131,6 +131,14 @@ public class ConnectDB {
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'boPhan') IS NULL ALTER TABLE dbo.NhanVien ADD boPhan NVARCHAR(50) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'ngayVaoLam') IS NULL ALTER TABLE dbo.NhanVien ADD ngayVaoLam VARCHAR(20) NULL;");
             stmt.execute("IF COL_LENGTH('dbo.NhanVien', 'trangThai') IS NULL ALTER TABLE dbo.NhanVien ADD trangThai NVARCHAR(30) NOT NULL CONSTRAINT DF_NV_TrangThai DEFAULT N'Đang làm việc' WITH VALUES;");
+            // Tự động phục hồi tiếng Việt cho NhanVien nếu CSDL bị nạp nhầm mã ANSI
+            stmt.execute("IF EXISTS (SELECT 1 FROM dbo.NhanVien WHERE chucVu LIKE N'%Ã%' OR hoTen LIKE N'%Ã%' OR chucVu LIKE N'%áº%' OR hoTen LIKE N'%áº%') BEGIN " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Nguyễn Văn Tiếp Tân', chucVu = N'Nhân viên tiếp tân', boPhan = N'Tiếp tân', trangThai = N'Đang làm việc' WHERE maNV = 'NV01'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Trần Văn Sửa Chữa', chucVu = N'Nhân viên sửa chữa', boPhan = N'Xưởng sửa chữa', trangThai = N'Đang làm việc' WHERE maNV = 'NV02'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Nguyễn Văn Kho', chucVu = N'Nhân viên kho', boPhan = N'Kho phụ tùng', trangThai = N'Đang làm việc' WHERE maNV = 'NV03'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Quản Lý Tổng', chucVu = N'Quản lý', boPhan = N'Ban Giám đốc', trangThai = N'Đang làm việc' WHERE maNV = 'NV04'; " +
+                         "  UPDATE dbo.NhanVien SET hoTen = N'Trần Thị Thu Ngân', chucVu = N'Nhân viên thu ngân', boPhan = N'Kế toán thu ngân', trangThai = N'Đang làm việc' WHERE maNV = 'NV05'; " +
+                         "END;");
             // Chuẩn hóa cột DATE cho KhachHang và PhuongTien
             stmt.execute("IF COL_LENGTH('dbo.KhachHang', 'ngayDangKy') IS NOT NULL " +
                          "AND (SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='KhachHang' AND COLUMN_NAME='ngayDangKy') <> 'date' BEGIN " +

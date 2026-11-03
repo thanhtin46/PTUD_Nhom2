@@ -37,10 +37,12 @@ public final class QuyenTruyCap {
         Quyen(String tenHienThi) { this.tenHienThi = tenHienThi; }
         public String getTenHienThi() { return tenHienThi; }
     }
+
     public static VaiTro vaiTro(String s) {
-        String v = Normalizer.normalize(s == null ? "" : s, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "").replace('đ','d').toLowerCase(Locale.ROOT).trim();
-        return switch(v) {
+        if (s == null) return VaiTro.KHONG_RO;
+        String v = Normalizer.normalize(s, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replace('đ','d').replace('Đ','D').toLowerCase(Locale.ROOT).trim();
+        VaiTro vt = switch(v) {
             case "quan_ly", "quan ly", "admin", "giam doc", "chu xuong" -> VaiTro.QUAN_LY;
             case "tiep_tan", "nhan vien tiep tan", "tiep tan", "le tan", "co van dich vu" -> VaiTro.TIEP_TAN;
             case "sua_chua", "nhan vien sua chua", "ky thuat vien", "ktv", "nhan vien ky thuat" -> VaiTro.SUA_CHUA;
@@ -48,7 +50,18 @@ public final class QuyenTruyCap {
             case "thu_ngan", "nhan vien thu ngan", "thu ngan", "ke toan" -> VaiTro.THU_NGAN;
             default -> VaiTro.KHONG_RO;
         };
+        if (vt != VaiTro.KHONG_RO) return vt;
+
+        // Dự phòng nếu chuỗi vai trò bị lỗi mã ký tự (Mojibake) hoặc biến thể viết tắt
+        if (v.contains("quan") && (v.contains("ly") || v.contains("la") || v.contains("doc"))) return VaiTro.QUAN_LY;
+        if (v.contains("tiep") || v.contains("tan") || v.contains("le tan")) return VaiTro.TIEP_TAN;
+        if (v.contains("sua") || v.contains("chua") || v.contains("ktv") || v.contains("thuat")) return VaiTro.SUA_CHUA;
+        if (v.contains("kho")) return VaiTro.KHO;
+        if (v.contains("ngan") || v.contains("thu") || v.contains("toan")) return VaiTro.THU_NGAN;
+
+        return VaiTro.KHONG_RO;
     }
+
     public static Set<Quyen> macDinh(String role) {
         return switch(vaiTro(role)) {
             case QUAN_LY -> EnumSet.allOf(Quyen.class);
@@ -59,6 +72,7 @@ public final class QuyenTruyCap {
             default -> EnumSet.noneOf(Quyen.class);
         };
     }
+
     public static boolean co(NhanVien n, Quyen q) {
         if(n==null || !n.dangHoatDong() || vaiTro(n.getVaiTro())==VaiTro.KHONG_RO)return false;
         if(macDinh(n.getVaiTro()).contains(q))return true;
@@ -66,49 +80,79 @@ public final class QuyenTruyCap {
         if(q==Quyen.PHAN_QUYEN || q==Quyen.NHAN_VIEN || q==Quyen.CAU_HINH)return false;
         return n.getCacQuyen()!=null && Arrays.asList(n.getCacQuyen()).contains(q.name());
     }
+
     public static String chuanTrang(String s) {
         if(s==null)return "";
-        return switch(s.trim()) {
-            case "Quản trị hệ thống", "Admin Hub" -> "Quản trị hệ thống (Admin)";
-            case "Khách hàng", "Danh sách khách hàng" -> "Quản lý khách hàng";
-            case "Phương tiện", "Danh sách phương tiện" -> "Quản lý phương tiện";
-            case "Phiếu tiếp nhận" -> "Lập phiếu tiếp nhận";
-            case "Phiếu sửa chữa", "Sửa chữa" -> "Lập phiếu sửa chữa";
-            case "Tra cứu phiếu sửa chữa" -> "Cập nhật tiến độ";
-            case "Lịch sử sửa chữa", "Lịch sử sửa chữa của khách hàng", "Lịch sử sửa chữa người dùng", "Tra cứu lịch sử sửa chữa người dùng" -> "Tra cứu lịch sử sửa chữa";
-            case "Hóa đơn", "Thanh toán hóa đơn" -> "Lập hóa đơn";
-            case "Hóa đơn bán hàng", "Bán lẻ phụ tùng" -> "Lập hóa đơn bán hàng";
-            case "Kho phụ tùng", "Danh sách phụ tùng" -> "Quản lý phụ tùng";
-            case "Theo dõi lịch sử nhập xuất", "Lịch sử nhập xuất" -> "Lịch sử nhập xuất kho";
-            case "Bảo hành" -> "Lập phiếu bảo hành";
-            case "Tra cứu bảo hành", "Quản lý bảo hành" -> "Tra cứu phiếu bảo hành";
-            case "Nhân viên" -> "Quản lý nhân viên";
-            case "Tra cứu nhân viên", "Phân quyền người dùng" -> "Phân quyền";
-            case "Báo cáo – Thống kê", "Báo cáo thống kê", "Báo cáo doanh thu", "Theo tháng", "Theo năm" -> "Thống kê doanh thu";
-            case "Biểu đồ đường xu hướng" -> "Xu hướng doanh thu (Đường)";
+        String v = Normalizer.normalize(s, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replace('đ','d').replace('Đ','D').toLowerCase(Locale.ROOT).trim();
+        return switch(v) {
+            case "trang chu", "tong quan" -> "Trang chủ";
+            case "admin hub", "quan tri he thong (admin)" -> "Admin Hub";
+            case "quan ly khach hang", "khach hang" -> "Quản lý khách hàng";
+            case "tra cuu khach hang" -> "Tra cứu khách hàng";
+            case "lich su sua chua" -> "Lịch sử sửa chữa";
+            case "quan ly phuong tien", "phuong tien" -> "Quản lý phương tiện";
+            case "tra cuu phuong tien" -> "Tra cứu phương tiện";
+            case "lap phieu tiep nhan", "phieu tiep nhan" -> "Lập phiếu tiếp nhận";
+            case "tra cuu phieu tiep nhan" -> "Tra cứu phiếu tiếp nhận";
+            case "lap phieu sua chua", "phieu sua chua" -> "Lập phiếu sửa chữa";
+            case "phan cong ktv" -> "Phân công KTV";
+            case "cap nhat tien do" -> "Cập nhật tiến độ";
+            case "dieu hanh sua chua" -> "Điều hành sửa chữa";
+            case "tra cuu lich su sua chua" -> "Tra cứu lịch sử sửa chữa";
+            case "lap hoa don", "hoa don", "ban le phu tung", "lap hoa don ban hang" -> "Lập hóa đơn";
+            case "tra cuu hoa don" -> "Tra cứu hóa đơn";
+            case "quan ly phu tung", "kho phu tung" -> "Quản lý phụ tùng";
+            case "nhap kho" -> "Nhập kho";
+            case "theo doi cho nhap" -> "Theo dõi chờ nhập";
+            case "xuat kho" -> "Xuất kho";
+            case "lich su nhap xuat kho" -> "Lịch sử nhập xuất kho";
+            case "bao cao ton kho" -> "Báo cáo tồn kho";
+            case "lap phieu bao hanh", "bao hanh" -> "Lập phiếu bảo hành";
+            case "tra cuu phieu bao hanh" -> "Tra cứu phiếu bảo hành";
+            case "quan ly nhan vien", "nhan vien" -> "Quản lý nhân viên";
+            case "phan quyen", "phan quyen nguoi dung" -> "Phân quyền";
+            case "thong ke doanh thu", "bao cao - thong ke", "bao cao doanh thu" -> "Thống kê doanh thu";
+            case "xu huong doanh thu (duong)" -> "Xu hướng doanh thu (Đường)";
             default -> s.trim();
         };
     }
-    public static final Map<String,Quyen> TRANG;
-    static {
-        Map<String,Quyen> m=new LinkedHashMap<>();
-        m.put("Quản trị hệ thống (Admin)",Quyen.CAU_HINH);
-        m.put("Quản lý khách hàng",Quyen.KH_SUA);m.put("Tra cứu khách hàng",Quyen.KH_XEM);
-        m.put("Quản lý phương tiện",Quyen.XE_SUA);m.put("Tra cứu phương tiện",Quyen.XE_XEM);
-        m.put("Lập phiếu tiếp nhận",Quyen.TIEP_NHAN);m.put("Tra cứu phiếu tiếp nhận",Quyen.TIEP_NHAN);
-        m.put("Tra cứu lịch sử sửa chữa",Quyen.LICH_SU);m.put("Lập phiếu sửa chữa",Quyen.SC);
-        m.put("Cập nhật tiến độ",Quyen.TIEN_DO);m.put("Phân công KTV",Quyen.PHAN_CONG);m.put("Điều hành sửa chữa",Quyen.PHAN_CONG);
-        m.put("Lập hóa đơn",Quyen.THANH_TOAN);m.put("Lập hóa đơn bán hàng",Quyen.THANH_TOAN);m.put("Tra cứu hóa đơn",Quyen.HD_XEM);
-        m.put("Quản lý phụ tùng",Quyen.PHU_TUNG);m.put("Nhập kho",Quyen.NHAP);m.put("Theo dõi chờ nhập",Quyen.NHAP);
-        m.put("Xuất kho",Quyen.XUAT);m.put("Báo cáo tồn kho",Quyen.KHO_XEM);m.put("Lịch sử nhập xuất kho",Quyen.KHO_XEM);
-        m.put("Lập phiếu bảo hành",Quyen.BAO_HANH);m.put("Tra cứu phiếu bảo hành",Quyen.BAO_HANH);
-        m.put("Quản lý nhân viên",Quyen.NHAN_VIEN);m.put("Phân quyền",Quyen.PHAN_QUYEN);
-        m.put("Thống kê doanh thu",Quyen.BAO_CAO);m.put("Xu hướng doanh thu (Đường)",Quyen.BAO_CAO);
-        TRANG=Collections.unmodifiableMap(m);
-    }
-    public static boolean moTrang(NhanVien n,String name) {
-        String route=chuanTrang(name);
-        if("Trang chủ".equals(route))return n!=null && n.dangHoatDong();
-        Quyen q=TRANG.get(route);return q!=null && co(n,q);
+
+    public static final Map<String, Quyen> TRANG = Map.ofEntries(
+            Map.entry("Admin Hub", Quyen.CAU_HINH),
+            Map.entry("Quản lý khách hàng", Quyen.KH_XEM),
+            Map.entry("Tra cứu khách hàng", Quyen.KH_XEM),
+            Map.entry("Lịch sử sửa chữa", Quyen.LICH_SU),
+            Map.entry("Quản lý phương tiện", Quyen.XE_XEM),
+            Map.entry("Tra cứu phương tiện", Quyen.XE_XEM),
+            Map.entry("Lập phiếu tiếp nhận", Quyen.TIEP_NHAN),
+            Map.entry("Tra cứu phiếu tiếp nhận", Quyen.TIEP_NHAN),
+            Map.entry("Lập phiếu sửa chữa", Quyen.SC),
+            Map.entry("Phân công KTV", Quyen.PHAN_CONG),
+            Map.entry("Cập nhật tiến độ", Quyen.TIEN_DO),
+            Map.entry("Điều hành sửa chữa", Quyen.PHAN_CONG),
+            Map.entry("Tra cứu lịch sử sửa chữa", Quyen.LICH_SU),
+            Map.entry("Lập hóa đơn", Quyen.THANH_TOAN),
+            Map.entry("Lập hóa đơn bán hàng", Quyen.THANH_TOAN),
+            Map.entry("Tra cứu hóa đơn", Quyen.HD_XEM),
+            Map.entry("Quản lý phụ tùng", Quyen.PHU_TUNG),
+            Map.entry("Nhập kho", Quyen.NHAP),
+            Map.entry("Theo dõi chờ nhập", Quyen.NHAP),
+            Map.entry("Xuất kho", Quyen.XUAT),
+            Map.entry("Lịch sử nhập xuất kho", Quyen.KHO_XEM),
+            Map.entry("Báo cáo tồn kho", Quyen.KHO_XEM),
+            Map.entry("Lập phiếu bảo hành", Quyen.BAO_HANH),
+            Map.entry("Tra cứu phiếu bảo hành", Quyen.BAO_HANH),
+            Map.entry("Quản lý nhân viên", Quyen.NHAN_VIEN),
+            Map.entry("Phân quyền", Quyen.PHAN_QUYEN),
+            Map.entry("Thống kê doanh thu", Quyen.BAO_CAO),
+            Map.entry("Xu hướng doanh thu (Đường)", Quyen.BAO_CAO)
+    );
+
+    public static boolean moTrang(NhanVien n, String tieuDe) {
+        String c = chuanTrang(tieuDe);
+        if("Trang chủ".equals(c)) return true;
+        Quyen q = TRANG.get(c);
+        return q != null && co(n, q);
     }
 }
