@@ -16,10 +16,16 @@ END;
 GO
 
 -- 2. Tạo mới Database
-CREATE DATABASE QuanLySuaChuaXe;
+CREATE DATABASE QuanLySuaChuaXe COLLATE Vietnamese_CI_AS;
 GO
 
 USE QuanLySuaChuaXe;
+GO
+
+-- Đảm bảo chuẩn định dạng ngày giờ và Unicode cho mọi máy tính
+SET DATEFORMAT ymd;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 GO
 
 -- ============================================================
@@ -148,7 +154,8 @@ CREATE TABLE PhieuSuaChua (
     trangThai NVARCHAR(50) NOT NULL DEFAULT N'CHO_SUA',
     CONSTRAINT CK_PSC_Ngay CHECK (
         ngayHoanThanhDuKien IS NULL
-        OR ngayHoanThanhDuKien >= CAST(ngayBD AS DATE)
+        OR TRY_CAST(ngayBD AS DATE) IS NULL
+        OR ngayHoanThanhDuKien >= TRY_CAST(ngayBD AS DATE)
     ),
     CONSTRAINT FK_PSC_PTN FOREIGN KEY (maPTN) REFERENCES PhieuTiepNhan(maPTN),
     CONSTRAINT FK_PSC_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
@@ -272,9 +279,12 @@ CREATE TABLE ChiTietPhieuBaoHanh (
 GO
 
 /* View tương thích ngược cho HangMucBaoHanh */
-CREATE VIEW HangMucBaoHanh AS
+IF OBJECT_ID(N'dbo.HangMucBaoHanh', N'V') IS NOT NULL
+    DROP VIEW dbo.HangMucBaoHanh;
+GO
+CREATE VIEW dbo.HangMucBaoHanh AS
 SELECT maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu
-FROM ChiTietPhieuBaoHanh;
+FROM dbo.ChiTietPhieuBaoHanh;
 GO
 
 /* 18. PHIEU NHAP KHO */
@@ -320,12 +330,13 @@ CREATE TABLE PhieuXuatKho (
     CONSTRAINT UQ_PXK_maPSC UNIQUE (maPSC),
     CONSTRAINT FK_PXK_PhieuSuaChua FOREIGN KEY (maPSC) REFERENCES PhieuSuaChua(maPSC),
     CONSTRAINT FK_PXK_NhanVien FOREIGN KEY (maNV) REFERENCES NhanVien(maNV),
-    CONSTRAINT CK_PXK_TrangThai CHECK (trangThai IN (N'Chờ xuất', N'Đã xuất', N'Đã hủy'))
+    CONSTRAINT CK_PXK_TrangThai CHECK (trangThai IN (N'Chờ xuất', N'Đã xuất', N'Đã hủy', 'CHO_XUAT', 'DA_XUAT', 'DA_HUY'))
 );
 GO
 
-/* Khóa ngoại PhieuSuaChua -> PhieuXuatKho (Tạo sau khi bảng PhieuXuatKho đã tồn tại) */
-ALTER TABLE PhieuSuaChua ADD CONSTRAINT FK_PSC_PhieuXuatKho FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuatKho(maPhieuXuat);
+/* Khóa ngoại PhieuSuaChua -> PhieuXuatKho (Tạo an toàn sau khi bảng PhieuXuatKho đã tồn tại) */
+IF OBJECT_ID(N'dbo.FK_PSC_PhieuXuatKho', N'F') IS NULL
+    ALTER TABLE PhieuSuaChua ADD CONSTRAINT FK_PSC_PhieuXuatKho FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuatKho(maPhieuXuat);
 GO
 CREATE TABLE ChiTietPhieuXuatKho (
     maPhieuXuat VARCHAR(20) NOT NULL,
@@ -531,8 +542,10 @@ GO
 -- ============================================================
 -- PHẦN III: DỮ LIỆU MẪU BỔ SUNG
 -- ============================================================
-SET XACT_ABORT ON;
-BEGIN TRANSACTION;
+USE QuanLySuaChuaXe;
+GO
+SET DATEFORMAT ymd;
+GO
 IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNV=N'NV101')
  INSERT INTO NhanVien (maNV,hoTen,chucVu,soDT,email,bacNghe,boPhan,ngayVaoLam,trangThai) VALUES (N'NV101',N'Lê Văn Cường',N'Nhân viên sửa chữa',N'0908100101',N'nv101@example.com',N'4/7',N'Xưởng dịch vụ',N'2025-01-01',N'Đang làm việc');
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE maNV=N'NV101')
@@ -1193,7 +1206,6 @@ IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD='HD203')
 IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD203' AND maPT='PT109')
  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);
 
-COMMIT TRANSACTION;
 GO
 
 PRINT N'Hoàn tất nạp CSDL QuanLySuaChuaXe thành công!';

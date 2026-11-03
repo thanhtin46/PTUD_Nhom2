@@ -13,12 +13,18 @@
 ---
 
 ## 2. Hướng dẫn thiết lập Cơ sở dữ liệu (Database Setup)
-File script CSDL đã được tối ưu và đặt trực tiếp tại thư mục gốc của dự án: [`QuanLySuaChuaXe.sql`](QuanLySuaChuaXe.sql).
+File script CSDL đã được tối ưu hóa toàn diện, hỗ trợ Collation `Vietnamese_CI_AS` và chuẩn mã hóa UTF-8: [`QuanLySuaChuaXe.sql`](QuanLySuaChuaXe.sql).
 
+### Cách 1 (Khuyên dùng - Nhanh nhất 1 click): Sử dụng công cụ `NapDuLieu_UTF8.bat`
+- Nhấp đúp chuột vào file **`NapDuLieu_UTF8.bat`** tại thư mục gốc của dự án.
+- Công cụ sẽ **tự động dò tìm** SQL Server đang chạy trên máy (hỗ trợ `localhost\SQLEXPRESS`, `localhost`, `.\SQLEXPRESS`, `.` và Windows Authentication / tài khoản `sa`).
+- Tự động nạp toàn bộ cấu trúc 22 bảng và bộ dữ liệu mẫu nghiệp vụ chuẩn 100% tiếng Việt mà không lo lỗi font chữ hay sai lệch phiên bản.
+
+### Cách 2: Chạy trực tiếp từ SQL Server Management Studio (SSMS)
 1. Mở **SQL Server Management Studio (SSMS)** và kết nối tới SQL Server của bạn.
 2. Mở file **`QuanLySuaChuaXe.sql`** trong thư mục đồ án.
 3. Nhấn **Execute** (hoặc phím `F5`) để thực thi toàn bộ script.
-   - Script sẽ tự động tạo cơ sở dữ liệu `QuanLySuaChuaXe`.
+   - Script sẽ tự động tạo cơ sở dữ liệu `QuanLySuaChuaXe` với Collation `Vietnamese_CI_AS`.
    - Tạo toàn bộ cấu trúc 22 bảng, khóa chính, khóa ngoại, ràng buộc toàn vẹn dữ liệu.
    - Nạp đầy đủ dữ liệu mẫu chuẩn nghiệp vụ: hồ sơ khách hàng, danh mục phương tiện, kho vật tư phụ tùng, các phiếu tiếp nhận, lệnh sửa chữa, phiếu xuất kho, hóa đơn dịch vụ và phiếu bảo hành.
 
