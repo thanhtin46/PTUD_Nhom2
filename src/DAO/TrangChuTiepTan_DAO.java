@@ -112,13 +112,18 @@ public class TrangChuTiepTan_DAO {
             return fallbackDanhSachGanDay(limit);
         }
 
-        String sql = "SELECT TOP (?) tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
+        String sql = "SELECT TOP (?) tn.maPTN, tn.maKH, " +
+                "COALESCE(kh.hoTen, tn.maKH, N'Khách hàng') AS hoTen, " +
+                "COALESCE(kh.soDT, '') AS soDT, " +
+                "COALESCE(pt.bienSoXe, tn.soVIN, '') AS bienSoXe, " +
+                "COALESCE(pt.hangXe, '') AS hangXe, " +
+                "COALESCE(pt.dongXe, '') AS dongXe, " +
                 "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV " +
                 "FROM PhieuTiepNhan tn " +
-                "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
-                "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
+                "LEFT JOIN KhachHang kh ON tn.maKH = kh.maKH " +
+                "LEFT JOIN PhuongTien pt ON (tn.soVIN = pt.soVIN OR pt.soVIN = ('VIN_' + REPLACE(tn.soVIN, 'VIN-', '')) OR pt.bienSoXe = tn.soVIN) " +
                 "LEFT JOIN NhanVien nv ON tn.maNV = nv.maNV " +
-                "ORDER BY tn.maPTN DESC";
+                "ORDER BY COALESCE(tn.ngayTN, '1970-01-01') DESC, LEN(tn.maPTN) DESC, tn.maPTN DESC";
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, limit > 0 ? limit : 10);
@@ -260,12 +265,17 @@ public class TrangChuTiepTan_DAO {
 
     private ArrayList<PhieuTiepNhan> fallbackDanhSachGanDay(int limit) {
         ArrayList<PhieuTiepNhan> list = new ArrayList<>();
-        ArrayList<PhieuTiepNhan> all = KhoDuLieu.get().getPhieuTiepNhans();
+        ArrayList<PhieuTiepNhan> all = new ArrayList<>(KhoDuLieu.get().getPhieuTiepNhans());
+        all.sort((a, b) -> {
+            java.time.LocalDateTime tA = a.getNgayTN() != null ? a.getNgayTN() : java.time.LocalDateTime.MIN;
+            java.time.LocalDateTime tB = b.getNgayTN() != null ? b.getNgayTN() : java.time.LocalDateTime.MIN;
+            int c = tB.compareTo(tA);
+            if (c != 0) return c;
+            return b.getSoPhieu().compareTo(a.getSoPhieu());
+        });
         int max = limit > 0 ? limit : 10;
-        int count = 0;
-        for (int i = all.size() - 1; i >= 0 && count < max; i--) {
+        for (int i = 0; i < all.size() && i < max; i++) {
             list.add(all.get(i));
-            count++;
         }
         return list;
     }

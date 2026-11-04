@@ -80,8 +80,7 @@ public class TrangChuTiepTan_UI extends JPanel {
         contentBody.add(midPanel);
         contentBody.add(Box.createVerticalStrut(14));
 
-        // 2.3. Banner Chào mừng & Trạng thái hệ thống
-        contentBody.add(taoBannerChaoMung());
+
 
         JScrollPane sp = new JScrollPane(contentBody);
         sp.setBorder(null);
@@ -91,7 +90,7 @@ public class TrangChuTiepTan_UI extends JPanel {
         root.add(sp, BorderLayout.CENTER);
 
         // Nạp dữ liệu ban đầu
-        napBangTiepNhan();
+        capNhatDuLieu();
     }
 
     // ===============================================================
@@ -105,7 +104,7 @@ public class TrangChuTiepTan_UI extends JPanel {
         left.setOpaque(false);
         left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
 
-        JLabel tde = UiHelper.tieuDeTrang("Bảng điều khiển Tiếp tân");
+        JLabel tde = UiHelper.tieuDeTrang("Bảng điều khiển Tiếp Nhận");
         JLabel phu = new JLabel("Tổng quan hoạt động tiếp nhận xe, theo dõi tiến độ sửa chữa và dịch vụ khách hàng tại xưởng");
         phu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         phu.setForeground(new Color(100, 116, 139));
@@ -300,10 +299,7 @@ public class TrangChuTiepTan_UI extends JPanel {
         footer.setOpaque(false);
         footer.setBorder(new EmptyBorder(8, 4, 4, 4));
 
-        JLabel lblHuongDan = new JLabel("Nhấp đúp chuột vào một dòng để xem chi tiết phiếu tiếp nhận");
-        lblHuongDan.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblHuongDan.setForeground(new Color(100, 116, 139));
-        footer.add(lblHuongDan, BorderLayout.WEST);
+
 
         JPanel actionBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actionBtns.setOpaque(false);
@@ -425,8 +421,8 @@ public class TrangChuTiepTan_UI extends JPanel {
         wrap.add(Box.createVerticalStrut(10));
 
         // 4.2. Khối lối tắt tác vụ nhanh của tiếp tân
-        JPanel pnlTacVu = UiHelper.panelForm("Lối tắt tiếp tân", 340);
-        JPanel gridBtns = new JPanel(new GridLayout(4, 1, 6, 6));
+        JPanel pnlTacVu = UiHelper.panelForm("Lối tắt tiếp nhận", 340);
+        JPanel gridBtns = new JPanel(new GridLayout(5, 1, 6, 6));
         gridBtns.setOpaque(false);
 
         JButton btnLapPhieu = UiHelper.nut("  Lập phiếu tiếp nhận mới", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> {
@@ -450,10 +446,17 @@ public class TrangChuTiepTan_UI extends JPanel {
             if (main != null) main.chuyenTrang("Lập hóa đơn");
         });
 
+        JButton btnBaoHanh = UiHelper.nut("  Lập phiếu bảo hành", UiIcon.of(UiIcon.SHIELD, 15), new Color(79, 70, 229), e -> {
+            Main_UI main = Main_UI.getInstance();
+            if (main != null) main.chuyenTrang("Lập phiếu bảo hành");
+        });
+        BaoVeQuyen.ganQuyen(btnBaoHanh, Entity.QuyenTruyCap.Quyen.BAO_HANH);
+
         gridBtns.add(btnLapPhieu);
         gridBtns.add(btnKhachHang);
         gridBtns.add(btnPhuongTien);
         gridBtns.add(btnHoaDon);
+        gridBtns.add(btnBaoHanh);
 
         pnlTacVu.add(gridBtns, BorderLayout.CENTER);
         wrap.add(pnlTacVu);
@@ -510,76 +513,7 @@ public class TrangChuTiepTan_UI extends JPanel {
         return p;
     }
 
-    // ===============================================================
-    // 5. BANNER CHÀO MỪNG DƯỚI CÙNG
-    // ===============================================================
-    private JPanel taoBannerChaoMung() {
-        JPanel chao = new JPanel(new BorderLayout(20, 0)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int w = getWidth(), h = getHeight();
 
-                g2.setColor(new Color(15, 23, 42, 10));
-                g2.fillRoundRect(0, 2, w, h - 2, 14, 14);
-
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, w, h - 1, 14, 14);
-
-                g2.setColor(UiHelper.VIEN);
-                g2.drawRoundRect(0, 0, w - 1, h - 2, 14, 14);
-
-                GradientPaint gp = new GradientPaint(0, 0, new Color(37, 99, 235), 0, h, new Color(14, 165, 233));
-                g2.setPaint(gp);
-                g2.fillRoundRect(0, 0, 5, h - 1, 5, 5);
-                g2.dispose();
-            }
-        };
-        chao.setOpaque(false);
-        chao.setBorder(new EmptyBorder(14, 20, 14, 20));
-
-        JPanel noiDungChao = new JPanel();
-        noiDungChao.setOpaque(false);
-        noiDungChao.setLayout(new BoxLayout(noiDungChao, BoxLayout.Y_AXIS));
-
-        String tenNhanVien = nvHienTai != null ? nvHienTai.getHoTen() : "Nhân viên Tiếp tân";
-        String vaiTro = nvHienTai != null ? nvHienTai.getVaiTro() : "Bộ phận Tiếp nhận & Dịch vụ";
-
-        JLabel loiChao = new JLabel("Xin chào, " + tenNhanVien + " — " + vaiTro);
-        loiChao.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        loiChao.setForeground(UiHelper.XANH_DAM);
-
-        JLabel huongDan = new JLabel("Hệ thống Gara Ô tô The T4 đã đồng bộ cơ sở dữ liệu và sẵn sàng phục vụ khách hàng tiếp nhận xe.");
-        huongDan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        huongDan.setForeground(new Color(100, 116, 139));
-
-        loiChao.setAlignmentX(Component.LEFT_ALIGNMENT);
-        huongDan.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        noiDungChao.add(loiChao);
-        noiDungChao.add(Box.createVerticalStrut(3));
-        noiDungChao.add(huongDan);
-        chao.add(noiDungChao, BorderLayout.CENTER);
-
-        JLabel trangThai = new JLabel("●  Hệ thống CSDL trực tuyến") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(22, 163, 74, 22));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        trangThai.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        trangThai.setForeground(new Color(22, 163, 74));
-        trangThai.setBorder(new EmptyBorder(6, 12, 6, 12));
-        chao.add(trangThai, BorderLayout.EAST);
-
-        return chao;
-    }
 
     // ===============================================================
     // CẬP NHẬT DỮ LIỆU & NẠP BẢNG

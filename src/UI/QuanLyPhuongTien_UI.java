@@ -179,7 +179,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
         // Hàng nút chức năng Thêm, Sửa, Xóa, Làm mới hiển thị trực quan đầy đủ
         JPanel hangNut1 = new JPanel(new GridLayout(1, 4, 8, 0));
         hangNut1.setOpaque(false);
-        hangNut1.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        hangNut1.add(UiHelper.nut("Thêm", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, true, e -> them()));
         hangNut1.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
         hangNut1.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
         hangNut1.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));

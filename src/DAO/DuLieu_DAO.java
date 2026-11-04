@@ -462,16 +462,21 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        String sql = "SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
+        String sql = "SELECT tn.maPTN, tn.maKH, " +
+                     "COALESCE(kh.hoTen, tn.maKH, N'Khách hàng') AS hoTen, " +
+                     "COALESCE(kh.soDT, '') AS soDT, " +
+                     "COALESCE(pt.bienSoXe, tn.soVIN, '') AS bienSoXe, " +
+                     "COALESCE(pt.hangXe, '') AS hangXe, " +
+                     "COALESCE(pt.dongXe, '') AS dongXe, " +
                      "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
                      "sc.maNV AS maNVPhanCong, ktv.hoTen AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
-                     "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
-                     "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
+                     "LEFT JOIN KhachHang kh ON tn.maKH = kh.maKH " +
+                     "LEFT JOIN PhuongTien pt ON (tn.soVIN = pt.soVIN OR pt.soVIN = ('VIN_' + REPLACE(tn.soVIN, 'VIN-', '')) OR pt.bienSoXe = tn.soVIN) " +
                      "LEFT JOIN NhanVien nv ON tn.maNV = nv.maNV " +
                      "LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) " +
                      "LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV " +
-                     "ORDER BY tn.maPTN ASC";
+                     "ORDER BY COALESCE(tn.ngayTN, '1970-01-01') DESC, LEN(tn.maPTN) DESC, tn.maPTN DESC";
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
