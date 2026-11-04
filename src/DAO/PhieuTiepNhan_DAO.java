@@ -221,12 +221,15 @@ public class PhieuTiepNhan_DAO {
             // HoaDon khong co soPhieuSC
 
             // 2. Xóa chi tiết sửa chữa & phiếu sửa chữa
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC = ?")) {
-                ps.setString(1, maPSC);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC IN (SELECT maPSC FROM PhieuSuaChua WHERE maPTN = ? OR maPSC = ?) OR maPSC = ?")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
+                ps.setString(3, maPSC);
                 ps.executeUpdate();
             }
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE maPSC = ?")) {
-                ps.setString(1, maPSC);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE maPTN = ? OR maPSC = ?")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
                 ps.executeUpdate();
             }
 
