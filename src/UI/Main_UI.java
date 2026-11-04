@@ -35,7 +35,7 @@ public class Main_UI extends JFrame {
     private int demThongBaoXuatKho = 0;
 
     // ==== Phân quyền ====
-    private static final String TIEP_TAN = "Nhân viên tiếp tân";
+    private static final String TIEP_TAN = "Nhân viên tiếp tân,Nhân viên tiếp nhận,Tiếp tân,Tiếp nhận";
     private static final String SUA_CHUA = "Nhân viên sửa chữa";
     private static final String KHO = "Nhân viên kho";
     private static final String THU_NGAN = "Nhân viên thu ngân";
@@ -618,9 +618,24 @@ public class Main_UI extends JFrame {
         }
 
         boolean coQuyen(NhanVien nv) {
+            if (vaiTro != null && !vaiTro.isEmpty()) {
+                if (nv == null || nv.getVaiTro() == null) return false;
+                if (QuyenTruyCap.vaiTro(nv.getVaiTro()) != QuyenTruyCap.VaiTro.QUAN_LY) {
+                    String vt = boDau(nv.getVaiTro());
+                    boolean vaiTroKhop = false;
+                    for (String r : vaiTro.split(",")) {
+                        String rChuan = boDau(r.trim());
+                        if (!rChuan.isEmpty() && (vt.contains(rChuan) || rChuan.contains(vt))) {
+                            vaiTroKhop = true;
+                            break;
+                        }
+                    }
+                    if (!vaiTroKhop) return false;
+                }
+            }
             if (laNhom()) return danhSachCon.stream().anyMatch(c -> c.coQuyen(nv));
             return QuyenTruyCap.moTrang(nv, ten);
-    }
+        }
 
         static MucMenu don(String ten, String icon, String vaiTro) {
             return new MucMenu(ten, icon, vaiTro);
@@ -662,13 +677,13 @@ public class Main_UI extends JFrame {
                 .them(MucMenu.con("Lập phiếu tiếp nhận"))
                 .them(MucMenu.con("Tra cứu phiếu tiếp nhận")));
 
-        // 4. Sửa chữa
+        // 4. Sửa chữa (Chỉ dành cho Kỹ thuật viên / Quản lý)
         ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
-                .them(MucMenu.con("Lập phiếu sửa chữa"))
-                .them(MucMenu.con("Phân công KTV"))
-                .them(MucMenu.con("Cập nhật tiến độ"))
+                .them(MucMenu.con("Lập phiếu sửa chữa", SUA_CHUA))
+                .them(MucMenu.con("Phân công KTV", SUA_CHUA))
+                .them(MucMenu.con("Cập nhật tiến độ", SUA_CHUA))
                 .them(MucMenu.con("Điều hành sửa chữa", QUAN_LY))
-                .them(MucMenu.con("Tra cứu lịch sử sửa chữa")));
+                .them(MucMenu.con("Tra cứu lịch sử sửa chữa", SUA_CHUA + "," + QUAN_LY)));
 
         // 5. Hóa đơn (Tích hợp cả thanh toán sửa chữa xe & bán lẻ phụ tùng shop)
         ds.add(MucMenu.nhom("Hóa đơn", UiIcon.BILL, TIEP_TAN + "," + THU_NGAN)

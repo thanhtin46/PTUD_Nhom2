@@ -445,7 +445,7 @@ public class TrangChuTiepTan_UI extends JPanel {
             if (main != null) main.chuyenTrang("Quản lý phương tiện");
         });
 
-        JButton btnHoaDon = UiHelper.nut("  Quầy thu ngân / Hóa đơn", UiIcon.of(UiIcon.BILL, 15), UiHelper.XANH_DAM, e -> {
+        JButton btnHoaDon = UiHelper.nut("  Lập hóa đơn thanh toán", UiIcon.of(UiIcon.BILL, 15), UiHelper.XANH_DAM, e -> {
             Main_UI main = Main_UI.getInstance();
             if (main != null) main.chuyenTrang("Lập hóa đơn");
         });

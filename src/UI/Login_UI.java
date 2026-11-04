@@ -281,7 +281,7 @@ public class Login_UI extends JFrame {
             JOptionPane.showMessageDialog(this,
                     "DANH SÁCH TÀI KHOẢN HỆ THỐNG (MẬT KHẨU MẶC ĐỊNH: 123)\n\n"
                     + "• Quản lý:       quanLy    (Toàn quyền hệ thống, xem báo cáo, phân quyền)\n"
-                    + "• Tiếp tân:      tiepTan   (Lập phiếu tiếp nhận, tra cứu khách hàng & xe)\n"
+                    + "• Tiếp tân:      tiepTan   (Lập phiếu tiếp nhận, hóa đơn thanh toán, tra cứu khách & xe)\n"
                     + "• Sửa chữa:      suaChua   (Điều hành xưởng, phiếu sửa chữa, bảo hành)\n"
                     + "• Thủ kho:       kho       (Nhập kho, xuất kho, quản lý phụ tùng)\n"
                     + "• Thu ngân:      thuNgan   (Lập hóa đơn, thanh toán, in biên lai)\n\n"

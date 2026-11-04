@@ -66,7 +66,7 @@ public final class QuyenTruyCap {
                 .replaceAll("\\p{M}", "").replace('đ','d').replace('Đ','D').toLowerCase(Locale.ROOT).trim();
         VaiTro vt = switch(v) {
             case "quan_ly", "quan ly", "admin", "giam doc", "chu xuong", "quan tri vien" -> VaiTro.QUAN_LY;
-            case "tiep_tan", "nhan vien tiep tan", "tiep tan", "le tan", "co van dich vu" -> VaiTro.TIEP_TAN;
+            case "tiep_tan", "nhan vien tiep tan", "tiep tan", "le tan", "co van dich vu", "nhan vien tiep nhan", "tiep nhan" -> VaiTro.TIEP_TAN;
             case "sua_chua", "nhan vien sua chua", "ky thuat vien", "ktv", "nhan vien ky thuat" -> VaiTro.SUA_CHUA;
             case "kho", "nhan vien kho", "thu kho" -> VaiTro.KHO;
             case "thu_ngan", "nhan vien thu ngan", "thu ngan", "ke toan" -> VaiTro.THU_NGAN;
@@ -95,7 +95,7 @@ public final class QuyenTruyCap {
     public static Set<Quyen> macDinh(String role) {
         return switch(vaiTro(role)) {
             case QUAN_LY -> EnumSet.allOf(Quyen.class);
-            case TIEP_TAN -> EnumSet.of(Quyen.KH_XEM,Quyen.KH_SUA,Quyen.XE_XEM,Quyen.XE_SUA,Quyen.TIEP_NHAN,Quyen.LICH_SU,Quyen.BAO_HANH);
+            case TIEP_TAN -> EnumSet.of(Quyen.KH_XEM,Quyen.KH_SUA,Quyen.XE_XEM,Quyen.XE_SUA,Quyen.TIEP_NHAN,Quyen.LICH_SU,Quyen.BAO_HANH,Quyen.THANH_TOAN,Quyen.HD_XEM);
             case SUA_CHUA -> EnumSet.of(Quyen.SC,Quyen.TIEN_DO,Quyen.LICH_SU,Quyen.KHO_XEM);
             case KHO -> EnumSet.of(Quyen.KHO_XEM,Quyen.PHU_TUNG,Quyen.NHAP,Quyen.XUAT);
             case THU_NGAN -> EnumSet.of(Quyen.KH_XEM,Quyen.XE_XEM,Quyen.HD_XEM,Quyen.THANH_TOAN);
