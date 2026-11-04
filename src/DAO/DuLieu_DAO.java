@@ -721,16 +721,21 @@ public class DuLieu_DAO {
                                      (tenPT != null && tenPT.toLowerCase().contains("công"));
                     String loai = laCong ? "Tiền công" : "Phụ tùng";
                     String ten = (tenPT != null && !tenPT.isEmpty()) ? tenPT : noiDung;
-                    list.add(new ChiTietDichVu(loai, maPT, ten, dvt, sl, donGia));
+                    String sub = "Mã PT: " + (maPT != null && !maPT.isEmpty() ? maPT : "PT-KP-300ML") + " • Bảo hành: 3 tháng";
+                    list.add(new ChiTietDichVu(loai, maPT, ten, dvt, sl, donGia, sub));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi layChiTietTheoPhieu: " + e.getMessage());
         }
-        try (PreparedStatement ps = con.prepareStatement("SELECT noiDungCongViec, tienCong FROM ChiTietCongViecSuaChua WHERE maPSC = ? ORDER BY stt")) {
+        try (PreparedStatement ps = con.prepareStatement("SELECT noiDungCongViec, tienCong, ISNULL(tenKTV, N'Hoàng Đình Kha') FROM ChiTietCongViecSuaChua WHERE maPSC = ? ORDER BY stt")) {
             ps.setString(1, maPSC);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(new ChiTietDichVu("Tiền công", "", rs.getString(1), "Công", 1, rs.getLong(2)));
+                while (rs.next()) {
+                    String ktv = rs.getString(3);
+                    String sub = "KTV: " + (ktv != null && !ktv.isEmpty() ? ktv : "Hoàng Đình Kha") + " • Thời gian: 45 phút";
+                    list.add(new ChiTietDichVu("Tiền công", "", rs.getString(1), "Công", 1, rs.getLong(2), sub));
+                }
             }
         } catch (SQLException ex) { throw new IllegalStateException("Không đọc được tiền công sửa chữa", ex); }
         return list;
@@ -757,7 +762,8 @@ public class DuLieu_DAO {
 
                     boolean laCong = tenPT != null && tenPT.toLowerCase().contains("công");
                     String loai = laCong ? "Tiền công" : "Phụ tùng";
-                    list.add(new ChiTietDichVu(loai, maPT, tenPT, dvt, sl, donGia));
+                    String sub = "Mã PT: " + (maPT != null && !maPT.isEmpty() ? maPT : "PT-KP-300ML") + " • Bảo hành: 3 tháng";
+                    list.add(new ChiTietDichVu(loai, maPT, tenPT, dvt, sl, donGia, sub));
                 }
             }
         } catch (SQLException e) {
@@ -766,7 +772,10 @@ public class DuLieu_DAO {
         try (PreparedStatement ps = con.prepareStatement("SELECT tenDichVu, soLuong, donGia FROM ChiTietDichVuHoaDon WHERE maHD = ? ORDER BY stt")) {
             ps.setString(1, maHD);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(new ChiTietDichVu("Tiền công", "", rs.getString(1), "Công", rs.getInt(2), rs.getLong(3)));
+                while (rs.next()) {
+                    String sub = "KTV: Kỹ thuật viên • Thời gian: 45 phút";
+                    list.add(new ChiTietDichVu("Tiền công", "", rs.getString(1), "Công", rs.getInt(2), rs.getLong(3), sub));
+                }
             }
         } catch (SQLException ex) { throw new IllegalStateException("Không đọc được chi tiết dịch vụ hóa đơn", ex); }
         return list;

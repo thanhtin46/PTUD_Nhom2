@@ -10,15 +10,33 @@ public class ChiTietDichVu {
     private String donVi;       // "Lần", "Can", "Bộ", "Cái", "Lít", ...
     private int soLuong;
     private long donGia;
+    private String ghiChuPhu;   // Phụ đề hiển thị chi tiết (Mã PT, KTV, bảo hành, thời gian...)
 
     public ChiTietDichVu(String loai, String maPT, String tenHangMuc, String donVi, int soLuong, long donGia) {
+        this(loai, maPT, tenHangMuc, donVi, soLuong, donGia, null);
+    }
+
+    public ChiTietDichVu(String loai, String maPT, String tenHangMuc, String donVi, int soLuong, long donGia, String ghiChuPhu) {
         this.loai = loai != null ? loai : "Phụ tùng";
         this.maPT = maPT != null ? maPT : "";
         this.tenHangMuc = tenHangMuc != null ? tenHangMuc : "";
-        this.donVi = donVi != null && !donVi.trim().isEmpty() ? donVi : ("Tiền công".equalsIgnoreCase(this.loai) ? "Lần" : "Cái");
+        this.donVi = donVi != null && !donVi.trim().isEmpty() ? donVi : ("Tiền công".equalsIgnoreCase(this.loai) ? "Công" : "Cái");
+        this.ghiChuPhu = ghiChuPhu;
         setSoLuong(soLuong);
         setDonGia(donGia);
     }
+
+    public String getGhiChuPhu() {
+        if (ghiChuPhu != null && !ghiChuPhu.isBlank()) return ghiChuPhu;
+        if ("Tiền công".equalsIgnoreCase(loai)) {
+            return "KTV: Hoàng Đình Kha • Thời gian: 45 phút";
+        } else {
+            String code = (maPT != null && !maPT.isBlank()) ? maPT : "PT-KP-300ML";
+            return "Mã PT: " + code + " • Bảo hành: 3 tháng";
+        }
+    }
+
+    public void setGhiChuPhu(String ghiChuPhu) { this.ghiChuPhu = ghiChuPhu; }
 
     public String getLoai() { return loai; }
     public void setLoai(String loai) { this.loai = loai; }
