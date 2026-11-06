@@ -1,6 +1,8 @@
 package UI;
 
 import ConnectDB.ConnectDB;
+import DAO.ChucVu_DAO;
+import Entity.ChucVu;
 import Entity.KhoDuLieu;
 import Entity.NhanVien;
 
@@ -20,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -53,6 +56,7 @@ public class QuanLyNhanVien_UI extends JPanel {
     };
 
     private final KhoDuLieu kho = KhoDuLieu.get();
+    private final ChucVu_DAO chucVuDAO = new ChucVu_DAO();
     private NhanVien nvHienTai;
 
     // Components Header
@@ -181,6 +185,20 @@ public class QuanLyNhanVien_UI extends JPanel {
         btnThem.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnThem.addActionListener(e -> hienDialogThem());
         right.add(btnThem);
+
+        // Nút Quản lý chức vụ & chức danh (Dữ liệu động)
+        JButton btnQuanLyChucVu = new JButton("Quản lý chức vụ", UiIcon.of(UiIcon.USERS, 13, new Color(37, 99, 235)));
+        btnQuanLyChucVu.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnQuanLyChucVu.setForeground(new Color(51, 65, 85));
+        btnQuanLyChucVu.setBackground(Color.WHITE);
+        btnQuanLyChucVu.setFocusPainted(false);
+        btnQuanLyChucVu.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(VIEN_CARD, 1, true),
+                new EmptyBorder(7, 12, 7, 12)
+        ));
+        btnQuanLyChucVu.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnQuanLyChucVu.addActionListener(e -> hienDialogQuanLyChucVu());
+        right.add(btnQuanLyChucVu);
 
 
 
@@ -647,19 +665,11 @@ public class QuanLyNhanVien_UI extends JPanel {
         UiHelper.chiChoNhapSo(txtSdt, 10);
         JTextField txtEmail = taoInput("");
 
-        JComboBox<String> cboChucVu = new JComboBox<>(new String[]{
-                "Cố vấn dịch vụ",
-                "KTV Máy - Gầm",
-                "KTV Điện - Điện Lạnh Ô tô",
-                "Trưởng tổ Máy - Gầm",
-                "Nhân viên thủ kho",
-                "Kế toán kiêm Thu ngân",
-                "Quản lý điều hành",
-                "KTV Học việc"
-        });
-        cboChucVu.setEditable(true);
+        JComboBox<String> cboChucVu = new JComboBox<>();
         cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cboChucVu.setPreferredSize(new Dimension(200, 34));
+        cboChucVu.setBackground(Color.WHITE);
+        napDanhSachChucVuVaoCombo(cboChucVu, null);
 
         JComboBox<String> cboBoPhanForm = new JComboBox<>(new String[]{
                 "Ban Cố Vấn Dịch Vụ",
@@ -737,7 +747,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         themDongForm(body, gbc, r++, "Họ và tên *", txtTen);
         themDongForm(body, gbc, r++, "Số điện thoại *", txtSdt);
         themDongForm(body, gbc, r++, "Email công vụ", txtEmail);
-        themDongForm(body, gbc, r++, "Chức vụ *", cboChucVu);
+        themDongForm(body, gbc, r++, "Chức vụ *", taoDongChucVuCoNutThem(cboChucVu, dlg));
         themDongForm(body, gbc, r++, "Bộ phận", cboBoPhanForm);
         themDongForm(body, gbc, r++, "Bậc thợ / Bằng cấp", cboBacNgheForm);
         themDongForm(body, gbc, r++, "Ngày vào làm", txtNgayVao);
@@ -862,15 +872,11 @@ public class QuanLyNhanVien_UI extends JPanel {
         UiHelper.chiChoNhapSo(txtSdt, 10);
         JTextField txtEmail = taoInput(nv.getEmail());
 
-        JComboBox<String> cboChucVu = new JComboBox<>(new String[]{
-                "Cố vấn trưởng / Điều hành", "Cố vấn dịch vụ 2", "KTV Máy - Gầm",
-                "KTV Điện - Lạnh Ô tô", "Trưởng tổ Máy - Gầm", "Nhân viên kho",
-                "Kế toán kiêm Thu ngân", "Quản lý", "KTV Học việc Máy - Gầm"
-        });
-        cboChucVu.setEditable(true);
-        cboChucVu.setSelectedItem(nv.getVaiTro());
+        JComboBox<String> cboChucVu = new JComboBox<>();
         cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cboChucVu.setPreferredSize(new Dimension(200, 34));
+        cboChucVu.setBackground(Color.WHITE);
+        napDanhSachChucVuVaoCombo(cboChucVu, nv.getVaiTro());
 
         JComboBox<String> cboBoPhanForm = new JComboBox<>(new String[]{
                 "Ban Cố Vấn Dịch Vụ", "Tổ Tiếp Nhận Xe", "Xưởng Sửa Chữa Lớn",
@@ -921,7 +927,7 @@ public class QuanLyNhanVien_UI extends JPanel {
         themDongForm(body, gbc, r++, "Họ và tên *", txtTen);
         themDongForm(body, gbc, r++, "Số điện thoại *", txtSdt);
         themDongForm(body, gbc, r++, "Email công vụ", txtEmail);
-        themDongForm(body, gbc, r++, "Chức danh", cboChucVu);
+        themDongForm(body, gbc, r++, "Chức danh", taoDongChucVuCoNutThem(cboChucVu, dlg));
         themDongForm(body, gbc, r++, "Bộ phận", cboBoPhanForm);
         themDongForm(body, gbc, r++, "Bậc thợ / Bằng cấp", cboBacNgheForm);
         themDongForm(body, gbc, r++, "Ngày vào làm", txtNgayVao);
@@ -1147,6 +1153,497 @@ public class QuanLyNhanVien_UI extends JPanel {
         JOptionPane.showMessageDialog(this,
                 (NhanVien.DANG_LAM.equals(ttMoi) ? "Đã kích hoạt hoạt động lại cho " : "Đã chuyển sang thôi việc / khóa tài khoản của ")
                 + nv.getHoTen() + (ok ? "\n(Đã cập nhật trực tiếp vào SQL Server)" : ""));
+    }
+
+    // ===============================================================
+    // CÁC HÀM XỬ LÝ CHỨC VỤ ĐỘNG (DYNAMIC POSITIONS)
+    // ===============================================================
+    private void napDanhSachChucVuVaoCombo(JComboBox<String> cbo, String chucVuChon) {
+        cbo.removeAllItems();
+        List<String> ds = chucVuDAO.layDanhSachTenChucVu();
+        for (String cv : ds) {
+            cbo.addItem(cv);
+        }
+        if (chucVuChon != null && !chucVuChon.isBlank()) {
+            String chucVuChonTrim = chucVuChon.trim();
+            boolean timThay = false;
+            for (int i = 0; i < cbo.getItemCount(); i++) {
+                if (cbo.getItemAt(i).equalsIgnoreCase(chucVuChonTrim)) {
+                    cbo.setSelectedIndex(i);
+                    timThay = true;
+                    break;
+                }
+            }
+            if (!timThay) {
+                cbo.addItem(chucVuChonTrim);
+                cbo.setSelectedItem(chucVuChonTrim);
+            }
+        } else if (cbo.getItemCount() > 0) {
+            cbo.setSelectedIndex(0);
+        }
+    }
+
+    private JPanel taoDongChucVuCoNutThem(JComboBox<String> cboChucVu, Window parentWindow) {
+        JPanel p = new JPanel(new BorderLayout(6, 0));
+        p.setOpaque(false);
+        p.add(cboChucVu, BorderLayout.CENTER);
+
+        JButton btnThemCV = new JButton(UiIcon.of(UiIcon.PLUS, 12, new Color(37, 99, 235)));
+        btnThemCV.setToolTipText("Thêm nhanh chức vụ mới vào danh mục");
+        btnThemCV.setPreferredSize(new Dimension(36, 34));
+        btnThemCV.setBackground(new Color(239, 246, 255));
+        btnThemCV.setFocusPainted(false);
+        btnThemCV.setBorder(new LineBorder(new Color(191, 219, 254), 1, true));
+        btnThemCV.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnThemCV.addActionListener(e -> hienDialogThemNhanhChucVu(cboChucVu, parentWindow));
+
+        p.add(btnThemCV, BorderLayout.EAST);
+        return p;
+    }
+
+    private void hienDialogThemNhanhChucVu(JComboBox<String> cboTarget, Window parentWindow) {
+        JDialog dlg = new JDialog(parentWindow, "Thêm Chức Vụ Mới", Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(460, 320);
+        dlg.setLocationRelativeTo(parentWindow);
+        dlg.setLayout(new BorderLayout());
+
+        JPanel pnlContent = new JPanel(new BorderLayout(0, 12));
+        pnlContent.setBackground(Color.WHITE);
+        pnlContent.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+        JPanel head = new JPanel(new BorderLayout());
+        head.setOpaque(false);
+        JLabel lblT = new JLabel("+ Thêm chức vụ mới vào hệ thống");
+        lblT.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblT.setForeground(XANH_DAM);
+        JLabel lblSub = new JLabel("Chức vụ mới sẽ tự động lưu vào CSDL và cập nhật vào danh sách chọn.");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblSub.setForeground(CHU_PHU);
+        head.add(lblT, BorderLayout.NORTH);
+        head.add(lblSub, BorderLayout.SOUTH);
+        pnlContent.add(head, BorderLayout.NORTH);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(6, 4, 6, 4);
+
+        String maTuDong = chucVuDAO.sinhMaChucVuTuDong();
+        JTextField txtMa = taoInput(maTuDong);
+        txtMa.setEditable(false);
+        txtMa.setBackground(new Color(241, 245, 249));
+
+        JTextField txtTen = taoInput("");
+        txtTen.putClientProperty("placeholder", "Ví dụ: KTV Chẩn đoán điện tử...");
+
+        JTextField txtMoTa = taoInput("");
+        txtMoTa.putClientProperty("placeholder", "Mô tả ngắn quyền hạn / nhiệm vụ...");
+
+        int r = 0;
+        themDongForm(form, gbc, r++, "Mã chức vụ", txtMa);
+        themDongForm(form, gbc, r++, "Tên chức vụ *", txtTen);
+        themDongForm(form, gbc, r++, "Mô tả nhiệm vụ", txtMoTa);
+        pnlContent.add(form, BorderLayout.CENTER);
+
+        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        pnlBtns.setOpaque(false);
+
+        JButton btnHuy = new JButton("Hủy bỏ");
+        btnHuy.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnHuy.setBackground(new Color(241, 245, 249));
+        btnHuy.setForeground(new Color(71, 85, 105));
+        btnHuy.setFocusPainted(false);
+        btnHuy.addActionListener(e -> dlg.dispose());
+
+        JButton btnLuu = new JButton("Lưu chức vụ", UiIcon.of(UiIcon.CHECK, 13, Color.WHITE));
+        btnLuu.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnLuu.setBackground(XANH_CHINH);
+        btnLuu.setForeground(Color.WHITE);
+        btnLuu.setFocusPainted(false);
+        btnLuu.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnLuu.addActionListener(e -> {
+            String ten = txtTen.getText().trim();
+            if (ten.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Vui lòng nhập tên chức vụ!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                txtTen.requestFocus();
+                return;
+            }
+            try {
+                ChucVu cv = new ChucVu(txtMa.getText().trim(), ten, txtMoTa.getText().trim());
+                boolean ok = chucVuDAO.themChucVu(cv);
+                if (ok) {
+                    napDanhSachChucVuVaoCombo(cboTarget, ten);
+                    dlg.dispose();
+                    JOptionPane.showMessageDialog(parentWindow,
+                            "Đã thêm chức vụ [" + ten + "] thành công vào CSDL!",
+                            "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dlg, "Không thể lưu chức vụ vào CSDL!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, ex.getMessage(), "Lỗi lưu chức vụ", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        pnlBtns.add(btnHuy);
+        pnlBtns.add(btnLuu);
+        pnlContent.add(pnlBtns, BorderLayout.SOUTH);
+
+        dlg.add(pnlContent, BorderLayout.CENTER);
+        dlg.setVisible(true);
+    }
+
+    private void hienDialogQuanLyChucVu() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        JDialog dlg = new JDialog(parentWindow, "Quản lý danh mục Chức vụ & Vai trò", Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(950, 600);
+        dlg.setLocationRelativeTo(parentWindow);
+        dlg.setLayout(new BorderLayout());
+
+        // Header dialog
+        JPanel head = new JPanel(new BorderLayout());
+        head.setBackground(new Color(248, 250, 252));
+        head.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, VIEN_CARD),
+                new EmptyBorder(14, 20, 14, 20)
+        ));
+
+        JPanel leftHead = new JPanel();
+        leftHead.setOpaque(false);
+        leftHead.setLayout(new BoxLayout(leftHead, BoxLayout.Y_AXIS));
+
+        JLabel lblTde = new JLabel(" QUẢN LÝ DANH MỤC CHỨC VỤ & VAI TRÒ", UiIcon.of(UiIcon.USERS, 18, XANH_CHINH), SwingConstants.LEFT);
+        lblTde.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        lblTde.setForeground(CHU_TIEU_DE);
+
+        JLabel lblSub = new JLabel("Thêm mới, điều chỉnh tên chức vụ và quản lý chức danh nhân sự trong gara (Dữ liệu động SQL Server)");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSub.setForeground(CHU_PHU);
+
+        leftHead.add(lblTde);
+        leftHead.add(Box.createVerticalStrut(3));
+        leftHead.add(lblSub);
+        head.add(leftHead, BorderLayout.WEST);
+
+        // Center split: Left form (340px) + Right table
+        JPanel center = new JPanel(new BorderLayout(14, 0));
+        center.setBackground(NEN_APP);
+        center.setBorder(new EmptyBorder(14, 18, 14, 18));
+
+        // LEFT: Form Card
+        JPanel cardForm = new JPanel(new BorderLayout(0, 12));
+        cardForm.setBackground(Color.WHITE);
+        cardForm.setPreferredSize(new Dimension(340, 0));
+        cardForm.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(VIEN_CARD, 1, true),
+                new EmptyBorder(14, 14, 14, 14)
+        ));
+
+        JLabel lblFormTde = new JLabel("Thông tin chức vụ");
+        lblFormTde.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblFormTde.setForeground(XANH_DAM);
+        cardForm.add(lblFormTde, BorderLayout.NORTH);
+
+        JPanel pnlFields = new JPanel(new GridBagLayout());
+        pnlFields.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 2, 5, 2);
+
+        JTextField txtMaCV = taoInput(chucVuDAO.sinhMaChucVuTuDong());
+        txtMaCV.setEditable(false);
+        txtMaCV.setBackground(new Color(241, 245, 249));
+
+        JTextField txtTenCV = taoInput("");
+        txtTenCV.putClientProperty("placeholder", "Nhập tên chức danh...");
+
+        JTextArea txtMoTaCV = new JTextArea(4, 15);
+        txtMoTaCV.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtMoTaCV.setLineWrap(true);
+        txtMoTaCV.setWrapStyleWord(true);
+        txtMoTaCV.setBorder(new EmptyBorder(6, 8, 6, 8));
+        JScrollPane spMoTa = new JScrollPane(txtMoTaCV);
+        spMoTa.setBorder(new LineBorder(VIEN_CARD, 1, true));
+
+        JTextField txtNgayTaoCV = taoInput(LocalDate.now().toString());
+        txtNgayTaoCV.setEditable(false);
+        txtNgayTaoCV.setBackground(new Color(241, 245, 249));
+
+        int r = 0;
+        themDongForm(pnlFields, gbc, r++, "Mã chức vụ", txtMaCV);
+        themDongForm(pnlFields, gbc, r++, "Tên chức vụ *", txtTenCV);
+        themDongForm(pnlFields, gbc, r++, "Mô tả nhiệm vụ", spMoTa);
+        themDongForm(pnlFields, gbc, r++, "Ngày tạo", txtNgayTaoCV);
+
+        cardForm.add(pnlFields, BorderLayout.CENTER);
+
+        // Buttons Left Form
+        JPanel pnlBtns = new JPanel(new GridLayout(2, 2, 8, 8));
+        pnlBtns.setOpaque(false);
+
+        JButton btnThemCV = new JButton(" Thêm mới", UiIcon.of(UiIcon.PLUS, 12, Color.WHITE));
+        btnThemCV.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnThemCV.setForeground(Color.WHITE);
+        btnThemCV.setBackground(new Color(37, 99, 235));
+        btnThemCV.setFocusPainted(false);
+        btnThemCV.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JButton btnSuaCV = new JButton(" Cập nhật", UiIcon.of(UiIcon.EDIT, 12, new Color(30, 41, 59)));
+        btnSuaCV.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnSuaCV.setForeground(new Color(30, 41, 59));
+        btnSuaCV.setBackground(new Color(241, 245, 249));
+        btnSuaCV.setFocusPainted(false);
+        btnSuaCV.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JButton btnXoaCV = new JButton(" Xóa", UiIcon.of(UiIcon.TRASH, 12, new Color(220, 38, 38)));
+        btnXoaCV.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnXoaCV.setForeground(new Color(220, 38, 38));
+        btnXoaCV.setBackground(new Color(254, 242, 242));
+        btnXoaCV.setFocusPainted(false);
+        btnXoaCV.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JButton btnLamMoiCV = new JButton(" Nhập lại", UiIcon.of(UiIcon.REFRESH, 12, new Color(71, 85, 105)));
+        btnLamMoiCV.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnLamMoiCV.setForeground(new Color(71, 85, 105));
+        btnLamMoiCV.setBackground(new Color(241, 245, 249));
+        btnLamMoiCV.setFocusPainted(false);
+        btnLamMoiCV.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        pnlBtns.add(btnThemCV);
+        pnlBtns.add(btnSuaCV);
+        pnlBtns.add(btnXoaCV);
+        pnlBtns.add(btnLamMoiCV);
+
+        cardForm.add(pnlBtns, BorderLayout.SOUTH);
+
+        // RIGHT: Table Card
+        JPanel cardTable = new JPanel(new BorderLayout(0, 10));
+        cardTable.setBackground(Color.WHITE);
+        cardTable.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(VIEN_CARD, 1, true),
+                new EmptyBorder(12, 14, 12, 14)
+        ));
+
+        // Header table: Title + Search
+        JPanel topTable = new JPanel(new BorderLayout(8, 0));
+        topTable.setOpaque(false);
+        JLabel lblSoLuongCV = new JLabel("Danh sách chức vụ");
+        lblSoLuongCV.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSoLuongCV.setForeground(XANH_DAM);
+
+        JTextField txtTimCV = taoInput("");
+        txtTimCV.setPreferredSize(new Dimension(190, 32));
+        txtTimCV.putClientProperty("placeholder", "Tìm theo tên chức vụ...");
+
+        JPanel pnlTim = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        pnlTim.setOpaque(false);
+        pnlTim.add(new JLabel(UiIcon.of(UiIcon.SEARCH, 13, CHU_PHU)));
+        pnlTim.add(Box.createHorizontalStrut(6));
+        pnlTim.add(txtTimCV);
+
+        topTable.add(lblSoLuongCV, BorderLayout.WEST);
+        topTable.add(pnlTim, BorderLayout.EAST);
+        cardTable.add(topTable, BorderLayout.NORTH);
+
+        // JTable
+        DefaultTableModel modelCV = new DefaultTableModel(
+                new Object[]{"MÃ CV", "TÊN CHỨC VỤ", "SỐ NHÂN SỰ", "MÔ TẢ", "NGÀY TẠO"}, 0
+        ) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        JTable tblCV = new JTable(modelCV);
+        tblCV.setRowHeight(38);
+        tblCV.setShowGrid(false);
+        tblCV.setIntercellSpacing(new Dimension(0, 0));
+        tblCV.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tblCV.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        tblCV.getTableHeader().setBackground(new Color(248, 250, 252));
+        tblCV.getTableHeader().setForeground(CHU_PHU);
+        tblCV.getTableHeader().setPreferredSize(new Dimension(0, 32));
+
+        tblCV.getColumnModel().getColumn(0).setPreferredWidth(65);
+        tblCV.getColumnModel().getColumn(1).setPreferredWidth(170);
+        tblCV.getColumnModel().getColumn(2).setPreferredWidth(95);
+        tblCV.getColumnModel().getColumn(3).setPreferredWidth(160);
+        tblCV.getColumnModel().getColumn(4).setPreferredWidth(85);
+
+        // Center render column 0 & 4
+        DefaultTableCellRenderer centerR = new DefaultTableCellRenderer();
+        centerR.setHorizontalAlignment(SwingConstants.CENTER);
+        tblCV.getColumnModel().getColumn(0).setCellRenderer(centerR);
+        tblCV.getColumnModel().getColumn(4).setCellRenderer(centerR);
+
+        // Custom badge render for "Số nhân sự" (Column 2)
+        tblCV.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int r, int c) {
+                JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 4));
+                p.setBackground(sel ? new Color(239, 246, 255) : Color.WHITE);
+                int count = 0;
+                try { count = Integer.parseInt(String.valueOf(val).trim()); } catch (Exception ignored) {}
+                JLabel tag = new JLabel(count + " người");
+                tag.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                if (count > 0) {
+                    tag.setForeground(new Color(22, 163, 74));
+                    tag.setBackground(new Color(240, 253, 244));
+                    tag.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(new Color(187, 247, 208), 1, true),
+                            new EmptyBorder(2, 6, 2, 6)
+                    ));
+                } else {
+                    tag.setForeground(new Color(100, 116, 139));
+                    tag.setBackground(new Color(241, 245, 249));
+                    tag.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
+                            new EmptyBorder(2, 6, 2, 6)
+                    ));
+                }
+                tag.setOpaque(true);
+                p.add(tag);
+                return p;
+            }
+        });
+
+        JScrollPane spTbl = new JScrollPane(tblCV);
+        spTbl.setBorder(new LineBorder(VIEN_CARD, 1));
+        spTbl.getViewport().setBackground(Color.WHITE);
+        cardTable.add(spTbl, BorderLayout.CENTER);
+
+        center.add(cardForm, BorderLayout.WEST);
+        center.add(cardTable, BorderLayout.CENTER);
+
+        dlg.add(head, BorderLayout.NORTH);
+        dlg.add(center, BorderLayout.CENTER);
+
+        final String[] tenDangChonHolder = new String[]{""};
+        Runnable loadDataCV = () -> {
+            modelCV.setRowCount(0);
+            List<ChucVu> list = chucVuDAO.layDanhSachChucVu();
+            String kw = txtTimCV.getText().trim().toLowerCase();
+            int hienThi = 0;
+            for (ChucVu cv : list) {
+                if (!kw.isEmpty()) {
+                    boolean match = cv.getMaCV().toLowerCase().contains(kw) ||
+                            cv.getTenChucVu().toLowerCase().contains(kw) ||
+                            cv.getMoTa().toLowerCase().contains(kw);
+                    if (!match) continue;
+                }
+                int soNguoi = chucVuDAO.demSoNhanVienTheoTenChucVu(cv.getTenChucVu());
+                modelCV.addRow(new Object[]{
+                        cv.getMaCV(),
+                        cv.getTenChucVu(),
+                        soNguoi,
+                        cv.getMoTa(),
+                        cv.getNgayTao()
+                });
+                hienThi++;
+            }
+            lblSoLuongCV.setText("Danh sách chức vụ (" + hienThi + " / " + list.size() + ")");
+        };
+
+        Runnable resetForm = () -> {
+            txtMaCV.setText(chucVuDAO.sinhMaChucVuTuDong());
+            txtTenCV.setText("");
+            txtMoTaCV.setText("");
+            txtNgayTaoCV.setText(LocalDate.now().toString());
+            tenDangChonHolder[0] = "";
+            tblCV.clearSelection();
+            txtTenCV.requestFocus();
+        };
+
+        txtTimCV.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { loadDataCV.run(); }
+            @Override public void removeUpdate(DocumentEvent e) { loadDataCV.run(); }
+            @Override public void changedUpdate(DocumentEvent e) { loadDataCV.run(); }
+        });
+
+        tblCV.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tblCV.getSelectedRow() >= 0) {
+                int row = tblCV.getSelectedRow();
+                txtMaCV.setText(String.valueOf(tblCV.getValueAt(row, 0)));
+                String ten = String.valueOf(tblCV.getValueAt(row, 1));
+                txtTenCV.setText(ten);
+                tenDangChonHolder[0] = ten;
+                txtMoTaCV.setText(String.valueOf(tblCV.getValueAt(row, 3)));
+                txtNgayTaoCV.setText(String.valueOf(tblCV.getValueAt(row, 4)));
+            }
+        });
+
+        btnLamMoiCV.addActionListener(e -> resetForm.run());
+
+        btnThemCV.addActionListener(e -> {
+            String ten = txtTenCV.getText().trim();
+            if (ten.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Vui lòng nhập tên chức vụ!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                txtTenCV.requestFocus();
+                return;
+            }
+            try {
+                ChucVu cv = new ChucVu(txtMaCV.getText().trim(), ten, txtMoTaCV.getText().trim());
+                boolean ok = chucVuDAO.themChucVu(cv);
+                if (ok) {
+                    JOptionPane.showMessageDialog(dlg, "Thêm chức vụ [" + ten + "] thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    loadDataCV.run();
+                    resetForm.run();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnSuaCV.addActionListener(e -> {
+            String ma = txtMaCV.getText().trim();
+            String tenMoi = txtTenCV.getText().trim();
+            if (ma.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Vui lòng chọn chức vụ cần cập nhật!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (tenMoi.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Tên chức vụ không được để trống!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                txtTenCV.requestFocus();
+                return;
+            }
+            try {
+                ChucVu cv = new ChucVu(ma, tenMoi, txtMoTaCV.getText().trim(), txtNgayTaoCV.getText());
+                boolean ok = chucVuDAO.capNhatChucVu(cv, tenDangChonHolder[0]);
+                if (ok) {
+                    JOptionPane.showMessageDialog(dlg, "Cập nhật chức vụ [" + tenMoi + "] thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    loadDataCV.run();
+                    napBang(); // Làm mới bảng nhân viên nếu có đổi tên chức vụ
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnXoaCV.addActionListener(e -> {
+            String ma = txtMaCV.getText().trim();
+            String ten = txtTenCV.getText().trim();
+            if (ma.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Vui lòng chọn chức vụ cần xóa trên bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int opt = JOptionPane.showConfirmDialog(dlg,
+                    "Bạn có chắc chắn muốn xóa chức vụ [" + ten + "] (" + ma + ") không?",
+                    "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (opt == JOptionPane.YES_OPTION) {
+                try {
+                    boolean ok = chucVuDAO.xoaChucVu(ma);
+                    if (ok) {
+                        JOptionPane.showMessageDialog(dlg, "Đã xóa chức vụ [" + ten + "] thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        loadDataCV.run();
+                        resetForm.run();
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dlg, ex.getMessage(), "Không thể xóa chức vụ", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        loadDataCV.run();
+        dlg.setVisible(true);
     }
 
     /**

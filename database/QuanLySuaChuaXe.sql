@@ -33,18 +33,28 @@ GO
 -- Thứ tự tạo bảng theo quan hệ khóa ngoại
 -- ============================================================
 
+/* 0. CHUC VU (Danh mục chức vụ động của nhân sự) */
+CREATE TABLE ChucVu (
+    maCV VARCHAR(20) NOT NULL PRIMARY KEY,
+    tenChucVu NVARCHAR(100) NOT NULL UNIQUE,
+    moTa NVARCHAR(255) NULL,
+    ngayTao VARCHAR(20) NULL DEFAULT CONVERT(VARCHAR(20), GETDATE(), 23)
+);
+GO
+
 /* 1. NHAN VIEN */
 CREATE TABLE NhanVien (
     maNV VARCHAR(20) NOT NULL PRIMARY KEY,
     hoTen NVARCHAR(100) NOT NULL,
-    chucVu NVARCHAR(50) NOT NULL,
+    chucVu NVARCHAR(100) NOT NULL,
     soDT VARCHAR(15) NOT NULL UNIQUE,
     email VARCHAR(100) NULL,
     bacNghe NVARCHAR(50) NULL,
     boPhan NVARCHAR(50) NULL,
     ngayVaoLam VARCHAR(20) NULL,
     trangThai NVARCHAR(30) NOT NULL DEFAULT N'Đang làm việc',
-    CONSTRAINT CK_NhanVien_SDT CHECK (LEN(soDT) >= 9)
+    CONSTRAINT CK_NhanVien_SDT CHECK (LEN(soDT) >= 9),
+    CONSTRAINT FK_NhanVien_ChucVu FOREIGN KEY (chucVu) REFERENCES ChucVu(tenChucVu)
 );
 GO
 
@@ -379,6 +389,20 @@ GO
 -- ============================================================
 
 USE QuanLySuaChuaXe;
+GO
+
+/* 0. Chuc vu (Dữ liệu ban đầu) */
+INSERT INTO ChucVu (maCV, tenChucVu, moTa, ngayTao) VALUES
+('CV01', N'Quản lý', N'Ban Giám đốc, điều hành tổng thể gara, quản lý tài chính và nhân sự', '2026-01-01'),
+('CV02', N'Cố vấn dịch vụ', N'Tiếp nhận xe, tư vấn khách hàng, chẩn đoán ban đầu và lập báo giá', '2026-01-01'),
+('CV03', N'Nhân viên tiếp tân', N'Đón tiếp khách hàng, tạo phiếu tiếp nhận và hỗ trợ thủ tục', '2026-01-01'),
+('CV04', N'Nhân viên sửa chữa', N'Kỹ thuật viên thực hiện sửa chữa, bảo dưỡng theo lệnh xưởng', '2026-01-01'),
+('CV05', N'KTV Máy - Gầm', N'Kỹ thuật viên chuyên trách đại tu động cơ, hộp số và hệ thống gầm', '2026-01-01'),
+('CV06', N'KTV Điện - Điện Lạnh Ô tô', N'Kỹ thuật viên chuyên điện tử, điều khiển ECU và điện lạnh', '2026-01-01'),
+('CV07', N'Trưởng tổ Kỹ thuật', N'Quản lý tổ thợ, kiểm tra KCS chất lượng trước khi bàn giao xe', '2026-01-01'),
+('CV08', N'Nhân viên kho', N'Thủ kho phụ tùng, kiểm tra nhập xuất vật tư và tồn kho', '2026-01-01'),
+('CV09', N'Nhân viên thu ngân', N'Thu ngân quầy, lập và xuất hóa đơn dịch vụ, thanh toán VietQR', '2026-01-01'),
+('CV10', N'KTV Học việc', N'Học việc xưởng, hỗ trợ kỹ thuật viên chính và vệ sinh khu vực', '2026-01-01');
 GO
 
 /* 1. Nhan vien */

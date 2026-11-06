@@ -311,6 +311,9 @@ public class ConnectDB {
         // Tự động khôi phục font chữ tiếng Việt ngay khi kết nối
         tuDongKhoiPhucTiengViet(c);
 
+        // Đảm bảo bảng chức vụ và các chức danh động đã sẵn sàng
+        DAO.ChucVu_DAO.kiemTraVaKhoiTaoBangChucVu(c);
+
         try (Statement stmt = c.createStatement()) {
             // NhanVien
             thucThiAnToan(stmt, "IF COL_LENGTH('dbo.NhanVien', 'email') IS NULL ALTER TABLE dbo.NhanVien ADD email VARCHAR(100) NULL;");
