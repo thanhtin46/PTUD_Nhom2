@@ -33,6 +33,8 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
     // Dùng khi mở phiếu sửa chữa từ màn hình khác
     private static String pscCanMoLai = null;
+    // Đánh dấu đang nạp lại phiếu sửa chữa có sẵn
+    private boolean dangNapPhieuSuaChua = false;
 
     public static void datPSCCanMoLai(String maPSC) {
         pscCanMoLai = maPSC;
@@ -140,8 +142,6 @@ public class LapPhieuSuaChua_UI extends JPanel {
             chonPhieuTiepNhan(phieuCanChonSan);
             phieuCanChonSan = null;
 
-        } else {
-            napPhieuMauDauTien();
         }
 
         tinhToanTaiChinh();
@@ -279,7 +279,6 @@ public class LapPhieuSuaChua_UI extends JPanel {
         txtGhiChu.setFont(UiHelper.FONT_BT);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
-        txtGhiChu.setText("Khách phản ánh máy hơi rung giật khi dừng đèn đỏ. Đã kiểm tra bugi và lọc gió.");
         JScrollPane spGhiChu = new JScrollPane(txtGhiChu);
         spGhiChu.setPreferredSize(new Dimension(190, 80));
 
@@ -626,21 +625,35 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
 
     private void napPhieuSuaChuaTuCSDL(String maPSCCanMo) {
-        if (!BaoVeQuyen.phieu(maPSCCanMo)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
-        String sqlPSC =
-                "SELECT maPSC, maNV, soVIN, ngayBD, ngayHoanThanhDuKien " +
-                        "FROM PhieuSuaChua WHERE maPSC = ?";
+
+        if (!BaoVeQuyen.phieu(maPSCCanMo)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phiếu không thuộc phạm vi được giao."
+            );
+            return;
+        }
+
+        String sqlPSC = """
+    SELECT maPSC, maPTN, maNV, soVIN,
+           ngayBD, ngayHoanThanhDuKien,
+           trangThai, ghiChu
+    FROM PhieuSuaChua
+    WHERE maPSC = ?
+""";
 
         try (Connection con = ConnectDB.getInstance().getConnection()) {
 
-            // BƯỚC 1: Lấy thông tin phiếu sửa chữa
             String maNV;
-            String soVIN;
+            String maPTN;
 
+            // BƯỚC 1: Lấy chính xác thông tin phiếu sửa chữa
             try (PreparedStatement ps = con.prepareStatement(sqlPSC)) {
+
                 ps.setString(1, maPSCCanMo);
 
                 try (ResultSet rs = ps.executeQuery()) {
+
                     if (!rs.next()) {
                         JOptionPane.showMessageDialog(
                                 this,
@@ -650,13 +663,23 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     }
 
                     maPSC = rs.getString("maPSC");
+
+                    maPTN = rs.getString("maPTN");
+
                     maNV = rs.getString("maNV");
-                    soVIN = rs.getString("soVIN");
+
+                    String ghiChu = rs.getString("ghiChu");
+
+                    txtGhiChu.setText(ghiChu != null ? ghiChu : "");
 
                     txtMaPSC.setText(maPSC);
-                    if (lblMa != null) lblMa.setText("[" + maPSC + "]");
+
+                    if (lblMa != null) {
+                        lblMa.setText("[" + maPSC + "]");
+                    }
 
                     Timestamp ngayBD = rs.getTimestamp("ngayBD");
+
                     if (ngayBD != null) {
                         txtNgayLap.setText(
                                 ngayBD.toLocalDateTime().format(
@@ -666,18 +689,40 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     }
 
                     Date ngayHen = rs.getDate("ngayHoanThanhDuKien");
+
                     if (ngayHen != null) {
                         txtNgayHenGiao.setText(
                                 ngayHen.toLocalDate()
                                         .atStartOfDay()
-                                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                                        .format(
+                                                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                                        )
                         );
                     }
                 }
             }
 
-            // BƯỚC 2: Chọn lại kỹ thuật viên
+            // BƯỚC 2: Chọn đúng phiếu tiếp nhận nhưng không sinh lại mã PSC
+            dangNapPhieuSuaChua = true;
+
+            try {
+                if (maPTN != null && !maPTN.isBlank()) {
+                    chonPhieuTiepNhan(maPTN);
+                }
+            } finally {
+                dangNapPhieuSuaChua = false;
+            }
+
+            // Đảm bảo mã PSC luôn giữ đúng mã đã lấy từ CSDL
+            txtMaPSC.setText(maPSC);
+
+            if (lblMa != null) {
+                lblMa.setText("[" + maPSC + "]");
+            }
+
+            // BƯỚC 3: Chọn lại kỹ thuật viên
             for (int i = 0; i < cboKtvPhuTrach.getItemCount(); i++) {
+
                 String item = cboKtvPhuTrach.getItemAt(i);
 
                 if (item != null && item.startsWith(maNV + " - ")) {
@@ -686,48 +731,30 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 }
             }
 
-            // BƯỚC 3: Khôi phục thông tin phiếu tiếp nhận theo VIN
-            String maPTN = null;
-            String sqlPTN =
-                    "SELECT TOP 1 maPTN " +
-                            "FROM PhieuTiepNhan " +
-                            "WHERE soVIN = ? " +
-                            "ORDER BY maPTN DESC";
-
-            try (PreparedStatement ps = con.prepareStatement(sqlPTN)) {
-                ps.setString(1, soVIN);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        maPTN = rs.getString("maPTN");
-                    }
-                }
-            }
-
-            if (maPTN != null) {
-                chonPhieuTiepNhan(maPTN);
-            }
-
-            // BƯỚC 4: Xóa dữ liệu cũ trên bảng trước khi nạp lại
+            // BƯỚC 4: Xóa dữ liệu cũ trên bảng
             modelCongViec.setRowCount(0);
             modelPhuTung.setRowCount(0);
 
-
-            // Nạp lại hạng mục công việc đã lưu
+            // BƯỚC 5: Nạp lại công việc sửa chữa
             String sqlCongViec =
                     "SELECT stt, noiDungCongViec, tenKTV, tienCong " +
                             "FROM ChiTietCongViecSuaChua " +
                             "WHERE maPSC = ? ORDER BY stt";
 
             try (PreparedStatement ps = con.prepareStatement(sqlCongViec)) {
-                ps.setString(1, maPSCCanMo);
+
+                ps.setString(1, maPSC);
 
                 try (ResultSet rs = ps.executeQuery()) {
+
                     while (rs.next()) {
+
                         int stt = rs.getInt("stt");
                         String noiDung = rs.getString("noiDungCongViec");
                         String tenKTV = rs.getString("tenKTV");
-                        long tienCong = rs.getBigDecimal("tienCong").longValue();
+
+                        java.math.BigDecimal tienBD = rs.getBigDecimal("tienCong");
+                        long tienCong = tienBD == null ? 0 : tienBD.longValue();
 
                         modelCongViec.addRow(new Object[]{
                                 stt,
@@ -740,8 +767,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 }
             }
 
-
-            // BƯỚC 5: Nạp phụ tùng đã lưu trong phiếu sửa chữa
+            // BƯỚC 6: Nạp lại phụ tùng sửa chữa
             String sqlChiTiet =
                     "SELECT ct.maPT, ct.tenPhuTung, ct.soLuong, " +
                             "ct.donGia, pt.donViTinh " +
@@ -750,12 +776,15 @@ public class LapPhieuSuaChua_UI extends JPanel {
                             "WHERE ct.maPSC = ?";
 
             try (PreparedStatement ps = con.prepareStatement(sqlChiTiet)) {
-                ps.setString(1, maPSCCanMo);
+
+                ps.setString(1, maPSC);
 
                 try (ResultSet rs = ps.executeQuery()) {
+
                     int stt = 1;
 
                     while (rs.next()) {
+
                         String maPT = rs.getString("maPT");
                         String tenPT = rs.getString("tenPhuTung");
                         int soLuong = rs.getInt("soLuong");
@@ -764,6 +793,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                         long donGia = giaBD == null ? 0 : giaBD.longValue();
 
                         String donVi = rs.getString("donViTinh");
+
                         if (donVi == null) {
                             donVi = "";
                         }
@@ -782,15 +812,23 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 }
             }
 
+            // BƯỚC 7: Tính lại tổng chi phí
             tinhToanTaiChinh();
 
+            System.out.println(
+                    "Đã mở phiếu sửa chữa: " + maPSC +
+                            " | Phiếu tiếp nhận: " + maPTN
+            );
+
         } catch (Exception ex) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Lỗi tải phiếu sửa chữa:\n" + ex.getMessage(),
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE
             );
+
             ex.printStackTrace();
         }
     }
@@ -908,9 +946,17 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         String sel = String.valueOf(cboPhieuTN.getSelectedItem());
         String soPhieu = sel.split(" - ")[0].trim();
-        this.maPSC = sinhMaPSCTuDong(soPhieu);
-        if (txtMaPSC != null) txtMaPSC.setText(this.maPSC);
-        if (lblMa != null) lblMa.setText("[" + this.maPSC + "]");
+        if (!dangNapPhieuSuaChua) {
+            this.maPSC = sinhMaPSCTuDong(soPhieu);
+
+            if (txtMaPSC != null) {
+                txtMaPSC.setText(this.maPSC);
+            }
+
+            if (lblMa != null) {
+                lblMa.setText("[" + this.maPSC + "]");
+            }
+        }
         PhieuTiepNhan p = kho.timPhieuTiepNhan(soPhieu);
         if (p == null) return;
 
@@ -956,27 +1002,6 @@ public class LapPhieuSuaChua_UI extends JPanel {
                 int stt = modelPhuTung.getRowCount() + 1;
                 modelPhuTung.addRow(new Object[]{stt, ct.getMaPT(), ct.getTenHangMuc(), ct.getDonVi(), ct.getSoLuong(), UiHelper.tien(ct.getDonGia()), UiHelper.tien(ct.getThanhTien()), "✕"});
             }
-        }
-        tinhToanTaiChinh();
-    }
-
-    private void napPhieuMauDauTien() {
-        if (cboPhieuTN.getItemCount() > 1) {
-            cboPhieuTN.setSelectedIndex(1);
-        }
-        // Thêm dữ liệu mẫu ban đầu trực quan
-        modelCongViec.setRowCount(0);
-        modelCongViec.addRow(new Object[]{1, "Bảo dưỡng định kỳ & Thay dầu máy", "Lê Văn Cường", UiHelper.tien(150000), "✕"});
-        modelCongViec.addRow(new Object[]{2, "Kiểm tra hệ thống phanh 4 bánh", "Hoàng Đình Kha", UiHelper.tien(250000), "✕"});
-
-        modelPhuTung.setRowCount(0);
-        PhuTung pt1 = kho.timPhuTung("PT001");
-        if (pt1 != null) {
-            modelPhuTung.addRow(new Object[]{1, pt1.getMaPT(), pt1.getTen(), pt1.getDonVi(), 1, UiHelper.tien(pt1.getDonGia()), UiHelper.tien(pt1.getDonGia()), "✕"});
-        }
-        PhuTung pt2 = kho.timPhuTung("PT002");
-        if (pt2 != null) {
-            modelPhuTung.addRow(new Object[]{2, pt2.getMaPT(), pt2.getTen(), pt2.getDonVi(), 1, UiHelper.tien(pt2.getDonGia()), UiHelper.tien(pt2.getDonGia()), "✕"});
         }
         tinhToanTaiChinh();
     }
@@ -1306,7 +1331,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                         docSoTien(modelCongViec.getValueAt(i, 3))));
             }
             Entity.DuLieuPhieuSuaChua duLieu = new Entity.DuLieuPhieuSuaChua(
-                    maPTN, maNV, ngayHen.toLocalDate(), phuTungs, congViecs);
+                    maPTN, maNV, ngayHen.toLocalDate(), txtGhiChu.getText(), phuTungs, congViecs);
             maPSC = new Service.SuaChuaService().luu(BaoVeQuyen.hienTai(), duLieu);
             kho.dongBoTuSQLServer();
             Main_UI.lamMoiThongBao();

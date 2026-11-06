@@ -1,7 +1,6 @@
 package UI;
 
 import DAO.TraCuuLichSuSuaChua_DAO;
-import DAO.TraCuuLichSuSuaChua_DAO.ChiTietBaoHanhDTO;
 import DAO.TraCuuLichSuSuaChua_DAO.ChiTietCongViecDTO;
 import DAO.TraCuuLichSuSuaChua_DAO.ChiTietPhuTungDTO;
 import DAO.TraCuuLichSuSuaChua_DAO.LichSuRecord;
@@ -41,11 +40,9 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
     });
 
     private String locTrangThai = "TAT_CA";
-    private String locThanhToan = "TAT_CA";
     private String locThoiGian = "TAT_CA";
 
     private JButton chipTatCaTT, chipHoanThanh, chipDangSua, chipChoSua, chipChoPT, chipChoTN;
-    private JButton chipTatCaPay, chipDaThanhToan, chipChuaThanhToan;
 
     private final JLabel lblGoiY = new JLabel();
     private final JLabel lblDemKetQua = new JLabel("Đang tải dữ liệu...");
@@ -104,7 +101,6 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
 
         topBox.add(taoHeader());
         topBox.add(Box.createVerticalStrut(10));
-        topBox.add(taoTheKpi());
         topBox.add(Box.createVerticalStrut(12));
 
         root.add(topBox, BorderLayout.NORTH);
@@ -123,7 +119,7 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
         splitPane.setContinuousLayout(true);
         splitPane.setResizeWeight(0.55);
         splitPane.setDividerSize(8);
-splitPane.setDividerLocation(230);
+        splitPane.setDividerLocation(230);
 
         // Bảng Master
         JPanel pnlMasterWrap = new JPanel(new BorderLayout());
@@ -132,26 +128,24 @@ splitPane.setDividerLocation(230);
         modelMaster = UiHelper.model(
                 "Mã TN", "Mã SC", "Ngày tiếp nhận", "Khách hàng", "Số ĐT",
                 "Biển số xe", "Hãng / Dòng xe", "Yêu cầu sửa chữa", "KTV phụ trách",
-                "Tiến độ sửa chữa", "Tiền công", "Tiền phụ tùng", "Tổng chi phí", "Thanh toán", "Mã HĐ"
+                "Tiến độ sửa chữa", "Tiền công", "Tiền phụ tùng", "Tổng chi phí"
         );
         tblMaster = UiHelper.bang(modelMaster);
         tblMaster.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        dinhDangCotMaster(0, SwingConstants.CENTER, 85);   // Mã TN
-        dinhDangCotMaster(1, SwingConstants.CENTER, 85);   // Mã SC
-        dinhDangCotMaster(2, SwingConstants.CENTER, 125);  // Ngày tiếp nhận
-        dinhDangCotMaster(3, SwingConstants.LEFT, 150);    // Khách hàng
-        dinhDangCotMaster(4, SwingConstants.CENTER, 105);  // Số ĐT
-        dinhDangCotMaster(5, SwingConstants.CENTER, 105);  // Biển số xe
-        dinhDangCotMaster(6, SwingConstants.LEFT, 130);    // Hãng / Dòng xe
-        dinhDangCotMaster(7, SwingConstants.LEFT, 180);    // Yêu cầu sửa chữa
-        dinhDangCotMaster(8, SwingConstants.LEFT, 135);    // KTV phụ trách
-        dinhDangCotMaster(9, SwingConstants.CENTER, 120);  // Tiến độ sửa chữa (Badge)
-        dinhDangCotMaster(10, SwingConstants.RIGHT, 100);  // Tiền công
-        dinhDangCotMaster(11, SwingConstants.RIGHT, 105);  // Tiền phụ tùng
-        dinhDangCotMaster(12, SwingConstants.RIGHT, 115);  // Tổng chi phí
-        dinhDangCotMaster(13, SwingConstants.CENTER, 120); // Thanh toán (Badge)
-        dinhDangCotMaster(14, SwingConstants.CENTER, 85);   // Mã HĐ
+        dinhDangCotMaster(0, SwingConstants.CENTER, 85);
+        dinhDangCotMaster(1, SwingConstants.CENTER, 85);
+        dinhDangCotMaster(2, SwingConstants.CENTER, 125);
+        dinhDangCotMaster(3, SwingConstants.LEFT, 150);
+        dinhDangCotMaster(4, SwingConstants.CENTER, 105);
+        dinhDangCotMaster(5, SwingConstants.CENTER, 105);
+        dinhDangCotMaster(6, SwingConstants.LEFT, 130);
+        dinhDangCotMaster(7, SwingConstants.LEFT, 180);
+        dinhDangCotMaster(8, SwingConstants.LEFT, 135);
+        dinhDangCotMaster(9, SwingConstants.CENTER, 120);
+        dinhDangCotMaster(10, SwingConstants.RIGHT, 100);
+        dinhDangCotMaster(11, SwingConstants.RIGHT, 105);
+        dinhDangCotMaster(12, SwingConstants.RIGHT, 115);  // Mã HĐ
 
         tblMaster.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -173,15 +167,15 @@ splitPane.setDividerLocation(230);
         spMaster.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         UiHelper.danhSachBong(spMaster);
         spMaster.setPreferredSize(new Dimension(900, 230));
-spMaster.setMinimumSize(new Dimension(900, 160));
-pnlMasterWrap.add(spMaster, BorderLayout.CENTER);
+        spMaster.setMinimumSize(new Dimension(900, 160));
+        pnlMasterWrap.add(spMaster, BorderLayout.CENTER);
 
         splitPane.setTopComponent(pnlMasterWrap);
 
         // Panel Detail bên dưới
         JPanel pnlDetailWrap = taoPanelDetail();
-pnlDetailWrap.setPreferredSize(new Dimension(900, 320));
-pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
+        pnlDetailWrap.setPreferredSize(new Dimension(900, 320));
+        pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         splitPane.setBottomComponent(pnlDetailWrap);
 
         centerPanel.add(splitPane, BorderLayout.CENTER);
@@ -199,13 +193,11 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         boxNut.setOpaque(false);
 
         JButton btnXemHoSo = UiHelper.nut("Xem hồ sơ đầy đủ", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> xemHoSoDayDu());
-        JButton btnInPhieu = UiHelper.nut("In phiếu tóm tắt", UiIcon.of(UiIcon.PRINT, 15), new Color(14, 116, 144), e -> inPhieuTomTat());
         JButton btnTiepNhanMoi = UiHelper.nut("Lập phiếu tiếp nhận mới", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, e -> lapPhieuTiepNhanMoi());
         BaoVeQuyen.ganQuyen(btnTiepNhanMoi, Entity.QuyenTruyCap.Quyen.TIEP_NHAN);
         JButton btnLamMoi = UiHelper.nut("Làm mới dữ liệu", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
 
         boxNut.add(btnXemHoSo);
-        boxNut.add(btnInPhieu);
         boxNut.add(btnTiepNhanMoi);
         boxNut.add(btnLamMoi);
         footer.add(boxNut, BorderLayout.EAST);
@@ -236,20 +228,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         north.add(Box.createVerticalStrut(4));
         north.add(phu);
         return north;
-    }
-
-    private JPanel taoTheKpi() {
-        JPanel kpiGrid = new JPanel(new GridLayout(1, 4, 14, 0));
-        kpiGrid.setOpaque(false);
-        kpiGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
-        kpiGrid.setPreferredSize(new Dimension(1000, 74));
-
-        kpiGrid.add(taoTheKpiItem("TỔNG LƯỢT SỬA CHỮA", lblKpiTongLuot, UiIcon.CLOCK, new Color(2, 132, 199), new Color(224, 242, 254), new Color(186, 230, 253)));
-        kpiGrid.add(taoTheKpiItem("ĐÃ HOÀN THÀNH", lblKpiHoanThanh, UiIcon.CHECK, new Color(22, 163, 74), new Color(220, 252, 231), new Color(187, 247, 208)));
-        kpiGrid.add(taoTheKpiItem("ĐANG TRONG XƯỞNG", lblKpiDangXuLy, UiIcon.WRENCH, new Color(217, 119, 6), new Color(254, 243, 199), new Color(253, 230, 138)));
-        kpiGrid.add(taoTheKpiItem("TỔNG CHI PHÍ PHÁT SINH", lblKpiTongTien, UiIcon.BILL, new Color(124, 58, 237), new Color(237, 233, 254), new Color(221, 214, 254)));
-
-        return kpiGrid;
     }
 
     private JPanel taoTheKpiItem(String tieuDe, JLabel lblGiaTri, String iconType, Color mauChu, Color mauNen, Color mauVien) {
@@ -387,12 +365,12 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         lblTd.setForeground(new Color(100, 116, 139));
         row2.add(lblTd);
 
-        chipTatCaTT = taoChip("Tất cả", "TAT_CA", true);
-        chipHoanThanh = taoChip("Hoàn thành", "HOAN_THANH", true);
-        chipDangSua = taoChip("Đang sửa", "DANG_SUA", true);
-        chipChoSua = taoChip("Chờ sửa", "CHO_SUA", true);
-        chipChoPT = taoChip("Chờ phụ tùng", "CHO_PHU_TUNG", true);
-        chipChoTN = taoChip("Chờ tiếp nhận", "CHO_TIEP_NHAN", true);
+        chipTatCaTT = taoChip("Tất cả", "TAT_CA");
+        chipHoanThanh = taoChip("Hoàn thành", "HOAN_THANH");
+        chipDangSua = taoChip("Đang sửa", "DANG_SUA");
+        chipChoSua = taoChip("Chờ sửa", "CHO_SUA");
+        chipChoPT = taoChip("Chờ phụ tùng", "CHO_PHU_TUNG");
+        chipChoTN = taoChip("Chờ tiếp nhận", "CHO_TIEP_NHAN");
 
         row2.add(chipTatCaTT);
         row2.add(chipHoanThanh);
@@ -402,23 +380,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         row2.add(chipChoTN);
 
         row2.add(Box.createHorizontalStrut(12));
-
-        // Chips Thanh toán
-        JLabel lblTt = new JLabel("Thanh toán:");
-        lblTt.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblTt.setForeground(new Color(100, 116, 139));
-        row2.add(lblTt);
-
-        chipTatCaPay = taoChip("Tất cả", "TAT_CA", false);
-        chipDaThanhToan = taoChip("Đã thanh toán", "DA_THANH_TOAN", false);
-        chipChuaThanhToan = taoChip("Chưa thanh toán", "CHUA_THANH_TOAN", false);
-
-        row2.add(chipTatCaPay);
-        row2.add(chipDaThanhToan);
-        row2.add(chipChuaThanhToan);
-
-        p.add(row2);
-        p.add(Box.createVerticalStrut(8));
 
         // Hàng 3: Gợi ý tìm kiếm
         JPanel hintBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
@@ -441,7 +402,7 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         return p;
     }
 
-    private JButton taoChip(String text, String value, boolean laLocTienDo) {
+    private JButton taoChip(String text, String value) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btn.setForeground(Color.BLACK);
@@ -454,14 +415,11 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         ));
 
         btn.addActionListener(e -> {
-            if (laLocTienDo) {
-                locTrangThai = value;
-            } else {
-                locThanhToan = value;
-            }
+            locTrangThai = value;
             capNhatGiaoDienChip();
             napBang();
         });
+
         return btn;
     }
 
@@ -472,10 +430,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         setChipActive(chipChoSua, "CHO_SUA".equalsIgnoreCase(locTrangThai));
         setChipActive(chipChoPT, "CHO_PHU_TUNG".equalsIgnoreCase(locTrangThai));
         setChipActive(chipChoTN, "CHO_TIEP_NHAN".equalsIgnoreCase(locTrangThai));
-
-        setChipActive(chipTatCaPay, "TAT_CA".equalsIgnoreCase(locThanhToan));
-        setChipActive(chipDaThanhToan, "DA_THANH_TOAN".equalsIgnoreCase(locThanhToan));
-        setChipActive(chipChuaThanhToan, "CHUA_THANH_TOAN".equalsIgnoreCase(locThanhToan));
     }
 
     private void setChipActive(JButton btn, boolean active) {
@@ -586,14 +540,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
 
         tabs.addTab("  2. Phụ tùng & Linh kiện thay thế  ", UiIcon.of(UiIcon.BOX, 14), tab2);
 
-        // Tab 3: Hóa đơn & Bảo hành
-        pnlHoaDonVaBaoHanh = new JPanel(new BorderLayout(12, 12));
-        pnlHoaDonVaBaoHanh.setBackground(Color.WHITE);
-        pnlHoaDonVaBaoHanh.setBorder(new EmptyBorder(12, 16, 12, 16));
-        napThongTinHoaDonVaBaoHanh(null, null);
-
-        tabs.addTab("  3. Hóa đơn & Sổ bảo hành  ", UiIcon.of(UiIcon.SHIELD, 14), pnlHoaDonVaBaoHanh);
-
         pnl.add(tabs, BorderLayout.CENTER);
         return pnl;
     }
@@ -604,17 +550,28 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
     private void napBang() {
         String tuKhoa = txtTuKhoa.getText().trim();
         int tieuChi = cboTieuChi.getSelectedIndex();
+
         modelMaster.setRowCount(0);
 
-        dsHienTai = dao.traCuuLichSu(BaoVeQuyen.hienTai(), tuKhoa, tieuChi, locTrangThai, locThanhToan, locThoiGian);
+        dsHienTai = dao.traCuuLichSu(
+                BaoVeQuyen.hienTai(),
+                tuKhoa,
+                tieuChi,
+                locTrangThai,
+                "TAT_CA",
+                locThoiGian
+        );
 
-        long tongTienThucThu = 0;
+        long tongChiPhi = 0;
         int countHoanThanh = 0;
         int countDangXuLy = 0;
 
         for (LichSuRecord r : dsHienTai) {
-            tongTienThucThu += r.getTongTien();
-            String tt = r.getTrangThaiSC();
+            tongChiPhi += r.getTongTien();
+
+            String tt = r.getTrangThaiSC() == null
+                    ? "" : r.getTrangThaiSC();
+
             if (tt.contains("Hoàn thành")) {
                 countHoanThanh++;
             } else {
@@ -634,31 +591,33 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
                     r.getTrangThaiSC(),
                     UiHelper.tien(r.getTienDichVu()) + " đ",
                     UiHelper.tien(r.getTienPhuTung()) + " đ",
-                    UiHelper.tien(r.getTongTien()) + " đ",
-                    r.getTrangThaiHD(),
-                    r.getMaHD()
+                    UiHelper.tien(r.getTongTien()) + " đ"
             });
         }
 
-        // Cập nhật thẻ KPI
         lblKpiTongLuot.setText(String.valueOf(dsHienTai.size()));
         lblKpiHoanThanh.setText(String.valueOf(countHoanThanh));
         lblKpiDangXuLy.setText(String.valueOf(countDangXuLy));
-        lblKpiTongTien.setText(UiHelper.tien(tongTienThucThu) + " đ");
+        lblKpiTongTien.setText(UiHelper.tien(tongChiPhi) + " đ");
 
-        lblDemKetQua.setText("Hiển thị: " + dsHienTai.size() + " lần sửa chữa / tiếp nhận trong hệ thống");
+        lblDemKetQua.setText(
+                "Hiển thị: " + dsHienTai.size()
+                        + " lần sửa chữa / tiếp nhận trong hệ thống"
+        );
 
-        // Tự động chọn dòng đầu tiên nếu có dữ liệu
         if (!dsHienTai.isEmpty()) {
             tblMaster.setRowSelectionInterval(0, 0);
         } else {
             banGhiDangChon = null;
-            lblTieuDeDetail.setText("Chi tiết lần sửa chữa: (Không có dữ liệu phù hợp)");
+            lblTieuDeDetail.setText(
+                    "Chi tiết lần sửa chữa: (Không có dữ liệu phù hợp)"
+            );
+
             modelCongViec.setRowCount(0);
             modelPhuTung.setRowCount(0);
+
             lblTongTienCong.setText("Tổng tiền công: 0 đ");
             lblTongTienPhuTung.setText("Tổng tiền phụ tùng: 0 đ");
-            napThongTinHoaDonVaBaoHanh(null, null);
         }
     }
 
@@ -673,7 +632,11 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
 
         // 1. Nạp công việc
         modelCongViec.setRowCount(0);
-        ArrayList<ChiTietCongViecDTO> dsCv = dao.layChiTietCongViec(banGhiDangChon.getMaPSC(), banGhiDangChon.getMaHD());
+        ArrayList<ChiTietCongViecDTO> dsCv =
+                dao.layChiTietCongViec(
+                        banGhiDangChon.getMaPSC(),
+                        null
+                );
         long sumCong = 0;
         int sttCv = 1;
         for (ChiTietCongViecDTO cv : dsCv) {
@@ -689,7 +652,11 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
 
         // 2. Nạp phụ tùng
         modelPhuTung.setRowCount(0);
-        ArrayList<ChiTietPhuTungDTO> dsPt = dao.layChiTietPhuTung(banGhiDangChon.getMaPSC(), banGhiDangChon.getMaHD());
+        ArrayList<ChiTietPhuTungDTO> dsPt =
+                dao.layChiTietPhuTung(
+                        banGhiDangChon.getMaPSC(),
+                        null
+                );
         long sumPt = 0;
         int sttPt = 1;
         for (ChiTietPhuTungDTO pt : dsPt) {
@@ -707,103 +674,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         }
         lblTongTienPhuTung.setText("Tổng tiền phụ tùng: " + UiHelper.tien(sumPt > 0 ? sumPt : banGhiDangChon.getTienPhuTung()) + " đ (" + dsPt.size() + " mặt hàng)");
 
-        // 3. Nạp hóa đơn & bảo hành
-        ArrayList<ChiTietBaoHanhDTO> dsBh = dao.layChiTietBaoHanh(banGhiDangChon.getMaHD(), banGhiDangChon.getMaKH(), banGhiDangChon.getSoVIN());
-        napThongTinHoaDonVaBaoHanh(banGhiDangChon, dsBh);
-    }
-
-    private void napThongTinHoaDonVaBaoHanh(LichSuRecord r, ArrayList<ChiTietBaoHanhDTO> dsBh) {
-        pnlHoaDonVaBaoHanh.removeAll();
-
-        if (r == null) {
-            JLabel lblNull = new JLabel("Chưa chọn lần sửa chữa nào để xem thông tin hóa đơn và bảo hành", SwingConstants.CENTER);
-            lblNull.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-            lblNull.setForeground(new Color(148, 163, 184));
-            pnlHoaDonVaBaoHanh.add(lblNull, BorderLayout.CENTER);
-            pnlHoaDonVaBaoHanh.revalidate();
-            pnlHoaDonVaBaoHanh.repaint();
-            return;
-        }
-
-        JPanel grid = new JPanel(new GridLayout(1, 2, 16, 0));
-        grid.setOpaque(false);
-
-        // Panel Trái: Thông tin Hóa đơn
-        JPanel pnlHd = new JPanel(new BorderLayout(0, 8));
-        pnlHd.setOpaque(true);
-        pnlHd.setBackground(new Color(248, 250, 252));
-        pnlHd.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
-                new EmptyBorder(12, 14, 12, 14)
-        ));
-
-        JLabel lblHdTitle = new JLabel("THÔNG TIN HÓA ĐƠN DỊCH VỤ", UiIcon.of(UiIcon.BILL, 16, new Color(37, 99, 235)), SwingConstants.LEFT);
-        lblHdTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblHdTitle.setForeground(new Color(15, 23, 42));
-        pnlHd.add(lblHdTitle, BorderLayout.NORTH);
-
-        StringBuilder sbHd = new StringBuilder();
-        sbHd.append("<html><div style='font-family:Segoe UI; font-size:12px; line-height:1.6;'>")
-            .append("<b>Mã hóa đơn:</b> <span style='color:#2563EB; font-weight:bold;'>").append(r.getMaHD()).append("</span><br>")
-            .append("<b>Khách hàng:</b> ").append(r.getTenKH()).append(" — SĐT: ").append(r.getSoDT()).append("<br>")
-            .append("<b>Phương tiện:</b> ").append(r.getBienSoXe()).append(" (").append(r.getTenXe()).append(")<br>")
-            .append("<b>Hình thức thanh toán:</b> ").append(r.getHinhThucTT()).append("<br>")
-            .append("<b>Trạng thái:</b> ").append(r.getTrangThaiHD().contains("Đã thanh toán")
-                    ? "<span style='color:#16A34A; font-weight:bold;'>Đã thanh toán</span>"
-                    : "<span style='color:#E11D48; font-weight:bold;'>Chưa thanh toán</span>").append("<br>")
-            .append("<hr style='border:0; border-top:1px solid #E2E8F0; margin:6px 0;'>")
-            .append("<b>Tiền công dịch vụ:</b> ").append(UiHelper.tien(r.getTienDichVu())).append(" đ<br>")
-            .append("<b>Tiền phụ tùng:</b> ").append(UiHelper.tien(r.getTienPhuTung())).append(" đ<br>")
-            .append("<b>TỔNG TIỀN PHẢI TRẢ:</b> <span style='color:#DC2626; font-size:14px; font-weight:bold;'>")
-            .append(UiHelper.tien(r.getTongTien())).append(" đ</span>")
-            .append("</div></html>");
-
-        JLabel lblHdBody = new JLabel(sbHd.toString());
-        JScrollPane spHd = new JScrollPane(lblHdBody); spHd.setBorder(null); spHd.setOpaque(false); spHd.getViewport().setOpaque(false); pnlHd.add(spHd, BorderLayout.CENTER);
-        grid.add(pnlHd);
-
-        // Panel Phải: Thông tin Bảo hành
-        JPanel pnlBh = new JPanel(new BorderLayout(0, 8));
-        pnlBh.setOpaque(true);
-        pnlBh.setBackground(new Color(248, 250, 252));
-        pnlBh.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
-                new EmptyBorder(12, 14, 12, 14)
-        ));
-
-        JLabel lblBhTitle = new JLabel("SỔ BẢO HÀNH ĐI KÈM", UiIcon.of(UiIcon.SHIELD, 16, new Color(22, 163, 74)), SwingConstants.LEFT);
-        lblBhTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblBhTitle.setForeground(new Color(15, 23, 42));
-        pnlBh.add(lblBhTitle, BorderLayout.NORTH);
-
-        StringBuilder sbBh = new StringBuilder();
-        sbBh.append("<html><div style='font-family:Segoe UI; font-size:12px; line-height:1.6;'>");
-
-        if (dsBh == null || dsBh.isEmpty()) {
-            sbBh.append("<div style='color:#64748B; padding:10px 0;'>")
-                .append("<i>Lần sửa chữa này chưa có phiếu bảo hành hoặc phụ tùng thay thế không thuộc diện cấp sổ bảo hành định kỳ.</i>")
-                .append("</div>");
-        } else {
-            ChiTietBaoHanhDTO bh = dsBh.get(0);
-            sbBh.append("<b>Số phiếu bảo hành:</b> <span style='color:#16A34A; font-weight:bold;'>").append(bh.getMaPBH()).append("</span><br>")
-                .append("<b>Thời hạn hiệu lực:</b> từ ").append(bh.getNgayBD()).append(" đến <b>").append(bh.getNgayKT()).append("</b><br>")
-                .append("<b>Tình trạng:</b> ").append(bh.getTrangThai().contains("Còn hạn")
-                        ? "<span style='color:#16A34A; font-weight:bold;'>Còn hiệu lực bảo hành</span>"
-                        : "<span style='color:#DC2626; font-weight:bold;'>Hết hạn bảo hành</span>").append("<br>")
-                .append("<hr style='border:0; border-top:1px solid #E2E8F0; margin:6px 0;'>")
-                .append("<b>Hạng mục bảo hành:</b> ").append(bh.getTenHangMuc()).append("<br>")
-                .append("<b>Thời gian cam kết:</b> ").append(bh.getThoiHan()).append(" tháng<br>")
-                .append("<b>Điều kiện:</b> ").append(bh.getDieuKien());
-        }
-        sbBh.append("</div></html>");
-
-        JLabel lblBhBody = new JLabel(sbBh.toString());
-        JScrollPane spBh = new JScrollPane(lblBhBody); spBh.setBorder(null); spBh.setOpaque(false); spBh.getViewport().setOpaque(false); pnlBh.add(spBh, BorderLayout.CENTER);
-        grid.add(pnlBh);
-
-        pnlHoaDonVaBaoHanh.add(grid, BorderLayout.CENTER);
-        pnlHoaDonVaBaoHanh.revalidate();
-        pnlHoaDonVaBaoHanh.repaint();
     }
 
     // =========================================================================
@@ -815,9 +685,17 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
             return;
         }
 
-        ArrayList<ChiTietCongViecDTO> dsCv = dao.layChiTietCongViec(banGhiDangChon.getMaPSC(), banGhiDangChon.getMaHD());
-        ArrayList<ChiTietPhuTungDTO> dsPt = dao.layChiTietPhuTung(banGhiDangChon.getMaPSC(), banGhiDangChon.getMaHD());
-        ArrayList<ChiTietBaoHanhDTO> dsBh = dao.layChiTietBaoHanh(banGhiDangChon.getMaHD(), banGhiDangChon.getMaKH(), banGhiDangChon.getSoVIN());
+        ArrayList<ChiTietCongViecDTO> dsCv =
+                dao.layChiTietCongViec(
+                        banGhiDangChon.getMaPSC(),
+                        null
+                );
+
+        ArrayList<ChiTietPhuTungDTO> dsPt =
+                dao.layChiTietPhuTung(
+                        banGhiDangChon.getMaPSC(),
+                        null
+                );
 
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Hồ sơ sửa chữa chi tiết — " + banGhiDangChon.getBienSoXe(), true);
         dlg.setSize(850, 620);
@@ -846,29 +724,28 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         // Body Dialog HTML
         StringBuilder html = new StringBuilder();
         html.append("<html><div style='font-family:Segoe UI; font-size:12px; color:#1E293B; line-height:1.5;'>")
-            .append("<table width='100%' cellpadding='5' style='background:#F8FAFC; border:1px solid #E2E8F0; margin-bottom:12px;'>")
-            .append("<tr>")
-            .append("<td width='50%'><b>Mã phiếu tiếp nhận:</b> <b style='color:#2563EB;'>").append(banGhiDangChon.getMaPTN()).append("</b></td>")
-            .append("<td width='50%'><b>Mã phiếu sửa chữa:</b> <b style='color:#059669;'>").append(banGhiDangChon.getMaPSC()).append("</b></td>")
-            .append("</tr><tr>")
-            .append("<td><b>Ngày giờ tiếp nhận:</b> ").append(banGhiDangChon.getNgayTN()).append("</td>")
-            .append("<td><b>Kỹ thuật viên phụ trách:</b> ").append(banGhiDangChon.getTenKTV()).append("</td>")
-            .append("</tr><tr>")
-            .append("<td><b>Khách hàng:</b> ").append(banGhiDangChon.getTenKH()).append(" — <b>SĐT:</b> ").append(banGhiDangChon.getSoDT()).append("</td>")
-            .append("<td><b>Phương tiện:</b> <b style='color:#D97706;'>").append(banGhiDangChon.getBienSoXe()).append("</b> (").append(banGhiDangChon.getTenXe()).append(")</td>")
-            .append("</tr><tr>")
-            .append("<td colspan='2'><b>Yêu cầu / Hiện trạng xe:</b> ").append(banGhiDangChon.getYeuCauSC()).append("</td>")
-            .append("</tr><tr>")
-            .append("<td><b>Tiến độ sửa chữa:</b> <b style='color:#2563EB;'>").append(banGhiDangChon.getTrangThaiSC()).append("</b></td>")
-            .append("<td><b>Tình trạng thanh toán:</b> ").append(banGhiDangChon.getTrangThaiHD().contains("Đã thanh toán") ? "<b style='color:#16A34A;'>Đã thanh toán</b>" : "<b style='color:#DC2626;'>Chưa thanh toán</b>").append(" (HĐ: ").append(banGhiDangChon.getMaHD()).append(")</td>")
-            .append("</tr></table>");
+                .append("<table width='100%' cellpadding='5' style='background:#F8FAFC; border:1px solid #E2E8F0; margin-bottom:12px;'>")
+                .append("<tr>")
+                .append("<td width='50%'><b>Mã phiếu tiếp nhận:</b> <b style='color:#2563EB;'>").append(banGhiDangChon.getMaPTN()).append("</b></td>")
+                .append("<td width='50%'><b>Mã phiếu sửa chữa:</b> <b style='color:#059669;'>").append(banGhiDangChon.getMaPSC()).append("</b></td>")
+                .append("</tr><tr>")
+                .append("<td><b>Ngày giờ tiếp nhận:</b> ").append(banGhiDangChon.getNgayTN()).append("</td>")
+                .append("<td><b>Kỹ thuật viên phụ trách:</b> ").append(banGhiDangChon.getTenKTV()).append("</td>")
+                .append("</tr><tr>")
+                .append("<td><b>Khách hàng:</b> ").append(banGhiDangChon.getTenKH()).append(" — <b>SĐT:</b> ").append(banGhiDangChon.getSoDT()).append("</td>")
+                .append("<td><b>Phương tiện:</b> <b style='color:#D97706;'>").append(banGhiDangChon.getBienSoXe()).append("</b> (").append(banGhiDangChon.getTenXe()).append(")</td>")
+                .append("</tr><tr>")
+                .append("<td colspan='2'><b>Yêu cầu / Hiện trạng xe:</b> ").append(banGhiDangChon.getYeuCauSC()).append("</td>")
+                .append("</tr><tr>")
+                .append("<td><b>Tiến độ sửa chữa:</b> <b style='color:#2563EB;'>").append(banGhiDangChon.getTrangThaiSC()).append("</b></td>")
+                .append("</tr></table>");
 
         // Bảng công việc
         html.append("<h4 style='color:#0F172A; margin:8px 0 4px 0;'>1. CÔNG VIỆC SỬA CHỮA & TIỀN CÔNG DỊCH VỤ</h4>")
-            .append("<table width='100%' border='1' cellspacing='0' cellpadding='4' style='border-color:#E2E8F0; border-collapse:collapse;'>")
-            .append("<tr style='background:#F1F5F9; font-weight:bold;'>")
-            .append("<th width='35'>STT</th><th>Nội dung công việc sửa chữa</th><th width='150'>KTV thực hiện</th><th width='110' align='right'>Tiền công</th>")
-            .append("</tr>");
+                .append("<table width='100%' border='1' cellspacing='0' cellpadding='4' style='border-color:#E2E8F0; border-collapse:collapse;'>")
+                .append("<tr style='background:#F1F5F9; font-weight:bold;'>")
+                .append("<th width='35'>STT</th><th>Nội dung công việc sửa chữa</th><th width='150'>KTV thực hiện</th><th width='110' align='right'>Tiền công</th>")
+                .append("</tr>");
 
         if (dsCv.isEmpty()) {
             html.append("<tr><td colspan='4' align='center' style='color:#94A3B8;'><i>Chưa có ghi nhận công việc sửa chữa chi tiết</i></td></tr>");
@@ -876,22 +753,29 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
             int stt = 1;
             for (ChiTietCongViecDTO cv : dsCv) {
                 html.append("<tr>")
-                    .append("<td align='center'>").append(stt++).append("</td>")
-                    .append("<td>").append(cv.getNoiDung()).append("</td>")
-                    .append("<td>").append(cv.getTenKTV()).append("</td>")
-                    .append("<td align='right'>").append(UiHelper.tien(cv.getTienCong())).append(" đ</td>")
-                    .append("</tr>");
+                        .append("<td align='center'>").append(stt++).append("</td>")
+                        .append("<td>").append(cv.getNoiDung()).append("</td>")
+                        .append("<td>").append(cv.getTenKTV()).append("</td>")
+                        .append("<td align='right'>").append(UiHelper.tien(cv.getTienCong())).append(" đ</td>")
+                        .append("</tr>");
             }
         }
+        long tongTienCongHoSo = 0;
+        for (ChiTietCongViecDTO cv : dsCv) {
+            tongTienCongHoSo += cv.getTienCong();
+        }
+        if (tongTienCongHoSo == 0) {
+            tongTienCongHoSo = banGhiDangChon.getTienDichVu();
+        }
         html.append("<tr style='background:#F8FAFC; font-weight:bold;'><td colspan='3' align='right'>Tổng tiền công dịch vụ:</td><td align='right' style='color:#2563EB;'>")
-            .append(UiHelper.tien(banGhiDangChon.getTienDichVu())).append(" đ</td></tr></table>");
+                .append(UiHelper.tien(tongTienCongHoSo)).append(" đ</td></tr></table>");
 
         // Bảng phụ tùng
         html.append("<h4 style='color:#0F172A; margin:12px 0 4px 0;'>2. PHỤ TÙNG & VẬT TƯ THAY THẾ</h4>")
-            .append("<table width='100%' border='1' cellspacing='0' cellpadding='4' style='border-color:#E2E8F0; border-collapse:collapse;'>")
-            .append("<tr style='background:#F1F5F9; font-weight:bold;'>")
-            .append("<th width='35'>STT</th><th width='75'>Mã PT</th><th>Tên phụ tùng</th><th width='45'>ĐVT</th><th width='45'>SL</th><th width='95' align='right'>Đơn giá</th><th width='105' align='right'>Thành tiền</th>")
-            .append("</tr>");
+                .append("<table width='100%' border='1' cellspacing='0' cellpadding='4' style='border-color:#E2E8F0; border-collapse:collapse;'>")
+                .append("<tr style='background:#F1F5F9; font-weight:bold;'>")
+                .append("<th width='35'>STT</th><th width='75'>Mã PT</th><th>Tên phụ tùng</th><th width='45'>ĐVT</th><th width='45'>SL</th><th width='95' align='right'>Đơn giá</th><th width='105' align='right'>Thành tiền</th>")
+                .append("</tr>");
 
         if (dsPt.isEmpty()) {
             html.append("<tr><td colspan='7' align='center' style='color:#94A3B8;'><i>Không sử dụng phụ tùng thay thế</i></td></tr>");
@@ -899,33 +783,35 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
             int stt = 1;
             for (ChiTietPhuTungDTO pt : dsPt) {
                 html.append("<tr>")
-                    .append("<td align='center'>").append(stt++).append("</td>")
-                    .append("<td align='center'>").append(pt.getMaPT()).append("</td>")
-                    .append("<td>").append(pt.getTenPT()).append("</td>")
-                    .append("<td align='center'>").append(pt.getDonViTinh()).append("</td>")
-                    .append("<td align='center'>").append(pt.getSoLuong()).append("</td>")
-                    .append("<td align='right'>").append(UiHelper.tien(pt.getDonGia())).append(" đ</td>")
-                    .append("<td align='right'>").append(UiHelper.tien(pt.getThanhTien())).append(" đ</td>")
-                    .append("</tr>");
+                        .append("<td align='center'>").append(stt++).append("</td>")
+                        .append("<td align='center'>").append(pt.getMaPT()).append("</td>")
+                        .append("<td>").append(pt.getTenPT()).append("</td>")
+                        .append("<td align='center'>").append(pt.getDonViTinh()).append("</td>")
+                        .append("<td align='center'>").append(pt.getSoLuong()).append("</td>")
+                        .append("<td align='right'>").append(UiHelper.tien(pt.getDonGia())).append(" đ</td>")
+                        .append("<td align='right'>").append(UiHelper.tien(pt.getThanhTien())).append(" đ</td>")
+                        .append("</tr>");
             }
         }
+        long tongTienPhuTungHoSo = 0;
+        for (ChiTietPhuTungDTO pt : dsPt) {
+            tongTienPhuTungHoSo += pt.getThanhTien();
+        }
+        if (tongTienPhuTungHoSo == 0) {
+            tongTienPhuTungHoSo = banGhiDangChon.getTienPhuTung();
+        }
         html.append("<tr style='background:#F8FAFC; font-weight:bold;'><td colspan='6' align='right'>Tổng tiền phụ tùng:</td><td align='right' style='color:#D97706;'>")
-            .append(UiHelper.tien(banGhiDangChon.getTienPhuTung())).append(" đ</td></tr></table>");
+                .append(UiHelper.tien(tongTienPhuTungHoSo)).append(" đ</td></tr></table>");
 
         // Tổng kết chi phí
-        html.append("<div style='margin-top:12px; padding:10px; background:#EFF6FF; border:1px solid #BFDBFE; text-align:right;'>")
-            .append("<span style='font-size:13px;'>TỔNG CỘNG CHI PHÍ SỬA CHỮA: </span>")
-            .append("<b style='font-size:16px; color:#DC2626;'>").append(UiHelper.tien(banGhiDangChon.getTongTien())).append(" đ</b>")
-            .append("</div>");
-
-        // Bảo hành nếu có
-        if (dsBh != null && !dsBh.isEmpty()) {
-            ChiTietBaoHanhDTO bh = dsBh.get(0);
-            html.append("<div style='margin-top:8px; padding:8px 12px; background:#F0FDF4; border:1px solid #BBF7D0;'>")
-                .append("<b>SỔ BẢO HÀNH: </b> Mã <b>").append(bh.getMaPBH()).append("</b> | Hiệu lực: <b>").append(bh.getNgayBD()).append("</b> đến <b>").append(bh.getNgayKT()).append("</b><br>")
-                .append("<b>Hạng mục: </b>").append(bh.getTenHangMuc()).append(" (Thời hạn: ").append(bh.getThoiHan()).append(" tháng) | <b>Điều kiện: </b>").append(bh.getDieuKien())
-                .append("</div>");
+        long tongChiPhiHoSo = banGhiDangChon.getTongTien();
+        if (tongChiPhiHoSo == 0) {
+            tongChiPhiHoSo = tongTienCongHoSo + tongTienPhuTungHoSo;
         }
+        html.append("<div style='margin-top:12px; padding:10px; background:#EFF6FF; border:1px solid #BFDBFE; text-align:right;'>")
+                .append("<span style='font-size:13px;'>TỔNG CỘNG CHI PHÍ SỬA CHỮA: </span>")
+                .append("<b style='font-size:16px; color:#DC2626;'>").append(UiHelper.tien(tongChiPhiHoSo)).append(" đ</b>")
+                .append("</div>");
 
         html.append("</div></html>");
 
@@ -946,13 +832,6 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         dlg.setVisible(true);
     }
 
-    private void inPhieuTomTat() {
-        if (banGhiDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một lần sửa chữa trong bảng để in phiếu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        xemHoSoDayDu();
-    }
 
     private void lapPhieuTiepNhanMoi() {
         Main_UI mainUI = Main_UI.getInstance();
@@ -993,9 +872,10 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
         txtTuKhoa.setText("");
         cboTieuChi.setSelectedIndex(0);
         cboThoiGian.setSelectedIndex(0);
+
         locTrangThai = "TAT_CA";
-        locThanhToan = "TAT_CA";
         locThoiGian = "TAT_CA";
+
         capNhatGiaoDienChip();
         capNhatGoiY();
         napBang();
@@ -1049,16 +929,7 @@ pnlDetailWrap.setMinimumSize(new Dimension(900, 220));
                             comp.setForeground(new Color(71, 85, 105));
                         }
                     }
-                    // Cột Thanh toán (cột 13)
-                    else if (c == 13) {
-                        if (strVal.contains("Đã thanh toán")) {
-                            comp.setForeground(new Color(22, 163, 74));
-                            comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                        } else {
-                            comp.setForeground(new Color(225, 29, 72));   // Rose 600
-                            comp.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                        }
-                    }
+
                 } else {
                     comp.setBackground(new Color(219, 234, 254));
                     comp.setForeground(UiHelper.XANH_TRUNG);
