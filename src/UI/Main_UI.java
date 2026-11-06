@@ -526,10 +526,8 @@ public class Main_UI extends JFrame {
                     -> new TraCuuPhieuTiepNhan_UI();
 
             // 4. Sửa chữa
-            case "Phiếu sửa chữa", "Sửa chữa", "Lập phiếu sửa chữa"
+            case "Phiếu sửa chữa", "Sửa chữa", "Lập phiếu sửa chữa", "Phân công KTV"
                     -> new LapPhieuSuaChua_UI(nhanVienHienTai);
-            case "Phân công KTV"
-                    -> new PhanCongKyThuatVien_UI();
             case "Tra cứu phiếu sửa chữa", "Cập nhật tiến độ"
                     -> new CapNhatTienDo_UI();
             case "Điều hành sửa chữa"
@@ -665,7 +663,6 @@ public class Main_UI extends JFrame {
         // 4. Sửa chữa
         ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu sửa chữa"))
-                .them(MucMenu.con("Phân công KTV"))
                 .them(MucMenu.con("Cập nhật tiến độ"))
                 .them(MucMenu.con("Điều hành sửa chữa", QUAN_LY))
                 .them(MucMenu.con("Tra cứu lịch sử sửa chữa")));

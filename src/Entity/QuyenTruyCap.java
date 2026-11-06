@@ -126,8 +126,7 @@ public final class QuyenTruyCap {
             case "tra cuu phuong tien" -> "Tra cứu phương tiện";
             case "lap phieu tiep nhan", "phieu tiep nhan" -> "Lập phiếu tiếp nhận";
             case "tra cuu phieu tiep nhan" -> "Tra cứu phiếu tiếp nhận";
-            case "lap phieu sua chua", "phieu sua chua" -> "Lập phiếu sửa chữa";
-            case "phan cong ktv" -> "Phân công KTV";
+            case "lap phieu sua chua", "phieu sua chua", "phan cong ktv" -> "Lập phiếu sửa chữa";
             case "cap nhat tien do" -> "Cập nhật tiến độ";
             case "dieu hanh sua chua" -> "Điều hành sửa chữa";
             case "tra cuu lich su sua chua" -> "Tra cứu lịch sử sửa chữa";
@@ -159,7 +158,6 @@ public final class QuyenTruyCap {
             Map.entry("Lập phiếu tiếp nhận", Quyen.TIEP_NHAN),
             Map.entry("Tra cứu phiếu tiếp nhận", Quyen.TIEP_NHAN),
             Map.entry("Lập phiếu sửa chữa", Quyen.SC),
-            Map.entry("Phân công KTV", Quyen.PHAN_CONG),
             Map.entry("Cập nhật tiến độ", Quyen.TIEN_DO),
             Map.entry("Điều hành sửa chữa", Quyen.PHAN_CONG),
             Map.entry("Tra cứu lịch sử sửa chữa", Quyen.LICH_SU),

@@ -1184,7 +1184,7 @@ public class QuanLyNhanVien_UI extends JPanel {
 
         m.addRow(new Object[]{"Admin / Ban Giám Đốc", "Toàn quyền điều hành, cấu hình, quản lý nhân sự & tài chính", "Tất cả chức năng + Báo cáo + Cấu hình", demNhanSuTheoVaiTro("Quản lý") + " người"});
         m.addRow(new Object[]{"Cố vấn dịch vụ / Tiếp tân", "Tiếp nhận xe, kiểm tra tình trạng ban đầu, báo giá sơ bộ", "Tiếp nhận xe, Khách hàng, Tra cứu xe", (demNhanSuTheoVaiTro("Cố vấn") + demNhanSuTheoVaiTro("tiếp tân")) + " người"});
-        m.addRow(new Object[]{"Kỹ thuật viên Sửa chữa", "Lập phiếu SC, chẩn đoán hư hỏng, xuất phụ tùng, sửa xe", "Phiếu sửa chữa, Phân công KTV, Tiến độ", (demNhanSuTheoVaiTro("KTV") + demNhanSuTheoVaiTro("sửa chữa")) + " người"});
+        m.addRow(new Object[]{"Kỹ thuật viên Sửa chữa", "Lập phiếu SC, chẩn đoán hư hỏng, xuất phụ tùng, sửa xe", "Phiếu sửa chữa, Cập nhật tiến độ", (demNhanSuTheoVaiTro("KTV") + demNhanSuTheoVaiTro("sửa chữa")) + " người"});
         m.addRow(new Object[]{"Nhân viên Thủ kho", "Quản lý tồn kho phụ tùng, kiểm tra nhập kho, xuất kho", "Kho phụ tùng, Nhập kho, Xuất kho, Tồn kho", demNhanSuTheoVaiTro("kho") + " người"});
         m.addRow(new Object[]{"Kế toán / Thu ngân", "Thu ngân quầy, xuất hóa đơn, in phiếu thu, báo cáo ca", "Quầy thu ngân, Thanh toán hóa đơn, Báo cáo DT", (demNhanSuTheoVaiTro("thu ngân") + demNhanSuTheoVaiTro("Kế toán")) + " người"});
 
