@@ -40,11 +40,11 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     private String maPhieuVuaLuu = "";
     private final PhieuBaoHanh_DAO dao = new PhieuBaoHanh_DAO();
 
-    private final Color NAVY = new Color(15, 23, 42);
-    private final Color BLUE = new Color(37, 99, 235);
-    private final Color GREEN = new Color(22, 163, 74);
-    private final Color BORDER = new Color(226, 232, 240);
-    private final Color CARD_BG = Color.WHITE;
+    private static final Color NAVY = new Color(15, 23, 42);
+    private static final Color BLUE = new Color(37, 99, 235);
+    private static final Color GREEN = new Color(22, 163, 74);
+    private static final Color BORDER = new Color(226, 232, 240);
+    private static final Color CARD_BG = Color.WHITE;
 
     // 1. Thông tin phiếu
     private final JTextField txtMaPBH = new JTextField();
@@ -843,8 +843,17 @@ public class LapPhieuBaoHanh_UI extends JPanel {
     }
 
     public void inPhieuTheoMa(String maPBH) {
+        inPhieuBaoHanh(this, maPBH);
+    }
+
+    public static void inPhieuBaoHanh(Component parent, String maPBH) {
+        if (maPBH == null || maPBH.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "Vui lòng cung cấp mã phiếu bảo hành hợp lệ.", "Lỗi in phiếu", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         try {
-            ThongTinIn t = dao.layThongTinIn(maPBH);
+            PhieuBaoHanh_DAO dao = new PhieuBaoHanh_DAO();
+            ThongTinIn t = dao.layThongTinIn(maPBH.trim());
             List<ChiTiet> dsSuaChua = t.getChiTietSuaChua();
             List<ChiTiet> dsPhuTung = t.getChiTietPhuTung();
 
@@ -981,15 +990,15 @@ public class LapPhieuBaoHanh_UI extends JPanel {
 
             html.append("</body></html>");
 
-            hienThiXemTruocVaIn(html.toString(), "Phiếu bảo hành — " + t.maPBH);
+            hienThiXemTruocVaIn(parent, html.toString(), "Phiếu bảo hành — " + t.maPBH);
 
         } catch (SQLException ex) {
-            baoLoi("Không tìm thấy dữ liệu phiếu bảo hành để in.", ex);
+            JOptionPane.showMessageDialog(parent, "Không tìm thấy dữ liệu phiếu bảo hành để in: " + ex.getMessage(), "Lỗi in phiếu", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void hienThiXemTruocVaIn(String htmlContent, String tieuDeCuaSo) {
-        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+    public static void hienThiXemTruocVaIn(Component parent, String htmlContent, String tieuDeCuaSo) {
+        Window parentWindow = parent instanceof Window ? (Window) parent : (parent != null ? SwingUtilities.getWindowAncestor(parent) : null);
         JDialog dlg = new JDialog(parentWindow, tieuDeCuaSo, Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(850, 720);
         dlg.setLocationRelativeTo(parentWindow);
@@ -1012,7 +1021,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
             try {
                 editor.print(null, null, true, null, null, true);
             } catch (PrinterException ex) {
-                baoLoi("Lỗi khi gửi lệnh in đến máy in.", ex);
+                JOptionPane.showMessageDialog(dlg, "Lỗi khi gửi lệnh in đến máy in: " + ex.getMessage(), "Lỗi máy in", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1023,7 +1032,7 @@ public class LapPhieuBaoHanh_UI extends JPanel {
         dlg.setVisible(true);
     }
 
-    private String escape(Object value) {
+    public static String escape(Object value) {
         if (value == null) return "";
         return value.toString()
                 .replace("&", "&amp;")

@@ -736,28 +736,79 @@ public class PhieuBaoHanh_DAO {
         ArrayList<PhieuBaoHanh> ds = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return ds;
-        String sql = "SELECT bh.maPBH, pt.bienSoXe, bh.ngayBD, " +
-                "bh.ngayKT, bh.trangThaiBH, COALESCE(hm.noiDung, bh.ghiChu, N'') AS lyDo " +
-                "FROM PhieuBaoHanh bh JOIN PhuongTien pt ON pt.soVIN = bh.soVIN " +
-                "OUTER APPLY (SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, ghiChu) AS nvarchar(max)), N'; ') AS noiDung FROM ChiTietPhieuBaoHanh WHERE maPBH = bh.maPBH) hm ORDER BY bh.maPBH DESC";
-        try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+        String sql = "SELECT "
+                + "bh.maPBH, bh.maHoaDon, bh.ngayLap, bh.ngayBD, bh.ngayKT, bh.trangThaiBH, bh.ghiChu, "
+                + "COALESCE(bh.maKH, h.maKH, pt.maKH) AS maKH, "
+                + "COALESCE(k.hoTen, N'Chưa rõ') AS tenKhachHang, "
+                + "COALESCE(k.soDT, N'') AS soDienThoai, "
+                + "COALESCE(pt.bienSoXe, N'') AS bienSoXe, "
+                + "bh.soVIN, bh.maNV, "
+                + "COALESCE(nv.hoTen, N'') AS tenNhanVien, "
+                + "COALESCE(sc.dsSuaChua, N'') AS dsSuaChua, "
+                + "COALESCE(ptg.dsPhuTung, N'') AS dsPhuTung, "
+                + "COALESCE(hm.tatCaHangMuc, bh.ghiChu, N'') AS noiDungTong "
+                + "FROM PhieuBaoHanh bh "
+                + "LEFT JOIN HoaDon h ON h.maHD = bh.maHoaDon "
+                + "LEFT JOIN PhuongTien pt ON pt.soVIN = bh.soVIN "
+                + "LEFT JOIN KhachHang k ON k.maKH = COALESCE(bh.maKH, h.maKH, pt.maKH) "
+                + "LEFT JOIN NhanVien nv ON nv.maNV = bh.maNV "
+                + "OUTER APPLY ( "
+                + "    SELECT STRING_AGG(CAST(tenHangMuc AS nvarchar(max)), N'; ') AS dsSuaChua "
+                + "    FROM ChiTietPhieuBaoHanh "
+                + "    WHERE maPBH = bh.maPBH AND (loaiHangMuc LIKE N'%sửa chữa%' OR loaiHangMuc LIKE N'%dịch vụ%') "
+                + ") sc "
+                + "OUTER APPLY ( "
+                + "    SELECT STRING_AGG(CAST(tenHangMuc AS nvarchar(max)), N'; ') AS dsPhuTung "
+                + "    FROM ChiTietPhieuBaoHanh "
+                + "    WHERE maPBH = bh.maPBH AND (loaiHangMuc NOT LIKE N'%sửa chữa%' AND loaiHangMuc NOT LIKE N'%dịch vụ%' OR loaiHangMuc IS NULL) "
+                + ") ptg "
+                + "OUTER APPLY ( "
+                + "    SELECT STRING_AGG(CAST(COALESCE(tenHangMuc, ghiChu) AS nvarchar(max)), N'; ') AS tatCaHangMuc "
+                + "    FROM ChiTietPhieuBaoHanh "
+                + "    WHERE maPBH = bh.maPBH "
+                + ") hm "
+                + "ORDER BY bh.ngayLap DESC, bh.maPBH DESC";
+
+        try (PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
-                String status = rs.getString("trangThaiBH");
-                String displayStatus = switch (status == null ? "" : status.toUpperCase()) {
-                    case "CON_HAN" -> "Còn hạn";
-                    case "DANG_XU_LY" -> "Đang xử lý";
-                    case "HET_HAN" -> "Hết hạn";
-                    case "TAM_NGUNG" -> "Tạm ngưng";
-                    case "DA_HUY" -> "Đã hủy";
-                    default -> status == null ? "" : status;
-                };
+                String maPBH = rs.getString("maPBH");
+                String maHD = rs.getString("maHoaDon");
+                String bienSoXe = rs.getString("bienSoXe");
+                String tenKH = rs.getString("tenKhachHang");
+                String soDT = rs.getString("soDienThoai");
+                String tenNV = rs.getString("tenNhanVien");
+                String trangThai = hienThiTrangThai(rs.getString("trangThaiBH"));
+
+                Date dLap = rs.getDate("ngayLap");
                 Date dBD = rs.getDate("ngayBD");
                 Date dKT = rs.getDate("ngayKT");
+                LocalDate ngayLap = dLap != null ? dLap.toLocalDate() : (dBD != null ? dBD.toLocalDate() : null);
                 LocalDate ngayBD = dBD != null ? dBD.toLocalDate() : null;
                 LocalDate ngayKT = dKT != null ? dKT.toLocalDate() : null;
-                ds.add(new PhieuBaoHanh(rs.getString("maPBH"), rs.getString("bienSoXe"),
-                        ngayBD, ngayKT, "", displayStatus,
-                        rs.getString("lyDo") == null ? "" : rs.getString("lyDo")));
+
+                String dsSuaChua = rs.getString("dsSuaChua");
+                String dsPhuTung = rs.getString("dsPhuTung");
+                String noiDungTong = rs.getString("noiDungTong");
+
+                PhieuBaoHanh p = new PhieuBaoHanh(
+                        maPBH,
+                        maHD,
+                        bienSoXe,
+                        tenKH,
+                        soDT,
+                        tenNV,
+                        ngayLap,
+                        ngayBD,
+                        ngayKT,
+                        trangThai,
+                        dsSuaChua,
+                        dsPhuTung,
+                        noiDungTong
+                );
+                ds.add(p);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi PhieuBaoHanh_DAO.layTatCa: " + e.getMessage());
@@ -765,27 +816,88 @@ public class PhieuBaoHanh_DAO {
         return ds;
     }
 
-    public ArrayList<PhieuBaoHanh> traCuu(String tuKhoa, int tieuChi, String tinhTrang) {
+    public ArrayList<PhieuBaoHanh> traCuu(String tuKhoa, int tieuChi, String tinhTrang, String loaiBaoHanh) {
         String q = tuKhoa == null ? "" : tuKhoa.trim().toLowerCase();
+        String qNorm = q.replaceAll("[\\s\\-\\.]", "");
+
         ArrayList<PhieuBaoHanh> result = new ArrayList<>();
-        Connection con = ConnectDB.getInstance().getConnection();
-        ArrayList<PhieuBaoHanh> source = con == null
-                ? new ArrayList<>(KhoDuLieu.get().getPhieuBaoHanhs()) : layTatCa();
+        ArrayList<PhieuBaoHanh> source = layTatCa();
+
         for (PhieuBaoHanh p : source) {
-            String text = switch (tieuChi) {
-                case 1 -> p.getSoPhieu();
-                case 2 -> p.getBienSo();
-                case 3 -> p.getTinhTrang();
-                case 4 -> p.getNoiDung();
-                default -> String.join(" ", safe(p.getSoPhieu()), safe(p.getBienSo()), safe(p.getNgayBDHienThi()),
-                        safe(p.getNgayKTHienThi()), safe(p.getTinhTrang()), safe(p.getNoiDung()));
-            };
-            boolean matchText = q.isEmpty() || safe(text).toLowerCase().contains(q);
+            // 1. So khớp trạng thái
             boolean matchStatus = tinhTrang == null || tinhTrang.isBlank() || "TAT_CA".equalsIgnoreCase(tinhTrang)
                     || tinhTrang.equalsIgnoreCase(p.getTinhTrang());
-            if (matchText && matchStatus) result.add(p);
+            if (!matchStatus) continue;
+
+            // 2. So khớp loại hạng mục bảo hành (Tất cả / Sửa chữa / Phụ tùng)
+            if (loaiBaoHanh != null && !loaiBaoHanh.isBlank() && !"TAT_CA".equalsIgnoreCase(loaiBaoHanh)) {
+                if (loaiBaoHanh.contains("sửa chữa") || loaiBaoHanh.contains("dịch vụ")) {
+                    if (!p.coSuaChua()) continue;
+                } else if (loaiBaoHanh.contains("phụ tùng") || loaiBaoHanh.contains("linh kiện")) {
+                    if (!p.coPhuTung()) continue;
+                }
+            }
+
+            // 3. So khớp từ khóa theo tiêu chí
+            if (q.isEmpty()) {
+                result.add(p);
+                continue;
+            }
+
+            boolean matchText = false;
+            String bs = safe(p.getBienSo());
+            String bsNorm = bs.toLowerCase().replaceAll("[\\s\\-\\.]", "");
+            String maPBH = safe(p.getSoPhieu()).toLowerCase();
+            String maHD = safe(p.getMaHoaDon()).toLowerCase();
+            String tenKH = safe(p.getTenKhachHang()).toLowerCase();
+            String sdt = safe(p.getSoDienThoai()).toLowerCase();
+            String sc = safe(p.getNoiDungSuaChua()).toLowerCase();
+            String pt = safe(p.getNoiDungPhuTung()).toLowerCase();
+            String tong = safe(p.getNoiDung()).toLowerCase();
+
+            switch (tieuChi) {
+                case 1 -> { // Số phiếu bảo hành
+                    matchText = maPBH.contains(q) || maPBH.replaceAll("[^0-9]", "").contains(q);
+                }
+                case 2 -> { // Mã hóa đơn
+                    matchText = maHD.contains(q) || maHD.replaceAll("[^0-9]", "").contains(q);
+                }
+                case 3 -> { // Biển số xe
+                    matchText = bs.toLowerCase().contains(q) || bsNorm.contains(qNorm);
+                }
+                case 4 -> { // Khách hàng (Tên / SĐT)
+                    matchText = tenKH.contains(q) || sdt.contains(q);
+                }
+                case 5 -> { // Dịch vụ sửa chữa
+                    matchText = sc.contains(q);
+                }
+                case 6 -> { // Phụ tùng / Linh kiện
+                    matchText = pt.contains(q);
+                }
+                default -> { // Tất cả tiêu chí (Tự động nhận diện)
+                    matchText = maPBH.contains(q)
+                            || maHD.contains(q)
+                            || bs.toLowerCase().contains(q)
+                            || bsNorm.contains(qNorm)
+                            || tenKH.contains(q)
+                            || sdt.contains(q)
+                            || sc.contains(q)
+                            || pt.contains(q)
+                            || tong.contains(q)
+                            || safe(p.getTinhTrang()).toLowerCase().contains(q)
+                            || safe(p.getNguoiLap()).toLowerCase().contains(q);
+                }
+            }
+
+            if (matchText) {
+                result.add(p);
+            }
         }
         return result;
+    }
+
+    public ArrayList<PhieuBaoHanh> traCuu(String tuKhoa, int tieuChi, String tinhTrang) {
+        return traCuu(tuKhoa, tieuChi, tinhTrang, "TAT_CA");
     }
 
     public boolean them(PhieuBaoHanh pbh) {

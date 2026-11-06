@@ -20,12 +20,40 @@ public class PhieuBaoHanh {
     private LocalDate ngayKT;
     private String tinhTrang;
     private String noiDung;
+    private String noiDungSuaChua = "";
+    private String noiDungPhuTung = "";
+    private String maHoaDonCache = "";
+    private String tenKhachHangCache = "";
+    private String soDienThoaiCache = "";
 
     public PhieuBaoHanh() {
     }
 
     public PhieuBaoHanh(String soPhieu) {
         this.soPhieu = soPhieu;
+    }
+
+    public PhieuBaoHanh(String soPhieu, String maHD, String bienSo, String tenKH, String soDT,
+                        String nguoiLap, LocalDate ngayLap, LocalDate ngayBD, LocalDate ngayKT,
+                        String tinhTrang, String dsSuaChua, String dsPhuTung, String noiDungTong) {
+        this.soPhieu = soPhieu;
+        this.maHoaDonCache = maHD != null ? maHD : "";
+        this.hoaDon = new HoaDon(this.maHoaDonCache);
+        this.phuongTien = new PhuongTien(bienSo != null ? bienSo : "");
+        this.khachHang = new KhachHang();
+        this.khachHang.setHoTen(tenKH != null ? tenKH : "");
+        this.khachHang.setSdt(soDT != null ? soDT : "");
+        this.tenKhachHangCache = tenKH != null ? tenKH : "";
+        this.soDienThoaiCache = soDT != null ? soDT : "";
+        this.nhanVien = new NhanVien();
+        this.nhanVien.setHoTen(nguoiLap != null ? nguoiLap : "");
+        this.ngayLap = ngayLap;
+        this.ngayBD = ngayBD;
+        this.ngayKT = ngayKT;
+        this.tinhTrang = tinhTrang;
+        this.noiDungSuaChua = dsSuaChua != null ? dsSuaChua : "";
+        this.noiDungPhuTung = dsPhuTung != null ? dsPhuTung : "";
+        this.noiDung = noiDungTong != null ? noiDungTong : "";
     }
 
     public PhieuBaoHanh(String soPhieu, KhachHang khachHang, PhuongTien phuongTien,
@@ -121,7 +149,49 @@ public class PhieuBaoHanh {
 
     public String getMaKH() { return khachHang != null ? khachHang.getMaKH() : ""; }
     public String getSoVIN() { return phuongTien != null ? phuongTien.getSoKhung() : ""; }
-    public String getMaHoaDon() { return hoaDon != null ? hoaDon.getMaHD() : ""; }
+    public String getMaHoaDon() {
+        if (maHoaDonCache != null && !maHoaDonCache.isEmpty()) return maHoaDonCache;
+        return hoaDon != null ? hoaDon.getMaHD() : "";
+    }
+    public void setMaHoaDon(String maHD) {
+        this.maHoaDonCache = maHD != null ? maHD : "";
+        if (this.hoaDon == null) this.hoaDon = new HoaDon(this.maHoaDonCache);
+        else this.hoaDon.setMaHD(this.maHoaDonCache);
+    }
+
+    public String getTenKhachHang() {
+        if (tenKhachHangCache != null && !tenKhachHangCache.isEmpty()) return tenKhachHangCache;
+        return khachHang != null ? khachHang.getHoTen() : "";
+    }
+    public void setTenKhachHang(String ten) {
+        this.tenKhachHangCache = ten != null ? ten : "";
+        if (this.khachHang == null) this.khachHang = new KhachHang();
+        this.khachHang.setHoTen(this.tenKhachHangCache);
+    }
+
+    public String getSoDienThoai() {
+        if (soDienThoaiCache != null && !soDienThoaiCache.isEmpty()) return soDienThoaiCache;
+        return khachHang != null ? khachHang.getSdt() : "";
+    }
+    public void setSoDienThoai(String sdt) {
+        this.soDienThoaiCache = sdt != null ? sdt : "";
+        if (this.khachHang == null) this.khachHang = new KhachHang();
+        this.khachHang.setSdt(this.soDienThoaiCache);
+    }
+
+    public String getNoiDungSuaChua() { return noiDungSuaChua != null ? noiDungSuaChua : ""; }
+    public void setNoiDungSuaChua(String s) { this.noiDungSuaChua = s != null ? s : ""; }
+
+    public String getNoiDungPhuTung() { return noiDungPhuTung != null ? noiDungPhuTung : ""; }
+    public void setNoiDungPhuTung(String s) { this.noiDungPhuTung = s != null ? s : ""; }
+
+    public boolean coSuaChua() {
+        return noiDungSuaChua != null && !noiDungSuaChua.trim().isEmpty();
+    }
+
+    public boolean coPhuTung() {
+        return noiDungPhuTung != null && !noiDungPhuTung.trim().isEmpty();
+    }
 
     public LocalDate getNgayLap() { return ngayLap; }
     public void setNgayLap(LocalDate ngayLap) { this.ngayLap = ngayLap; }
