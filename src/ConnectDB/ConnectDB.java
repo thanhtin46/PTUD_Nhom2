@@ -374,6 +374,14 @@ public class ConnectDB {
             thucThiAnToan(stmt, "IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'ngayHetHan') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD ngayHetHan DATE NULL;");
             thucThiAnToan(stmt, "IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'dieuKienBaoHanh') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD dieuKienBaoHanh NVARCHAR(MAX) NULL;");
             thucThiAnToan(stmt, "IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'ghiChu') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD ghiChu NVARCHAR(MAX) NULL;");
+            thucThiAnToan(stmt, "IF COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'loaiHangMuc') IS NULL ALTER TABLE dbo.ChiTietPhieuBaoHanh ADD loaiHangMuc NVARCHAR(50) NULL CONSTRAINT DF_CTPBH_Loai DEFAULT N'Phụ tùng / Linh kiện' WITH VALUES;");
+
+            // Đảm bảo các mã gói dịch vụ sửa chữa có sẵn trong PhuTung để bảo toàn ràng buộc khóa ngoại FK
+            for (int i = 1; i <= 20; i++) {
+                String dvCode = String.format("DV%03d", i);
+                thucThiAnToan(stmt, "IF NOT EXISTS (SELECT 1 FROM dbo.PhuTung WHERE maPT='" + dvCode + "') " +
+                                    "INSERT INTO dbo.PhuTung (maPT, tenPT, donViTinh, donGiaBan) VALUES ('" + dvCode + "', N'Dịch vụ sửa chữa bảo hành " + i + "', N'Gói', 0);");
+            }
 
             // Chuyển dữ liệu từ bảng cũ HangMucBaoHanh sang ChiTietPhieuBaoHanh nếu bảng cũ còn tồn tại dưới dạng Table
             thucThiAnToan(stmt, "IF OBJECT_ID('dbo.HangMucBaoHanh', 'U') IS NOT NULL BEGIN " +

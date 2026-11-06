@@ -10,8 +10,12 @@ import java.util.Objects;
 public class ChiTietPhieuBaoHanh {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    public static final String LOAI_SUA_CHUA = "Dịch vụ sửa chữa";
+    public static final String LOAI_PHU_TUNG = "Phụ tùng / Linh kiện";
+
     private PhieuBaoHanh phieuBaoHanh;
     private PhuTung phuTung;
+    private String loaiHangMuc = LOAI_PHU_TUNG;
     private String tenHangMuc;
     private int thoiHanBaoHanh;       // Số tháng
     private LocalDate ngayHetHan;
@@ -35,6 +39,7 @@ public class ChiTietPhieuBaoHanh {
         this.ghiChu = ghiChu;
         this.lyDo = lyDo;
         this.huongXuLy = huongXuLy;
+        this.loaiHangMuc = tuDongNhanDienLoai(tenHangMuc, lyDo);
     }
 
     public ChiTietPhieuBaoHanh(String maPBH, String maPT, String tenHangMuc,
@@ -43,6 +48,15 @@ public class ChiTietPhieuBaoHanh {
         this(maPBH != null && !maPBH.isEmpty() ? new PhieuBaoHanh(maPBH) : null,
              maPT != null && !maPT.isEmpty() ? new PhuTung(maPT) : null,
              tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy);
+    }
+
+    public ChiTietPhieuBaoHanh(String maPBH, String maPT, String loaiHangMuc, String tenHangMuc,
+                               int thoiHanBaoHanh, LocalDate ngayHetHan, String dieuKienBaoHanh,
+                               String ghiChu, String lyDo, String huongXuLy) {
+        this(maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, huongXuLy);
+        if (loaiHangMuc != null && !loaiHangMuc.isBlank()) {
+            this.loaiHangMuc = loaiHangMuc;
+        }
     }
 
     public PhieuBaoHanh getPhieuBaoHanh() {
@@ -77,6 +91,33 @@ public class ChiTietPhieuBaoHanh {
     public void setMaPT(String maPT) {
         if (this.phuTung == null) this.phuTung = new PhuTung(maPT);
         else this.phuTung.setMaPT(maPT);
+    }
+
+    public String getLoaiHangMuc() {
+        if (loaiHangMuc != null && !loaiHangMuc.isBlank()) return loaiHangMuc;
+        return tuDongNhanDienLoai(tenHangMuc, lyDo);
+    }
+
+    public void setLoaiHangMuc(String loaiHangMuc) {
+        this.loaiHangMuc = loaiHangMuc;
+    }
+
+    public boolean laSuaChua() {
+        return LOAI_SUA_CHUA.equalsIgnoreCase(getLoaiHangMuc());
+    }
+
+    public boolean laPhuTung() {
+        return !laSuaChua();
+    }
+
+    public static String tuDongNhanDienLoai(String ten, String moTa) {
+        String s = ((ten != null ? ten : "") + " " + (moTa != null ? moTa : "")).toLowerCase();
+        if (s.contains("công") || s.contains("dịch vụ") || s.contains("sửa chữa")
+                || s.contains("kiểm tra") || s.contains("bảo dưỡng") || s.contains("thay thế và chạy thử")
+                || s.contains("cân chỉnh") || s.contains("vệ sinh") || s.contains("đại tu")) {
+            return LOAI_SUA_CHUA;
+        }
+        return LOAI_PHU_TUNG;
     }
 
     public String getTenHangMuc() {

@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- HỆ THỐNG QUẢN LÝ GARA Ô TÔ
 -- CƠ SỞ DỮ LIỆU: QuanLySuaChuaXe
 -- Tạo bảng, ràng buộc khóa ngoại và dữ liệu mẫu ban đầu
@@ -276,6 +276,7 @@ CREATE TABLE ChiTietPhieuBaoHanh (
     maPBH VARCHAR(20) NOT NULL,
     maPT VARCHAR(20) NOT NULL,
     tenHangMuc NVARCHAR(255) NOT NULL,
+    loaiHangMuc NVARCHAR(50) NULL DEFAULT N'Phụ tùng / Linh kiện',
     thoiHanBaoHanh INT NOT NULL DEFAULT 6 CHECK (thoiHanBaoHanh > 0),
     ngayHetHan DATE NOT NULL,
     dieuKienBaoHanh NVARCHAR(MAX) NULL,

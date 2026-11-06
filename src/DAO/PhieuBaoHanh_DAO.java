@@ -58,11 +58,22 @@ public class PhieuBaoHanh_DAO {
     // 2. LỚP CHI TIẾT BẢO HÀNH
     // =========================================================
     public static class ChiTiet {
+        public String maPT;
+        public String loaiHangMuc = "Phụ tùng / Linh kiện";
         public String tenHangMuc;
         public int thoiHan;
         public Date ngayHetHan;
         public String dieuKien;
         public String ghiChu;
+
+        public boolean laSuaChua() {
+            String s = ((loaiHangMuc != null ? loaiHangMuc : "") + " " + (tenHangMuc != null ? tenHangMuc : "")).toLowerCase();
+            return s.contains("sửa chữa") || s.contains("dịch vụ") || s.contains("công");
+        }
+
+        public boolean laPhuTung() {
+            return !laSuaChua();
+        }
     }
 
     // =========================================================
@@ -86,6 +97,22 @@ public class PhieuBaoHanh_DAO {
         public String tongTien;
 
         public List<ChiTiet> chiTiet = new ArrayList<>();
+
+        public List<ChiTiet> getChiTietSuaChua() {
+            List<ChiTiet> list = new ArrayList<>();
+            for (ChiTiet ct : chiTiet) {
+                if (ct.laSuaChua()) list.add(ct);
+            }
+            return list;
+        }
+
+        public List<ChiTiet> getChiTietPhuTung() {
+            List<ChiTiet> list = new ArrayList<>();
+            for (ChiTiet ct : chiTiet) {
+                if (ct.laPhuTung()) list.add(ct);
+            }
+            return list;
+        }
     }
 
     // =========================================================
@@ -307,9 +334,15 @@ public class PhieuBaoHanh_DAO {
     private void luuChiTiet(Connection c, String maPBH, List<ChiTietPhieuBaoHanh> dsChiTiet)
             throws SQLException {
 
-        String sql = "INSERT INTO dbo.ChiTietPhieuBaoHanh "
-                + "(maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        boolean coCotLoai = false;
+        try (Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT COL_LENGTH('dbo.ChiTietPhieuBaoHanh', 'loaiHangMuc')")) {
+            if (rs.next() && rs.getObject(1) != null) coCotLoai = true;
+        } catch (SQLException ignored) {}
+
+        String sql = coCotLoai
+                ? "INSERT INTO dbo.ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo, loaiHangMuc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                : "INSERT INTO dbo.ChiTietPhieuBaoHanh (maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, lyDo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         java.util.Set<String> daDungMaPT = new java.util.HashSet<>();
 
@@ -323,18 +356,36 @@ public class PhieuBaoHanh_DAO {
                 Date ngayHetHan = ct.getNgayHetHan() == null ? null : Date.valueOf(ct.getNgayHetHan());
                 String dieuKien = ct.getDieuKienBaoHanh();
                 String ghiChuCT = ct.getGhiChu();
+                String loai = ct.getLoaiHangMuc();
 
                 if (rong(tenHangMuc)) {
                     throw new SQLException("Tên hạng mục bảo hành không được để trống.");
                 }
                 if (thoiHan <= 0) {
-                    throw new SQLException("Th\u1EDDi h\u1EA1n b\u1EA3o h\u00E0nh ph\u1EA3i l\u1EDBn h\u01A1n 0.");
+                    throw new SQLException("Thời hạn bảo hành phải lớn hơn 0.");
                 }
                 if (ngayHetHan == null) {
-                    throw new SQLException("Ng\u00E0y h\u1EBFt h\u1EA1n b\u1EA3o h\u00E0nh kh\u00F4ng \u0111\u01B0\u1EE3c \u0111\u1EC3 tr\u1ED1ng.");
+                    throw new SQLException("Ngày hết hạn bảo hành không được để trống.");
                 }
 
-                String maPT = ct.getMaPT().isBlank() ? null : ct.getMaPT().trim();
+                String maPT = (ct.getMaPT() != null && !ct.getMaPT().isBlank()) ? ct.getMaPT().trim() : null;
+
+                // Nếu là dịch vụ sửa chữa hoặc chưa có maPT:
+                if (ct.laSuaChua()) {
+                    for (int i = 1; i <= 99; i++) {
+                        String cand = String.format("DV%03d", i);
+                        if (!daDungMaPT.contains(cand)) {
+                            try (PreparedStatement psDV = c.prepareStatement("IF NOT EXISTS (SELECT 1 FROM dbo.PhuTung WHERE maPT=?) INSERT INTO dbo.PhuTung(maPT, tenPT, donViTinh, donGiaBan) VALUES (?, ?, N'Gói', 0)")) {
+                                psDV.setString(1, cand);
+                                psDV.setString(2, cand);
+                                psDV.setString(3, tenHangMuc);
+                                psDV.executeUpdate();
+                            }
+                            maPT = cand;
+                            break;
+                        }
+                    }
+                }
 
                 if (maPT == null || daDungMaPT.contains(maPT)) {
                     try (PreparedStatement psPT = c.prepareStatement("SELECT TOP 1 maPT FROM PhuTung WHERE tenPT = ?")) {
@@ -387,6 +438,11 @@ public class PhieuBaoHanh_DAO {
                 ps.setDate(5, ngayHetHan);
                 ps.setString(6, dieuKien);
                 ps.setString(7, ghiChuCT);
+                ps.setString(8, loai); // Lưu vào lyDo để tương thích ngược
+
+                if (coCotLoai) {
+                    ps.setString(9, loai);
+                }
 
                 ps.addBatch();
             }
@@ -405,7 +461,7 @@ public class PhieuBaoHanh_DAO {
     }
 
     // =========================================================
-    // 8. LẤY THÔNG TIN PHIẾU ĐỂ IN
+    // 8. LẤY THÔNG TIN PHIẾU ĐỂ IN & XEM CHI TIẾT
     // =========================================================
     public ThongTinIn layThongTinIn(String maPBH) throws SQLException {
 
@@ -418,11 +474,12 @@ public class PhieuBaoHanh_DAO {
                 + "LEFT JOIN dbo.KhachHang k ON k.maKH = h.maKH "
                 + "WHERE b.maPBH = ?";
 
-        String sqlCT = "SELECT tenHangMuc, thoiHanBaoHanh, ngayHetHan, "
-                + "dieuKienBaoHanh, ghiChu "
+        String sqlCT = "SELECT maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, "
+                + "dieuKienBaoHanh, ghiChu, "
+                + "COALESCE(loaiHangMuc, lyDo, N'Phụ tùng / Linh kiện') AS loaiHangMuc "
                 + "FROM dbo.ChiTietPhieuBaoHanh "
                 + "WHERE maPBH = ? "
-                + "ORDER BY maPT";
+                + "ORDER BY loaiHangMuc DESC, maPT ASC";
 
         Connection c = getConnection();
         ThongTinIn t = new ThongTinIn();
@@ -464,11 +521,16 @@ public class PhieuBaoHanh_DAO {
                 while (rs.next()) {
                     ChiTiet ct = new ChiTiet();
 
+                    ct.maPT = rs.getString("maPT");
                     ct.tenHangMuc = rs.getString("tenHangMuc");
                     ct.thoiHan = rs.getInt("thoiHanBaoHanh");
                     ct.ngayHetHan = rs.getDate("ngayHetHan");
                     ct.dieuKien = rs.getString("dieuKienBaoHanh");
                     ct.ghiChu = rs.getString("ghiChu");
+                    ct.loaiHangMuc = rs.getString("loaiHangMuc");
+                    if (ct.loaiHangMuc == null || ct.loaiHangMuc.isBlank()) {
+                        ct.loaiHangMuc = ChiTietPhieuBaoHanh.tuDongNhanDienLoai(ct.tenHangMuc, ct.dieuKien);
+                    }
 
                     t.chiTiet.add(ct);
                 }
@@ -476,6 +538,164 @@ public class PhieuBaoHanh_DAO {
         }
 
         return t;
+    }
+
+    // =========================================================
+    // 9. LẤY GỢI Ý TOÀN BỘ CÁC MỤC SỬA CHỮA & PHỤ TÙNG TỪ HÓA ĐƠN
+    // =========================================================
+    public List<ChiTietPhieuBaoHanh> layGoiYHangMucTuHoaDon(String maHD) {
+        List<ChiTietPhieuBaoHanh> list = new ArrayList<>();
+        if (maHD == null || maHD.trim().isEmpty()) return list;
+        try {
+            Connection c = getConnection();
+
+            // 1. LẤY CÁC HẠNG MỤC DỊCH VỤ SỬA CHỮA
+            // 1.1 ChiTietDichVuHoaDon
+            try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT stt, tenDichVu, donGia FROM ChiTietDichVuHoaDon WHERE maHD = ? ORDER BY stt")) {
+                ps.setString(1, maHD);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String ten = rs.getString("tenDichVu");
+                        if (ten != null && !ten.isBlank()) {
+                            ChiTietPhieuBaoHanh ct = new ChiTietPhieuBaoHanh();
+                            ct.setLoaiHangMuc(ChiTietPhieuBaoHanh.LOAI_SUA_CHUA);
+                            ct.setTenHangMuc(ten.trim());
+                            ct.setThoiHanBaoHanh(3);
+                            ct.setDieuKienBaoHanh("Bảo hành chất lượng tay nghề, kỹ thuật thi công & căn chỉnh tại xưởng The T4 (không do va chạm/ngoại lực)");
+                            ct.setGhiChu("Dịch vụ theo HĐ " + maHD);
+                            list.add(ct);
+                        }
+                    }
+                }
+            }
+
+            // 1.2 Nếu ChiTietDichVuHoaDon chưa có, tìm từ ChiTietCongViecSuaChua
+            if (list.isEmpty()) {
+                String sqlPSC = "SELECT cv.noiDungCongViec FROM ChiTietCongViecSuaChua cv " +
+                        "WHERE cv.maPSC IN (" +
+                        "  SELECT sc.maPSC FROM PhieuSuaChua sc " +
+                        "  JOIN HoaDon h ON (sc.maKH = h.maKH OR h.ghiChu LIKE '%' + sc.maPSC + '%') " +
+                        "  WHERE h.maHD = ?" +
+                        ") ORDER BY cv.stt";
+                try (PreparedStatement ps = c.prepareStatement(sqlPSC)) {
+                    ps.setString(1, maHD);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            String ten = rs.getString("noiDungCongViec");
+                            if (ten != null && !ten.isBlank()) {
+                                ChiTietPhieuBaoHanh ct = new ChiTietPhieuBaoHanh();
+                                ct.setLoaiHangMuc(ChiTietPhieuBaoHanh.LOAI_SUA_CHUA);
+                                ct.setTenHangMuc(ten.trim());
+                                ct.setThoiHanBaoHanh(3);
+                                ct.setDieuKienBaoHanh("Bảo hành chất lượng tay nghề, kỹ thuật thi công & căn chỉnh tại xưởng The T4 (không do va chạm/ngoại lực)");
+                                ct.setGhiChu("Dịch vụ theo lệnh sửa chữa liên kết");
+                                list.add(ct);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. LẤY CÁC HẠNG MỤC PHỤ TÙNG & LINH KIỆN
+            // 2.1 ChiTietHoaDon
+            try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT ct.maPT, ct.tenPhuTung, ct.donGia, pt.donViTinh FROM ChiTietHoaDon ct " +
+                    "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT WHERE ct.maHD = ? ORDER BY ct.maPT")) {
+                ps.setString(1, maHD);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String maPT = rs.getString("maPT");
+                        String tenPT = rs.getString("tenPhuTung");
+                        if (tenPT != null && !tenPT.isBlank()) {
+                            ChiTietPhieuBaoHanh ct = new ChiTietPhieuBaoHanh();
+                            ct.setLoaiHangMuc(ChiTietPhieuBaoHanh.LOAI_PHU_TUNG);
+                            ct.setMaPT(maPT);
+                            ct.setTenHangMuc(tenPT.trim());
+                            ct.setThoiHanBaoHanh(6);
+                            ct.setDieuKienBaoHanh("Bảo hành lỗi kỹ thuật vật tư / phụ tùng chính hãng từ nhà sản xuất (còn nguyên tem niêm phong)");
+                            ct.setGhiChu("Linh kiện thay mới theo HĐ " + maHD);
+                            list.add(ct);
+                        }
+                    }
+                }
+            }
+
+            // 2.2 Nếu ChiTietHoaDon chưa có, tìm từ ChiTietSuaChua
+            boolean coPhuTung = list.stream().anyMatch(ChiTietPhieuBaoHanh::laPhuTung);
+            if (!coPhuTung) {
+                String sqlPTSuaChua = "SELECT ct.maPT, ct.tenPhuTung, ct.noiDungSC FROM ChiTietSuaChua ct " +
+                        "WHERE ct.maPSC IN (" +
+                        "  SELECT sc.maPSC FROM PhieuSuaChua sc " +
+                        "  JOIN HoaDon h ON (sc.maKH = h.maKH OR h.ghiChu LIKE '%' + sc.maPSC + '%') " +
+                        "  WHERE h.maHD = ?" +
+                        ")";
+                try (PreparedStatement ps = c.prepareStatement(sqlPTSuaChua)) {
+                    ps.setString(1, maHD);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            String maPT = rs.getString("maPT");
+                            String tenPT = rs.getString("tenPhuTung");
+                            if (tenPT != null && !tenPT.isBlank()) {
+                                ChiTietPhieuBaoHanh ct = new ChiTietPhieuBaoHanh();
+                                ct.setLoaiHangMuc(ChiTietPhieuBaoHanh.LOAI_PHU_TUNG);
+                                ct.setMaPT(maPT);
+                                ct.setTenHangMuc(tenPT.trim());
+                                ct.setThoiHanBaoHanh(6);
+                                ct.setDieuKienBaoHanh("Bảo hành lỗi kỹ thuật vật tư / phụ tùng chính hãng từ nhà sản xuất (còn nguyên tem niêm phong)");
+                                ct.setGhiChu("Linh kiện theo lệnh sửa chữa liên kết");
+                                list.add(ct);
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException ex) {
+            System.err.println("Lỗi layGoiYHangMucTuHoaDon: " + ex.getMessage());
+        }
+        return list;
+    }
+
+    // =========================================================
+    // 10. LẤY CHI TIẾT CỦA MỘT PHIẾU BẢO HÀNH ĐÃ LƯU
+    // =========================================================
+    public List<ChiTietPhieuBaoHanh> layChiTietPhieuBaoHanh(String maPBH) {
+        List<ChiTietPhieuBaoHanh> list = new ArrayList<>();
+        if (maPBH == null || maPBH.trim().isEmpty()) return list;
+        try {
+            Connection c = getConnection();
+            String sql = "SELECT maPBH, maPT, tenHangMuc, thoiHanBaoHanh, ngayHetHan, dieuKienBaoHanh, ghiChu, " +
+                    "COALESCE(loaiHangMuc, lyDo, N'Phụ tùng / Linh kiện') AS loaiHangMuc " +
+                    "FROM dbo.ChiTietPhieuBaoHanh WHERE maPBH = ? ORDER BY loaiHangMuc DESC, maPT ASC";
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, maPBH);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String loai = rs.getString("loaiHangMuc");
+                        String ten = rs.getString("tenHangMuc");
+                        Date dHet = rs.getDate("ngayHetHan");
+                        LocalDate ngayHet = dHet != null ? dHet.toLocalDate() : null;
+                        ChiTietPhieuBaoHanh ct = new ChiTietPhieuBaoHanh(
+                                rs.getString("maPBH"),
+                                rs.getString("maPT"),
+                                loai,
+                                ten,
+                                rs.getInt("thoiHanBaoHanh"),
+                                ngayHet,
+                                rs.getString("dieuKienBaoHanh"),
+                                rs.getString("ghiChu"),
+                                loai,
+                                ""
+                        );
+                        list.add(ct);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Lỗi layChiTietPhieuBaoHanh: " + ex.getMessage());
+        }
+        return list;
     }
 
     // =========================================================

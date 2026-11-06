@@ -76,6 +76,91 @@ public class TraCuuBaoHanh_UI extends JPanel {
     private void dinhDangCot(int col,int align,int width){TableColumn tc=table.getColumnModel().getColumn(col);tc.setPreferredWidth(width);tc.setHeaderRenderer(new DefaultTableCellRenderer(){public Component getTableCellRendererComponent(JTable t,Object v,boolean s,boolean f,int r,int c){JLabel l=(JLabel)super.getTableCellRendererComponent(t,v,s,f,r,c);l.setHorizontalAlignment(align);l.setBackground(new Color(241,245,249));l.setForeground(new Color(30,41,59));l.setFont(new Font("Segoe UI",Font.BOLD,13));l.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0,0,1,0,UiHelper.VIEN),new EmptyBorder(8,align==SwingConstants.LEFT?12:4,8,4)));return l;}});tc.setCellRenderer(new DefaultTableCellRenderer(){public Component getTableCellRendererComponent(JTable t,Object v,boolean s,boolean f,int r,int c){Component x=super.getTableCellRendererComponent(t,v,s,f,r,c);if(!s){x.setBackground(r%2==0?Color.WHITE:new Color(248,250,252));x.setForeground(new Color(30,41,59));}else{x.setBackground(new Color(219,234,254));x.setForeground(UiHelper.XANH_TRUNG);}if(x instanceof JLabel l){l.setHorizontalAlignment(align);l.setBorder(new EmptyBorder(0,align==SwingConstants.LEFT?12:4,0,4));}return x;}});}
     private void napBang(){String q=txtTuKhoa.getText().trim();int criterion=cboTieuChi.getSelectedIndex();model.setRowCount(0);dsHienTai=KhoDuLieu.get().getPhieuBaoHanhDAO().traCuu(q,criterion,locTinhTrang);for(PhieuBaoHanh p:dsHienTai){String bs=(p.getPhuongTien()!=null)?p.getPhuongTien().getBienSo():p.getBienSo();model.addRow(new Object[]{p.getSoPhieu(),bs,p.getNgayBDHienThi(),p.getNgayKTHienThi(),p.getTinhTrang(),p.getNoiDung()});}lblDemKetQua.setText("Hiển thị: "+dsHienTai.size()+" / "+KhoDuLieu.get().getPhieuBaoHanhs().size()+" phiếu bảo hành");}
     private String safe(String s){return s==null?"":s;}
-    private void xemChiTiet(){int row=table.getSelectedRow();if(row<0){JOptionPane.showMessageDialog(this,"Vui lòng chọn một phiếu bảo hành trong bảng để xem chi tiết!","Thông báo",JOptionPane.WARNING_MESSAGE);return;}PhieuBaoHanh p=dsHienTai.get(table.convertRowIndexToModel(row));String msg="<html><div style='width:440px;font-family:Segoe UI;'><h3 style='color:#0F172A;'>CHI TIẾT PHIẾU BẢO HÀNH</h3><table cellpadding='4' style='font-size:12px;'><tr><td width='140'><b>Số phiếu:</b></td><td><b style='color:#2563EB;'>"+safe(p.getSoPhieu())+"</b></td></tr><tr><td><b>Biển số xe:</b></td><td>"+safe(p.getBienSo())+"</td></tr><tr><td><b>Ngày bắt đầu:</b></td><td>"+safe(p.getNgayBDHienThi())+"</td></tr><tr><td><b>Ngày kết thúc:</b></td><td>"+safe(p.getNgayKTHienThi())+"</td></tr><tr><td><b>Người lập:</b></td><td>"+safe(p.getNguoiLap())+"</td></tr><tr><td><b>Tình trạng:</b></td><td><b>"+safe(p.getTinhTrang())+"</b></td></tr></table><hr><b style='color:#2563EB;'>NỘI DUNG BẢO HÀNH</b><div style='background:#F8FAFC;padding:8px;border:1px solid #E2E8F0;'>"+safe(p.getNoiDung())+"</div></div></html>";JOptionPane.showMessageDialog(this,msg,"Phiếu bảo hành — "+p.getSoPhieu(),JOptionPane.INFORMATION_MESSAGE);}
+    private void xemChiTiet(){
+        int row=table.getSelectedRow();
+        if(row<0){
+            JOptionPane.showMessageDialog(this,"Vui lòng chọn một phiếu bảo hành trong bảng để xem chi tiết!","Thông báo",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        PhieuBaoHanh p=dsHienTai.get(table.convertRowIndexToModel(row));
+        String maPBH = p.getSoPhieu();
+
+        java.util.List<Entity.ChiTietPhieuBaoHanh> dsCT = KhoDuLieu.get().getPhieuBaoHanhDAO().layChiTietPhieuBaoHanh(maPBH);
+
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        JDialog dlg = new JDialog(parentWindow, "Chi tiết phiếu bảo hành — " + maPBH, Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(820, 560);
+        dlg.setLocationRelativeTo(parentWindow);
+        dlg.setLayout(new BorderLayout());
+
+        // Header info
+        JPanel pnlHead = new JPanel(new GridLayout(3, 2, 10, 4));
+        pnlHead.setBackground(new Color(241, 245, 249));
+        pnlHead.setBorder(new EmptyBorder(12, 16, 12, 16));
+        pnlHead.add(new JLabel("Mã phiếu: " + maPBH));
+        pnlHead.add(new JLabel("Biển số xe: " + safe(p.getBienSo())));
+        pnlHead.add(new JLabel("Thời hạn: " + safe(p.getNgayBDHienThi()) + "  ➔  " + safe(p.getNgayKTHienThi())));
+        pnlHead.add(new JLabel("Tình trạng: " + safe(p.getTinhTrang())));
+        pnlHead.add(new JLabel("Người lập: " + safe(p.getNguoiLap())));
+        pnlHead.add(new JLabel("Tổng số hạng mục: " + (dsCT.isEmpty() ? "1" : dsCT.size()) + " mục"));
+        dlg.add(pnlHead, BorderLayout.NORTH);
+
+        // Center Table with Sửa chữa & Phụ tùng
+        DefaultTableModel md = UiHelper.model("STT", "Loại bảo hành", "Tên hạng mục", "Thời hạn", "Ngày hết hạn", "Điều kiện bảo hành");
+        JTable tbl = UiHelper.bang(md);
+        tbl.getColumnModel().getColumn(0).setPreferredWidth(45);
+        tbl.getColumnModel().getColumn(1).setPreferredWidth(140);
+        tbl.getColumnModel().getColumn(2).setPreferredWidth(230);
+        tbl.getColumnModel().getColumn(3).setPreferredWidth(85);
+        tbl.getColumnModel().getColumn(4).setPreferredWidth(95);
+        tbl.getColumnModel().getColumn(5).setPreferredWidth(260);
+
+        UiHelper.canGiua(tbl, 0, 3, 4);
+        tbl.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int r, int c) {
+                JLabel l = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, r, c);
+                l.setHorizontalAlignment(SwingConstants.CENTER);
+                String val = value != null ? value.toString() : "";
+                boolean laSC = val.contains("sửa chữa") || val.contains("dịch vụ");
+                if (!isSelected) {
+                    l.setBackground(laSC ? new Color(239, 246, 255) : new Color(240, 253, 244));
+                    l.setForeground(laSC ? new Color(29, 78, 216) : new Color(21, 128, 61));
+                }
+                l.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                return l;
+            }
+        });
+
+        int idx = 1;
+        for (Entity.ChiTietPhieuBaoHanh ct : dsCT) {
+            md.addRow(new Object[]{
+                    idx++,
+                    ct.getLoaiHangMuc(),
+                    ct.getTenHangMuc(),
+                    ct.getThoiHanBaoHanh() + " tháng",
+                    ct.getNgayHetHanHienThi(),
+                    ct.getDieuKienBaoHanh()
+            });
+        }
+        if (dsCT.isEmpty() && !safe(p.getNoiDung()).isEmpty()) {
+            md.addRow(new Object[]{1, "Phụ tùng / Linh kiện", p.getNoiDung(), "6 tháng", safe(p.getNgayKTHienThi()), "Theo quy chuẩn dịch vụ gara"});
+        }
+
+        dlg.add(new JScrollPane(tbl), BorderLayout.CENTER);
+
+        // Footer buttons: Đóng + In phiếu
+        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        pnlBot.setBorder(new EmptyBorder(6, 12, 6, 12));
+        JButton btnIn = UiHelper.nut("In phiếu bảo hành", UiIcon.of(UiIcon.PRINT, 14), new Color(194, 65, 12), ev -> {
+            new LapPhieuBaoHanh_UI(null).inPhieuTheoMa(maPBH);
+        });
+        JButton btnDong = UiHelper.nut("Đóng", UiHelper.XAM, ev -> dlg.dispose());
+        pnlBot.add(btnIn);
+        pnlBot.add(btnDong);
+        dlg.add(pnlBot, BorderLayout.SOUTH);
+
+        dlg.setVisible(true);
+    }
     private void chuyenTrangLapPhieu(){Main_UI main=Main_UI.getInstance();if(main==null)main=(Main_UI)SwingUtilities.getAncestorOfClass(Main_UI.class,this);if(main!=null)main.chuyenTrang("Lập phiếu bảo hành");else JOptionPane.showMessageDialog(this,"Không tìm thấy giao diện chính.");}
 }
