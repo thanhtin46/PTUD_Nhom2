@@ -9,7 +9,7 @@ import java.util.Objects;
  * Lớp thực thể Phiếu tiếp nhận xe.
  */
 public class PhieuTiepNhan {
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private String soPhieu;
     private NhanVien nhanVien;

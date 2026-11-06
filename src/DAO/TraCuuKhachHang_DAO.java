@@ -44,6 +44,9 @@ public class TraCuuKhachHang_DAO {
 
         public String getSoPhieu() { return soPhieu; }
         public String getNgayTiepNhan() { return ngayTiepNhan; }
+        public String getNgayTN() { return ngayTiepNhan; }
+        public String getTenKTV() { return ktvXuLy; }
+        public String getTrangThaiXe() { return tienDo; }
         public String getBienSo() { return bienSo; }
         public String getXe() { return xe; }
         public String getYeuCau() { return yeuCau; }

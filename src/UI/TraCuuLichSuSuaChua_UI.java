@@ -344,7 +344,7 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
         });
 
         JButton btnTimKiem = UiHelper.nut("Tìm kiếm", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_TRUNG, e -> napBang());
-        JButton btnLamMoiLoc = UiHelper.nut("Xóa lọc", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
+        JButton btnLamMoiLoc = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
 
         pnlRight.add(lblTg);
         pnlRight.add(cboThoiGian);

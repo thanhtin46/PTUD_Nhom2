@@ -124,7 +124,6 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         JButton btnTao = UiHelper.nut("Tạo phiếu", UiIcon.of(UiIcon.PLUS, 16), UiHelper.XANH_LA, true, e -> tao());
         JButton btnSua = UiHelper.nut("Sửa phiếu", UiIcon.of(UiIcon.CHECK, 16), UiHelper.XANH_TRUNG, true, e -> sua());
         JButton btnXoa = UiHelper.nut("Xóa phiếu", UiIcon.of(UiIcon.CLOSE, 16), UiHelper.CHU_CHAY, true, e -> xoa());
-        BaoVeQuyen.ganQuyen(btnXoa, Entity.QuyenTruyCap.Quyen.KH_XOA);
         JButton btnLamMoi = UiHelper.nut("Làm mới", UiIcon.of(UiIcon.REFRESH, 16), UiHelper.XAM, false, e -> lamMoi());
 
         nut.add(btnTao);
@@ -183,7 +182,10 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             txtBienSo.setText(bienSo);
             txtHang.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
             txtLoai.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
-            txtNgay.setText(model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "");
+            String ngayVal = model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "";
+            if (ngayVal.contains(" ")) ngayVal = ngayVal.split(" ")[0];
+            txtNgay.setText(ngayVal);
+            txtNgay.setEditable(false);
             txtYeuCau.setText(model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : "");
 
             dongBoComboXe(bienSo);
@@ -222,6 +224,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
                 txtHoTen.setText(kh.getHoTen() != null ? kh.getHoTen() : "");
             }
 
+            txtNgay.setEditable(false);
             dongBoComboXe(xe.getBienSo());
         } finally {
             isUpdating = false;
@@ -288,6 +291,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
                 txtHoTen.setText(kh.getHoTen() != null ? kh.getHoTen() : "");
             }
 
+            txtNgay.setEditable(false);
             dongBoComboXe(xe.getBienSo());
         } finally {
             isUpdating = false;
@@ -321,6 +325,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             txtHoTen.setText("");
             txtYeuCau.setText("");
             txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            txtNgay.setEditable(true);
             table.clearSelection();
             txtBienSo.requestFocus();
         } finally {
@@ -359,6 +364,10 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         }
         if (yeuCau.isEmpty()) {
             UiHelper.loi(this, "Vui lòng nhập yêu cầu / tình trạng sửa chữa của khách!", txtYeuCau);
+            return;
+        }
+        if (!yeuCau.matches("^[\\p{Lu}][\\p{Ll}\\s\\d,.:;()_/-]*$")) {
+            UiHelper.loi(this, "Yêu cầu của khách không hợp lệ! Chữ cái đầu phải viết hoa và các chữ còn lại viết thường (Ví dụ: Bảo dưỡng thay nhớt động cơ)!", txtYeuCau);
             return;
         }
 
@@ -465,6 +474,10 @@ public class LapPhieuTiepNhan_UI extends JPanel {
             UiHelper.loi(this, "Vui lòng nhập yêu cầu của khách!", txtYeuCau);
             return;
         }
+        if (!yeuCau.matches("^[\\p{Lu}][\\p{Ll}\\s\\d,.:;()_/-]*$")) {
+            UiHelper.loi(this, "Yêu cầu của khách không hợp lệ! Chữ cái đầu phải viết hoa và các chữ còn lại viết thường (Ví dụ: Bảo dưỡng thay nhớt động cơ)!", txtYeuCau);
+            return;
+        }
 
         // Cập nhật thông tin khách hàng nếu có sửa tên
         KhachHang kh = kho.timKhachHangTheoSdt(sdt);
@@ -505,7 +518,6 @@ public class LapPhieuTiepNhan_UI extends JPanel {
     }
 
     private void xoa() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.KH_XOA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu tiếp nhận trong bảng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);

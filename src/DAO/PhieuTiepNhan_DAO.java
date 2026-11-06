@@ -25,17 +25,22 @@ public class PhieuTiepNhan_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return fallbackCache();
 
-        String sql = "SELECT tn.maPTN, tn.maKH, kh.hoTen, kh.soDT, pt.bienSoXe, pt.hangXe, pt.dongXe, " +
+        String sql = "SELECT tn.maPTN, tn.maKH, " +
+                     "COALESCE(kh.hoTen, tn.maKH, N'Khách hàng') AS hoTen, " +
+                     "COALESCE(kh.soDT, '') AS soDT, " +
+                     "COALESCE(pt.bienSoXe, tn.soVIN, '') AS bienSoXe, " +
+                     "COALESCE(pt.hangXe, '') AS hangXe, " +
+                     "COALESCE(pt.dongXe, '') AS dongXe, " +
                      "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
                      "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN sc.maNV ELSE NULL END AS maNVPhanCong, " +
                      "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN ktv.hoTen ELSE NULL END AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
-                     "JOIN KhachHang kh ON tn.maKH = kh.maKH " +
-                     "JOIN PhuongTien pt ON tn.soVIN = pt.soVIN " +
+                     "LEFT JOIN KhachHang kh ON tn.maKH = kh.maKH " +
+                     "LEFT JOIN PhuongTien pt ON (tn.soVIN = pt.soVIN OR pt.soVIN = ('VIN_' + REPLACE(tn.soVIN, 'VIN-', '')) OR pt.bienSoXe = tn.soVIN) " +
                      "LEFT JOIN NhanVien nv ON tn.maNV = nv.maNV " +
                      "LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR (sc.maPTN IS NULL AND ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC)) " +
                      "LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV " +
-                     "ORDER BY tn.maPTN DESC";
+                     "ORDER BY COALESCE(tn.ngayTN, '1970-01-01') DESC, LEN(tn.maPTN) DESC, tn.maPTN DESC";
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -221,12 +226,15 @@ public class PhieuTiepNhan_DAO {
             // HoaDon khong co soPhieuSC
 
             // 2. Xóa chi tiết sửa chữa & phiếu sửa chữa
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC = ?")) {
-                ps.setString(1, maPSC);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC IN (SELECT maPSC FROM PhieuSuaChua WHERE maPTN = ? OR maPSC = ?) OR maPSC = ?")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
+                ps.setString(3, maPSC);
                 ps.executeUpdate();
             }
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE maPSC = ?")) {
-                ps.setString(1, maPSC);
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM PhieuSuaChua WHERE maPTN = ? OR maPSC = ?")) {
+                ps.setString(1, maPTN);
+                ps.setString(2, maPSC);
                 ps.executeUpdate();
             }
 

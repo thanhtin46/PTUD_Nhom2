@@ -352,7 +352,7 @@ public final class UiHelper {
             if (finalIcon == null) {
                 if (finalText.startsWith("✓") || finalText.startsWith("✔")) {
                     finalIcon = UiIcon.of(UiIcon.CHECK, 15);
-                } else if (finalText.startsWith("➕") || finalText.startsWith("+")) {
+                } else if (finalText.startsWith("➕") || finalText.startsWith("+") || finalText.startsWith("Thêm") || finalText.startsWith("Tạo")) {
                     finalIcon = UiIcon.of(UiIcon.PLUS, 15);
                 } else if (finalText.startsWith("🗑") || finalText.contains("Xóa") || finalText.contains("Hủy")) {
                     finalIcon = UiIcon.of(UiIcon.TRASH, 15);

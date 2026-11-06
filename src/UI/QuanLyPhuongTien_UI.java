@@ -14,12 +14,100 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+/**
+ * Màn hình Quản lý thông tin phương tiện (Thêm, Sửa, Xóa, Làm mới) dành cho Tiếp tân và Quản lý:
+ * - Biển số xe: Không được bỏ trống, bắt đầu 2 số, 1 chữ in hoa, dấu '-' và 5 số (VD: 51A-12345)
+ * - Hãng xe: Combobox các hãng xe, chữ cái đầu mỗi từ viết hoa và các chữ sau viết thường, chỉ được nhập chữ
+ * - Dòng xe / Model: Combobox đồng bộ theo hãng xe, chữ cái đầu mỗi từ viết hoa và các chữ sau viết thường, chỉ được nhập chữ
+ * - Số khung (VIN): Theo chuẩn số khung thực tế ngoài đời (đúng 17 ký tự chữ và số, không chứa I, O, Q)
+ * - Màu sơn: Bắt đầu bằng chữ cái, toàn bộ là chữ (không chứa số, ký tự đặc biệt)
+ * - Năm sản xuất: Gồm 4 chữ số, bắt đầu bằng 19 hoặc 20
+ * - Số km hiện tại (ODO): Chỉ được nhập số
+ * - Cho phép nhập tất cả ký tự vào các ô nhập liệu, kiểm tra và hiển thị thông báo chi tiết khi nhấn Thêm/Sửa
+ * - Nút Xóa hiển thị trực quan, hỗ trợ xóa an toàn cascade CSDL SQL Server
+ */
 public class QuanLyPhuongTien_UI extends JPanel {
-    private JTextField txtBienSo, txtHangXe, txtDongXe, txtSoKhung, txtMauSon, txtNamSX, txtOdo;
+    private static final String[] DS_HANG_XE = {
+        "Toyota", "Honda", "Hyundai", "Kia", "Mazda", "Ford", "Mitsubishi", 
+        "Vinfast", "Mercedes", "Audi", "Lexus", "Porsche", 
+        "Volkswagen", "Volvo", "Land Rover", "Peugeot", "Suzuki", "Subaru", 
+        "Isuzu", "Nissan", "Chevrolet", "Jeep", "Tesla", "Skoda", 
+        "Haval", "Geely", "Chery", "Wuling", "Ferrari", "Lamborghini", 
+        "Rolls Royce", "Bentley", "Aston Martin", "Maserati", "Jaguar", 
+        "Bugatti", "Mclaren", "Genesis", "Infiniti", "Acura", "Cadillac", 
+        "Lincoln", "Mini", "Alfa Romeo", "Chrysler", "Dodge", "Ram", 
+        "Fiat", "Renault", "Citroen", "Seat", "Cupra", "Smart", "Lotus", 
+        "Daihatsu", "Ssangyong"
+    };
+
+    private static final Map<String, String[]> MAP_DONG_XE = new LinkedHashMap<>();
+
+    static {
+        MAP_DONG_XE.put("Toyota", new String[]{"Vios", "Camry", "Corolla Altis", "Corolla Cross", "Fortuner", "Innova", "Innova Cross", "Hilux", "Raize", "Yaris Cross", "Veloz Cross", "Avanza Premio", "Land Cruiser", "Prado", "Alphard", "Wigo", "Yaris"});
+        MAP_DONG_XE.put("Honda", new String[]{"City", "Civic", "Accord", "Brio"});
+        MAP_DONG_XE.put("Hyundai", new String[]{"Accent", "Grand", "Elantra", "Creta", "Tucson", "Santa Fe", "Stargazer", "Custin", "Palisade", "Venue"});
+        MAP_DONG_XE.put("Kia", new String[]{"Morning", "Soluto", "Sonet", "Seltos", "Carens", "Sportage", "Sorento", "Carnival"});
+        MAP_DONG_XE.put("Mazda", new String[]{"Mazda Hai", "Mazda Ba", "Mazda Sau", "Triton"});
+        MAP_DONG_XE.put("Ford", new String[]{"Ranger", "Ranger Raptor", "Everest", "Explorer", "Transit", "Territory"});
+        MAP_DONG_XE.put("Mitsubishi", new String[]{"Xpander", "Xpander Cross", "Xforce", "Outlander", "Pajero Sport", "Triton", "Attrage"});
+        MAP_DONG_XE.put("Vinfast", new String[]{"Fadil", "Lux", "President"});
+        MAP_DONG_XE.put("Mercedes", new String[]{"Maybach", "Cla", "Gla", "Glb", "Glc", "Gle", "Gls"});
+        MAP_DONG_XE.put("Audi", new String[]{"Sedan", "Sportback", "Coupe"});
+        MAP_DONG_XE.put("Lexus", new String[]{"Sedan", "Suv", "Cross"});
+        MAP_DONG_XE.put("Porsche", new String[]{"Macan", "Cayenne", "Panamera", "Taycan", "Cayman", "Boxster"});
+        MAP_DONG_XE.put("Volkswagen", new String[]{"Teramont", "Tiguan", "Touareg", "Viloran", "Virtus", "Polo"});
+        MAP_DONG_XE.put("Volvo", new String[]{"Cross Country", "Sedan"});
+        MAP_DONG_XE.put("Land Rover", new String[]{"Range Rover", "Range Rover Sport", "Range Rover Velar", "Range Rover Evoque", "Defender", "Discovery"});
+        MAP_DONG_XE.put("Peugeot", new String[]{"Traveller", "Sedan"});
+        MAP_DONG_XE.put("Suzuki", new String[]{"Swift", "Ertiga", "Ciaz", "Jimny", "Carry"});
+        MAP_DONG_XE.put("Subaru", new String[]{"Forester", "Outback"});
+        MAP_DONG_XE.put("Nissan", new String[]{"Almera", "Navara", "Kicks", "Terra"});
+        MAP_DONG_XE.put("Isuzu", new String[]{"Mu", "Truck"});
+        MAP_DONG_XE.put("Chevrolet", new String[]{"Colorado", "Trailblazer", "Spark", "Cruze"});
+        MAP_DONG_XE.put("Jeep", new String[]{"Wrangler", "Gladiator", "Grand Cherokee"});
+        MAP_DONG_XE.put("Tesla", new String[]{"Cybertruck", "Roadster"});
+        MAP_DONG_XE.put("Skoda", new String[]{"Kodiaq", "Karoq", "Octavia", "Superb"});
+        MAP_DONG_XE.put("Haval", new String[]{"Jolion", "Suv"});
+        MAP_DONG_XE.put("Chery", new String[]{"Omoda", "Tiggo"});
+        MAP_DONG_XE.put("Wuling", new String[]{"Bingo", "Mini"});
+        MAP_DONG_XE.put("Ferrari", new String[]{"Roma", "Portofino", "Purosangue"});
+        MAP_DONG_XE.put("Lamborghini", new String[]{"Urus", "Revuelto", "Aventador"});
+        MAP_DONG_XE.put("Rolls Royce", new String[]{"Phantom", "Ghost", "Cullinan", "Spectre"});
+        MAP_DONG_XE.put("Bentley", new String[]{"Continental", "Flying Spur", "Bentayga"});
+        MAP_DONG_XE.put("Aston Martin", new String[]{"Vantage", "Sedan"});
+        MAP_DONG_XE.put("Maserati", new String[]{"Ghibli", "Levante", "Grecale", "Quattroporte"});
+        MAP_DONG_XE.put("Jaguar", new String[]{"Pace", "Sedan"});
+        MAP_DONG_XE.put("Bugatti", new String[]{"Chiron", "Divo", "Bolide", "Tourbillon"});
+        MAP_DONG_XE.put("Mclaren", new String[]{"Artura", "Speed"});
+        MAP_DONG_XE.put("Genesis", new String[]{"Sedan", "Suv"});
+        MAP_DONG_XE.put("Cadillac", new String[]{"Escalade", "Sedan"});
+        MAP_DONG_XE.put("Lincoln", new String[]{"Navigator", "Aviator", "Nautilus", "Corsair"});
+        MAP_DONG_XE.put("Mini", new String[]{"Cooper", "Countryman", "Clubman"});
+        MAP_DONG_XE.put("Alfa Romeo", new String[]{"Giulia", "Stelvio", "Tonale"});
+        MAP_DONG_XE.put("Chrysler", new String[]{"Pacifica", "Sedan"});
+        MAP_DONG_XE.put("Dodge", new String[]{"Charger", "Challenger", "Durango"});
+        MAP_DONG_XE.put("Ram", new String[]{"Classic", "Truck"});
+        MAP_DONG_XE.put("Fiat", new String[]{"Panda", "Tipo"});
+        MAP_DONG_XE.put("Renault", new String[]{"Kaptur", "Duster", "Koleos", "Megane"});
+        MAP_DONG_XE.put("Citroen", new String[]{"Aircross", "Sedan"});
+        MAP_DONG_XE.put("Seat", new String[]{"Ibiza", "Leon", "Ateca", "Tarraco"});
+        MAP_DONG_XE.put("Cupra", new String[]{"Formentor", "Leon", "Ateca", "Born"});
+        MAP_DONG_XE.put("Lotus", new String[]{"Emira", "Eletre", "Evija"});
+        MAP_DONG_XE.put("Daihatsu", new String[]{"Terios", "Xenia", "Rocky"});
+        MAP_DONG_XE.put("Ssangyong", new String[]{"Tivoli", "Korando", "Rexton", "Musso"});
+    }
+
+    private JTextField txtBienSo, txtSoKhung, txtMauSon, txtNamSX, txtOdo;
+    private JComboBox<String> cboHangXe;
+    private JComboBox<String> cboDongXe;
     private JComboBox<String> cboChuXe;
     private JTable table;
     private DefaultTableModel model;
+
+    private boolean dangCapNhatDongXe = false;
 
     private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -45,8 +133,12 @@ public class QuanLyPhuongTien_UI extends JPanel {
         JPanel formPanel = UiHelper.panelForm("Thông tin xe", 490);
 
         txtBienSo = new JTextField();
-        txtHangXe = new JTextField();
-        txtDongXe = new JTextField();
+        cboHangXe = new JComboBox<>(DS_HANG_XE);
+        cboHangXe.setEditable(true);
+
+        cboDongXe = new JComboBox<>();
+        cboDongXe.setEditable(true);
+
         txtSoKhung = new JTextField();
         txtMauSon = new JTextField();
         txtNamSX = new JTextField();
@@ -55,26 +147,41 @@ public class QuanLyPhuongTien_UI extends JPanel {
         cboChuXe = new JComboBox<>();
         napComboChuXe();
 
+        // Đồng bộ danh sách dòng xe theo hãng xe ban đầu (Toyota)
+        if (cboHangXe.getItemCount() > 0) {
+            cboHangXe.setSelectedIndex(0);
+            capNhatDanhSachDongXe(cboHangXe.getItemAt(0), null);
+        }
+
+        // Bắt sự kiện khi chọn hoặc thay đổi hãng xe thì tự động cập nhật danh sách dòng xe tương ứng
+        cboHangXe.addActionListener(e -> {
+            if (dangCapNhatDongXe) return;
+            Object sel = cboHangXe.getSelectedItem();
+            String hang = sel != null ? sel.toString().trim() : "";
+            capNhatDanhSachDongXe(hang, null);
+        });
+
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         UiHelper.themDong(form, 0, "Biển số xe *", txtBienSo);
-        UiHelper.themDong(form, 1, "Hãng xe *", txtHangXe);
-        UiHelper.themDong(form, 2, "Dòng xe / Model *", txtDongXe);
+        UiHelper.themDong(form, 1, "Hãng xe *", cboHangXe);
+        UiHelper.themDong(form, 2, "Dòng xe / Model *", cboDongXe);
         UiHelper.themDong(form, 3, "Số khung (VIN) *", txtSoKhung);
-        UiHelper.themDong(form, 4, "Màu sơn", txtMauSon);
-        UiHelper.themDong(form, 5, "Năm sản xuất", txtNamSX);
+        UiHelper.themDong(form, 4, "Màu sơn *", txtMauSon);
+        UiHelper.themDong(form, 5, "Năm sản xuất *", txtNamSX);
         UiHelper.themDong(form, 6, "Chủ sở hữu *", cboChuXe);
-        UiHelper.themDong(form, 7, "Số km hiện tại", txtOdo);
+        UiHelper.themDong(form, 7, "Số km hiện tại *", txtOdo);
 
         JPanel panelNut = new JPanel(new BorderLayout(0, 10));
         panelNut.setOpaque(false);
         panelNut.setBorder(new EmptyBorder(16, 0, 0, 0));
 
+        // Hàng nút chức năng Thêm, Sửa, Xóa, Làm mới hiển thị trực quan đầy đủ
         JPanel hangNut1 = new JPanel(new GridLayout(1, 4, 8, 0));
         hangNut1.setOpaque(false);
-        hangNut1.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        hangNut1.add(UiHelper.nut("Thêm", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, true, e -> them()));
         hangNut1.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
-        hangNut1.add(BaoVeQuyen.ganQuyen(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()), Entity.QuyenTruyCap.Quyen.XE_XOA));
+        hangNut1.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
         hangNut1.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
 
         JButton btnTiepNhan = UiHelper.nut("Lập phiếu tiếp nhận cho xe này", UiIcon.of(UiIcon.FILE, 16), UiHelper.XANH_TRUNG, true, e -> lapPhieuTiepNhan());
@@ -101,6 +208,64 @@ public class QuanLyPhuongTien_UI extends JPanel {
         String s = sel.toString();
         int i = s.indexOf(" - ");
         return i > 0 ? s.substring(0, i) : s;
+    }
+
+    /**
+     * Cập nhật danh sách dòng xe tương ứng với hãng xe được chọn
+     */
+    private void capNhatDanhSachDongXe(String hangXe, String dongChon) {
+        if (dangCapNhatDongXe) return;
+        dangCapNhatDongXe = true;
+        try {
+            cboDongXe.removeAllItems();
+            String hangChuan = hangXe != null ? hangXe.trim() : "";
+            String[] dsDong = null;
+            for (Map.Entry<String, String[]> entry : MAP_DONG_XE.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(hangChuan)) {
+                    dsDong = entry.getValue();
+                    break;
+                }
+            }
+
+            if (dsDong != null) {
+                for (String d : dsDong) {
+                    cboDongXe.addItem(d);
+                }
+            }
+
+            if (dongChon != null && !dongChon.trim().isEmpty()) {
+                String dc = dongChon.trim();
+                boolean timThay = false;
+                for (int i = 0; i < cboDongXe.getItemCount(); i++) {
+                    if (cboDongXe.getItemAt(i).equalsIgnoreCase(dc)) {
+                        cboDongXe.setSelectedIndex(i);
+                        timThay = true;
+                        break;
+                    }
+                }
+                if (!timThay) {
+                    cboDongXe.addItem(dc);
+                    cboDongXe.setSelectedItem(dc);
+                }
+            } else if (cboDongXe.getItemCount() > 0) {
+                cboDongXe.setSelectedIndex(0);
+            }
+        } finally {
+            dangCapNhatDongXe = false;
+        }
+    }
+
+    private void dongBoHangXe(String hangXe) {
+        if (hangXe == null || hangXe.trim().isEmpty()) return;
+        String hangChuan = hangXe.trim();
+        for (int i = 0; i < cboHangXe.getItemCount(); i++) {
+            if (cboHangXe.getItemAt(i).equalsIgnoreCase(hangChuan)) {
+                cboHangXe.setSelectedIndex(i);
+                return;
+            }
+        }
+        cboHangXe.addItem(hangChuan);
+        cboHangXe.setSelectedItem(hangChuan);
     }
 
     private JPanel taoBang() {
@@ -209,20 +374,27 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private void them() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_SUA)) return;
         if (!kiemTraForm(true)) return;
         String maChu = maChuDangChon();
         if (maChu.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn chủ sở hữu!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn chủ sở hữu cho xe!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboChuXe.requestFocus();
             return;
         }
 
+        Object itemHang = cboHangXe.getSelectedItem();
+        String hangXe = itemHang != null ? itemHang.toString().trim() : "";
+        dongBoHangXe(hangXe);
+
+        Object itemDong = cboDongXe.getSelectedItem();
+        String dongXe = itemDong != null ? itemDong.toString().trim() : "";
+
         LocalDate ngayHomNay = LocalDate.now();
         PhuongTien xe = new PhuongTien(
-                txtBienSo.getText().trim(),
-                txtHangXe.getText().trim(),
-                txtDongXe.getText().trim(),
-                txtSoKhung.getText().trim(),
+                txtBienSo.getText().trim().toUpperCase(),
+                hangXe,
+                dongXe,
+                txtSoKhung.getText().trim().toUpperCase(),
                 "", // Bỏ nhập số máy
                 txtMauSon.getText().trim(),
                 txtNamSX.getText().trim(),
@@ -239,10 +411,9 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private void xoa() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_XOA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần xóa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần xóa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -251,7 +422,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
         // Kiểm tra ràng buộc tiếp nhận / sửa chữa qua PhuongTien_DAO
         boolean coHoatDong = phuongTienDAO.xeCoLichSuHoatDong(bienSo);
         String canhBao = coHoatDong
-                ? "Xe [" + bienSo + "] đã có lịch sử phiếu tiếp nhận hoặc sửa chữa tại gara!\nBạn có chắc chắn muốn xóa toàn bộ thông tin xe này?"
+                ? "Xe [" + bienSo + "] đã có lịch sử phiếu tiếp nhận hoặc sửa chữa tại gara!\nBạn có chắc chắn muốn xóa toàn bộ thông tin xe này và các dữ liệu liên quan?"
                 : "Bạn có chắc muốn xóa xe [" + bienSo + "] khỏi hệ thống?";
 
         if (JOptionPane.showConfirmDialog(this, canhBao,
@@ -259,18 +430,20 @@ public class QuanLyPhuongTien_UI extends JPanel {
 
         // Xóa an toàn qua PhuongTien_DAO
         boolean ok = phuongTienDAO.xoaPhuongTien(bienSo);
-        kho.xoaPhuongTien(bienSo);
-
-        napBang();
-        lamMoi();
-        JOptionPane.showMessageDialog(this, ok ? "Đã xóa xe khỏi CSDL SQL Server!" : "Đã xóa xe!");
+        if (ok) {
+            kho.xoaPhuongTien(bienSo);
+            napBang();
+            lamMoi();
+            JOptionPane.showMessageDialog(this, "Đã xóa xe [" + bienSo + "] thành công khỏi CSDL SQL Server!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể xóa xe [" + bienSo + "]! Vui lòng kiểm tra lại kết nối CSDL hoặc ràng buộc dữ liệu.", "Lỗi xóa xe", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void sua() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.XE_SUA)) return;
         int dong = table.getSelectedRow();
         if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần sửa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn xe cần sửa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!kiemTraForm(false)) return;
@@ -282,9 +455,16 @@ public class QuanLyPhuongTien_UI extends JPanel {
         }
         if (xe == null) return;
 
-        xe.setHangXe(txtHangXe.getText().trim());
-        xe.setDongXe(txtDongXe.getText().trim());
-        xe.setSoKhung(txtSoKhung.getText().trim());
+        Object itemHang = cboHangXe.getSelectedItem();
+        String hangXe = itemHang != null ? itemHang.toString().trim() : "";
+        dongBoHangXe(hangXe);
+
+        Object itemDong = cboDongXe.getSelectedItem();
+        String dongXe = itemDong != null ? itemDong.toString().trim() : "";
+
+        xe.setHangXe(hangXe);
+        xe.setDongXe(dongXe);
+        xe.setSoKhung(txtSoKhung.getText().trim().toUpperCase());
         xe.setMauSon(txtMauSon.getText().trim());
         xe.setNamSX(txtNamSX.getText().trim());
         xe.setOdo(txtOdo.getText().trim());
@@ -300,8 +480,10 @@ public class QuanLyPhuongTien_UI extends JPanel {
 
     private void lamMoi() {
         txtBienSo.setText("");
-        txtHangXe.setText("");
-        txtDongXe.setText("");
+        if (cboHangXe.getItemCount() > 0) {
+            cboHangXe.setSelectedIndex(0);
+            capNhatDanhSachDongXe(cboHangXe.getItemAt(0), null);
+        }
         txtSoKhung.setText("");
         txtMauSon.setText("");
         txtNamSX.setText("");
@@ -351,8 +533,11 @@ public class QuanLyPhuongTien_UI extends JPanel {
         int dong = table.getSelectedRow();
         if (dong < 0) return;
         txtBienSo.setText(model.getValueAt(dong, 0) != null ? model.getValueAt(dong, 0).toString() : "");
-        txtHangXe.setText(model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString() : "");
-        txtDongXe.setText(model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString() : "");
+        String hang = model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString().trim() : "";
+        String dongXe = model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString().trim() : "";
+        dongBoHangXe(hang);
+        capNhatDanhSachDongXe(hang, dongXe);
+
         txtSoKhung.setText(model.getValueAt(dong, 3) != null ? model.getValueAt(dong, 3).toString() : "");
         txtMauSon.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
         txtNamSX.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
@@ -369,46 +554,128 @@ public class QuanLyPhuongTien_UI extends JPanel {
     }
 
     private boolean kiemTraForm(boolean laThem) {
-        String bienSo = txtBienSo.getText().trim();
-        String hangXe = txtHangXe.getText().trim();
-        String dongXe = txtDongXe.getText().trim();
-        String soKhung = txtSoKhung.getText().trim();
+        String bienSo = txtBienSo.getText().trim().toUpperCase();
+        txtBienSo.setText(bienSo);
+
+        Object itemHang = cboHangXe.getSelectedItem();
+        String hangXe = itemHang != null ? itemHang.toString().trim() : "";
+
+        Object itemDong = cboDongXe.getSelectedItem();
+        String dongXe = itemDong != null ? itemDong.toString().trim() : "";
+
+        String soKhung = txtSoKhung.getText().trim().toUpperCase();
+        txtSoKhung.setText(soKhung);
+
+        String mauSon = txtMauSon.getText().trim();
         String namSX = txtNamSX.getText().trim();
         String odo = txtOdo.getText().trim();
 
-        if (bienSo.isEmpty() || soKhung.isEmpty()) {
-            UiHelper.loi(this, "Biển số xe và Số khung không được để trống!", txtBienSo);
+        // 1. Biển số xe: Không được bỏ trống, bắt đầu 2 số, chữ in hoa, '-', 5 số
+        if (bienSo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Biển số xe không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtBienSo.requestFocus();
             return false;
         }
+        if (!bienSo.matches("^\\d{2}[A-Z]-\\d{5}$")) {
+            JOptionPane.showMessageDialog(this, "Biển số xe không đúng định dạng!\nBiển số phải bắt đầu bằng 2 chữ số, tiếp theo là 1 chữ cái in hoa, dấu '-' và 5 chữ số phía sau (Ví dụ: 51A-12345, 29B-98765).", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtBienSo.requestFocus();
+            return false;
+        }
+
+        // 2. Hãng xe: Không được để trống, chữ cái đầu mỗi từ viết hoa, các chữ cái sau viết thường, chỉ được nhập chữ
         if (hangXe.isEmpty()) {
-            UiHelper.loi(this, "Vui lòng nhập Hãng xe!", txtHangXe);
+            JOptionPane.showMessageDialog(this, "Hãng xe không được để trống! Vui lòng chọn hoặc nhập hãng xe.", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboHangXe.requestFocus();
             return false;
         }
+        if (hangXe.matches(".*\\d.*")) {
+            JOptionPane.showMessageDialog(this, "Hãng xe chỉ được nhập chữ, không được chứa chữ số!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboHangXe.requestFocus();
+            return false;
+        }
+        if (!hangXe.matches("^[\\p{Lu}][\\p{Ll}]+( [\\p{Lu}][\\p{Ll}]+)*$")) {
+            JOptionPane.showMessageDialog(this, "Hãng xe không hợp lệ!\nChữ cái đầu mỗi từ phải viết hoa, các chữ cái sau viết thường và chỉ được chứa chữ (Ví dụ: Toyota, Honda, Land Rover)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboHangXe.requestFocus();
+            return false;
+        }
+
+        // 3. Dòng xe / Model: Không được để trống, chữ cái đầu mỗi từ viết hoa, các chữ cái sau viết thường, chỉ được nhập chữ
         if (dongXe.isEmpty()) {
-            UiHelper.loi(this, "Vui lòng nhập Dòng xe / Model!", txtDongXe);
+            JOptionPane.showMessageDialog(this, "Dòng xe / Model không được để trống! Vui lòng chọn hoặc nhập dòng xe.", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboDongXe.requestFocus();
             return false;
         }
-        if (!namSX.isEmpty()) {
-            int namMax = LocalDate.now().getYear() + 1;
-            if (!namSX.matches("\\d{4}") || Integer.parseInt(namSX) < 1950 || Integer.parseInt(namSX) > namMax) {
-                UiHelper.loi(this, "Năm sản xuất phải gồm 4 chữ số, từ 1950 đến " + namMax + "!", txtNamSX);
-                return false;
-            }
+        if (dongXe.matches(".*\\d.*")) {
+            JOptionPane.showMessageDialog(this, "Dòng xe / Model chỉ được nhập chữ, không được chứa chữ số!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboDongXe.requestFocus();
+            return false;
         }
-        if (!odo.isEmpty() && !odo.matches("\\d+")) {
-            UiHelper.loi(this, "Số km hiện tại chỉ được nhập số!", txtOdo);
+        if (!dongXe.matches("^[\\p{Lu}][\\p{Ll}]+( [\\p{Lu}][\\p{Ll}]+)*$")) {
+            JOptionPane.showMessageDialog(this, "Dòng xe / Model không hợp lệ!\nChữ cái đầu mỗi từ phải viết hoa, các chữ cái sau viết thường và chỉ được chứa chữ (Ví dụ: Vios, Camry, Corolla Cross)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cboDongXe.requestFocus();
             return false;
         }
 
-        // Kiểm tra trùng biển số xe qua PhuongTien_DAO
+        // 4. Số khung (VIN): Theo chuẩn số khung thực tế ngoài đời (17 ký tự chữ và số, loại trừ I, O, Q)
+        if (soKhung.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Số khung (VIN) không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtSoKhung.requestFocus();
+            return false;
+        }
+        if (!soKhung.matches("^[A-HJ-NPR-Z0-9]{17}$")) {
+            JOptionPane.showMessageDialog(this, "Số khung (VIN) phải gồm đúng 17 ký tự chữ và số (không bao gồm chữ I, O, Q để tránh nhầm với số 0 và 1).", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtSoKhung.requestFocus();
+            return false;
+        }
+
+        // 5. Màu sơn: Chữ cái đầu là chữ, và toàn bộ là chữ
+        if (mauSon.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Màu sơn không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtMauSon.requestFocus();
+            return false;
+        }
+        if (!mauSon.matches("^[\\p{L}][\\p{L}\\s]*$")) {
+            JOptionPane.showMessageDialog(this, "Màu sơn phải bắt đầu bằng chữ cái in hoa và chỉ chứa các chữ cái ", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtMauSon.requestFocus();
+            return false;
+        }
+
+        // 6. Năm sản xuất: Bắt đầu từ 19 hoặc 20
+        if (namSX.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Năm sản xuất không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtNamSX.requestFocus();
+            return false;
+        }
+        int namHienTai = LocalDate.now().getYear();
+        if (!namSX.matches("^(19|20)\\d{2}$") || Integer.parseInt(namSX) < 1900 || Integer.parseInt(namSX) > namHienTai + 1) {
+            JOptionPane.showMessageDialog(this, "Năm sản xuất phải gồm 4 chữ số và bắt đầu bằng 19 hoặc 20 (từ 1900 đến " + (namHienTai + 1) + ").", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtNamSX.requestFocus();
+            return false;
+        }
+
+        // 7. Số km hiện tại: Chỉ được số
+        if (odo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Số km hiện tại không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtOdo.requestFocus();
+            return false;
+        }
+        if (!odo.matches("^\\d+$")) {
+            JOptionPane.showMessageDialog(this, "Số km hiện tại chỉ được nhập các chữ số.", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtOdo.requestFocus();
+            return false;
+        }
+
+        // 8. Kiểm tra trùng biển số xe qua PhuongTien_DAO
         if (laThem && phuongTienDAO.kiemTraTrungBienSo(bienSo)) {
-            UiHelper.loi(this, "Biển số \"" + bienSo + "\" đã tồn tại trong hệ thống!", txtBienSo);
+            JOptionPane.showMessageDialog(this, "Biển số xe \"" + bienSo + "\" đã tồn tại trong hệ thống!", "Cảnh báo trùng biển số", JOptionPane.WARNING_MESSAGE);
+            txtBienSo.requestFocus();
             return false;
         }
 
-        // Kiểm tra trùng số VIN qua PhuongTien_DAO
+        // 9. Kiểm tra trùng số VIN qua PhuongTien_DAO
         if (phuongTienDAO.kiemTraTrungVIN(soKhung, laThem ? null : bienSo)) {
-            UiHelper.loi(this, "Số khung (VIN) \"" + soKhung + "\" đã được sử dụng cho xe khác!", txtSoKhung);
+            JOptionPane.showMessageDialog(this, "Số khung (VIN) \"" + soKhung + "\" đã được sử dụng cho xe khác trong hệ thống!", "Cảnh báo trùng số khung", JOptionPane.WARNING_MESSAGE);
+            txtSoKhung.requestFocus();
             return false;
         }
 

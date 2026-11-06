@@ -76,15 +76,15 @@ public class TraCuuPhuongTien_DAO {
     }
 
     /**
-     * Tra cứu danh sách phương tiện theo từ khóa, tiêu chí và bộ lọc nhanh
-     * @param tuKhoa Từ khóa tìm kiếm
+     * Tra cứu danh sách phương tiện theo từ khóa, tiêu chí và bộ lọc nhanh trực tiếp
+     * @param tuKhoa Từ khóa tìm kiếm (có thể rỗng)
      * @param tieuChi 0: Tất cả, 1: Biển số, 2: Hãng xe, 3: Dòng xe, 4: Chủ xe
-     * @param boLocNhanh "TAT_CA", "BIEN_SO", "HANG_XE", "CHU_XE"
+     * @param boLocNhanh "TAT_CA", "DANG_SUA", "DA_TIEP_NHAN", "CHUA_TIEP_NHAN", "TOYOTA", "HONDA", "HYUNDAI", "KIA", "VINFAST", "FORD", "MAZDA", "MITSUBISHI"
      */
     public ArrayList<PhuongTienDTO> traCuuPhuongTien(String tuKhoa, int tieuChi, String boLocNhanh) {
         ArrayList<PhuongTienDTO> list = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return fallbackCache(tuKhoa, tieuChi);
+        if (con == null) return fallbackCache(tuKhoa, tieuChi, boLocNhanh);
 
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
 
@@ -93,7 +93,7 @@ public class TraCuuPhuongTien_DAO {
            .append("ISNULL(pt.soMay, '') AS soMay, ")
            .append("ISNULL(pt.mauSon, '') AS mauSon, ")
            .append("ISNULL(pt.odo, '0') AS odo, ")
-           .append("ISNULL(pt.ngayTiepNhanGanNhat, '') AS ngayTiepNhanGanNhat, ")
+           .append("pt.ngayTiepNhanGanNhat, ")
            .append("ISNULL(kh.hoTen, N'Chưa có thông tin') AS tenChuXe, ")
            .append("ISNULL(kh.soDT, '') AS sdtChuXe, ")
            .append("ISNULL(kh.diaChi, '') AS diaChiChuXe, ")
@@ -102,7 +102,7 @@ public class TraCuuPhuongTien_DAO {
            .append("LEFT JOIN KhachHang kh ON pt.maKH = kh.maKH ")
            .append("WHERE 1=1 ");
 
-        // 1. Điều kiện từ khóa theo tiêu chí
+        // 1. Điều kiện từ khóa theo tiêu chí (chỉ áp dụng khi người dùng nhập từ khóa vào ô tìm kiếm)
         if (!q.isEmpty()) {
             switch (tieuChi) {
                 case 1 -> sql.append("AND LOWER(pt.bienSoXe) LIKE ? ");
@@ -110,7 +110,6 @@ public class TraCuuPhuongTien_DAO {
                 case 3 -> sql.append("AND LOWER(pt.dongXe) LIKE ? ");
                 case 4 -> sql.append("AND (LOWER(kh.hoTen) LIKE ? OR LOWER(kh.soDT) LIKE ? OR LOWER(pt.maKH) LIKE ?) ");
                 default -> {
-                    // Tất cả
                     sql.append("AND (LOWER(pt.bienSoXe) LIKE ? ")
                        .append("OR LOWER(pt.hangXe) LIKE ? ")
                        .append("OR LOWER(pt.dongXe) LIKE ? ")
@@ -118,6 +117,37 @@ public class TraCuuPhuongTien_DAO {
                        .append("OR LOWER(kh.soDT) LIKE ? ")
                        .append("OR LOWER(pt.maKH) LIKE ? ")
                        .append("OR LOWER(pt.soVIN) LIKE ?) ");
+                }
+            }
+        }
+
+        // 2. Điều kiện bộ lọc nhanh trực tiếp (hoạt động độc lập, không cần nhập từ khóa)
+        String hangTuyChon = null;
+        if (boLocNhanh != null && !boLocNhanh.equalsIgnoreCase("TAT_CA")) {
+            switch (boLocNhanh.toUpperCase()) {
+                case "DANG_SUA" -> {
+                    sql.append("AND pt.soVIN IN (")
+                       .append("  SELECT tn.soVIN FROM PhieuTiepNhan tn ")
+                       .append("  WHERE LOWER(ISNULL(tn.trangThaiXe, '')) NOT LIKE N'%hoàn thành%' ")
+                       .append("    AND LOWER(ISNULL(tn.trangThaiXe, '')) NOT LIKE N'%đã giao%' ")
+                       .append("    AND LOWER(ISNULL(tn.trangThaiXe, '')) NOT LIKE N'%hủy%' ")
+                       .append(") ");
+                }
+                case "DA_TIEP_NHAN" -> sql.append("AND pt.ngayTiepNhanGanNhat IS NOT NULL ");
+                case "CHUA_TIEP_NHAN" -> sql.append("AND pt.ngayTiepNhanGanNhat IS NULL ");
+                case "TOYOTA" -> sql.append("AND LOWER(pt.hangXe) = 'toyota' ");
+                case "HONDA" -> sql.append("AND LOWER(pt.hangXe) = 'honda' ");
+                case "HYUNDAI" -> sql.append("AND LOWER(pt.hangXe) = 'hyundai' ");
+                case "KIA" -> sql.append("AND LOWER(pt.hangXe) = 'kia' ");
+                case "FORD" -> sql.append("AND LOWER(pt.hangXe) = 'ford' ");
+                case "VINFAST" -> sql.append("AND (LOWER(pt.hangXe) = 'vinfast' OR LOWER(pt.hangXe) = 'vin fast') ");
+                case "MAZDA" -> sql.append("AND LOWER(pt.hangXe) = 'mazda' ");
+                case "MITSUBISHI" -> sql.append("AND LOWER(pt.hangXe) = 'mitsubishi' ");
+                default -> {
+                    if (boLocNhanh.startsWith("HANG:")) {
+                        sql.append("AND LOWER(pt.hangXe) = ? ");
+                        hangTuyChon = boLocNhanh.substring(5).trim().toLowerCase();
+                    }
                 }
             }
         }
@@ -141,6 +171,9 @@ public class TraCuuPhuongTien_DAO {
                         }
                     }
                 }
+            }
+            if (hangTuyChon != null) {
+                stmt.setString(paramIdx++, hangTuyChon);
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -167,7 +200,7 @@ public class TraCuuPhuongTien_DAO {
             }
         } catch (SQLException e) {
             System.err.println("Lỗi TraCuuPhuongTien_DAO.traCuuPhuongTien: " + e.getMessage());
-            return fallbackCache(tuKhoa, tieuChi);
+            return fallbackCache(tuKhoa, tieuChi, boLocNhanh);
         }
 
         return list;
@@ -176,7 +209,7 @@ public class TraCuuPhuongTien_DAO {
     /**
      * Tìm kiếm dự phòng trên bộ nhớ cache nếu kết nối SQL Server gặp sự cố
      */
-    private ArrayList<PhuongTienDTO> fallbackCache(String tuKhoa, int tieuChi) {
+    private ArrayList<PhuongTienDTO> fallbackCache(String tuKhoa, int tieuChi, String boLocNhanh) {
         ArrayList<PhuongTienDTO> list = new ArrayList<>();
         KhoDuLieu kho = KhoDuLieu.get();
         String q = (tuKhoa != null) ? tuKhoa.trim().toLowerCase() : "";
@@ -201,6 +234,27 @@ public class TraCuuPhuongTien_DAO {
                             || tenChu.toLowerCase().contains(q)
                             || sdtChu.contains(q)
                             || (xe.getMaChuXe() != null && xe.getMaChuXe().toLowerCase().contains(q));
+                }
+            }
+
+            if (match && boLocNhanh != null && !boLocNhanh.equalsIgnoreCase("TAT_CA")) {
+                switch (boLocNhanh.toUpperCase()) {
+                    case "DA_TIEP_NHAN" -> match = xe.getNgayTiepNhanGanNhat() != null;
+                    case "CHUA_TIEP_NHAN" -> match = xe.getNgayTiepNhanGanNhat() == null;
+                    case "TOYOTA" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("toyota");
+                    case "HONDA" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("honda");
+                    case "HYUNDAI" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("hyundai");
+                    case "KIA" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("kia");
+                    case "FORD" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("ford");
+                    case "VINFAST" -> match = xe.getHangXe() != null && (xe.getHangXe().equalsIgnoreCase("vinfast") || xe.getHangXe().equalsIgnoreCase("vin fast"));
+                    case "MAZDA" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("mazda");
+                    case "MITSUBISHI" -> match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase("mitsubishi");
+                    default -> {
+                        if (boLocNhanh.startsWith("HANG:")) {
+                            String h = boLocNhanh.substring(5).trim();
+                            match = xe.getHangXe() != null && xe.getHangXe().equalsIgnoreCase(h);
+                        }
+                    }
                 }
             }
 

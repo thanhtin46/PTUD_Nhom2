@@ -32,7 +32,7 @@ public class TraCuuKhachHang_UI extends JPanel {
     private String boLocNhanh = "TAT_CA";
 
     private final DefaultTableModel model = UiHelper.model(
-            "Mã KH", "Họ tên", "SĐT", "CCCD", "Xe sở hữu", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
+            "Mã KH", "Họ tên", "SĐT", "CCCD", "Xe sở hữu", "Địa chỉ", "Email", "Nhóm KH", "Ngày ĐK");
     private final KhoDuLieu kho = KhoDuLieu.get();
     private final TraCuuKhachHang_DAO traCuuDAO = new TraCuuKhachHang_DAO();
     private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
@@ -77,7 +77,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(160);  // Xe sở hữu
         table.getColumnModel().getColumn(5).setPreferredWidth(300);  // Địa chỉ — tăng để hiện đủ
         table.getColumnModel().getColumn(6).setPreferredWidth(145);  // Email
-        table.getColumnModel().getColumn(7).setPreferredWidth(120);  // Ghi chú
+        table.getColumnModel().getColumn(7).setPreferredWidth(120);  // Nhóm KH
         table.getColumnModel().getColumn(8).setPreferredWidth(100);  // Ngày ĐK
 
         UiHelper.canGiua(table, 0, 2, 3, 4, 8);
@@ -342,7 +342,7 @@ public class TraCuuKhachHang_UI extends JPanel {
                 + "<tr><td><b>Email:</b></td><td>" + kh.getEmail() + "</td></tr>"
                 + "<tr><td><b>Địa chỉ:</b></td><td>" + kh.getDiaChi() + "</td></tr>"
                 + "<tr><td><b>Ngày đăng ký:</b></td><td>" + kh.getNgayDangKyHienThi() + "</td></tr>"
-                + "<tr><td><b>Ghi chú / Nhóm:</b></td><td>" + kh.getGhiChu() + "</td></tr>"
+                + "<tr><td><b>Nhóm KH:</b></td><td>" + kh.getGhiChu() + "</td></tr>"
                 + "</table>"
                 + "<hr style='border:none;border-top:1px solid #E2E8F0;margin:10px 0;'>"
                 + "<h4 style='color:#2563EB;margin-bottom:6px;'>DANH SÁCH XE SỞ HỮU (" + demXe + " xe):</h4>"

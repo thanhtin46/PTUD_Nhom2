@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class QuanLyKhachHang_UI extends JPanel {
     private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail, txtNgayDangKy;
-    private JComboBox<String> cboGhiChu;
+    private JComboBox<String> cboNhomKH;
     private JTable table;
     private DefaultTableModel model;
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -64,15 +64,15 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtEmail = new JTextField();
 
         // Chọn các nhóm người: Khách mới, Khách đã sửa chữa, Khách thân thiết, Khách VIP
-        cboGhiChu = new JComboBox<>(new String[]{
+        cboNhomKH = new JComboBox<>(new String[]{
                 "Khách mới",
                 "Khách đã sửa chữa",
                 "Khách thân thiết",
                 "Khách VIP"
         });
-        cboGhiChu.setFont(UiHelper.FONT_BT);
-        cboGhiChu.setBackground(Color.WHITE);
-        cboGhiChu.setPreferredSize(new Dimension(190, 36));
+        cboNhomKH.setFont(UiHelper.FONT_BT);
+        cboNhomKH.setBackground(Color.WHITE);
+        cboNhomKH.setPreferredSize(new Dimension(190, 36));
 
         // Dòng áp cứng ngày đăng ký (cố định hiển thị ngày đăng ký, không cho sửa)
         txtNgayDangKy = new JTextField();
@@ -88,14 +88,14 @@ public class QuanLyKhachHang_UI extends JPanel {
         UiHelper.themDong(form, 3, "CCCD/CMND", txtCccd);
         UiHelper.themDong(form, 4, "Địa chỉ", txtDiaChi);
         UiHelper.themDong(form, 5, "Email", txtEmail);
-        UiHelper.themDong(form, 6, "Ghi chú / Nhóm KH", cboGhiChu);
+        UiHelper.themDong(form, 6, "Nhóm KH", cboNhomKH);
         UiHelper.themDong(form, 7, "Ngày đăng ký", txtNgayDangKy);
 
         // Hàng nút chức năng: Thêm, Sửa, Xóa, Làm mới
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
         nut.setBorder(new EmptyBorder(16, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm", UiHelper.XANH_LA, e -> them()));
+        nut.add(UiHelper.nut("Thêm", UiIcon.of(UiIcon.PLUS, 15), UiHelper.XANH_LA, true, e -> them()));
         nut.add(UiHelper.nut("Sửa", UiHelper.XANH_TRUNG, e -> sua()));
         nut.add(UiHelper.nut("Xóa", UiHelper.CHU_CHAY, e -> xoa()));
         nut.add(UiHelper.nut("Làm mới", UiHelper.XAM, e -> lamMoi()));
@@ -106,7 +106,7 @@ public class QuanLyKhachHang_UI extends JPanel {
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách khách hàng");
-        model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Ghi chú", "Ngày ĐK");
+        model = UiHelper.model("Mã KH", "Họ tên", "SĐT", "CCCD", "Địa chỉ", "Email", "Nhóm KH", "Ngày ĐK");
         table = UiHelper.bang(model);
 
         // Bật cuộn ngang tự nhiên và giữ đúng kích thước chuẩn của từng cột
@@ -119,7 +119,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         table.getColumnModel().getColumn(3).setPreferredWidth(120);  // CCCD
         table.getColumnModel().getColumn(4).setPreferredWidth(260);  // Địa chỉ
         table.getColumnModel().getColumn(5).setPreferredWidth(180);  // Email
-        table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Ghi chú
+        table.getColumnModel().getColumn(6).setPreferredWidth(160);  // Nhóm KH
         table.getColumnModel().getColumn(7).setPreferredWidth(110);  // Ngày ĐK
 
         UiHelper.canGiua(table, 0, 2, 3, 7);
@@ -148,8 +148,12 @@ public class QuanLyKhachHang_UI extends JPanel {
         }
 
         for (KhachHang kh : ds) {
+            String nhomKH = kh.getGhiChu();
+            if (nhomKH == null || nhomKH.trim().isEmpty()) {
+                nhomKH = "Khách mới";
+            }
             model.addRow(new Object[]{kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
-                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKyHienThi()});
+                    kh.getDiaChi(), kh.getEmail(), nhomKH, kh.getNgayDangKyHienThi()});
         }
     }
 
@@ -157,12 +161,12 @@ public class QuanLyKhachHang_UI extends JPanel {
         if (!kiemTraForm(true)) return;
 
         LocalDate ngayDangKy = LocalDate.now();
-        String ghiChuChon = cboGhiChu.getSelectedItem() != null ? cboGhiChu.getSelectedItem().toString() : "Khách mới";
+        String nhomKH = cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : "Khách mới";
 
         KhachHang kh = new KhachHang(
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
                 txtCccd.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(),
-                ghiChuChon, ngayDangKy);
+                nhomKH, ngayDangKy);
 
         boolean ok = kho.themKhachHang(kh);
         napBang();
@@ -190,7 +194,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         kh.setCccd(txtCccd.getText().trim());
         kh.setDiaChi(txtDiaChi.getText().trim());
         kh.setEmail(txtEmail.getText().trim());
-        kh.setGhiChu(cboGhiChu.getSelectedItem() != null ? cboGhiChu.getSelectedItem().toString() : "Khách mới");
+        kh.setGhiChu(cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : "Khách mới");
 
         boolean ok = kho.capNhatKhachHang(kh);
         napBang();
@@ -230,7 +234,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtCccd.setText("");
         txtDiaChi.setText("");
         txtEmail.setText("");
-        cboGhiChu.setSelectedIndex(0); // Mặc định là "Khách mới"
+        cboNhomKH.setSelectedIndex(0); // Mặc định là "Khách mới"
         txtNgayDangKy.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))); // Áp cứng ngày hôm nay
         table.clearSelection();
         txtTen.requestFocus();
@@ -246,10 +250,19 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtDiaChi.setText(model.getValueAt(dong, 4) != null ? model.getValueAt(dong, 4).toString() : "");
         txtEmail.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
 
-        String ghiChu = model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString() : "";
-        cboGhiChu.setSelectedItem(ghiChu);
-        if (cboGhiChu.getSelectedIndex() < 0) {
-            cboGhiChu.setSelectedIndex(0);
+        String nhomKH = model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString().trim() : "";
+        cboNhomKH.setSelectedItem(nhomKH);
+        if (cboNhomKH.getSelectedIndex() < 0) {
+            String lower = nhomKH.toLowerCase();
+            if (lower.contains("vip")) {
+                cboNhomKH.setSelectedItem("Khách VIP");
+            } else if (lower.contains("than thiet") || lower.contains("thân thiết")) {
+                cboNhomKH.setSelectedItem("Khách thân thiết");
+            } else if (lower.contains("sua") || lower.contains("sửa")) {
+                cboNhomKH.setSelectedItem("Khách đã sửa chữa");
+            } else {
+                cboNhomKH.setSelectedItem("Khách mới");
+            }
         }
 
         txtNgayDangKy.setText(model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
@@ -290,7 +303,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         // Chữ cái đầu viết hoa các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng,
         // sau dấu khoảng trắng đó phải là chữ cái đầu viết hoa và các chữ cái thường.
         if (!ten.matches("^[\\p{Lu}][\\p{Ll}]+( [\\p{Lu}][\\p{Ll}]+)+$")) {
-            UiHelper.loi(this, "Họ và tên không hợp lệ! Chữ cái đầu mỗi từ phải viết hoa, các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng và không chứa số (Ví dụ: Nguyễn Văn An)!", txtTen);
+            UiHelper.loi(this, "Họ và tên không hợp lệ! Chữ cái đầu mỗi từ phải viết hoa, các chữ cái sau viết thường, phân cách bởi một dấu khoảng trắng và không chứa số !", txtTen);
             return false;
         }
 
@@ -300,25 +313,25 @@ public class QuanLyKhachHang_UI extends JPanel {
             return false;
         }
         if (!sdt.matches("^0\\d{9}$")) {
-            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng số 0 và không được chứa chữ (Ví dụ: 0912345678)!", txtSdt);
+            UiHelper.loi(this, "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng số 0 và không được chứa chữ !", txtSdt);
             return false;
         }
 
         // 4. Ràng buộc CCCD: 0 ở đầu và 11 chữ số phía sau, không được nhập chữ
         if (!cccd.isEmpty() && !cccd.matches("^0\\d{11}$")) {
-            UiHelper.loi(this, "Số CCCD phải gồm 12 chữ số, bắt đầu bằng số 0 và không được chứa chữ (Ví dụ: 079123456789)!", txtCccd);
+            UiHelper.loi(this, "Số CCCD phải gồm 12 chữ số, bắt đầu bằng số 0 và không được chứa chữ !", txtCccd);
             return false;
         }
 
         // 5. Ràng buộc Địa chỉ: 2 hoặc 3 chữ số đầu tiên, phía sau là ký tự bất kỳ và có ít nhất 1 dấu phẩy
         if (!diaChi.isEmpty() && !diaChi.matches("^\\d{2,3}(?!\\d).*,.*$")) {
-            UiHelper.loi(this, "Địa chỉ phải gồm 2 hoặc 3 chữ số đầu tiên, phía sau là ký tự bất kỳ và có ít nhất 1 dấu phẩy (Ví dụ: 123 Nguyễn Trãi, Quận 1 hoặc 45 Lê Lợi, TP.HCM)", txtDiaChi);
+            UiHelper.loi(this, "Địa chỉ phải gồm 2 hoặc 3 chữ số đầu tiên, phía sau là ký tự bất kỳ và có ít nhất 1 dấu phẩy !", txtDiaChi);
             return false;
         }
 
         // 6. Ràng buộc Email: Đầu tiên phải là chữ hoặc số, sau đó tới @gmail.com
         if (!email.isEmpty() && !email.matches("^[a-zA-Z0-9][a-zA-Z0-9._-]*@gmail\\.com$")) {
-            UiHelper.loi(this, "Email không hợp lệ! Ký tự đầu tiên phải là chữ hoặc số và đuôi phải là @gmail.com (Ví dụ: khachhang123@gmail.com)", txtEmail);
+            UiHelper.loi(this, "Email không hợp lệ! Ký tự đầu tiên phải là chữ hoặc số và đuôi phải là @gmail.com !", txtEmail);
             return false;
         }
 

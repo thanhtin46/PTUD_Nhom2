@@ -90,6 +90,8 @@ public class KhachHang {
     public void setEmail(String email) { this.email = email; }
 
     public String getGhiChu() { return ghiChu; }
+    public String getNhomKH() { return ghiChu != null && !ghiChu.trim().isEmpty() ? ghiChu : "Khách mới"; }
+    public void setNhomKH(String nhomKH) { setGhiChu(nhomKH); }
     public void setGhiChu(String ghiChu) { this.ghiChu = QuyenTruyCap.giaiMaMojibake(ghiChu); }
 
     public LocalDate getNgayDangKy() { return ngayDangKy; }
