@@ -179,46 +179,102 @@ public final class UiHelper {
     }
 
     /** Định dạng ô nhập liệu và hiệu ứng khi chọn */
+
+    /** Định dạng ô nhập liệu, phân biệt ô được nhập và ô chỉ xem */
     public static void trangTriInput(JComponent o) {
         o.setFont(FONT_BT);
+
         if (o instanceof JTextField tf) {
             tf.setPreferredSize(new Dimension(190, 38));
-            tf.setBackground(new Color(248, 250, 252));
-            tf.setForeground(XANH_DAM);
+            tf.setOpaque(true);
             tf.setCaretColor(XANH_TRUNG);
-            tf.setBorder(createInputBorder(false));
 
-            tf.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    tf.setBackground(Color.WHITE);
-                    tf.setBorder(createInputBorder(true));
-                    tf.repaint();
-                }
+            // Ô không cho nhập: nền xám
+            if (!tf.isEditable()) {
+                tf.setBackground(new Color(226, 232, 240));
+                tf.setForeground(new Color(100, 116, 139));
+                tf.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(203, 213, 225), 1, true),
+                        new EmptyBorder(7, 12, 7, 12)
+                ));
+            } else {
+                // Ô được phép nhập: nền xanh rất nhạt
+                tf.setBackground(new Color(239, 246, 255));
+                tf.setForeground(new Color(15, 23, 42));
+                tf.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(59, 130, 246), 1, true),
+                        new EmptyBorder(7, 12, 7, 12)
+                ));
 
-                @Override
-                public void focusLost(FocusEvent e) {
-                    tf.setBackground(new Color(248, 250, 252));
-                    tf.setBorder(createInputBorder(false));
-                    tf.repaint();
-                }
-            });
+                tf.addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusGained(FocusEvent e) {
+                        tf.setBackground(Color.WHITE);
+                        tf.setBorder(BorderFactory.createCompoundBorder(
+                                BorderFactory.createLineBorder(new Color(37, 99, 235), 2, true),
+                                new EmptyBorder(6, 11, 6, 11)
+                        ));
+                    }
+
+                    @Override
+                    public void focusLost(FocusEvent e) {
+                        tf.setBackground(new Color(239, 246, 255));
+                        tf.setBorder(BorderFactory.createCompoundBorder(
+                                BorderFactory.createLineBorder(new Color(59, 130, 246), 1, true),
+                                new EmptyBorder(7, 12, 7, 12)
+                        ));
+                    }
+                });
+            }
+
         } else if (o instanceof JComboBox<?> cb) {
             cb.setPreferredSize(new Dimension(190, 38));
-            cb.setBackground(Color.WHITE);
-            cb.setForeground(XANH_DAM);
-            cb.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
+            cb.setOpaque(true);
+            cb.setEnabled(true);
+            cb.setBackground(new Color(219, 234, 254));
+            cb.setForeground(new Color(30, 64, 175));
+            cb.setBorder(BorderFactory.createLineBorder(
+                    new Color(59, 130, 246), 1, true
+            ));
+
+            // Màu danh sách khi xổ xuống
+            cb.setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(
+                        JList<?> list, Object value, int index,
+                        boolean isSelected, boolean cellHasFocus) {
+
+                    JLabel lbl = (JLabel) super.getListCellRendererComponent(
+                            list, value, index, isSelected, cellHasFocus
+                    );
+
+                    lbl.setOpaque(true);
+                    if (isSelected) {
+                        lbl.setBackground(new Color(59, 130, 246));
+                        lbl.setForeground(Color.WHITE);
+                    } else {
+                        lbl.setBackground(new Color(239, 246, 255));
+                        lbl.setForeground(new Color(30, 64, 175));
+                    }
+
+                    lbl.setBorder(new EmptyBorder(6, 10, 6, 10));
+                    return lbl;
+                }
+            });
+
         } else if (o instanceof JScrollPane sp) {
             sp.setBorder(BorderFactory.createLineBorder(VIEN, 1, true));
+
             if (sp.getViewport().getView() instanceof JTextArea ta) {
                 ta.setFont(FONT_BT);
-                ta.setBackground(new Color(248, 250, 252));
+                ta.setBackground(new Color(239, 246, 255));
                 ta.setForeground(XANH_DAM);
                 ta.setBorder(new EmptyBorder(8, 12, 8, 12));
                 ta.setCaretColor(XANH_TRUNG);
             }
         }
     }
+
 
     private static javax.swing.border.Border createInputBorder(boolean focus) {
         Color viBorder = focus ? VIEN_FOCUS : VIEN;

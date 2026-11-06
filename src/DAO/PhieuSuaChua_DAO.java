@@ -60,42 +60,93 @@ public class PhieuSuaChua_DAO {
         }
     }
 
-    private void luuDauPhieu(Connection con, String maPSC, DuLieuPhieuSuaChua d) throws SQLException {
+
+    private void luuDauPhieu(
+            Connection con,
+            String maPSC,
+            DuLieuPhieuSuaChua d) throws SQLException {
+
         String maKH;
         String soVIN;
-        try (PreparedStatement ps = con.prepareStatement("SELECT maKH, soVIN FROM PhieuTiepNhan WHERE maPTN=?")) {
+
+        // Lấy thông tin khách hàng và phương tiện từ phiếu tiếp nhận
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT maKH, soVIN FROM PhieuTiepNhan WHERE maPTN=?")) {
+
             ps.setString(1, d.getMaTiepNhan());
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) throw new SQLException("Không tìm thấy phiếu tiếp nhận " + d.getMaTiepNhan());
+                if (!rs.next()) {
+                    throw new SQLException(
+                            "Không tìm thấy phiếu tiếp nhận " + d.getMaTiepNhan());
+                }
+
                 maKH = rs.getString("maKH");
                 soVIN = rs.getString("soVIN");
             }
         }
+
         int soDong;
-        try (PreparedStatement ps = con.prepareStatement(
-                "UPDATE PhieuSuaChua SET maNV=?, maKH=?, soVIN=?, ngayHoanThanhDuKien=?, maPTN=? WHERE maPSC=?")) {
+
+        // Cập nhật phiếu sửa chữa đã tồn tại
+        String sqlUpdate = """
+        UPDATE PhieuSuaChua
+        SET maNV = ?,
+            maKH = ?,
+            soVIN = ?,
+            ngayHoanThanhDuKien = ?,
+            maPTN = ?,
+            ghiChu = ?
+        WHERE maPSC = ?
+        """;
+
+        try (PreparedStatement ps = con.prepareStatement(sqlUpdate)) {
+
             ps.setString(1, d.getMaKyThuatVien());
             ps.setString(2, maKH);
             ps.setString(3, soVIN);
             ps.setDate(4, Date.valueOf(d.getNgayHen()));
             ps.setString(5, d.getMaTiepNhan());
-            ps.setString(6, maPSC);
+            ps.setString(6, d.getGhiChu());
+            ps.setString(7, maPSC);
+
             soDong = ps.executeUpdate();
         }
+
+        // Nếu chưa có phiếu sửa chữa thì tạo mới
         if (soDong == 0) {
-            try (PreparedStatement ps = con.prepareStatement(
-                    "INSERT INTO PhieuSuaChua (maPSC, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai, maPTN) "
-                    + "VALUES (?, ?, ?, ?, SYSDATETIME(), ?, N'CHO_SUA', ?)")) {
+
+            String sqlInsert = """
+            INSERT INTO PhieuSuaChua
+            (
+                maPSC,
+                maNV,
+                maKH,
+                soVIN,
+                ngayBD,
+                ngayHoanThanhDuKien,
+                trangThai,
+                maPTN,
+                ghiChu
+            )
+            VALUES (?, ?, ?, ?, SYSDATETIME(), ?, N'CHO_SUA', ?, ?)
+            """;
+
+            try (PreparedStatement ps = con.prepareStatement(sqlInsert)) {
+
                 ps.setString(1, maPSC);
                 ps.setString(2, d.getMaKyThuatVien());
                 ps.setString(3, maKH);
                 ps.setString(4, soVIN);
                 ps.setDate(5, Date.valueOf(d.getNgayHen()));
                 ps.setString(6, d.getMaTiepNhan());
+                ps.setString(7, d.getGhiChu());
+
                 ps.executeUpdate();
             }
         }
     }
+
 
     private void luuPhuTung(Connection con, String maPSC, DuLieuPhieuSuaChua d) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC=?")) {

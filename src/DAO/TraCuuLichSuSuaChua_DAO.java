@@ -233,32 +233,48 @@ public class TraCuuLichSuSuaChua_DAO {
 
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ")
-          .append("tn.maPTN, ")
-          .append("sc.maPSC, ")
-          .append("tn.ngayTN, ")
-          .append("kh.maKH, ")
-          .append("kh.hoTen AS tenKH, ")
-          .append("kh.soDT, ")
-          .append("kh.chungMinh, ")
-          .append("tn.soVIN, ")
-          .append("pt.bienSoXe, ")
-          .append("ISNULL(pt.hangXe, '') + ' ' + ISNULL(pt.dongXe, '') AS tenXe, ")
-          .append("ISNULL(tn.yeuCauSC, '') AS yeuCauSC, ")
-          .append("ISNULL(ktv.hoTen, N'Chưa giao') AS tenKTV, ")
-          .append("ISNULL(sc.trangThai, ISNULL(tn.trangThaiXe, N'Chờ tiếp nhận')) AS trangThaiSC, ")
-          .append("hd.maHD, ")
-          .append("ISNULL(hd.tienDichVu, 0) AS tienDichVu, ")
-          .append("ISNULL(hd.tienPhuTung, 0) AS tienPhuTung, ")
-          .append("ISNULL(hd.tongTien, 0) AS tongTien, ")
-          .append("ISNULL(hd.trangThai, N'Chưa thanh toán') AS trangThaiHD, ")
-          .append("hd.hinhThucThanhToan ")
-          .append("FROM PhieuTiepNhan tn ")
-          .append("JOIN KhachHang kh ON tn.maKH = kh.maKH ")
-          .append("JOIN PhuongTien pt ON tn.soVIN = pt.soVIN ")
-          .append("LEFT JOIN PhieuSuaChua sc ON (sc.maPTN = tn.maPTN OR ('SC' + SUBSTRING(tn.maPTN, 3, 10)) = sc.maPSC) ")
-          .append("LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV ")
-          .append("OUTER APPLY (SELECT TOP 1 maHD, tienDichVu, tienPhuTung, tongTien, trangThai, hinhThucThanhToan FROM HoaDon h WHERE h.maKH = tn.maKH AND h.ngayLap = CAST(tn.ngayTN AS DATE)) hd ")
-          .append("WHERE 1=1 ");
+                .append("tn.maPTN, ")
+                .append("sc.maPSC, ")
+                .append("tn.ngayTN, ")
+                .append("kh.maKH, ")
+                .append("kh.hoTen AS tenKH, ")
+                .append("kh.soDT, ")
+                .append("kh.chungMinh, ")
+                .append("tn.soVIN, ")
+                .append("pt.bienSoXe, ")
+                .append("ISNULL(pt.hangXe, '') + ' ' + ISNULL(pt.dongXe, '') AS tenXe, ")
+                .append("ISNULL(tn.yeuCauSC, '') AS yeuCauSC, ")
+                .append("ISNULL(ktv.hoTen, N'Chưa giao') AS tenKTV, ")
+                .append("ISNULL(sc.trangThai, ISNULL(tn.trangThaiXe, N'Chờ tiếp nhận')) AS trangThaiSC, ")
+                .append("hd.maHD, ")
+                .append("CASE WHEN hd.maHD IS NOT NULL THEN ISNULL(hd.tienDichVu, 0) ELSE ISNULL(cv.tienDichVu, 0) END AS tienDichVu, ")
+                .append("CASE WHEN hd.maHD IS NOT NULL THEN ISNULL(hd.tienPhuTung, 0) ELSE ISNULL(ptTien.tienPhuTung, 0) END AS tienPhuTung, ")
+                .append("CASE WHEN hd.maHD IS NOT NULL THEN ISNULL(hd.tongTien, 0) ELSE ISNULL(cv.tienDichVu, 0) + ISNULL(ptTien.tienPhuTung, 0) END AS tongTien, ")
+                .append("ISNULL(hd.trangThai, N'Chưa thanh toán') AS trangThaiHD, ")
+                .append("hd.hinhThucThanhToan ")
+                .append("FROM PhieuTiepNhan tn ")
+                .append("JOIN KhachHang kh ON tn.maKH = kh.maKH ")
+                .append("JOIN PhuongTien pt ON tn.soVIN = pt.soVIN ")
+                .append("LEFT JOIN PhieuSuaChua sc ON sc.maPTN = tn.maPTN ")
+                .append("LEFT JOIN NhanVien ktv ON sc.maNV = ktv.maNV ")
+                // Hóa đơn: giữ cách liên kết theo khách hàng và ngày tiếp nhận của CSDL hiện tại.
+                .append("OUTER APPLY (")
+                .append("    SELECT TOP 1 h.maHD, h.tienDichVu, h.tienPhuTung, h.tongTien, h.trangThai, h.hinhThucThanhToan ")
+                .append("    FROM HoaDon h ")
+                .append("    WHERE h.maKH = tn.maKH AND h.ngayLap = CAST(tn.ngayTN AS DATE) ")
+                .append("    ORDER BY h.maHD DESC ")
+                .append(") hd ")
+                // Khi chưa có hóa đơn, lấy tiền công trực tiếp từ chi tiết công việc.
+                .append("OUTER APPLY (")
+                .append("    SELECT SUM(ISNULL(ct.tienCong, 0)) AS tienDichVu ")
+                .append("    FROM ChiTietCongViecSuaChua ct WHERE ct.maPSC = sc.maPSC ")
+                .append(") cv ")
+                // Alias ptTien để không trùng với bí danh pt của bảng PhuongTien.
+                .append("OUTER APPLY (")
+                .append("    SELECT SUM(ISNULL(ct.soLuong, 0) * ISNULL(ct.donGia, 0)) AS tienPhuTung ")
+                .append("    FROM ChiTietSuaChua ct WHERE ct.maPSC = sc.maPSC ")
+                .append(") ptTien ")
+                .append("WHERE 1=1 ");
 
         ArrayList<Object> params = new ArrayList<>();
         if(viewer!=null && Entity.QuyenTruyCap.vaiTro(viewer.getVaiTro())==Entity.QuyenTruyCap.VaiTro.SUA_CHUA
@@ -384,113 +400,165 @@ public class TraCuuLichSuSuaChua_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        // Ưu tiên 1: ChiTietCongViecSuaChua theo maPSC
-        if (maPSC != null && !maPSC.trim().isEmpty() && !"—".equals(maPSC)) {
-            String sql = "SELECT stt, noiDungCongViec, ISNULL(tenKTV, N'—') AS tenKTV, tienCong " +
-                         "FROM ChiTietCongViecSuaChua WHERE maPSC = ? ORDER BY stt";
-            try (PreparedStatement stmt = con.prepareStatement(sql)) {
-                stmt.setString(1, maPSC.trim());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(new ChiTietCongViecDTO(
-                                rs.getInt("stt"),
-                                rs.getString("noiDungCongViec"),
-                                rs.getString("tenKTV"),
-                                (long) rs.getDouble("tienCong")
-                        ));
-                    }
-                }
-            } catch (SQLException ignored) {}
-        }
+        // Ưu tiên 1: Lấy chi tiết dịch vụ trên hóa đơn
+        if (maHD != null && !maHD.trim().isEmpty() && !"—".equals(maHD)) {
+            String sql = """
+            SELECT stt, tenDichVu, donGia
+            FROM ChiTietDichVuHoaDon
+            WHERE maHD = ?
+            ORDER BY stt
+            """;
 
-        // Ưu tiên 2: ChiTietDichVuHoaDon theo maHD nếu ChiTietCongViecSuaChua rỗng
-        if (list.isEmpty() && maHD != null && !maHD.trim().isEmpty() && !"—".equals(maHD)) {
-            String sql = "SELECT stt, tenDichVu, donGia FROM ChiTietDichVuHoaDon WHERE maHD = ? ORDER BY stt";
             try (PreparedStatement stmt = con.prepareStatement(sql)) {
                 stmt.setString(1, maHD.trim());
+
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         list.add(new ChiTietCongViecDTO(
                                 rs.getInt("stt"),
                                 rs.getString("tenDichVu"),
                                 "KTV Gara",
-                                (long) rs.getDouble("donGia")
+                                rs.getLong("donGia")
                         ));
                     }
                 }
-            } catch (SQLException ignored) {}
+            } catch (SQLException e) {
+                System.err.println("Lỗi lấy chi tiết dịch vụ hóa đơn: " + e.getMessage());
+            }
+        }
+
+        // Ưu tiên 2: Nếu hóa đơn không có chi tiết thì lấy dữ liệu sửa chữa
+        if (list.isEmpty() && maPSC != null
+                && !maPSC.trim().isEmpty() && !"—".equals(maPSC)) {
+
+            String sql = """
+            SELECT stt, noiDungCongViec,
+                   ISNULL(tenKTV, N'—') AS tenKTV,
+                   tienCong
+            FROM ChiTietCongViecSuaChua
+            WHERE maPSC = ?
+            ORDER BY stt
+            """;
+
+            try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                stmt.setString(1, maPSC.trim());
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(new ChiTietCongViecDTO(
+                                rs.getInt("stt"),
+                                rs.getString("noiDungCongViec"),
+                                rs.getString("tenKTV"),
+                                rs.getLong("tienCong")
+                        ));
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi lấy chi tiết công việc sửa chữa: " + e.getMessage());
+            }
         }
 
         return list;
     }
-
     // =========================================================================
     //                        TRUY VẤN CHI TIẾT PHỤ TÙNG
     // =========================================================================
+
     public ArrayList<ChiTietPhuTungDTO> layChiTietPhuTung(String maPSC, String maHD) {
         ArrayList<ChiTietPhuTungDTO> list = new ArrayList<>();
+
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
 
-        // Ưu tiên 1: ChiTietSuaChua theo maPSC
-        if (maPSC != null && !maPSC.trim().isEmpty() && !"—".equals(maPSC)) {
-            String sql = "SELECT ct.maPT, " +
-                         "ISNULL(ct.tenPhuTung, pt.tenPT) AS tenPT, " +
-                         "ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh, " +
-                         "ct.soLuong, ct.donGia, (ct.soLuong * ct.donGia) AS thanhTien, " +
-                         "ISNULL(ct.trangThai, N'DA_HOAN_THANH') AS trangThai " +
-                         "FROM ChiTietSuaChua ct " +
-                         "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
-                         "WHERE ct.maPSC = ?";
-            try (PreparedStatement stmt = con.prepareStatement(sql)) {
-                stmt.setString(1, maPSC.trim());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    int stt = 1;
-                    while (rs.next()) {
-                        String tt = rs.getString("trangThai");
-                        String ttStr = (tt != null && (tt.contains("HOAN_THANH") || tt.contains("Hoàn thành")))
-                                ? "Đã lắp đặt" : "Đang xử lý";
-                        list.add(new ChiTietPhuTungDTO(
-                                stt++,
-                                rs.getString("maPT"),
-                                rs.getString("tenPT"),
-                                rs.getString("donViTinh"),
-                                rs.getInt("soLuong"),
-                                (long) rs.getDouble("donGia"),
-                                (long) rs.getDouble("thanhTien"),
-                                ttStr
-                        ));
-                    }
-                }
-            } catch (SQLException ignored) {}
-        }
+        // 1. Ưu tiên lấy phụ tùng từ chi tiết hóa đơn
+        if (maHD != null && !maHD.trim().isEmpty()
+                && !"—".equals(maHD.trim())) {
 
-        // Ưu tiên 2: ChiTietHoaDon theo maHD nếu ChiTietSuaChua rỗng
-        if (list.isEmpty() && maHD != null && !maHD.trim().isEmpty() && !"—".equals(maHD)) {
-            String sql = "SELECT ct.maPT, ISNULL(ct.tenPhuTung, pt.tenPT) AS tenPT, " +
-                         "ISNULL(ct.donViTinh, ISNULL(pt.donViTinh, N'Cái')) AS donViTinh, " +
-                         "ct.soLuong, ct.donGia, (ct.soLuong * ct.donGia) AS thanhTien " +
-                         "FROM ChiTietHoaDon ct " +
-                         "LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT " +
-                         "WHERE ct.maHD = ?";
+            String sql = """
+            SELECT
+                ct.maPT,
+                pt.tenPT,
+                pt.donViTinh,
+                ct.soLuong,
+                ct.donGia,
+                (ISNULL(ct.soLuong, 0) * ISNULL(ct.donGia, 0)) AS thanhTien
+            FROM ChiTietHoaDon ct
+            LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT
+            WHERE ct.maHD = ?
+            ORDER BY ct.maPT
+            """;
+
             try (PreparedStatement stmt = con.prepareStatement(sql)) {
                 stmt.setString(1, maHD.trim());
+
                 try (ResultSet rs = stmt.executeQuery()) {
                     int stt = 1;
+
                     while (rs.next()) {
+                        int soLuong = rs.getInt("soLuong");
+                        long donGia = rs.getLong("donGia");
+
                         list.add(new ChiTietPhuTungDTO(
                                 stt++,
                                 rs.getString("maPT"),
                                 rs.getString("tenPT"),
                                 rs.getString("donViTinh"),
-                                rs.getInt("soLuong"),
-                                (long) rs.getDouble("donGia"),
-                                (long) rs.getDouble("thanhTien"),
+                                soLuong,
+                                donGia,
+                                rs.getLong("thanhTien"),
                                 "Đã thanh toán"
                         ));
                     }
                 }
-            } catch (SQLException ignored) {}
+            } catch (SQLException e) {
+                System.err.println("Lỗi lấy phụ tùng từ ChiTietHoaDon:");
+                e.printStackTrace();
+            }
+        }
+
+        // 2. Nếu hóa đơn chưa có chi tiết phụ tùng,
+        // lấy trực tiếp từ phiếu sửa chữa
+        if (list.isEmpty() && maPSC != null
+                && !maPSC.trim().isEmpty()
+                && !"—".equals(maPSC.trim())) {
+
+            String sql = """
+            SELECT
+                ct.maPT,
+                pt.tenPT,
+                pt.donViTinh,
+                ct.soLuong,
+                ct.donGia,
+                (ISNULL(ct.soLuong, 0) * ISNULL(ct.donGia, 0)) AS thanhTien
+            FROM ChiTietSuaChua ct
+            LEFT JOIN PhuTung pt ON ct.maPT = pt.maPT
+            WHERE ct.maPSC = ?
+            ORDER BY ct.maPT
+            """;
+
+            try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                stmt.setString(1, maPSC.trim());
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    int stt = 1;
+
+                    while (rs.next()) {
+                        list.add(new ChiTietPhuTungDTO(
+                                stt++,
+                                rs.getString("maPT"),
+                                rs.getString("tenPT"),
+                                rs.getString("donViTinh"),
+                                rs.getInt("soLuong"),
+                                rs.getLong("donGia"),
+                                rs.getLong("thanhTien"),
+                                "Đã lắp đặt"
+                        ));
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi lấy phụ tùng từ ChiTietSuaChua:");
+                e.printStackTrace();
+            }
         }
 
         return list;
@@ -505,15 +573,15 @@ public class TraCuuLichSuSuaChua_DAO {
         if (con == null) return list;
 
         String sql = "SELECT pbh.maPBH, " +
-                     "pbh.ngayBD, " +
-                     "pbh.ngayKT, " +
-                     "pbh.trangThaiBH, " +
-                     "ISNULL(hm.tenHangMuc, pbh.ghiChu) AS tenHangMuc, " +
-                     "ISNULL(hm.thoiHanBaoHanh, 12) AS thoiHan, " +
-                     "ISNULL(hm.dieuKienBaoHanh, N'Theo tiêu chuẩn nhà sản xuất') AS dieuKien " +
-                     "FROM PhieuBaoHanh pbh " +
-                     "LEFT JOIN ChiTietPhieuBaoHanh hm ON pbh.maPBH = hm.maPBH " +
-                     "WHERE (pbh.maHoaDon = ? AND ? <> '') OR (pbh.soVIN = ? AND ? <> '') OR (pbh.maKH = ? AND ? <> '')";
+                "pbh.ngayBD, " +
+                "pbh.ngayKT, " +
+                "pbh.trangThaiBH, " +
+                "ISNULL(hm.tenHangMuc, pbh.ghiChu) AS tenHangMuc, " +
+                "ISNULL(hm.thoiHanBaoHanh, 12) AS thoiHan, " +
+                "ISNULL(hm.dieuKienBaoHanh, N'Theo tiêu chuẩn nhà sản xuất') AS dieuKien " +
+                "FROM PhieuBaoHanh pbh " +
+                "LEFT JOIN ChiTietPhieuBaoHanh hm ON pbh.maPBH = hm.maPBH " +
+                "WHERE (pbh.maHoaDon = ? AND ? <> '') OR (pbh.soVIN = ? AND ? <> '') OR (pbh.maKH = ? AND ? <> '')";
 
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, maHD != null ? maHD : "");

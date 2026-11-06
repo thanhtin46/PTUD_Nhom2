@@ -222,124 +222,312 @@ public class CapNhatTienDo_UI extends JPanel {
         return bot;
     }
 
+    private String chuyenTrangThai(String trangThai) {
+        if (trangThai == null) return "Chờ tiếp nhận";
+
+        switch (trangThai.trim().toUpperCase()) {
+            case "HOAN_THANH":
+            case "DA_HOAN_THANH":
+                return "Hoàn thành";
+
+            case "DANG_SUA":
+                return "Đang sửa";
+
+            case "CHO_SUA":
+                return "Chờ phụ tùng";
+
+            case "DA_PHAN_CONG":
+                return "Đã phân công";
+
+            case "CHO_TIEP_NHAN":
+                return "Chờ tiếp nhận";
+
+            default:
+                return trangThai;
+        }
+    }
+
+    private String chuyenTrangThaiSQL(String trangThai) {
+        switch (trangThai) {
+            case "Hoàn thành":
+                return "HOAN_THANH";
+
+            case "Đang sửa":
+                return "DANG_SUA";
+
+            case "Chờ phụ tùng":
+                return "CHO_SUA";
+
+            case "Đã phân công":
+                return "DA_PHAN_CONG";
+
+            case "Chờ tiếp nhận":
+                return "CHO_TIEP_NHAN";
+
+            default:
+                return "DANG_SUA";
+        }
+    }
+
     public void napBang() {
-        String q = txtTuKhoa.getText().trim().toLowerCase();
+        String q = txtTuKhoa.getText().trim();
         String locTd = String.valueOf(cboLocTienDo.getSelectedItem());
+
         model.setRowCount(0);
 
-        ArrayList<PhieuTiepNhan> ds = kho.getPhieuTiepNhans();
-        int dem = 0;
-
-        for (PhieuTiepNhan p : ds) {
-            if (!BaoVeQuyen.phieu(p.getSoPhieu())) continue;
-            String so = p.getSoPhieu().toLowerCase();
-            String bienSo = p.getBienSo().toLowerCase();
-            String khach = p.getHoTen().toLowerCase();
-            String sdt = p.getSdt().toLowerCase();
-            String ktv = (p.getKyThuatVien() != null ? p.getKyThuatVien() : "").toLowerCase();
-            String td = p.getTienDo() != null ? p.getTienDo() : "Chờ tiếp nhận";
-
-            // Kiểm tra bộ lọc tiến độ
-            if (!"Tất cả tiến độ".equals(locTd) && !td.equalsIgnoreCase(locTd)) {
-                continue;
-            }
-
-            // Kiểm tra từ khóa
-            boolean khop = q.isEmpty() || so.contains(q) || bienSo.contains(q)
-                    || khach.contains(q) || sdt.contains(q) || ktv.contains(q);
-
-            if (khop) {
-                dem++;
-                model.addRow(new Object[]{
-                        p.getSoPhieu(), p.getBienSo(), p.getHoTen(), p.getSdt(),
-                        p.getHangXe() + " " + p.getLoaiXe(),
-                        p.getYeuCau(),
-                        p.getKyThuatVien() == null || p.getKyThuatVien().isEmpty() ? "(Chưa phân công)" : p.getKyThuatVien(),
-                        td,
-                        UiHelper.tien(p.getThanhTien()) + " đ",
-                        p.getNgayTiepNhanHienThi()
-                });
-            }
-        }
-
-        lblDem.setText("Tìm thấy: " + dem + " / " + ds.size() + " phiếu sửa chữa");
-    }
-
-    private void capNhatTienDo() {
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.TIEN_DO)) return;
-        int dong = table.getSelectedRow();
-        if (dong < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn phiếu cần cập nhật tiến độ trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        String soPhieu = model.getValueAt(dong, 0).toString();
-        if (!BaoVeQuyen.phieu(soPhieu)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
-        String tienDoMoi = String.valueOf(cboTienDoMoi.getSelectedItem());
-
-        boolean ok = kho.capNhatTienDoPhieuTiepNhan(soPhieu, tienDoMoi, null);
-        napBang();
-
-        JOptionPane.showMessageDialog(this,
-                "Đã cập nhật tiến độ phiếu [" + soPhieu + "] thành: " + tienDoMoi
-                        + (ok ? "\n(Đã đồng bộ vào cơ sở dữ liệu SQL Server)" : ""),
-                "Cập nhật thành công", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /** Mở phiếu sửa chữa chi tiết và đồng bộ sang LapPhieuSuaChua_UI */
-
-    private void moPhieuSuaChua() {
-        int dong = table.getSelectedRow();
-
-        if (dong < 0) {
-            JOptionPane.showMessageDialog(
-                    this, "Vui lòng chọn một phiếu trong bảng!"
-            );
-            return;
-        }
-
-        String maPTN = String.valueOf(model.getValueAt(dong, 0));
-        String maPSC = null;
-
         String sql =
-                "SELECT TOP 1 ps.maPSC " +
+                "SELECT ps.maPSC, pt.bienSoXe, kh.hoTen, kh.soDT, " +
+                        "       pt.hangXe, pt.dongXe, tn.yeuCauSC, " +
+                        "       nv.hoTen AS tenKTV, ps.trangThai, " +
+                        "       COALESCE(cv.tienCong, 0) AS tienCong, " +
+                        "       COALESCE(ct.tienPhuTung, 0) AS tienPhuTung, " +
+                        "       COALESCE(tn.ngayTN, ps.ngayBD) AS ngayTiepNhan " +
                         "FROM PhieuSuaChua ps " +
-                        "JOIN PhieuTiepNhan tn ON tn.soVIN = ps.soVIN " +
-                        "WHERE tn.maPTN = ? " +
+                        "LEFT JOIN PhieuTiepNhan tn ON ps.maPTN = tn.maPTN " +
+                        "JOIN KhachHang kh ON ps.maKH = kh.maKH " +
+                        "JOIN PhuongTien pt ON ps.soVIN = pt.soVIN " +
+                        "LEFT JOIN NhanVien nv ON ps.maNV = nv.maNV " +
+
+                        "OUTER APPLY ( " +
+                        "    SELECT SUM(tienCong) AS tienCong " +
+                        "    FROM ChiTietCongViecSuaChua " +
+                        "    WHERE maPSC = ps.maPSC " +
+                        ") cv " +
+
+                        "OUTER APPLY ( " +
+                        "    SELECT SUM(soLuong * donGia) AS tienPhuTung " +
+                        "    FROM ChiTietSuaChua " +
+                        "    WHERE maPSC = ps.maPSC " +
+                        ") ct " +
+
                         "ORDER BY ps.ngayBD DESC";
 
+        int dem = 0;
+
         try (Connection con = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-            ps.setString(1, maPTN);
+            while (rs.next()) {
+                String maPSC = rs.getString("maPSC");
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    maPSC = rs.getString("maPSC");
+                if (!BaoVeQuyen.phieu(maPSC)) {
+                    continue;
                 }
+
+                String bienSo = rs.getString("bienSoXe");
+                String khach = rs.getString("hoTen");
+                String sdt = rs.getString("soDT");
+                String hangXe = rs.getString("hangXe");
+                String dongXe = rs.getString("dongXe");
+                String yeuCau = rs.getString("yeuCauSC");
+                String ktv = rs.getString("tenKTV");
+
+                String trangThaiDB = rs.getString("trangThai");
+                String td = chuyenTrangThai(trangThaiDB);
+
+                if (!"Tất cả tiến độ".equals(locTd)
+                        && !td.equalsIgnoreCase(locTd)) {
+                    continue;
+                }
+
+                boolean khop = q.isEmpty()
+                        || maPSC.toLowerCase().contains(q.toLowerCase())
+                        || String.valueOf(bienSo).toLowerCase().contains(q.toLowerCase())
+                        || String.valueOf(khach).toLowerCase().contains(q.toLowerCase())
+                        || String.valueOf(sdt).contains(q)
+                        || String.valueOf(ktv).toLowerCase().contains(q.toLowerCase());
+
+                if (!khop) {
+                    continue;
+                }
+
+                long tienCong = rs.getBigDecimal("tienCong").longValue();
+                long tienPhuTung = rs.getBigDecimal("tienPhuTung").longValue();
+
+                long tongTruocVAT = tienCong + tienPhuTung;
+                long vat = (long) (tongTruocVAT * 0.08);
+                long tongChiPhi = tongTruocVAT + vat;
+
+                java.sql.Timestamp ngay =
+                        rs.getTimestamp("ngayTiepNhan");
+
+                String ngayHienThi = ngay == null
+                        ? ""
+                        : new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")
+                        .format(ngay);
+
+                model.addRow(new Object[]{
+                        maPSC,
+                        bienSo,
+                        khach,
+                        sdt,
+                        hangXe + " " + dongXe,
+                        yeuCau,
+                        ktv == null ? "(Chưa phân công)" : ktv,
+                        td,
+                        UiHelper.tien(tongChiPhi) + " đ",
+                        ngayHienThi
+                });
+
+                dem++;
             }
 
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Không tìm được phiếu sửa chữa:\n" + ex.getMessage(),
+                    "Lỗi tải danh sách phiếu sửa chữa:\n" + ex.getMessage(),
                     "Lỗi SQL",
                     JOptionPane.ERROR_MESSAGE
+            );
+            ex.printStackTrace();
+        }
+
+        lblDem.setText("Tìm thấy: " + dem + " phiếu sửa chữa");
+    }
+
+    private void capNhatTienDo() {
+        if (!BaoVeQuyen.yeuCau(
+                this, Entity.QuyenTruyCap.Quyen.TIEN_DO)) {
+            return;
+        }
+
+        int dong = table.getSelectedRow();
+
+        if (dong < 0) {
+            JOptionPane.showMessageDialog(
+                    this, "Vui lòng chọn phiếu cần cập nhật!"
+            );
+            return;
+        }
+
+        dong = table.convertRowIndexToModel(dong);
+
+        String maPSC = String.valueOf(model.getValueAt(dong, 0));
+
+        if (!BaoVeQuyen.phieu(maPSC)) {
+            JOptionPane.showMessageDialog(
+                    this, "Phiếu không thuộc phạm vi được giao."
+            );
+            return;
+        }
+
+        String tienDoMoi =
+                String.valueOf(cboTienDoMoi.getSelectedItem());
+
+        String trangThaiSQL = chuyenTrangThaiSQL(tienDoMoi);
+
+        String sql =
+                "UPDATE PhieuSuaChua SET trangThai = ? " +
+                        "WHERE maPSC = ?";
+
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, trangThaiSQL);
+            ps.setString(2, maPSC);
+
+            int soDong = ps.executeUpdate();
+
+            if (soDong > 0) {
+                kho.dongBoTuSQLServer();
+                napBang();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Đã cập nhật tiến độ phiếu " + maPSC
+                                + " thành: " + tienDoMoi,
+                        "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } else {
+                JOptionPane.showMessageDialog(
+                        this, "Không tìm thấy phiếu sửa chữa!"
+                );
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Lỗi cập nhật tiến độ:\n" + ex.getMessage(),
+                    "Lỗi SQL",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    /** Mở phiếu sửa chữa chi tiết và đồng bộ sang LapPhieuSuaChua_UI */
+
+    /**
+     * Mở đúng phiếu sửa chữa đang được chọn trên bảng.
+     */
+    private void moPhieuSuaChua() {
+        int dong = table.getSelectedRow();
+
+        if (dong < 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng chọn một phiếu sửa chữa trong bảng!",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // Chuyển chỉ số dòng đang chọn về chỉ số trong model
+        dong = table.convertRowIndexToModel(dong);
+
+        // Cột 0 của bảng là mã phiếu sửa chữa (maPSC)
+        Object giaTri = model.getValueAt(dong, 0);
+
+        if (giaTri == null || giaTri.toString().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không lấy được mã phiếu sửa chữa!",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        String maPSC = giaTri.toString().trim();
+
+        if (!maPSC.startsWith("SC")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mã phiếu sửa chữa không hợp lệ: " + maPSC,
+                    "Lỗi dữ liệu",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        if (!BaoVeQuyen.phieu(maPSC)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phiếu không thuộc phạm vi được giao.",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
         Main_UI mainUI = Main_UI.getInstance();
 
-        if (mainUI == null) return;
-
-        if (maPSC != null) {
-            // Đã có phiếu sửa chữa: mở đúng phiếu đã lưu
-            LapPhieuSuaChua_UI.datPSCCanMoLai(maPSC);
-        } else {
-            // Chưa có phiếu sửa chữa: mở theo phiếu tiếp nhận
-            LapPhieuSuaChua_UI.datPhieuCanChon(maPTN);
+        if (mainUI == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm thấy màn hình chính!",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
         }
 
+        // Truyền đúng mã phiếu sửa chữa đang chọn
+        LapPhieuSuaChua_UI.datPSCCanMoLai(maPSC);
+
+        // Chuyển sang màn hình lập phiếu sửa chữa
         mainUI.chuyenTrang("Lập phiếu sửa chữa");
     }
 
@@ -350,9 +538,62 @@ public class CapNhatTienDo_UI extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu trong bảng để xem chi tiết!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String soPhieu = model.getValueAt(dong, 0).toString();
-        if (!BaoVeQuyen.phieu(soPhieu)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
-        PhieuTiepNhan p = kho.timPhieuTiepNhan(soPhieu);
+        String maPSC = model.getValueAt(dong, 0).toString().trim();
+
+        if (!BaoVeQuyen.phieu(maPSC)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phiếu không thuộc phạm vi được giao."
+            );
+            return;
+        }
+
+// Lấy mã phiếu tiếp nhận tương ứng với phiếu sửa chữa
+        String maPTN = null;
+
+        String sql = """
+        SELECT maPTN
+        FROM PhieuSuaChua
+        WHERE maPSC = ?
+        """;
+
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maPSC);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    maPTN = rs.getString("maPTN");
+                }
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Lỗi lấy thông tin phiếu tiếp nhận: " + ex.getMessage()
+            );
+            return;
+        }
+
+        if (maPTN == null || maPTN.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm thấy phiếu tiếp nhận của phiếu sửa chữa " + maPSC
+            );
+            return;
+        }
+
+        PhieuTiepNhan p = kho.timPhieuTiepNhan(maPTN);
+
+        if (p == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không tìm thấy dữ liệu phiếu tiếp nhận " + maPTN
+            );
+            return;
+        }
         if (p == null) return;
 
         String msg = "<html><div style='width:400px;font-family:Segoe UI;'>"
