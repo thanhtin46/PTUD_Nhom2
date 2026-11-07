@@ -441,6 +441,10 @@ public class ConnectDB {
                                 "INSERT INTO dbo.ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES " +
                                 "('HD203', 'PT109', N'Cần gạt mưa Bosch AeroTwin', N'Bộ', 1, 350000);");
 
+            // PhuTung: bổ sung cột loaiPT và maNCC nếu chưa có
+            thucThiAnToan(stmt, "IF COL_LENGTH('dbo.PhuTung', 'loaiPT') IS NULL ALTER TABLE dbo.PhuTung ADD loaiPT NVARCHAR(100) NULL;");
+            thucThiAnToan(stmt, "IF COL_LENGTH('dbo.PhuTung', 'maNCC') IS NULL ALTER TABLE dbo.PhuTung ADD maNCC VARCHAR(20) NULL CONSTRAINT FK_PhuTung_NhaCungCap FOREIGN KEY REFERENCES dbo.NhaCungCap(maNCC);");
+
             // QuyenBoSung & NhatKyQuyen
             thucThiAnToan(stmt, "IF OBJECT_ID('dbo.QuyenBoSung', 'U') IS NULL " +
                                 "CREATE TABLE dbo.QuyenBoSung (" +

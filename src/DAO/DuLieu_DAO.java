@@ -339,30 +339,71 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
-        String sqlPT = "INSERT INTO PhuTung (maPT, tenPT, donViTinh, donGiaBan) VALUES (?, ?, ?, ?)";
-        String sqlKho = "INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlPT = "INSERT INTO PhuTung "
+                + "(maPT, tenPT, donViTinh, donGiaBan, loaiPT, maNCC) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        String sqlKho = "INSERT INTO Kho "
+                + "(maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        boolean autoCommitCu = true;
+
         try {
+            autoCommitCu = con.getAutoCommit();
+            con.setAutoCommit(false);
+
+            // 1. Thêm phụ tùng
             try (PreparedStatement stmt = con.prepareStatement(sqlPT)) {
                 stmt.setString(1, pt.getMaPT());
                 stmt.setString(2, pt.getTen());
                 stmt.setString(3, pt.getDonVi());
-                stmt.setDouble(4, (double) pt.getDonGia());
+                stmt.setLong(4, pt.getDonGia());
+                stmt.setString(5, pt.getLoaiPT());
+
+                if (pt.getMaNCC() != null
+                        && !pt.getMaNCC().trim().isEmpty()) {
+                    stmt.setString(6, pt.getMaNCC());
+                } else {
+                    stmt.setNull(6, Types.VARCHAR);
+                }
+
                 stmt.executeUpdate();
             }
 
+            // 2. Tạo thông tin kho với tồn ban đầu bằng 0
             try (PreparedStatement stmt = con.prepareStatement(sqlKho)) {
                 stmt.setString(1, "KHO_" + pt.getMaPT());
                 stmt.setString(2, pt.getMaPT());
-                stmt.setInt(3, pt.getSoLuongTon());
+                stmt.setInt(3, 0);
                 stmt.setString(4, "Kệ A");
-                stmt.setInt(5, pt.getSoLuongToiThieu() > 0 ? pt.getSoLuongToiThieu() : 5);
+                stmt.setInt(5, 5);
                 stmt.setInt(6, 200);
+
                 stmt.executeUpdate();
             }
+
+            // 3. Hoàn tất transaction
+            con.commit();
             return true;
+
         } catch (SQLException e) {
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Lỗi rollback: " + ex.getMessage());
+            }
+
             System.err.println("Lỗi themPhuTung: " + e.getMessage());
             return false;
+
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitCu);
+            } catch (SQLException e) {
+                System.err.println("Lỗi khôi phục AutoCommit: "
+                        + e.getMessage());
+            }
         }
     }
 
@@ -370,7 +411,7 @@ public class DuLieu_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
-        String sqlPT = "UPDATE PhuTung SET tenPT = ?, donViTinh = ?, donGiaBan = ? WHERE maPT = ?";
+        String sqlPT = "UPDATE PhuTung SET tenPT = ?, donViTinh = ?, donGiaBan = ?, loaiPT = ?, maNCC = ? WHERE maPT = ?";
         String sqlKho = "UPDATE Kho SET soLuongTon = ?, soLTT = ? WHERE maPT = ?";
         try {
             try (PreparedStatement stmt = con.prepareStatement(sqlPT)) {

@@ -12,6 +12,9 @@ public class PhuTung {
     private int soLuongTon;
     private long donGia;
     private int soLuongToiThieu;     // Mức tồn tối thiểu để cảnh báo hết hàng
+    private String loaiPT;           // Phân loại phụ tùng (lưu vào DB cột loaiPT)
+    private String maNCC;            // Mã nhà cung cấp chính
+    private String tenNCC;           // Tên nhà cung cấp (đọc kèm khi query)
 
     public PhuTung() {
     }
@@ -32,6 +35,16 @@ public class PhuTung {
         this.soLuongTon = soLuongTon;
         this.donGia = donGia;
         this.soLuongToiThieu = soLuongToiThieu;
+    }
+
+    /** Constructor đầy đủ gồm phân loại và nhà cung cấp. */
+    public PhuTung(String maPT, String ten, String donVi, int soLuongTon,
+                   long donGia, int soLuongToiThieu,
+                   String loaiPT, String maNCC, String tenNCC) {
+        this(maPT, ten, donVi, soLuongTon, donGia, soLuongToiThieu);
+        this.loaiPT = loaiPT;
+        this.maNCC  = maNCC;
+        this.tenNCC = tenNCC;
     }
 
     public String getMaPT() { return maPT; }
@@ -60,6 +73,15 @@ public class PhuTung {
 
     public int getSoLuongToiThieu() { return soLuongToiThieu; }
     public void setSoLuongToiThieu(int soLuongToiThieu) { this.soLuongToiThieu = soLuongToiThieu; }
+
+    public String getLoaiPT() { return loaiPT; }
+    public void setLoaiPT(String loaiPT) { this.loaiPT = loaiPT; }
+
+    public String getMaNCC() { return maNCC; }
+    public void setMaNCC(String maNCC) { this.maNCC = maNCC; }
+
+    public String getTenNCC() { return tenNCC; }
+    public void setTenNCC(String tenNCC) { this.tenNCC = tenNCC; }
 
     // Kiểm tra mức cảnh báo tồn kho
     public String getMucCanhBao() {
