@@ -16,7 +16,6 @@ import java.awt.event.FocusEvent;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
 public class LapPhieuTiepNhan_UI extends JPanel {
     private final NhanVien nv;
     private final KhoDuLieu kho = KhoDuLieu.get();

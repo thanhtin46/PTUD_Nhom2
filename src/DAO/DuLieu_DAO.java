@@ -313,25 +313,53 @@ public class DuLieu_DAO {
     public ArrayList<PhuTung> layTatCaPhuTung() {
         ArrayList<PhuTung> list = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
-        if (con == null) return list;
 
-        String sql = "SELECT pt.maPT, pt.tenPT, pt.donViTinh, pt.donGiaBan, " +
-                     "ISNULL(k.soLuongTon, 0) AS soLuongTon, ISNULL(k.soLTT, 5) AS soLTT " +
-                     "FROM PhuTung pt LEFT JOIN Kho k ON pt.maPT = k.maPT ORDER BY pt.maPT ASC";
-        try (PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        if (con == null) {
+            return list;
+        }
+
+        String sql = "SELECT "
+                + "pt.maPT, "
+                + "pt.tenPT, "
+                + "pt.donViTinh, "
+                + "pt.donGiaBan, "
+                + "pt.maNCC, "
+                + "ISNULL(ncc.tenNCC, '') AS tenNCC, "
+                + "ISNULL(k.soLuongTon, 0) AS soLuongTon, "
+                + "ISNULL(k.soLTT, 5) AS soLTT "
+                + "FROM PhuTung pt "
+                + "LEFT JOIN Kho k ON pt.maPT = k.maPT "
+                + "LEFT JOIN NhaCungCap ncc ON pt.maNCC = ncc.maNCC "
+                + "ORDER BY pt.maPT ASC";
+
+        try (
+                PreparedStatement stmt = con.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()
+        ) {
             while (rs.next()) {
                 String ma = rs.getString("maPT");
                 String ten = rs.getString("tenPT");
                 String dvt = rs.getString("donViTinh");
-                long donGia = (long) rs.getDouble("donGiaBan");
+                long donGia = rs.getLong("donGiaBan");
                 int ton = rs.getInt("soLuongTon");
                 int ltt = rs.getInt("soLTT");
-                list.add(new PhuTung(ma, ten, dvt, ton, donGia, ltt));
+
+                String maNCC = rs.getString("maNCC");
+                String tenNCC = rs.getString("tenNCC");
+
+                PhuTung pt = new PhuTung(
+                        ma, ten, dvt, ton, donGia, ltt
+                );
+
+                pt.setMaNCC(maNCC);
+                pt.setTenNCC(tenNCC);
+
+                list.add(pt);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi layTatCaPhuTung: " + e.getMessage());
         }
+
         return list;
     }
 
@@ -407,46 +435,98 @@ public class DuLieu_DAO {
         }
     }
 
+
+
     public boolean capNhatPhuTung(PhuTung pt) {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
-        String sqlPT = "UPDATE PhuTung SET tenPT = ?, donViTinh = ?, donGiaBan = ?, loaiPT = ?, maNCC = ? WHERE maPT = ?";
+        String sqlPT = "UPDATE PhuTung SET tenPT = ?, donViTinh = ?, " +
+                "donGiaBan = ?, loaiPT = ?, maNCC = ? WHERE maPT = ?";
+
         String sqlKho = "UPDATE Kho SET soLuongTon = ?, soLTT = ? WHERE maPT = ?";
+
+        boolean autoCommit = true;
+
         try {
+            autoCommit = con.getAutoCommit();
+            con.setAutoCommit(false);
+
+            // 1. Cập nhật thông tin phụ tùng
             try (PreparedStatement stmt = con.prepareStatement(sqlPT)) {
                 stmt.setString(1, pt.getTen());
                 stmt.setString(2, pt.getDonVi());
                 stmt.setDouble(3, (double) pt.getDonGia());
-                stmt.setString(4, pt.getMaPT());
-                stmt.executeUpdate();
+                stmt.setString(4, pt.getLoaiPT());
+
+                if (pt.getMaNCC() != null && !pt.getMaNCC().trim().isEmpty()) {
+                    stmt.setString(5, pt.getMaNCC());
+                } else {
+                    stmt.setNull(5, java.sql.Types.VARCHAR);
+                }
+
+                stmt.setString(6, pt.getMaPT());
+
+                int rowsPT = stmt.executeUpdate();
+
+                // Không tìm thấy phụ tùng cần cập nhật
+                if (rowsPT == 0) {
+                    con.rollback();
+                    return false;
+                }
             }
 
+            // 2. Cập nhật thông tin kho
             try (PreparedStatement stmt = con.prepareStatement(sqlKho)) {
                 stmt.setInt(1, pt.getSoLuongTon());
                 stmt.setInt(2, pt.getSoLuongToiThieu());
                 stmt.setString(3, pt.getMaPT());
-                int rows = stmt.executeUpdate();
-                if (rows == 0) {
-                    // Chưa có dòng kho thì tạo mới
-                    try (PreparedStatement ins = con.prepareStatement(
-                            "INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) VALUES (?, ?, ?, ?, ?, ?)")) {
+
+                int rowsKho = stmt.executeUpdate();
+
+                // 3. Nếu chưa có dữ liệu kho thì thêm mới
+                if (rowsKho == 0) {
+                    String sqlInsertKho =
+                            "INSERT INTO Kho (maKho, maPT, soLuongTon, viTriKho, soLTT, soLTD) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?)";
+
+                    try (PreparedStatement ins = con.prepareStatement(sqlInsertKho)) {
                         ins.setString(1, "KHO_" + pt.getMaPT());
                         ins.setString(2, pt.getMaPT());
                         ins.setInt(3, pt.getSoLuongTon());
                         ins.setString(4, "Kệ A");
                         ins.setInt(5, pt.getSoLuongToiThieu());
                         ins.setInt(6, 200);
+
                         ins.executeUpdate();
                     }
                 }
             }
+
+            // 4. Xác nhận toàn bộ thay đổi
+            con.commit();
             return true;
+
         } catch (SQLException e) {
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Lỗi rollback: " + ex.getMessage());
+            }
+
             System.err.println("Lỗi capNhatPhuTung: " + e.getMessage());
             return false;
+
+        } finally {
+            try {
+                con.setAutoCommit(autoCommit);
+            } catch (SQLException e) {
+                System.err.println("Lỗi khôi phục AutoCommit: " + e.getMessage());
+            }
         }
     }
+
+
 
     public boolean xoaPhuTung(String maPT) {
         Connection con = ConnectDB.getInstance().getConnection();
