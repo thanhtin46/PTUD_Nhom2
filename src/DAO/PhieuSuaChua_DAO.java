@@ -60,7 +60,6 @@ public class PhieuSuaChua_DAO {
         }
     }
 
-
     private void luuDauPhieu(
             Connection con,
             String maPSC,
@@ -96,19 +95,25 @@ public class PhieuSuaChua_DAO {
             soVIN = ?,
             ngayHoanThanhDuKien = ?,
             maPTN = ?,
-            ghiChu = ?
+            ghiChu = ?,
+            trangThai = ?
         WHERE maPSC = ?
         """;
 
         try (PreparedStatement ps = con.prepareStatement(sqlUpdate)) {
 
-            ps.setString(1, d.getMaKyThuatVien());
+            if (d.getMaKyThuatVien() == null || d.getMaKyThuatVien().isBlank()) {
+                ps.setNull(1, Types.VARCHAR);
+            } else {
+                ps.setString(1, d.getMaKyThuatVien());
+            }
             ps.setString(2, maKH);
             ps.setString(3, soVIN);
             ps.setDate(4, Date.valueOf(d.getNgayHen()));
             ps.setString(5, d.getMaTiepNhan());
             ps.setString(6, d.getGhiChu());
-            ps.setString(7, maPSC);
+            ps.setString(7, d.getTrangThai() != null ? d.getTrangThai() : "CHO_SUA");
+            ps.setString(8, maPSC);
 
             soDong = ps.executeUpdate();
         }
@@ -129,24 +134,43 @@ public class PhieuSuaChua_DAO {
                 maPTN,
                 ghiChu
             )
-            VALUES (?, ?, ?, ?, SYSDATETIME(), ?, N'CHO_SUA', ?, ?)
+            VALUES (?, ?, ?, ?, SYSDATETIME(), ?, ?, ?, ?)
             """;
 
             try (PreparedStatement ps = con.prepareStatement(sqlInsert)) {
 
                 ps.setString(1, maPSC);
-                ps.setString(2, d.getMaKyThuatVien());
+                if (d.getMaKyThuatVien() == null || d.getMaKyThuatVien().isBlank()) {
+                    ps.setNull(2, Types.VARCHAR);
+                } else {
+                    ps.setString(2, d.getMaKyThuatVien());
+                }
                 ps.setString(3, maKH);
                 ps.setString(4, soVIN);
                 ps.setDate(5, Date.valueOf(d.getNgayHen()));
-                ps.setString(6, d.getMaTiepNhan());
-                ps.setString(7, d.getGhiChu());
+                ps.setString(6, d.getTrangThai() != null ? d.getTrangThai() : "CHO_SUA");
+                ps.setString(7, d.getMaTiepNhan());
+                ps.setString(8, d.getGhiChu());
 
                 ps.executeUpdate();
             }
         }
-    }
 
+        // Đồng bộ trạng thái và KTV sang PhieuTiepNhan
+        String tt = d.getTrangThai() != null ? d.getTrangThai() : "CHO_SUA";
+        String ttPTN = "CHO_KTV".equalsIgnoreCase(tt) ? "Chờ KTV" : ("CHO_SUA".equalsIgnoreCase(tt) ? "Chờ phụ tùng" : "Đang sửa");
+        try (PreparedStatement psPTN = con.prepareStatement(
+                "UPDATE PhieuTiepNhan SET kyThuatVien = ?, trangThaiXe = ? WHERE maPTN = ?")) {
+            if (d.getMaKyThuatVien() == null || d.getMaKyThuatVien().isBlank()) {
+                psPTN.setNull(1, Types.VARCHAR);
+            } else {
+                psPTN.setString(1, d.getMaKyThuatVien());
+            }
+            psPTN.setString(2, ttPTN);
+            psPTN.setString(3, d.getMaTiepNhan());
+            psPTN.executeUpdate();
+        }
+    }
 
     private void luuPhuTung(Connection con, String maPSC, DuLieuPhieuSuaChua d) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietSuaChua WHERE maPSC=?")) {

@@ -1,4 +1,3 @@
-
 package Entity;
 
 import java.time.LocalDate;
@@ -15,6 +14,7 @@ public final class DuLieuPhieuSuaChua {
     private final String maKyThuatVien;
     private final LocalDate ngayHen;
     private final String ghiChu;
+    private final String trangThai;
     private final List<ChiTietDichVu> phuTungs;
     private final List<CongViec> congViecs;
 
@@ -25,13 +25,20 @@ public final class DuLieuPhieuSuaChua {
             String ghiChu,
             List<ChiTietDichVu> phuTungs,
             List<CongViec> congViecs) {
+        this(maTiepNhan, maKyThuatVien, ngayHen, ghiChu, "CHO_SUA", phuTungs, congViecs);
+    }
+
+    public DuLieuPhieuSuaChua(
+            String maTiepNhan,
+            String maKyThuatVien,
+            LocalDate ngayHen,
+            String ghiChu,
+            String trangThai,
+            List<ChiTietDichVu> phuTungs,
+            List<CongViec> congViecs) {
 
         if (maTiepNhan == null || maTiepNhan.isBlank()) {
             throw new IllegalArgumentException("Vui lòng chọn phiếu tiếp nhận.");
-        }
-
-        if (maKyThuatVien == null || maKyThuatVien.isBlank()) {
-            throw new IllegalArgumentException("Vui lòng chọn kỹ thuật viên.");
         }
 
         if (ngayHen == null) {
@@ -45,9 +52,10 @@ public final class DuLieuPhieuSuaChua {
         }
 
         this.maTiepNhan = maTiepNhan.trim();
-        this.maKyThuatVien = maKyThuatVien.trim();
+        this.maKyThuatVien = (maKyThuatVien == null || maKyThuatVien.isBlank()) ? null : maKyThuatVien.trim();
         this.ngayHen = ngayHen;
         this.ghiChu = ghiChu == null ? "" : ghiChu.trim();
+        this.trangThai = (trangThai == null || trangThai.isBlank()) ? "CHO_SUA" : trangThai.trim();
 
         this.phuTungs = saoChep(phuTungs);
         this.congViecs = List.copyOf(congViecs);
@@ -91,6 +99,10 @@ public final class DuLieuPhieuSuaChua {
 
     public String getGhiChu() {
         return ghiChu;
+    }
+
+    public String getTrangThai() {
+        return trangThai;
     }
 
     public List<ChiTietDichVu> getPhuTungs() {

@@ -25,10 +25,10 @@ public class CapNhatTienDo_UI extends JPanel {
     private final KhoDuLieu kho = KhoDuLieu.get();
     private final JTextField txtTuKhoa = new JTextField();
     private final JComboBox<String> cboLocTienDo = new JComboBox<>(new String[]{
-            "Tất cả tiến độ", "Chờ tiếp nhận", "Đã phân công", "Đang sửa", "Chờ phụ tùng", "Hoàn thành"
+            "Tất cả tiến độ", "Chờ tiếp nhận", "Đã phân công", "Đang sửa", "Chờ phụ tùng", "Chờ KTV", "Hoàn thành"
     });
     private final JComboBox<String> cboTienDoMoi = new JComboBox<>(new String[]{
-            "Chờ tiếp nhận", "Đã phân công", "Đang sửa", "Chờ phụ tùng", "Hoàn thành"
+            "Chờ tiếp nhận", "Đã phân công", "Đang sửa", "Chờ phụ tùng", "Chờ KTV", "Hoàn thành"
     });
     private final JLabel lblDem = new JLabel("Đang tải dữ liệu...");
 
@@ -98,6 +98,8 @@ public class CapNhatTienDo_UI extends JPanel {
                         l.setForeground(new Color(37, 99, 235));
                     } else if (td.contains("Chờ phụ tùng")) {
                         l.setForeground(new Color(225, 29, 72));   // Rose 600
+                    } else if (td.contains("Chờ KTV")) {
+                        l.setForeground(new Color(147, 51, 234));  // Purple 600
                     } else if (td.contains("phân công")) {
                         l.setForeground(new Color(217, 119, 6));
                     } else {
@@ -236,6 +238,9 @@ public class CapNhatTienDo_UI extends JPanel {
             case "CHO_SUA":
                 return "Chờ phụ tùng";
 
+            case "CHO_KTV":
+                return "Chờ KTV";
+
             case "DA_PHAN_CONG":
                 return "Đã phân công";
 
@@ -258,6 +263,9 @@ public class CapNhatTienDo_UI extends JPanel {
             case "Chờ phụ tùng":
                 return "CHO_SUA";
 
+            case "Chờ KTV":
+                return "CHO_KTV";
+
             case "Đã phân công":
                 return "DA_PHAN_CONG";
 
@@ -270,6 +278,9 @@ public class CapNhatTienDo_UI extends JPanel {
     }
 
     public void napBang() {
+        // Tự động điều phối KTV cho các đơn đang chờ nếu có KTV rảnh
+        Service.SuaChuaService.tuDongDieuPhoiKtvChoDonCho();
+
         String q = txtTuKhoa.getText().trim();
         String locTd = String.valueOf(cboLocTienDo.getSelectedItem());
 
@@ -531,7 +542,6 @@ public class CapNhatTienDo_UI extends JPanel {
         mainUI.chuyenTrang("Lập phiếu sửa chữa");
     }
 
-
     private void xemChiTiet() {
         int dong = table.getSelectedRow();
         if (dong < 0) {
@@ -548,7 +558,7 @@ public class CapNhatTienDo_UI extends JPanel {
             return;
         }
 
-// Lấy mã phiếu tiếp nhận tương ứng với phiếu sửa chữa
+        // Lấy mã phiếu tiếp nhận tương ứng với phiếu sửa chữa
         String maPTN = null;
 
         String sql = """
@@ -594,7 +604,6 @@ public class CapNhatTienDo_UI extends JPanel {
             );
             return;
         }
-        if (p == null) return;
 
         String msg = "<html><div style='width:400px;font-family:Segoe UI;'>"
                 + "<h3 style='color:#0F172A;margin-bottom:8px;'>CHI TIẾT PHIẾU TIẾP NHẬN & SỬA CHỮA</h3>"

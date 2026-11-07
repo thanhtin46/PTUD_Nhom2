@@ -146,6 +146,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         }
 
         tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
     }
 
     private void setupPhimTat() {
@@ -174,8 +175,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         right.setOpaque(false);
 
-        JButton btnLuu = UiHelper.nut("Yêu cầu xuất kho", UiIcon.of(UiIcon.CHECK, 15), UiHelper.XANH_LA, e -> luuPhieuSuaChua());
-        JButton btnHoanTat = UiHelper.nut("Hoàn tất phiếu", new Color(22, 163, 74), e -> hoanTatPhieuSuaChua());
+        JButton btnHoanThanh = UiHelper.nut("Hoàn thành", UiIcon.of(UiIcon.CHECK, 15), UiHelper.XANH_LA, e -> hoanThanhPhieuSuaChua());
         JButton btnIn = UiHelper.nut("In phiếu", UiIcon.of(UiIcon.PRINT, 15), new Color(13, 148, 136), e -> {});
         JButton btnLamMoi = UiHelper.nut("Làm mới (F5)", UiIcon.of(UiIcon.REFRESH, 15), UiHelper.XAM, e -> lamMoi());
         JButton btnTraCuu = UiHelper.nut("Tra cứu", UiIcon.of(UiIcon.SEARCH, 15), UiHelper.XANH_DAM, e -> {
@@ -183,8 +183,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
             if (mainUI != null) mainUI.chuyenTrang("Tra cứu phiếu sửa chữa");
         });
 
-        right.add(btnLuu);
-        right.add(btnHoanTat);
+        right.add(btnHoanThanh);
         right.add(btnIn);
         right.add(btnLamMoi);
         right.add(btnTraCuu);
@@ -297,13 +296,15 @@ public class LapPhieuSuaChua_UI extends JPanel {
         cboKtvPhuTrach.setFont(UiHelper.FONT_BT);
         cboKtvPhuTrach.setBackground(Color.WHITE);
         cboKtvPhuTrach.setPreferredSize(new Dimension(100, 36));
+        cboKtvPhuTrach.addActionListener(e -> xuLyChonKtv());
 
         cboTienDo = new JComboBox<>(new String[]{
-                "Đang sửa", "Chờ phụ tùng", "Hoàn thành", "Chờ tiếp nhận"
+                "Chờ phụ tùng", "Chờ KTV"
         });
         cboTienDo.setFont(new Font("Segoe UI", Font.BOLD, 13));
         cboTienDo.setBackground(Color.WHITE);
         cboTienDo.setPreferredSize(new Dimension(100, 36));
+        cboTienDo.addActionListener(e -> xuLyThayDoiTrangThai());
 
         txtGhiChu = new JTextArea(3, 20);
         txtGhiChu.setFont(UiHelper.FONT_BT);
@@ -313,7 +314,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         spGhiChu.setPreferredSize(new Dimension(190, 80));
 
         UiHelper.themDong(col2, 0, "KTV phụ trách chính *", cboKtvPhuTrach);
-        UiHelper.themDong(col2, 1, "Tiến độ sửa chữa *", cboTienDo);
+        UiHelper.themDong(col2, 1, "Trạng thái *", cboTienDo);
         UiHelper.themDong(col2, 2, "Chẩn đoán / Ghi chú", spGhiChu);
 
         grid.add(col1);
@@ -509,6 +510,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     modelCongViec.removeRow(row);
                     capNhatStt(modelCongViec);
                     tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
                 }
             }
         });
@@ -593,6 +595,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     modelPhuTung.removeRow(row);
                     capNhatStt(modelPhuTung);
                     tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
                 }
             }
         });
@@ -644,115 +647,128 @@ public class LapPhieuSuaChua_UI extends JPanel {
     }
 
 
-    private void hoanTatPhieuSuaChua() {
-        if (!BaoVeQuyen.phieu(maPSC)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
-        if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.SC)) return;
-        if (maPSC == null || maPSC.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Mã phiếu sửa chữa không hợp lệ.");
-            return;
+    private boolean dangXuLyTrangThai = false;
+
+    private boolean kiemTraDaXuatKho(String maPSC) {
+        if (maPSC == null || maPSC.isBlank()) return false;
+        try (Connection con = ConnectDB.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT TOP 1 trangThai FROM PhieuXuatKho WHERE maPSC = ?")) {
+            ps.setString(1, maPSC.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String tt = rs.getString("trangThai");
+                    return tt != null && tt.trim().equalsIgnoreCase("Đã xuất");
+                }
+            }
+        } catch (SQLException ignored) {}
+        return false;
+    }
+
+    private void xuLyThayDoiTrangThai() {
+        if (dangXuLyTrangThai || cboTienDo == null || cboKtvPhuTrach == null) return;
+        dangXuLyTrangThai = true;
+        try {
+            String tt = String.valueOf(cboTienDo.getSelectedItem());
+            String selPTN = (cboPhieuTN != null && cboPhieuTN.getSelectedIndex() > 0)
+                    ? String.valueOf(cboPhieuTN.getSelectedItem()).split(" - ")[0].trim() : null;
+
+            NhanVien ktvRanh = null;
+            for (NhanVien nv : kho.getNhanViens()) {
+                if (!nv.dangHoatDong()) continue;
+                if (Entity.QuyenTruyCap.vaiTro(nv.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) continue;
+                String lich = kho.layThongTinLichSuaChuaKtv(nv.getMaNV(), selPTN);
+                if (lich == null && ktvRanh == null) {
+                    ktvRanh = nv;
+                }
+            }
+
+            if ("Chờ KTV".equalsIgnoreCase(tt)) {
+                if (ktvRanh == null) {
+                    // Tất cả KTV đều đã có lịch: làm mờ phần chọn KTV
+                    cboKtvPhuTrach.setEnabled(false);
+                    cboKtvPhuTrach.setSelectedIndex(0);
+                    cboKtvPhuTrach.setToolTipText("Tất cả kỹ thuật viên đều đang có lịch. Đơn sẽ tự động được gán khi có KTV trống lịch.");
+                } else {
+                    // Có ít nhất 1 KTV trống lịch: tự động gán KTV này
+                    cboKtvPhuTrach.setEnabled(true);
+                    cboKtvPhuTrach.setToolTipText(null);
+                    for (int i = 0; i < cboKtvPhuTrach.getItemCount(); i++) {
+                        String it = cboKtvPhuTrach.getItemAt(i);
+                        if (it != null && it.startsWith(ktvRanh.getMaNV() + " - ")) {
+                            cboKtvPhuTrach.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                    // Khi KTV được gán vào đơn nhưng đơn đó chưa được xuất phụ tùng thì chuyển trạng thái 'Chờ phụ tùng'
+                    boolean coPhuTung = modelPhuTung != null && modelPhuTung.getRowCount() > 0;
+                    boolean daXuat = kiemTraDaXuatKho(maPSC);
+                    if (coPhuTung && !daXuat) {
+                        cboTienDo.setSelectedItem("Chờ phụ tùng");
+                    }
+                }
+            } else if ("Chờ phụ tùng".equalsIgnoreCase(tt)) {
+                cboKtvPhuTrach.setEnabled(true);
+                cboKtvPhuTrach.setToolTipText(null);
+                if (cboKtvPhuTrach.getSelectedIndex() <= 0 && ktvRanh != null) {
+                    for (int i = 0; i < cboKtvPhuTrach.getItemCount(); i++) {
+                        String it = cboKtvPhuTrach.getItemAt(i);
+                        if (it != null && it.startsWith(ktvRanh.getMaNV() + " - ")) {
+                            cboKtvPhuTrach.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        } finally {
+            dangXuLyTrangThai = false;
         }
+    }
 
-        int xacNhan = JOptionPane.showConfirmDialog(
-                this,
-                "Bạn có chắc muốn hoàn tất phiếu sửa chữa " + maPSC + "?",
-                "Xác nhận hoàn tất",
-                JOptionPane.YES_NO_OPTION
-        );
-
-        if (xacNhan != JOptionPane.YES_OPTION) {
-            return;
+    private void xuLyChonKtv() {
+        if (dangXuLyTrangThai || cboTienDo == null || cboKtvPhuTrach == null) return;
+        if (cboKtvPhuTrach.getSelectedIndex() > 0) {
+            boolean coPhuTung = modelPhuTung != null && modelPhuTung.getRowCount() > 0;
+            boolean daXuat = kiemTraDaXuatKho(maPSC);
+            if (coPhuTung && !daXuat) {
+                dangXuLyTrangThai = true;
+                try {
+                    cboTienDo.setSelectedItem("Chờ phụ tùng");
+                } finally {
+                    dangXuLyTrangThai = false;
+                }
+            }
         }
+    }
 
-        String sqlKiemTra =
-                "SELECT trangThai FROM PhieuXuatKho WHERE maPSC = ?";
-
-        String sqlCapNhat =
-                "UPDATE PhieuSuaChua SET trangThai = N'HOAN_THANH' " +
-                        "WHERE maPSC = ?";
+    private void hoanTatSauKhiXuat(String maPSC) {
+        String sqlCapNhat = "UPDATE PhieuSuaChua SET trangThai = N'HOAN_THANH' WHERE maPSC = ?";
+        String sqlCapNhatPTN = "UPDATE PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' " +
+                "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
+                "   OR maPTN = ? " +
+                "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
 
         try (Connection con = ConnectDB.getInstance().getConnection()) {
-
-            // Kiểm tra phiếu xuất kho đã được xác nhận xuất hoàn toàn chưa
-            try (PreparedStatement ps = con.prepareStatement(sqlKiemTra)) {
-                ps.setString(1, maPSC);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "Phiếu sửa chữa chưa có phiếu xuất kho.\n" +
-                                        "Vui lòng chuyển sang màn hình Xuất kho."
-                        );
-                        return;
-                    }
-
-                    String trangThaiXuat = rs.getString("trangThai");
-
-                    if (trangThaiXuat == null ||
-                            !trangThaiXuat.trim().equalsIgnoreCase("Đã xuất")) {
-                        JOptionPane.showMessageDialog(
-                                this,
-                                "Phiếu xuất kho chưa hoàn tất.\n" +
-                                        "Chỉ được hoàn tất sửa chữa khi trạng thái xuất kho là Đã xuất."
-                        );
-                        return;
-                    }
-                }
-            }
-
-            // Cập nhật trạng thái phiếu sửa chữa
             try (PreparedStatement ps = con.prepareStatement(sqlCapNhat)) {
                 ps.setString(1, maPSC);
-
-                int soDong = ps.executeUpdate();
-
-                if (soDong == 0) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Không tìm thấy phiếu sửa chữa " + maPSC
-                    );
-                    return;
-                }
+                ps.executeUpdate();
             }
-
-            // Đồng bộ trạng thái sang bảng PhieuTiepNhan
-            String sqlCapNhatPTN = "UPDATE PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' " +
-                    "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
-                    "   OR maPTN = ? " +
-                    "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
             try (PreparedStatement psPTN = con.prepareStatement(sqlCapNhatPTN)) {
                 psPTN.setString(1, maPSC);
                 psPTN.setString(2, maPSC);
                 psPTN.setString(3, maPSC);
                 psPTN.executeUpdate();
             }
-
-            // Làm mới toàn diện bộ nhớ và thông báo badge trên thanh điều hướng
             kho.dongBoTuSQLServer();
             Main_UI.lamMoiThongBao();
-
-            // Đồng bộ trạng thái trên giao diện
-            cboTienDo.setSelectedItem("Hoàn thành");
-
-            JOptionPane.showMessageDialog(
-                    this,
+            JOptionPane.showMessageDialog(this,
                     "Đã hoàn tất phiếu sửa chữa " + maPSC + ".",
                     "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Lỗi hoàn tất phiếu sửa chữa:\n" + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE
-            );
-            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi hoàn tất phiếu: " + ex.getMessage());
         }
     }
-
-
     private void napPhieuSuaChuaTuCSDL(String maPSCCanMo) {
 
         if (!BaoVeQuyen.phieu(maPSCCanMo)) {
@@ -939,6 +955,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
             // BƯỚC 7: Tính lại tổng chi phí
             tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
 
             System.out.println(
                     "Đã mở phiếu sửa chữa: " + maPSC +
@@ -1129,6 +1146,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
             }
         }
         tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
     }
 
     private void khiChonCongViecMau() {
@@ -1213,6 +1231,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         modelCongViec.addRow(new Object[]{stt, ten, ktv, UiHelper.tien(gia), "✕"});
         txtTenCongViec.setText("");
         tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
     }
 
 
@@ -1309,6 +1328,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         txtSoLuongPT.setText("1");
         tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
     }
 
 
@@ -1353,7 +1373,10 @@ public class LapPhieuSuaChua_UI extends JPanel {
             return false;
         }
 
-        if (cboKtvPhuTrach.getSelectedIndex() <= 0) {
+        String tt = String.valueOf(cboTienDo.getSelectedItem());
+        boolean choKtvTatCaBan = "Chờ KTV".equalsIgnoreCase(tt) && !cboKtvPhuTrach.isEnabled();
+
+        if (!choKtvTatCaBan && cboKtvPhuTrach.getSelectedIndex() <= 0) {
             JOptionPane.showMessageDialog(
                     this, "Vui lòng phân công kỹ thuật viên!"
             );
@@ -1371,9 +1394,6 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         return true;
     }
-    // ===============================================================
-    // LƯU & ĐỒNG BỘ DỮ LIỆU
-    // ===============================================================
 
     private long docSoTien(Object giaTri) {
         String chuoi = String.valueOf(giaTri).trim();
@@ -1381,7 +1401,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         return Long.parseLong(chuoi.replaceAll("[^0-9]", ""));
     }
 
-    private void luuPhieuSuaChua() {
+    private void hoanThanhPhieuSuaChua() {
         if (!BaoVeQuyen.yeuCau(this, Entity.QuyenTruyCap.Quyen.SC)) return;
         if (!kiemTraDuLieuTruocKhiLuu()) {
             return;
@@ -1389,35 +1409,44 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
         String selPTN = String.valueOf(cboPhieuTN.getSelectedItem());
         String maPTN = selPTN.split(" - ")[0].trim();
-        if (!BaoVeQuyen.phieu(maPTN)) { JOptionPane.showMessageDialog(this,"Phiếu không thuộc phạm vi được giao."); return; }
+        if (!BaoVeQuyen.phieu(maPTN)) {
+            JOptionPane.showMessageDialog(this, "Phiếu không thuộc phạm vi được giao.");
+            return;
+        }
 
         String selKTV = String.valueOf(cboKtvPhuTrach.getSelectedItem());
-        if (selKTV.startsWith("--") || !selKTV.contains(" - ")) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn kỹ thuật viên!");
-            return;
+        String maNV = null;
+        if (cboKtvPhuTrach.isEnabled() && cboKtvPhuTrach.getSelectedIndex() > 0 && selKTV.contains(" - ")) {
+            maNV = selKTV.split(" - ")[0].trim();
         }
-        String maNV = selKTV.split(" - ")[0].trim();
-        NhanVien nvChon = kho.timNhanVienTheoMa(maNV);
-        if (nvChon == null || Entity.QuyenTruyCap.vaiTro(nvChon.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ được phân công công việc cho Nhân viên sửa chữa (Kỹ thuật viên)!",
-                    "Kỹ thuật viên không hợp lệ",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (!Entity.QuyenTruyCap.co(BaoVeQuyen.hienTai(),Entity.QuyenTruyCap.Quyen.PHAN_CONG) && !maNV.equals(BaoVeQuyen.hienTai().getMaNV())) { JOptionPane.showMessageDialog(this,"Không được đổi người phụ trách."); return; }
 
-        // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa
-        String lichKtv = kho.layThongTinLichSuaChuaKtv(maNV, maPTN);
-        if (lichKtv != null) {
-            JOptionPane.showMessageDialog(this,
-                    "Kỹ thuật viên " + selKTV + " hiện ĐÃ CÓ LỊCH SỬA CHỮA!\n\n" +
-                            "• Đang thực hiện: " + lichKtv + "\n" +
-                            "• Quy định điều phối: Mỗi kỹ thuật viên chỉ nhận 1 xe sửa chữa tại một thời điểm.\n\n" +
-                            "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng].",
-                    "Kỹ thuật viên đang có lịch",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
+        if (maNV != null) {
+            NhanVien nvChon = kho.timNhanVienTheoMa(maNV);
+            if (nvChon == null || Entity.QuyenTruyCap.vaiTro(nvChon.getVaiTro()) != Entity.QuyenTruyCap.VaiTro.SUA_CHUA) {
+                JOptionPane.showMessageDialog(this,
+                        "Chỉ được phân công công việc cho Nhân viên sửa chữa (Kỹ thuật viên)!",
+                        "Kỹ thuật viên không hợp lệ",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!Entity.QuyenTruyCap.co(BaoVeQuyen.hienTai(), Entity.QuyenTruyCap.Quyen.PHAN_CONG)
+                    && !maNV.equals(BaoVeQuyen.hienTai().getMaNV())) {
+                JOptionPane.showMessageDialog(this, "Không được đổi người phụ trách.");
+                return;
+            }
+
+            // Kiểm tra xem KTV đã có lịch sửa chữa khác chưa
+            String lichKtv = kho.layThongTinLichSuaChuaKtv(maNV, maPTN);
+            if (lichKtv != null) {
+                JOptionPane.showMessageDialog(this,
+                        "Kỹ thuật viên " + selKTV + " hiện ĐÃ CÓ LỊCH SỬA CHỮA!\n\n" +
+                                "• Đang thực hiện: " + lichKtv + "\n" +
+                                "• Quy định điều phối: Mỗi kỹ thuật viên chỉ nhận 1 xe sửa chữa tại một thời điểm.\n\n" +
+                                "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng] hoặc chọn trạng thái [Chờ KTV].",
+                        "Kỹ thuật viên đang có lịch",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         }
 
         // Lấy ngày đã chọn từ bộ chọn ngày.
@@ -1435,8 +1464,17 @@ public class LapPhieuSuaChua_UI extends JPanel {
             return;
         }
 
-        // Chỉ yêu cầu xuất kho khi phiếu có phụ tùng.
         boolean coPhuTung = modelPhuTung.getRowCount() > 0;
+        boolean daXuatKho = kiemTraDaXuatKho(maPSC);
+
+        String trangThaiLuu;
+        if (maNV == null) {
+            trangThaiLuu = "CHO_KTV";
+        } else if (coPhuTung && !daXuatKho) {
+            trangThaiLuu = "CHO_SUA";
+        } else {
+            trangThaiLuu = "DANG_SUA";
+        }
 
         try {
             java.util.List<ChiTietDichVu> phuTungs = new java.util.ArrayList<>();
@@ -1456,7 +1494,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
                         docSoTien(modelCongViec.getValueAt(i, 3))));
             }
             Entity.DuLieuPhieuSuaChua duLieu = new Entity.DuLieuPhieuSuaChua(
-                    maPTN, maNV, ngayHen.toLocalDate(), txtGhiChu.getText(), phuTungs, congViecs);
+                    maPTN, maNV, ngayHen.toLocalDate(), txtGhiChu.getText(), trangThaiLuu, phuTungs, congViecs);
             maPSC = new Service.SuaChuaService().luu(BaoVeQuyen.hienTai(), duLieu);
             kho.dongBoTuSQLServer();
             Main_UI.lamMoiThongBao();
@@ -1466,39 +1504,31 @@ public class LapPhieuSuaChua_UI extends JPanel {
             return;
         }
 
-        if (coPhuTung) {
-            // Truyền mã phiếu sửa chữa sang màn hình xuất kho.
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Đã lưu tạm phiếu sửa chữa " + maPSC
-                            + ".\nTiếp theo, thủ kho cần xác nhận xuất phụ tùng.",
-                    "Đã lưu tạm",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
+        // Tự động chuyển đơn xuất phụ tùng nếu phiếu có phụ tùng chưa xuất
+        if (coPhuTung && !daXuatKho) {
+            XuatKho_UI.datPSCCanChon(maPSC);
             Main_UI mainUI = Main_UI.getInstance();
             if (mainUI != null && mainUI.coQuyenTrang("Xuất kho")) {
-                XuatKho_UI.datPSCCanChon(maPSC);
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Đã lưu phiếu sửa chữa " + maPSC + " thành công.\n" +
+                                "Hệ thống tự động chuyển sang đơn xuất phụ tùng để thực hiện xuất kho.",
+                        "Chuyển đơn xuất phụ tùng",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
                 mainUI.chuyenTrang("Xuất kho");
             } else {
                 JOptionPane.showMessageDialog(
                         this,
-                        "Yêu cầu đã lưu. Bộ phận kho sẽ xử lý xuất phụ tùng."
+                        "Đã lưu phiếu sửa chữa " + maPSC + " và chuyển yêu cầu xuất phụ tùng tới bộ phận kho."
                 );
             }
             return;
         }
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Đã lưu phiếu sửa chữa " + maPSC
-                        + ". Phiếu không có phụ tùng nên không cần xác nhận xuất kho."
-        );
+        // Nếu phiếu không có phụ tùng hoặc phụ tùng đã xuất kho hoàn tất -> Hoàn tất phiếu sửa chữa
+        hoanTatSauKhiXuat(maPSC);
     }
-
-
-
     private void lamMoi() {
         this.maPSC = sinhMaPSCMoi();
         if (txtMaPSC != null) {
@@ -1521,6 +1551,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         modelCongViec.setRowCount(0);
         modelPhuTung.setRowCount(0);
         tinhToanTaiChinh();
+        xuLyThayDoiTrangThai();
         JOptionPane.showMessageDialog(this, "Đã làm mới form sửa chữa phương tiện!");
     }
 
