@@ -64,6 +64,18 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
     private DefaultTableModel modelCongViec;
     private JTable tblCongViec;
     private JLabel lblTongTienCong;
+    // VAT mặc định 10%
+    private static final double VAT = 0.08;
+
+    // Tính tiền VAT
+    private long tinhTienVAT(long tongTien) {
+        return Math.round(tongTien * VAT);
+    }
+
+    // Tổng tiền sau VAT
+    private long tinhTongThanhToan(long tongTien) {
+        return tongTien + tinhTienVAT(tongTien);
+    }
 
     private DefaultTableModel modelPhuTung;
     private JTable tblPhuTung;
@@ -128,7 +140,7 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
         modelMaster = UiHelper.model(
                 "Mã TN", "Mã SC", "Ngày tiếp nhận", "Khách hàng", "Số ĐT",
                 "Biển số xe", "Hãng / Dòng xe", "Yêu cầu sửa chữa", "KTV phụ trách",
-                "Tiến độ sửa chữa", "Tiền công", "Tiền phụ tùng", "Tổng chi phí"
+                "Tiến độ sửa chữa", "Tiền công", "Tiền phụ tùng", "Tổng thanh toán (VAT)"
         );
         tblMaster = UiHelper.bang(modelMaster);
         tblMaster.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -567,7 +579,7 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
         int countDangXuLy = 0;
 
         for (LichSuRecord r : dsHienTai) {
-            tongChiPhi += r.getTongTien();
+            tongChiPhi += tinhTongThanhToan(r.getTongTien());
 
             String tt = r.getTrangThaiSC() == null
                     ? "" : r.getTrangThaiSC();
@@ -591,7 +603,7 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
                     r.getTrangThaiSC(),
                     UiHelper.tien(r.getTienDichVu()) + " đ",
                     UiHelper.tien(r.getTienPhuTung()) + " đ",
-                    UiHelper.tien(r.getTongTien()) + " đ"
+                    UiHelper.tien(tinhTongThanhToan(r.getTongTien())) + " đ"
             });
         }
 
@@ -804,16 +816,47 @@ public class TraCuuLichSuSuaChua_UI extends JPanel {
                 .append(UiHelper.tien(tongTienPhuTungHoSo)).append(" đ</td></tr></table>");
 
         // Tổng kết chi phí
-        long tongChiPhiHoSo = banGhiDangChon.getTongTien();
-        if (tongChiPhiHoSo == 0) {
-            tongChiPhiHoSo = tongTienCongHoSo + tongTienPhuTungHoSo;
-        }
-        html.append("<div style='margin-top:12px; padding:10px; background:#EFF6FF; border:1px solid #BFDBFE; text-align:right;'>")
-                .append("<span style='font-size:13px;'>TỔNG CỘNG CHI PHÍ SỬA CHỮA: </span>")
-                .append("<b style='font-size:16px; color:#DC2626;'>").append(UiHelper.tien(tongChiPhiHoSo)).append(" đ</b>")
-                .append("</div>");
+        // Tổng kết chi phí trước VAT
+        long tongChiPhiTruocVAT = banGhiDangChon.getTongTien();
 
-        html.append("</div></html>");
+        if (tongChiPhiTruocVAT == 0) {
+            tongChiPhiTruocVAT = tongTienCongHoSo + tongTienPhuTungHoSo;
+        }
+
+        // Tính VAT 10%
+        long tienVAT = tinhTienVAT(tongChiPhiTruocVAT);
+
+        // Tổng thanh toán sau VAT
+        long tongThanhToan = tongChiPhiTruocVAT + tienVAT;
+        // Tổng kết chi phí
+        html.append("<div style='margin-top:12px; padding:12px; ")
+                .append("background:#EFF6FF; border:1px solid #BFDBFE;'>")
+
+                .append("<table width='100%' cellpadding='5'>")
+
+                .append("<tr>")
+                .append("<td align='right'>Tổng tiền trước VAT:</td>")
+                .append("<td align='right' width='180'><b>")
+                .append(UiHelper.tien(tongChiPhiTruocVAT))
+                .append(" đ</b></td>")
+                .append("</tr>")
+
+                .append("<tr>")
+                .append("<td align='right'>Thuế VAT (10%):</td>")
+                .append("<td align='right'><b style='color:#D97706;'>")
+                .append(UiHelper.tien(tienVAT))
+                .append(" đ</b></td>")
+                .append("</tr>")
+
+                .append("<tr style='border-top:1px solid #BFDBFE;'>")
+                .append("<td align='right'><b style='font-size:14px;'>TỔNG THANH TOÁN:</b></td>")
+                .append("<td align='right'><b style='font-size:17px; color:#DC2626;'>")
+                .append(UiHelper.tien(tongThanhToan))
+                .append(" đ</b></td>")
+                .append("</tr>")
+
+                .append("</table>")
+                .append("</div>");
 
         JLabel lblBody = new JLabel(html.toString());
         JScrollPane sp = new JScrollPane(lblBody);
