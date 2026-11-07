@@ -128,6 +128,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         add(root, BorderLayout.CENTER);
 
         // Nạp dữ liệu ban đầu
+        kho.dongBoTuSQLServer();
         napDuLieuTiepNhan();
         napDuLieuPhuTung();
         napDuLieuKtv();

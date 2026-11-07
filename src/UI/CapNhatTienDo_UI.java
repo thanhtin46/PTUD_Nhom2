@@ -431,32 +431,43 @@ public class CapNhatTienDo_UI extends JPanel {
         String sql =
                 "UPDATE PhieuSuaChua SET trangThai = ? " +
                         "WHERE maPSC = ?";
+        String sqlPTN =
+                "UPDATE PhieuTiepNhan SET trangThaiXe = ? " +
+                        "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
+                        "   OR maPTN = ? " +
+                        "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
 
-        try (Connection con = ConnectDB.getInstance().getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, trangThaiSQL);
-            ps.setString(2, maPSC);
-
-            int soDong = ps.executeUpdate();
-
-            if (soDong > 0) {
-                kho.dongBoTuSQLServer();
-                napBang();
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Đã cập nhật tiến độ phiếu " + maPSC
-                                + " thành: " + tienDoMoi,
-                        "Thành công",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-            } else {
-                JOptionPane.showMessageDialog(
-                        this, "Không tìm thấy phiếu sửa chữa!"
-                );
+        try (Connection con = ConnectDB.getInstance().getConnection()) {
+            if (con != null) {
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                    ps.setString(1, trangThaiSQL);
+                    ps.setString(2, maPSC);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement psPTN = con.prepareStatement(sqlPTN)) {
+                    psPTN.setString(1, tienDoMoi);
+                    psPTN.setString(2, maPSC);
+                    psPTN.setString(3, maPSC);
+                    psPTN.setString(4, maPSC);
+                    psPTN.executeUpdate();
+                }
             }
 
+            // Nếu hoàn thành, giải phóng KTV và tự động điều phối KTV rảnh cho đơn đang chờ KTV
+            if ("HOAN_THANH".equalsIgnoreCase(trangThaiSQL) || "Hoàn thành".equalsIgnoreCase(tienDoMoi)) {
+                Service.SuaChuaService.tuDongDieuPhoiKtvChoDonCho();
+            }
+
+            kho.dongBoTuSQLServer();
+            napBang();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Đã cập nhật tiến độ phiếu " + maPSC
+                            + " thành: " + tienDoMoi,
+                    "Thành công",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(
                     this,

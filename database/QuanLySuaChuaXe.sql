@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- HỆ THỐNG QUẢN LÝ GARA Ô TÔ
 -- CƠ SỞ DỮ LIỆU: QuanLySuaChuaXe
 -- Tạo bảng, ràng buộc khóa ngoại và dữ liệu mẫu ban đầu
@@ -465,14 +465,14 @@ GO
 /* 8. Phieu tiep nhan */
 INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES
 ('TN001', 'NV01', 'KH001', 'VN001A12345000001', '2026-03-10T08:30:00', N'Thay dầu và kiểm tra lọc gió', N'Đang sửa'),
-('TN002', 'NV01', 'KH002', 'VN002A67890000002', '2026-03-10T09:00:00', N'Kiểm tra hệ thống phanh', N'Chờ sửa'),
+('TN002', 'NV01', 'KH002', 'VN002A67890000002', '2026-03-10T09:00:00', N'Kiểm tra hệ thống phanh', N'Chờ KTV'),
 ('TN003', 'NV01', 'KH003', 'VN003A11223000003', '2026-03-11T10:00:00', N'Kiểm tra bugi', N'Chờ tiếp nhận');
 GO
 
 /* 9. Phieu sua chua */
 INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES
 ('SC001', 'TN001', 'NV02', 'KH001', 'VN001A12345000001', '2026-03-10T09:00:00', '2026-03-10', N'DANG_SUA'),
-('SC002', 'TN002', 'NV02', 'KH002', 'VN002A67890000002', '2026-03-10T10:00:00', '2026-03-11', N'CHO_SUA');
+('SC002', 'TN002', NULL, 'KH002', 'VN002A67890000002', '2026-03-10T10:00:00', '2026-03-11', N'CHO_KTV');
 GO
 
 /* 10. Chi tiet sua chua (Phụ tùng) */

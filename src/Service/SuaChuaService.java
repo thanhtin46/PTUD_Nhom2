@@ -154,10 +154,9 @@ public class SuaChuaService {
 
                 if (maPTN != null && !maPTN.isBlank()) {
                     try (PreparedStatement psUpPTN = con.prepareStatement(
-                            "UPDATE PhieuTiepNhan SET kyThuatVien = ?, trangThaiXe = ? WHERE maPTN = ?")) {
-                        psUpPTN.setString(1, maKtv);
-                        psUpPTN.setString(2, ttPTN);
-                        psUpPTN.setString(3, maPTN);
+                            "UPDATE PhieuTiepNhan SET trangThaiXe = ? WHERE maPTN = ?")) {
+                        psUpPTN.setString(1, ttPTN);
+                        psUpPTN.setString(2, maPTN);
                         psUpPTN.executeUpdate();
                     }
                 }

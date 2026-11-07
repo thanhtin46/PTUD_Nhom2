@@ -250,7 +250,43 @@ public class KhoDuLieu {
             return null;
         }
 
-        // 1. Kiểm tra trực tiếp trong danh sách phiếu tiếp nhận trong bộ nhớ
+        // 1. Kiểm tra trực tiếp trong SQL Server bảng PhieuSuaChua (nguồn dữ liệu chuẩn)
+        java.sql.Connection con = ConnectDB.ConnectDB.getInstance().getConnection();
+        if (con != null) {
+            String sql = "SELECT TOP 1 sc.maPSC, ISNULL(sc.maPTN, sc.maPSC) AS maPTN, ISNULL(pt.bienSoXe, N'—') AS bienSoXe, sc.trangThai " +
+                         "FROM PhieuSuaChua sc " +
+                         "LEFT JOIN PhuongTien pt ON sc.soVIN = pt.soVIN " +
+                         "WHERE sc.maNV = ? " +
+                         "  AND sc.trangThai NOT IN ('HOAN_THANH', 'DA_HOAN_THANH', 'DA_HUY', 'HUY') " +
+                         "  AND sc.trangThai NOT LIKE N'%hoàn thành%' " +
+                         "  AND sc.trangThai NOT LIKE N'%hủy%'";
+            if (maPhieuBoQua != null && !maPhieuBoQua.isBlank()) {
+                sql += "  AND sc.maPSC <> ? AND ISNULL(sc.maPTN, '') <> ? ";
+            }
+            try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setString(1, maNV);
+                if (maPhieuBoQua != null && !maPhieuBoQua.isBlank()) {
+                    ps.setString(2, maPhieuBoQua);
+                    ps.setString(3, maPhieuBoQua);
+                }
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String psc = rs.getString("maPSC");
+                        String bs = rs.getString("bienSoXe");
+                        String tt = rs.getString("trangThai");
+                        String ttHienThi = "DANG_SUA".equalsIgnoreCase(tt) ? "Đang sửa" : ("CHO_SUA".equalsIgnoreCase(tt) ? "Chờ phụ tùng" : ("CHO_KTV".equalsIgnoreCase(tt) ? "Chờ KTV" : tt));
+                        return "Phiếu " + psc + " (Xe " + bs + ") - " + ttHienThi;
+                    } else {
+                        // SQL Server xác nhận KTV không có phiếu nào đang sửa -> Sẵn sàng
+                        return null;
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                System.err.println("Lỗi kiểm tra lịch KTV qua SQL: " + e.getMessage());
+            }
+        }
+
+        // 2. Chế độ ngoại tuyến (Fallback khi mất kết nối CSDL): kiểm tra trong bộ nhớ
         for (PhieuTiepNhan p : phieuTiepNhans) {
             if (maNV.equalsIgnoreCase(p.getKyThuatVien())) {
                 String td = p.getTienDo() == null ? "" : p.getTienDo().toLowerCase();
@@ -261,36 +297,6 @@ public class KhoDuLieu {
                     }
                     return "Phiếu " + p.getSoPhieu() + " (Xe " + p.getBienSo() + ") - " + p.getTienDo();
                 }
-            }
-        }
-
-        // 2. Kiểm tra trong SQL Server bảng PhieuSuaChua
-        java.sql.Connection con = ConnectDB.ConnectDB.getInstance().getConnection();
-        if (con != null) {
-            String sql = "SELECT TOP 1 sc.maPSC, ISNULL(sc.maPTN, sc.maPSC) AS maPTN, ISNULL(pt.bienSoXe, N'—') AS bienSoXe, sc.trangThai " +
-                         "FROM PhieuSuaChua sc " +
-                         "LEFT JOIN PhuongTien pt ON sc.soVIN = pt.soVIN " +
-                         "WHERE sc.maNV = ? " +
-                         "  AND sc.trangThai NOT IN ('HOAN_THANH', 'DA_HOAN_THANH', 'DA_HUY', 'HUY') " +
-                         "  AND sc.trangThai NOT LIKE N'%hoàn thành%' " +
-                         "  AND sc.trangThai NOT LIKE N'%hủy%'";
-            try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
-                ps.setString(1, maNV);
-                try (java.sql.ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String psc = rs.getString("maPSC");
-                        String ptn = rs.getString("maPTN");
-                        String bs = rs.getString("bienSoXe");
-                        String tt = rs.getString("trangThai");
-                        if (maPhieuBoQua != null && (maPhieuBoQua.equalsIgnoreCase(psc) || maPhieuBoQua.equalsIgnoreCase(ptn))) {
-                            return null;
-                        }
-                        String ttHienThi = "DANG_SUA".equalsIgnoreCase(tt) ? "Đang sửa" : ("CHO_SUA".equalsIgnoreCase(tt) ? "Chờ sửa" : tt);
-                        return "Phiếu " + psc + " (Xe " + bs + ") - " + ttHienThi;
-                    }
-                }
-            } catch (java.sql.SQLException e) {
-                System.err.println("Lỗi kiểm tra lịch KTV: " + e.getMessage());
             }
         }
 

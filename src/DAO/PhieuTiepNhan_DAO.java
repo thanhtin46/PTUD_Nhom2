@@ -31,7 +31,14 @@ public class PhieuTiepNhan_DAO {
                      "COALESCE(pt.bienSoXe, tn.soVIN, '') AS bienSoXe, " +
                      "COALESCE(pt.hangXe, '') AS hangXe, " +
                      "COALESCE(pt.dongXe, '') AS dongXe, " +
-                     "tn.ngayTN, tn.yeuCauSC, tn.trangThaiXe, nv.hoTen AS tenNV, " +
+                     "tn.ngayTN, tn.yeuCauSC, " +
+                     "CASE WHEN sc.trangThai IN ('HOAN_THANH', 'DA_HOAN_THANH') THEN N'Hoàn thành' " +
+                     "     WHEN sc.trangThai = 'DANG_SUA' THEN N'Đang sửa' " +
+                     "     WHEN sc.trangThai = 'CHO_SUA' THEN N'Chờ phụ tùng' " +
+                     "     WHEN sc.trangThai = 'CHO_KTV' THEN N'Chờ KTV' " +
+                     "     WHEN sc.trangThai = 'DA_PHAN_CONG' THEN N'Đã phân công' " +
+                     "     WHEN sc.trangThai IS NOT NULL AND sc.trangThai <> '' THEN sc.trangThai " +
+                     "     ELSE tn.trangThaiXe END AS trangThaiXe, nv.hoTen AS tenNV, " +
                      "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN sc.maNV ELSE NULL END AS maNVPhanCong, " +
                      "CASE WHEN LOWER(ktv.chucVu) LIKE N'%sửa chữa%' OR LOWER(ktv.chucVu) LIKE '%ktv%' THEN ktv.hoTen ELSE NULL END AS tenKtvPhanCong " +
                      "FROM PhieuTiepNhan tn " +
