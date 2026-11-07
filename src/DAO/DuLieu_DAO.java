@@ -323,6 +323,7 @@ public class DuLieu_DAO {
                 + "pt.tenPT, "
                 + "pt.donViTinh, "
                 + "pt.donGiaBan, "
+                + "ISNULL(pt.loaiPT, '') AS loaiPT, "
                 + "pt.maNCC, "
                 + "ISNULL(ncc.tenNCC, '') AS tenNCC, "
                 + "ISNULL(k.soLuongTon, 0) AS soLuongTon, "
@@ -351,6 +352,7 @@ public class DuLieu_DAO {
                         ma, ten, dvt, ton, donGia, ltt
                 );
 
+                pt.setLoaiPT(rs.getString("loaiPT"));
                 pt.setMaNCC(maNCC);
                 pt.setTenNCC(tenNCC);
 

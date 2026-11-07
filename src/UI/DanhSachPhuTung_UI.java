@@ -15,8 +15,7 @@ import java.util.ArrayList;
 
 /**
  * Màn hình quản lý danh sách phụ tùng trong kho.
- * Hỗ trợ tìm kiếm, lọc theo phân loại và cập nhật thông tin.
- * Cho phép chọn Phân loại và Nhà cung cấp khi thêm/sửa phụ tùng.
+ * Hỗ trợ tìm kiếm, lọc theo phân loại, kiểm tra ràng buộc dữ liệu và cập nhật thông tin.
  */
 public class DanhSachPhuTung_UI extends JPanel {
 
@@ -33,13 +32,12 @@ public class DanhSachPhuTung_UI extends JPanel {
     };
 
     // ── Form nhập liệu bên trái ───────────────────────────────────────────
-    private final JTextField     txtMa    = new JTextField();
-    private final JTextField     txtTen   = new JTextField();
-    private final JTextField     txtDonVi = new JTextField();
-    private final JTextField     txtTon   = new JTextField();
-    private final JTextField     txtGia   = new JTextField();
+    private final JTextField        txtMa       = new JTextField();
+    private final JTextField        txtTen      = new JTextField();
     private final JComboBox<String> cboLoaiForm = new JComboBox<>(PHAN_LOAI_OPTIONS);
-    private final JComboBox<String> cboNCC      = new JComboBox<>();
+    private final JTextField        txtDonVi    = new JTextField();
+    private final JTextField        txtGia      = new JTextField();
+    private final JTextField        txtTon      = new JTextField();
 
     // ── Bảng & thanh lọc bên phải ────────────────────────────────────────
     private JTable table;
@@ -76,29 +74,21 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         root.add(UiHelper.tieuDeTrang("Quản lý phụ tùng"), BorderLayout.NORTH);
 
-        napDanhSachNCC();
         napLocLoai();
+
+        // Ràng buộc phím: Đơn giá và Tồn kho chỉ cho phép nhập số, khi gõ chữ sẽ không hiển thị
+        UiHelper.chiChoNhapSo(txtGia, 12);
+        UiHelper.chiChoNhapSo(txtTon, 8);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
         split.setResizeWeight(0.32);
-        split.setDividerLocation(480);
+        split.setDividerLocation(390);
         split.setBorder(null);
         split.setOpaque(false);
         root.add(split, BorderLayout.CENTER);
 
+        lamMoi();
         napBang();
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // NẠP DỮ LIỆU PHỤ
-    // ─────────────────────────────────────────────────────────────────────
-
-    /** Nạp danh sách nhà cung cấp từ CSDL vào combo. */
-    private void napDanhSachNCC() {
-        cboNCC.removeAllItems();
-        cboNCC.addItem("-- Chọn nhà cung cấp --");
-        ArrayList<String> dsNCC = kho.layDanhSachNhaCungCap();
-        for (String s : dsNCC) cboNCC.addItem(s);
     }
 
     /** Khởi tạo combobox lọc phân loại (gồm "Tất cả" + các loại cố định). */
@@ -113,7 +103,7 @@ public class DanhSachPhuTung_UI extends JPanel {
     // XÂY DỰNG FORM TRÁI
     // ─────────────────────────────────────────────────────────────────────
     private JPanel taoForm() {
-        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 480);
+        JPanel formPanel = UiHelper.panelForm("Thông tin phụ tùng", 390);
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
 
@@ -125,22 +115,21 @@ public class DanhSachPhuTung_UI extends JPanel {
         cboLoaiForm.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         UiHelper.themDong(form, 2, "Phân loại *", cboLoaiForm);
         // Đơn vị tính
-        UiHelper.themDong(form, 3, "Đơn vị tính", txtDonVi);
+        UiHelper.themDong(form, 3, "Đơn vị tính *", txtDonVi);
         // Đơn giá
         UiHelper.themDong(form, 4, "Đơn giá (VNĐ) *", txtGia);
-        // Nhà cung cấp (combobox)
-        cboNCC.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        UiHelper.themDong(form, 5, "Nhà cung cấp", cboNCC);
 
-        // Tồn kho — chỉ đọc (hệ thống quản lý qua phiếu nhập/xuất)
+        // Số lượng tồn kho (chỉ đọc, quản lý qua phiếu nhập / xuất kho)
         txtTon.setText("0");
         txtTon.setEditable(false);
+        txtTon.setBackground(new Color(241, 245, 249));
+        UiHelper.themDong(form, 5, "Số lượng tồn kho", txtTon);
 
         // Nút hành động
         JPanel nut = new JPanel(new GridLayout(1, 4, 8, 0));
         nut.setOpaque(false);
         nut.setBorder(new EmptyBorder(16, 0, 0, 0));
-        nut.add(UiHelper.nut("Thêm",    UiHelper.XANH_LA,   e -> them()));
+        nut.add(UiHelper.nut("Thêm",    UiHelper.XANH_LA,    e -> them()));
         nut.add(UiHelper.nut("Sửa",     UiHelper.XANH_TRUNG, e -> sua()));
         nut.add(UiHelper.nut("Xóa",     UiHelper.CHU_CHAY,   e -> xoa()));
         nut.add(UiHelper.nut("Làm mới", UiHelper.XAM,        e -> lamMoi()));
@@ -157,24 +146,23 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         bangPanel.add(taoThanhLoc(), BorderLayout.NORTH);
 
-        // Cột: Mã PT | Tên | Phân loại | NCC | ĐVT | Tồn kho | Đơn giá
-        model = UiHelper.model("Mã PT", "Tên phụ tùng", "Phân loại", "Nhà cung cấp", "ĐVT", "Tồn kho", "Đơn giá (đ)");
+        // Cột: Mã PT | Tên phụ tùng | Phân loại | ĐVT | Tồn kho | Đơn giá (đ) (Đã bỏ cột Nhà cung cấp)
+        model = UiHelper.model("Mã PT", "Tên phụ tùng", "Phân loại", "ĐVT", "Tồn kho", "Đơn giá (đ)");
         table = UiHelper.bang(model);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(80);   // Mã PT
-        table.getColumnModel().getColumn(1).setPreferredWidth(200);  // Tên
-        table.getColumnModel().getColumn(2).setPreferredWidth(135);  // Phân loại
-        table.getColumnModel().getColumn(3).setPreferredWidth(150);  // NCC
-        table.getColumnModel().getColumn(4).setPreferredWidth(60);   // ĐVT
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);   // Tồn kho
-        table.getColumnModel().getColumn(6).setPreferredWidth(115);  // Đơn giá
+        table.getColumnModel().getColumn(1).setPreferredWidth(210);  // Tên
+        table.getColumnModel().getColumn(2).setPreferredWidth(145);  // Phân loại
+        table.getColumnModel().getColumn(3).setPreferredWidth(65);   // ĐVT
+        table.getColumnModel().getColumn(4).setPreferredWidth(75);   // Tồn kho
+        table.getColumnModel().getColumn(5).setPreferredWidth(115);  // Đơn giá
 
-        UiHelper.canGiua(table, 0, 4);
-        UiHelper.canTrai(table, 1, 2, 3);
-        UiHelper.canPhai(table, 6);
+        UiHelper.canGiua(table, 0, 3);
+        UiHelper.canTrai(table, 1, 2);
+        UiHelper.canPhai(table, 5);
 
-        // Renderer màu cho cột Tồn kho (cột 5)
+        // Renderer màu cho cột Tồn kho (cột 4)
         DefaultTableCellRenderer tonRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
@@ -199,7 +187,7 @@ public class DanhSachPhuTung_UI extends JPanel {
                 return c;
             }
         };
-        table.getColumnModel().getColumn(5).setCellRenderer(tonRenderer);
+        table.getColumnModel().getColumn(4).setCellRenderer(tonRenderer);
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) hienLenForm();
@@ -223,7 +211,7 @@ public class DanhSachPhuTung_UI extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 8);
 
         // Ô tìm kiếm
-        gbc.gridx = 0; gbc.weightx = 0.38;
+        gbc.gridx = 0; gbc.weightx = 0.40;
         txtTimKiem.setPreferredSize(new Dimension(0, 34));
         UiHelper.trangTriInput(txtTimKiem);
         txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
@@ -234,20 +222,20 @@ public class DanhSachPhuTung_UI extends JPanel {
         row1.add(txtTimKiem, gbc);
 
         // ComboBox Phân loại
-        gbc.gridx = 1; gbc.weightx = 0.26;
+        gbc.gridx = 1; gbc.weightx = 0.28;
         cboLocLoai.setPreferredSize(new Dimension(0, 34));
         cboLocLoai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         row1.add(cboLocLoai, gbc);
 
         // ComboBox Mức tồn kho
-        gbc.gridx = 2; gbc.weightx = 0.22;
+        gbc.gridx = 2; gbc.weightx = 0.20;
         cboTonKho.setPreferredSize(new Dimension(0, 34));
         cboTonKho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cboTonKho.addActionListener(e -> napBang());
         row1.add(cboTonKho, gbc);
 
         // Nút Bỏ lọc
-        gbc.gridx = 3; gbc.weightx = 0.14; gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridx = 3; gbc.weightx = 0.12; gbc.insets = new Insets(0, 0, 0, 0);
         JButton btnBoLoc = UiHelper.nut("Bỏ lọc", UiIcon.of(UiIcon.REFRESH, 13), UiHelper.XAM, true, e -> boLoc());
         btnBoLoc.setPreferredSize(new Dimension(85, 34));
         row1.add(btnBoLoc, gbc);
@@ -312,9 +300,15 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         model.setRowCount(0);
         int dem = 0;
-        int tong = kho.getPhuTungs().size();
+        int tong = 0;
 
         for (PhuTung pt : kho.getPhuTungs()) {
+            // Bỏ qua các mã dịch vụ bảo hành ảo DVxxx
+            if (pt.getMaPT() != null && pt.getMaPT().startsWith("DV")) {
+                continue;
+            }
+            tong++;
+
             // 1. Lọc từ khóa
             if (!tuKhoa.isEmpty()) {
                 String ma  = pt.getMaPT() != null ? pt.getMaPT().toLowerCase() : "";
@@ -332,13 +326,10 @@ public class DanhSachPhuTung_UI extends JPanel {
             if ("Sắp hết (< 10)".equals(tonChon)         && pt.getSoLuongTon() >= 10) continue;
 
             dem++;
-            String tenNCC = pt.getTenNCC() != null && !pt.getTenNCC().trim().isEmpty()
-                    ? pt.getTenNCC() : (pt.getMaNCC() != null ? pt.getMaNCC() : "—");
             model.addRow(new Object[]{
                     pt.getMaPT(),
                     pt.getTen(),
                     phanLoaiPhuTung(pt),
-                    tenNCC,
                     pt.getDonVi(),
                     pt.getSoLuongTon(),
                     UiHelper.tien(pt.getDonGia())
@@ -350,41 +341,36 @@ public class DanhSachPhuTung_UI extends JPanel {
         }
     }
 
+    private String sinhMaMoi() {
+        int max = 0;
+        for (PhuTung pt : kho.getPhuTungs()) {
+            if (pt.getMaPT() != null && pt.getMaPT().startsWith("PT")) {
+                try {
+                    int num = Integer.parseInt(pt.getMaPT().replaceAll("[^0-9]", ""));
+                    if (num > max) max = num;
+                } catch (Exception ignored) {}
+            }
+        }
+        return String.format("PT%03d", max + 1);
+    }
+
     private void them() {
         if (!kiemTra(true)) return;
 
         try {
+            long donGia = Long.parseLong(txtGia.getText().trim().replaceAll("[^0-9]", ""));
             PhuTung pt = new PhuTung(
-                    txtMa.getText().trim(),
+                    txtMa.getText().trim().toUpperCase(),
                     txtTen.getText().trim(),
                     txtDonVi.getText().trim(),
                     0,
-                    Long.parseLong(
-                            txtGia.getText().trim().replace(",", "")
-                    )
+                    donGia
             );
 
             // Phân loại
-            pt.setLoaiPT(
-                    String.valueOf(cboLoaiForm.getSelectedItem())
-            );
-
-            // Nhà cung cấp
-            String nccItem = (String) cboNCC.getSelectedItem();
-
-            if (nccItem != null
-                    && !nccItem.startsWith("--")
-                    && nccItem.contains(" - ")) {
-
-                pt.setMaNCC(nccItem.split(" - ", 2)[0].trim());
-
-                pt.setTenNCC(
-                        nccItem.split(" - ", 2)[1].trim()
-                );
-            } else {
-                pt.setMaNCC(null);
-                pt.setTenNCC(null);
-            }
+            pt.setLoaiPT(String.valueOf(cboLoaiForm.getSelectedItem()));
+            pt.setMaNCC(null);
+            pt.setTenNCC(null);
 
             // Lưu dữ liệu
             boolean ok = kho.themPhuTung(pt);
@@ -392,10 +378,9 @@ public class DanhSachPhuTung_UI extends JPanel {
             if (ok) {
                 napBang();
                 lamMoi();
-
                 JOptionPane.showMessageDialog(
                         this,
-                        "Thêm phụ tùng thành công!",
+                        "Thêm phụ tùng [" + pt.getMaPT() + "] thành công!",
                         "Thông báo",
                         JOptionPane.INFORMATION_MESSAGE
                 );
@@ -432,17 +417,10 @@ public class DanhSachPhuTung_UI extends JPanel {
 
         pt.setTen(txtTen.getText().trim());
         pt.setDonVi(txtDonVi.getText().trim());
-        pt.setDonGia(Long.parseLong(txtGia.getText().trim().replace(",", "")));
+        pt.setDonGia(Long.parseLong(txtGia.getText().trim().replaceAll("[^0-9]", "")));
         pt.setLoaiPT(String.valueOf(cboLoaiForm.getSelectedItem()));
-
-        String nccItem = String.valueOf(cboNCC.getSelectedItem());
-        if (nccItem != null && nccItem.contains(" - ") && !nccItem.startsWith("--")) {
-            pt.setMaNCC(nccItem.split(" - ")[0].trim());
-            pt.setTenNCC(nccItem.substring(nccItem.indexOf(" - ") + 3).trim());
-        } else {
-            pt.setMaNCC(null);
-            pt.setTenNCC(null);
-        }
+        pt.setMaNCC(null);
+        pt.setTenNCC(null);
 
         boolean ok = kho.capNhatPhuTung(pt);
         napBang();
@@ -468,18 +446,17 @@ public class DanhSachPhuTung_UI extends JPanel {
         napBang();
         lamMoi();
         JOptionPane.showMessageDialog(this,
-                ok ? "Đã xóa phụ tùng khỏi CSDL SQL Server!"
+                ok ? "Đã xóa phụ tùng [" + ma + "] khỏi CSDL SQL Server!"
                    : "Đã xóa phụ tùng!");
     }
 
     private void lamMoi() {
-        txtMa.setText("");
+        txtMa.setText(sinhMaMoi());
         txtTen.setText("");
         txtDonVi.setText("");
         txtTon.setText("0");
         txtGia.setText("");
         cboLoaiForm.setSelectedIndex(0);
-        cboNCC.setSelectedIndex(0);
         txtMa.setEditable(true);
         table.clearSelection();
     }
@@ -489,13 +466,12 @@ public class DanhSachPhuTung_UI extends JPanel {
         if (dong < 0) return;
 
         String ma = table.getValueAt(dong, 0).toString();
-        PhuTung pt = kho.timPhuTung(ma);
 
         txtMa.setText(ma);
         txtTen.setText(table.getValueAt(dong, 1).toString());
-        txtDonVi.setText(table.getValueAt(dong, 4).toString());
-        txtTon.setText(table.getValueAt(dong, 5).toString());
-        txtGia.setText(table.getValueAt(dong, 6).toString().replace(",", ""));
+        txtDonVi.setText(table.getValueAt(dong, 3).toString());
+        txtTon.setText(table.getValueAt(dong, 4).toString());
+        txtGia.setText(table.getValueAt(dong, 5).toString().replaceAll("[^0-9]", ""));
         txtMa.setEditable(false);
 
         // Chọn đúng phân loại trong combo
@@ -506,34 +482,81 @@ public class DanhSachPhuTung_UI extends JPanel {
                 break;
             }
         }
-
-        // Chọn đúng NCC trong combo
-        if (pt != null && pt.getMaNCC() != null && !pt.getMaNCC().isEmpty()) {
-            for (int i = 0; i < cboNCC.getItemCount(); i++) {
-                String item = cboNCC.getItemAt(i);
-                if (item != null && item.startsWith(pt.getMaNCC())) {
-                    cboNCC.setSelectedIndex(i);
-                    break;
-                }
-            }
-        } else {
-            cboNCC.setSelectedIndex(0);
-        }
     }
 
     private boolean kiemTra(boolean them) {
-        if (txtMa.getText().trim().isEmpty() || txtTen.getText().trim().isEmpty()) {
-            UiHelper.loi(this, "Mã và tên phụ tùng không được để trống!", txtMa);
+        String ma = txtMa.getText().trim().toUpperCase();
+        txtMa.setText(ma);
+        String ten = txtTen.getText().trim();
+        txtTen.setText(ten);
+        String donVi = txtDonVi.getText().trim();
+        txtDonVi.setText(donVi);
+        String giaStr = txtGia.getText().trim().replaceAll("[^0-9]", "");
+
+        // 1. Ràng buộc Mã phụ tùng
+        if (ma.isEmpty()) {
+            UiHelper.loi(this, "Mã phụ tùng không được để trống!", txtMa);
             return false;
         }
-        if (!txtGia.getText().trim().replace(",", "").matches("[1-9]\\d*")) {
-            UiHelper.loi(this, "Đơn giá phải là số nguyên dương!", txtGia);
+        if (!ma.matches("^PT\\d{3,}$")) {
+            UiHelper.loi(this, "Mã phụ tùng không đúng định dạng!\nMã phụ tùng phải bắt đầu bằng \"PT\" theo sau là ít nhất 3 chữ số (Ví dụ: PT001, PT101).", txtMa);
             return false;
         }
-        if (them && kho.timPhuTung(txtMa.getText().trim()) != null) {
-            UiHelper.loi(this, "Mã phụ tùng đã tồn tại trong hệ thống!", txtMa);
+        if (them && kho.timPhuTung(ma) != null) {
+            UiHelper.loi(this, "Mã phụ tùng \"" + ma + "\" đã tồn tại trong hệ thống!", txtMa);
             return false;
         }
+
+        // 2. Ràng buộc Tên phụ tùng
+        if (ten.isEmpty()) {
+            UiHelper.loi(this, "Tên phụ tùng không được để trống!", txtTen);
+            return false;
+        }
+        if (ten.length() < 2) {
+            UiHelper.loi(this, "Tên phụ tùng phải có ít nhất 2 ký tự!", txtTen);
+            return false;
+        }
+        if (!ten.matches("^[\\p{Lu}\\d][\\p{L}\\p{N}\\s/.,%()_+-]*$")) {
+            UiHelper.loi(this, "Tên phụ tùng không hợp lệ!\nTên phụ tùng phải bắt đầu bằng chữ cái in hoa hoặc số (Ví dụ: Lọc dầu động cơ, Bugi iridium, Ắc quy 12V 60Ah, Lốp 205/55R16)!", txtTen);
+            return false;
+        }
+
+        // 3. Ràng buộc Phân loại
+        if (cboLoaiForm.getSelectedItem() == null || String.valueOf(cboLoaiForm.getSelectedItem()).trim().isEmpty()) {
+            UiHelper.loi(this, "Vui lòng chọn phân loại phụ tùng!", cboLoaiForm);
+            return false;
+        }
+
+        // 4. Ràng buộc Đơn vị tính
+        if (donVi.isEmpty()) {
+            UiHelper.loi(this, "Đơn vị tính không được để trống!", txtDonVi);
+            return false;
+        }
+        if (!donVi.matches("^[\\p{Lu}][\\p{Ll}\\s]*$")) {
+            UiHelper.loi(this, "Đơn vị tính không hợp lệ!\nĐơn vị tính phải bắt đầu bằng chữ hoa và chỉ chứa các chữ cái (Ví dụ: Cái, Chiếc, Bộ, Bình, Lít, Chai, Hộp)!", txtDonVi);
+            return false;
+        }
+
+        // 5. Ràng buộc Đơn giá
+        if (giaStr.isEmpty()) {
+            UiHelper.loi(this, "Đơn giá không được để trống!", txtGia);
+            return false;
+        }
+        if (!giaStr.matches("^[1-9]\\d*$")) {
+            UiHelper.loi(this, "Đơn giá phải là số nguyên dương lớn hơn 0!", txtGia);
+            return false;
+        }
+        try {
+            long gia = Long.parseLong(giaStr);
+            if (gia < 1000) {
+                UiHelper.loi(this, "Đơn giá phải từ 1.000 VNĐ trở lên!", txtGia);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            UiHelper.loi(this, "Đơn giá vượt quá giới hạn cho phép!", txtGia);
+            return false;
+        }
+
         return true;
     }
 }

@@ -446,12 +446,12 @@ INSERT INTO NhaCungCap (maNCC, tenNCC, soDT, diaChi, email) VALUES
 GO
 
 /* 6. Phu tung */
-INSERT INTO PhuTung (maPT, tenPT, donViTinh, donGiaBan) VALUES
-('PT001', N'Lọc dầu động cơ', N'Chiếc', 150000),
-('PT002', N'Lọc gió động cơ', N'Chiếc', 220000),
-('PT003', N'Bugi đánh lửa', N'Chiếc', 85000),
-('PT004', N'Dầu động cơ cao cấp', N'Lít', 120000),
-('PT005', N'Bộ phanh trước', N'Bộ', 450000);
+INSERT INTO PhuTung (maPT, tenPT, donViTinh, donGiaBan, loaiPT) VALUES
+('PT001', N'Lọc dầu động cơ', N'Chiếc', 150000, N'Lọc & Bảo dưỡng'),
+('PT002', N'Lọc gió động cơ', N'Chiếc', 220000, N'Lọc & Bảo dưỡng'),
+('PT003', N'Bugi đánh lửa', N'Chiếc', 85000, N'Điện & Ắc quy'),
+('PT004', N'Dầu động cơ cao cấp', N'Lít', 120000, N'Dầu nhớt & Dung dịch'),
+('PT005', N'Bộ phanh trước', N'Bộ', 450000, N'Hệ thống Phanh');
 GO
 
 /* 7. Kho */
