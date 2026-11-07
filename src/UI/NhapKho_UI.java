@@ -46,7 +46,7 @@ public class NhapKho_UI extends JPanel {
         add(root, BorderLayout.CENTER);
 
         root.add(UiHelper.tieuDeTrang(xuat ? "📤 Phiếu xuất kho" : "📥 Phiếu nhập kho"), BorderLayout.NORTH);
-
+        txtDonGia.setEditable(false);
         txtSoPhieu.setEditable(false);
         txtSoPhieu.setText(xuat ? kho.maPhieuXuatMoi() : kho.maPhieuNhapMoi());
         txtNgay.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
