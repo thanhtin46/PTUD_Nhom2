@@ -569,6 +569,9 @@ public class DuLieu_DAO {
                 stmt.setString(5, "CHO_SUA");
                 stmt.executeUpdate();
             }
+            try {
+                new KhachHang_DAO().tuDongCapNhatNhomKhachHang(maKH);
+            } catch (Exception ignored) {}
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi themPhieuTiepNhan: " + e.getMessage());

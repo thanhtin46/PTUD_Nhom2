@@ -77,7 +77,7 @@ public class TraCuuKhachHang_UI extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(160);  // Xe sở hữu
         table.getColumnModel().getColumn(5).setPreferredWidth(300);  // Địa chỉ — tăng để hiện đủ
         table.getColumnModel().getColumn(6).setPreferredWidth(145);  // Email
-        table.getColumnModel().getColumn(7).setPreferredWidth(120);  // Nhóm KH
+        table.getColumnModel().getColumn(7).setPreferredWidth(160);  // Nhóm KH
         table.getColumnModel().getColumn(8).setPreferredWidth(100);  // Ngày ĐK
 
         UiHelper.canGiua(table, 0, 2, 3, 4, 8);
@@ -191,14 +191,14 @@ public class TraCuuKhachHang_UI extends JPanel {
         pnlChips.add(lblLocNhanh);
 
         JButton chipTatCa = taoChipButton("Tất cả", "TAT_CA");
-        JButton chipVip = taoChipButton("Khách VIP", "VIP");
+        JButton chipThanThiet = taoChipButton("Khách hàng thân thiết", "THAN_THIET");
+        JButton chipMoi = taoChipButton("Khách mới", "MOI");
         JButton chipDangSua = taoChipButton("Có xe đang sửa", "DANG_SUA");
-        JButton chipMoi = taoChipButton("Khách mới đăng ký", "MOI");
 
         pnlChips.add(chipTatCa);
-        pnlChips.add(chipVip);
-        pnlChips.add(chipDangSua);
+        pnlChips.add(chipThanThiet);
         pnlChips.add(chipMoi);
+        pnlChips.add(chipDangSua);
         row2.add(pnlChips, BorderLayout.WEST);
 
         p.add(row2);
@@ -292,16 +292,18 @@ public class TraCuuKhachHang_UI extends JPanel {
 
         for (KhachHang kh : danhSach) {
             String bienSoXe = traCuuDAO.layDanhSachBienSoXeCuaKhach(kh.getMaKH());
+            String nhomKH = KhachHang.chuanHoaNhom(kh.getGhiChu());
             model.addRow(new Object[]{
                     kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
                     bienSoXe,
-                    kh.getDiaChi(), kh.getEmail(), kh.getGhiChu(), kh.getNgayDangKyHienThi()
+                    kh.getDiaChi(), kh.getEmail(), nhomKH, kh.getNgayDangKyHienThi()
             });
         }
 
         int tongSo = khachHangDAO.layTongSoKhachHang();
         if (tongSo == 0) tongSo = kho.getKhachHangs().size();
-        lblDemKetQua.setText("Tìm thấy: " + danhSach.size() + " / " + tongSo + " khách hàng");
+        int[] stats = traCuuDAO.layThongKeKhachHang();
+        lblDemKetQua.setText("Tìm thấy: " + danhSach.size() + " / " + tongSo + " khách hàng  |  Thân thiết: " + stats[1] + "  |  Có xe đang sửa: " + stats[2]);
     }
 
     /** Xem thông tin chi tiết khách hàng và danh sách xe sở hữu */
@@ -342,7 +344,7 @@ public class TraCuuKhachHang_UI extends JPanel {
                 + "<tr><td><b>Email:</b></td><td>" + kh.getEmail() + "</td></tr>"
                 + "<tr><td><b>Địa chỉ:</b></td><td>" + kh.getDiaChi() + "</td></tr>"
                 + "<tr><td><b>Ngày đăng ký:</b></td><td>" + kh.getNgayDangKyHienThi() + "</td></tr>"
-                + "<tr><td><b>Nhóm KH:</b></td><td>" + kh.getGhiChu() + "</td></tr>"
+                + "<tr><td><b>Nhóm KH:</b></td><td><span style='color:#16A34A;font-weight:bold;'>" + KhachHang.chuanHoaNhom(kh.getGhiChu()) + "</span></td></tr>"
                 + "</table>"
                 + "<hr style='border:none;border-top:1px solid #E2E8F0;margin:10px 0;'>"
                 + "<h4 style='color:#2563EB;margin-bottom:6px;'>DANH SÁCH XE SỞ HỮU (" + demXe + " xe):</h4>"
@@ -378,24 +380,24 @@ public class TraCuuKhachHang_UI extends JPanel {
         }
 
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Lịch sử sửa chữa — " + kh.getHoTen(), true);
-        dlg.setSize(920, 500);
+        dlg.setSize(880, 480);
         dlg.setLocationRelativeTo(this);
 
-        JPanel pnl = new JPanel(new BorderLayout(12, 12));
+        JPanel pnl = new JPanel(new BorderLayout(10, 10));
         pnl.setBackground(UiHelper.NEN);
         pnl.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        JLabel lblTieuDe = new JLabel("Lịch sử sửa chữa của khách hàng: " + kh.getHoTen() + " — SĐT: " + kh.getSdt() + " (" + dsLs.size() + " lần tiếp nhận)");
-        lblTieuDe.setFont(UiHelper.FONT_TIEU_DE_PHU);
+        JLabel lblTieuDe = new JLabel("LỊCH SỬ TIẾP NHẬN & SỬA CHỮA — " + kh.getHoTen().toUpperCase() + " (" + kh.getMaKH() + ")");
+        lblTieuDe.setFont(UiHelper.FONT_TIEU_DE);
         lblTieuDe.setForeground(UiHelper.XANH_DAM);
         pnl.add(lblTieuDe, BorderLayout.NORTH);
 
-        DefaultTableModel mdLs = UiHelper.model("Số phiếu", "Ngày tiếp nhận", "Biển số", "Hãng / Loại", "Yêu cầu sửa chữa", "KTV xử lý", "Tiến độ", "Chi phí");
-        for (TraCuuKhachHang_DAO.LichSuSuaChuaDTO dto : dsLs) {
+        DefaultTableModel mdLs = UiHelper.model("Mã phiếu", "Ngày tiếp nhận", "Biển số", "Xe", "Yêu cầu sửa chữa", "KTV xử lý", "Trạng thái", "Chi phí");
+        for (TraCuuKhachHang_DAO.LichSuSuaChuaDTO ls : dsLs) {
             mdLs.addRow(new Object[]{
-                    dto.getSoPhieu(), dto.getNgayTiepNhan(), dto.getBienSo(),
-                    dto.getXe(), dto.getYeuCau(), dto.getKtvXuLy(), dto.getTienDo(),
-                    UiHelper.tien(dto.getChiPhi()) + " đ"
+                    ls.getSoPhieu(), ls.getNgayTiepNhan(), ls.getBienSo(), ls.getXe(),
+                    ls.getYeuCau(), ls.getKtvXuLy(), ls.getTrangThaiXe(),
+                    ls.getChiPhi() > 0 ? String.format("%,d đ", ls.getChiPhi()) : "Chưa thanh toán"
             });
         }
 

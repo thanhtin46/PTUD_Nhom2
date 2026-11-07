@@ -461,6 +461,22 @@ public class ConnectDB {
                                 "  nguoiThucHien VARCHAR(20) NOT NULL, doiTuong VARCHAR(20) NOT NULL, " +
                                 "  noiDung NVARCHAR(2000) NOT NULL);");
 
+            // Chuẩn hóa Nhóm khách hàng: Chỉ gồm "Khách mới" và "Khách hàng thân thiết".
+            // Tự động nâng hạng lên "Khách hàng thân thiết" khi khách có từ 2 lần sửa chữa/tiếp nhận/hóa đơn.
+            thucThiAnToan(stmt, "UPDATE dbo.KhachHang SET ghiChu = N'Khách hàng thân thiết' " +
+                                "WHERE maKH IN (" +
+                                "  SELECT maKH FROM (" +
+                                "    SELECT maKH, COUNT(DISTINCT maPTN) as cnt FROM dbo.PhieuTiepNhan GROUP BY maKH HAVING COUNT(DISTINCT maPTN) >= 2 " +
+                                "    UNION " +
+                                "    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM dbo.PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 " +
+                                "    UNION " +
+                                "    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM dbo.HoaDon GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 " +
+                                "  ) t " +
+                                ");");
+            thucThiAnToan(stmt, "UPDATE dbo.KhachHang SET ghiChu = N'Khách mới' " +
+                                "WHERE ghiChu IS NULL OR LTRIM(RTRIM(ghiChu)) = '' " +
+                                "   OR (ghiChu <> N'Khách hàng thân thiết' AND ghiChu <> N'Khách mới');");
+
             daDongBoCauTruc = true;
         } catch (SQLException ex) {
             System.err.println("Cảnh báo đồng bộ cấu trúc CSDL: " + ex.getMessage());

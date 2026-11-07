@@ -70,6 +70,9 @@ public class ThanhToan_DAO {
                 }
             }
             con.commit();
+            try {
+                new KhachHang_DAO().tuDongCapNhatNhomKhachHang(hd.getMaKH());
+            } catch (Exception ignored) {}
             return true;
         } catch (SQLException | RuntimeException ex) {
             try { con.rollback(); } catch (SQLException ignored) {}

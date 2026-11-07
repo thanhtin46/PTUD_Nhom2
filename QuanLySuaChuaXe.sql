@@ -426,8 +426,8 @@ GO
 
 /* 3. Khach hang */
 INSERT INTO KhachHang (maKH, hoTen, soDT, chungMinh, diaChi, email, ghiChu, ngayDangKy) VALUES
-('KH001', N'Nguyễn Minh Quân', '0912000001', '079000000001', N'123 Nguyễn Văn Cừ, Q.5, TP.HCM', 'quan.nm@gmail.com', N'Khách VIP', '2026-01-01'),
-('KH002', N'Trần Ngọc Mai', '0912000002', '079000000002', N'456 Lê Lợi, Q.1, TP.HCM', 'mai.tn@gmail.com', N'Khách thân thiết', '2026-01-15'),
+('KH001', N'Nguyễn Minh Quân', '0912000001', '079000000001', N'123 Nguyễn Văn Cừ, Q.5, TP.HCM', 'quan.nm@gmail.com', N'Khách hàng thân thiết', '2026-01-01'),
+('KH002', N'Trần Ngọc Mai', '0912000002', '079000000002', N'456 Lê Lợi, Q.1, TP.HCM', 'mai.tn@gmail.com', N'Khách hàng thân thiết', '2026-01-15'),
 ('KH003', N'Đỗ Hoàng Nam', '0912000003', '079000000003', N'789 Cách Mạng Tháng 8, Q.10, TP.HCM', 'nam.dh@gmail.com', N'Khách mới', '2026-02-20');
 GO
 
@@ -588,45 +588,45 @@ IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE maNV=N'NV104')
 IF NOT EXISTS (SELECT 1 FROM TaiKhoan WHERE maNV=N'NV104')
  INSERT INTO TaiKhoan (maNV,taiKhoan,matKhau,trangThai) VALUES (N'NV104',N'demo104',N'123',N'HOAT_DONG');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH101')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH101',N'Nguyễn Minh Anh',N'0918200101',N'079100000101',N'12 Nguyễn Văn Cừ, TP.HCM',N'kh101@example.com',N'Bảo dưỡng định kỳ',N'2026-10-27');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH101',N'Nguyễn Minh Anh',N'0918200101',N'079100000101',N'12 Nguyễn Văn Cừ, TP.HCM',N'kh101@example.com',N'Khách hàng thân thiết',N'2026-10-27');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH102')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH102',N'Trần Ngọc Lan',N'0918200102',N'079100000102',N'13 Nguyễn Văn Cừ, TP.HCM',N'kh102@example.com',N'Bảo dưỡng định kỳ',N'2026-10-23');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH102',N'Trần Ngọc Lan',N'0918200102',N'079100000102',N'13 Nguyễn Văn Cừ, TP.HCM',N'kh102@example.com',N'Khách hàng thân thiết',N'2026-10-23');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH103')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH103',N'Lê Quốc Bảo',N'0918200103',N'079100000103',N'14 Nguyễn Văn Cừ, TP.HCM',N'kh103@example.com',N'Bảo dưỡng định kỳ',N'2026-10-19');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH103',N'Lê Quốc Bảo',N'0918200103',N'079100000103',N'14 Nguyễn Văn Cừ, TP.HCM',N'kh103@example.com',N'Khách hàng thân thiết',N'2026-10-19');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH104')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH104',N'Phạm Thu Hà',N'0918200104',N'079100000104',N'15 Nguyễn Văn Cừ, TP.HCM',N'kh104@example.com',N'Bảo dưỡng định kỳ',N'2026-10-15');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH104',N'Phạm Thu Hà',N'0918200104',N'079100000104',N'15 Nguyễn Văn Cừ, TP.HCM',N'kh104@example.com',N'Khách mới',N'2026-10-15');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH105')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH105',N'Hoàng Đức Huy',N'0918200105',N'079100000105',N'16 Nguyễn Văn Cừ, TP.HCM',N'kh105@example.com',N'Bảo dưỡng định kỳ',N'2026-10-11');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH105',N'Hoàng Đức Huy',N'0918200105',N'079100000105',N'16 Nguyễn Văn Cừ, TP.HCM',N'kh105@example.com',N'Khách mới',N'2026-10-11');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH106')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH106',N'Đặng Thị Mai',N'0918200106',N'079100000106',N'17 Nguyễn Văn Cừ, TP.HCM',N'kh106@example.com',N'Bảo dưỡng định kỳ',N'2026-10-07');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH106',N'Đặng Thị Mai',N'0918200106',N'079100000106',N'17 Nguyễn Văn Cừ, TP.HCM',N'kh106@example.com',N'Khách mới',N'2026-10-07');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH107')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH107',N'Bùi Thanh Tùng',N'0918200107',N'079100000107',N'18 Nguyễn Văn Cừ, TP.HCM',N'kh107@example.com',N'Bảo dưỡng định kỳ',N'2026-10-03');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH107',N'Bùi Thanh Tùng',N'0918200107',N'079100000107',N'18 Nguyễn Văn Cừ, TP.HCM',N'kh107@example.com',N'Khách mới',N'2026-10-03');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH108')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH108',N'Đỗ Hải Yến',N'0918200108',N'079100000108',N'19 Nguyễn Văn Cừ, TP.HCM',N'kh108@example.com',N'Bảo dưỡng định kỳ',N'2026-09-29');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH108',N'Đỗ Hải Yến',N'0918200108',N'079100000108',N'19 Nguyễn Văn Cừ, TP.HCM',N'kh108@example.com',N'Khách mới',N'2026-09-29');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH109')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH109',N'Vũ Gia Hưng',N'0918200109',N'079100000109',N'20 Nguyễn Văn Cừ, TP.HCM',N'kh109@example.com',N'Bảo dưỡng định kỳ',N'2026-09-25');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH109',N'Vũ Gia Hưng',N'0918200109',N'079100000109',N'20 Nguyễn Văn Cừ, TP.HCM',N'kh109@example.com',N'Khách mới',N'2026-09-25');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH110')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH110',N'Ngô Bảo Châu',N'0918200110',N'079100000110',N'21 Nguyễn Văn Cừ, TP.HCM',N'kh110@example.com',N'Bảo dưỡng định kỳ',N'2026-09-21');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH110',N'Ngô Bảo Châu',N'0918200110',N'079100000110',N'21 Nguyễn Văn Cừ, TP.HCM',N'kh110@example.com',N'Khách mới',N'2026-09-21');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH111')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH111',N'Dương Tuấn Kiệt',N'0918200111',N'079100000111',N'22 Nguyễn Văn Cừ, TP.HCM',N'kh111@example.com',N'Bảo dưỡng định kỳ',N'2026-09-17');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH111',N'Dương Tuấn Kiệt',N'0918200111',N'079100000111',N'22 Nguyễn Văn Cừ, TP.HCM',N'kh111@example.com',N'Khách mới',N'2026-09-17');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH112')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH112',N'Hồ Mỹ Linh',N'0918200112',N'079100000112',N'23 Nguyễn Văn Cừ, TP.HCM',N'kh112@example.com',N'Bảo dưỡng định kỳ',N'2026-09-13');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH112',N'Hồ Mỹ Linh',N'0918200112',N'079100000112',N'23 Nguyễn Văn Cừ, TP.HCM',N'kh112@example.com',N'Khách mới',N'2026-09-13');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH113')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH113',N'Phan Quang Dũng',N'0918200113',N'079100000113',N'24 Nguyễn Văn Cừ, TP.HCM',N'kh113@example.com',N'Bảo dưỡng định kỳ',N'2026-09-09');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH113',N'Phan Quang Dũng',N'0918200113',N'079100000113',N'24 Nguyễn Văn Cừ, TP.HCM',N'kh113@example.com',N'Khách mới',N'2026-09-09');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH114')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH114',N'Võ Khánh Ngọc',N'0918200114',N'079100000114',N'25 Nguyễn Văn Cừ, TP.HCM',N'kh114@example.com',N'Bảo dưỡng định kỳ',N'2026-09-05');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH114',N'Võ Khánh Ngọc',N'0918200114',N'079100000114',N'25 Nguyễn Văn Cừ, TP.HCM',N'kh114@example.com',N'Khách mới',N'2026-09-05');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH115')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH115',N'Mai Anh Khoa',N'0918200115',N'079100000115',N'26 Nguyễn Văn Cừ, TP.HCM',N'kh115@example.com',N'Bảo dưỡng định kỳ',N'2026-09-01');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH115',N'Mai Anh Khoa',N'0918200115',N'079100000115',N'26 Nguyễn Văn Cừ, TP.HCM',N'kh115@example.com',N'Khách mới',N'2026-09-01');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH116')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH116',N'Đinh Phương Thảo',N'0918200116',N'079100000116',N'27 Nguyễn Văn Cừ, TP.HCM',N'kh116@example.com',N'Bảo dưỡng định kỳ',N'2026-08-28');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH116',N'Đinh Phương Thảo',N'0918200116',N'079100000116',N'27 Nguyễn Văn Cừ, TP.HCM',N'kh116@example.com',N'Khách mới',N'2026-08-28');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH117')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH117',N'Cao Nhật Minh',N'0918200117',N'079100000117',N'28 Nguyễn Văn Cừ, TP.HCM',N'kh117@example.com',N'Bảo dưỡng định kỳ',N'2026-08-24');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH117',N'Cao Nhật Minh',N'0918200117',N'079100000117',N'28 Nguyễn Văn Cừ, TP.HCM',N'kh117@example.com',N'Khách mới',N'2026-08-24');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH118')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH118',N'Lý Thùy Dương',N'0918200118',N'079100000118',N'29 Nguyễn Văn Cừ, TP.HCM',N'kh118@example.com',N'Bảo dưỡng định kỳ',N'2026-08-20');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH118',N'Lý Thùy Dương',N'0918200118',N'079100000118',N'29 Nguyễn Văn Cừ, TP.HCM',N'kh118@example.com',N'Khách mới',N'2026-08-20');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH119')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH119',N'Tạ Hoàng Long',N'0918200119',N'079100000119',N'30 Nguyễn Văn Cừ, TP.HCM',N'kh119@example.com',N'Bảo dưỡng định kỳ',N'2026-08-16');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH119',N'Tạ Hoàng Long',N'0918200119',N'079100000119',N'30 Nguyễn Văn Cừ, TP.HCM',N'kh119@example.com',N'Khách mới',N'2026-08-16');
 IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE maKH=N'KH120')
- INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH120',N'Trịnh Thanh Trúc',N'0918200120',N'079100000120',N'31 Nguyễn Văn Cừ, TP.HCM',N'kh120@example.com',N'Bảo dưỡng định kỳ',N'2026-08-12');
+ INSERT INTO KhachHang (maKH,hoTen,soDT,chungMinh,diaChi,email,ghiChu,ngayDangKy) VALUES (N'KH120',N'Trịnh Thanh Trúc',N'0918200120',N'079100000120',N'31 Nguyễn Văn Cừ, TP.HCM',N'kh120@example.com',N'Khách hàng thân thiết',N'2026-08-12');
 IF NOT EXISTS (SELECT 1 FROM PhuongTien WHERE soVIN=N'VINDEMO101')
  INSERT INTO PhuongTien (soVIN,bienSoXe,hangXe,dongXe,maSX,maKH,soMay,mauSon,odo,ngayTiepNhanGanNhat) VALUES (N'VINDEMO101',N'51A-20101',N'Toyota',N'Vios',2020,N'KH101',N'MAY101',N'Trắng',N'10000',N'2026-10-27');
 IF NOT EXISTS (SELECT 1 FROM PhuongTien WHERE soVIN=N'VINDEMO102')

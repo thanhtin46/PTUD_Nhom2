@@ -8,6 +8,23 @@ import java.util.Objects;
  * Lớp thực thể Khách hàng.
  */
 public class KhachHang {
+    public static final String NHOM_MOI = "Khách mới";
+    public static final String NHOM_THAN_THIET = "Khách hàng thân thiết";
+
+    /**
+     * Chuẩn hóa nhóm khách hàng: Chỉ cho phép 2 nhóm duy nhất:
+     * - "Khách hàng thân thiết"
+     * - "Khách mới"
+     */
+    public static String chuanHoaNhom(String raw) {
+        if (raw == null) return NHOM_MOI;
+        String s = raw.trim().toLowerCase();
+        if (s.contains("thân thiết") || s.contains("than thiet") || s.contains("vip")) {
+            return NHOM_THAN_THIET;
+        }
+        return NHOM_MOI;
+    }
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private String maKH;
@@ -32,6 +49,7 @@ public class KhachHang {
         this.sdt = sdt;
         this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
         this.email = email;
+        this.ghiChu = NHOM_MOI;
     }
 
     public KhachHang(String maKH, String hoTen, String sdt, String cccd,
@@ -42,7 +60,7 @@ public class KhachHang {
         this.cccd = cccd;
         this.diaChi = QuyenTruyCap.giaiMaMojibake(diaChi);
         this.email = email;
-        this.ghiChu = QuyenTruyCap.giaiMaMojibake(ghiChu);
+        this.ghiChu = chuanHoaNhom(QuyenTruyCap.giaiMaMojibake(ghiChu));
         this.ngayDangKy = ngayDangKy;
     }
 
@@ -89,10 +107,10 @@ public class KhachHang {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getGhiChu() { return ghiChu; }
-    public String getNhomKH() { return ghiChu != null && !ghiChu.trim().isEmpty() ? ghiChu : "Khách mới"; }
+    public String getGhiChu() { return chuanHoaNhom(ghiChu); }
+    public String getNhomKH() { return chuanHoaNhom(ghiChu); }
     public void setNhomKH(String nhomKH) { setGhiChu(nhomKH); }
-    public void setGhiChu(String ghiChu) { this.ghiChu = QuyenTruyCap.giaiMaMojibake(ghiChu); }
+    public void setGhiChu(String ghiChu) { this.ghiChu = chuanHoaNhom(QuyenTruyCap.giaiMaMojibake(ghiChu)); }
 
     public LocalDate getNgayDangKy() { return ngayDangKy; }
     public void setNgayDangKy(LocalDate ngayDangKy) { this.ngayDangKy = ngayDangKy; }

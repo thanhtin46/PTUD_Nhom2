@@ -18,13 +18,14 @@ import java.time.format.DateTimeFormatter;
  * - Ràng buộc CCCD: 0 ở đầu và 11 chữ số theo sau (12 số), không được nhập chữ.
  * - Ràng buộc Địa chỉ: Gồm 2 hoặc 3 chữ số ở đầu và phải có dấu phẩy.
  * - Ràng buộc Email: Ký tự đầu tiên phải là chữ hoặc số, sau đó tới @gmail.com.
- * - Ghi chú / Nhóm KH: Cho chọn các nhóm người (Khách mới, Khách đã sửa chữa, Khách thân thiết, Khách VIP).
+ * - Nhóm KH: Chỉ gồm 2 nhóm "Khách mới" và "Khách hàng thân thiết". Tự động nâng hạng lên "Khách hàng thân thiết" khi khách có từ 2 lần sửa chữa tại gara.
  * - Nút Xóa hiển thị đầy đủ trực quan trên giao diện.
  * - Dòng áp cứng Ngày đăng ký (cố định ngày đăng ký, không cho sửa).
  */
 public class QuanLyKhachHang_UI extends JPanel {
     private JTextField txtMa, txtTen, txtSdt, txtCccd, txtDiaChi, txtEmail, txtNgayDangKy;
     private JComboBox<String> cboNhomKH;
+    private JLabel lblGiaiThichNhomKH;
     private JTable table;
     private DefaultTableModel model;
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -63,16 +64,22 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtDiaChi = new JTextField();
         txtEmail = new JTextField();
 
-        // Chọn các nhóm người: Khách mới, Khách đã sửa chữa, Khách thân thiết, Khách VIP
+        // Chỉ cho phép 2 nhóm khách hàng: "Khách mới" và "Khách hàng thân thiết"
         cboNhomKH = new JComboBox<>(new String[]{
-                "Khách mới",
-                "Khách đã sửa chữa",
-                "Khách thân thiết",
-                "Khách VIP"
+                KhachHang.NHOM_MOI,
+                KhachHang.NHOM_THAN_THIET
         });
         cboNhomKH.setFont(UiHelper.FONT_BT);
         cboNhomKH.setBackground(Color.WHITE);
         cboNhomKH.setPreferredSize(new Dimension(190, 36));
+
+        lblGiaiThichNhomKH = new JLabel("<html><i style='color:#64748B;'>Tự động lên 'Thân thiết' khi sửa từ 2 lần</i></html>");
+        lblGiaiThichNhomKH.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+
+        JPanel pnlNhomKH = new JPanel(new BorderLayout(0, 3));
+        pnlNhomKH.setOpaque(false);
+        pnlNhomKH.add(cboNhomKH, BorderLayout.NORTH);
+        pnlNhomKH.add(lblGiaiThichNhomKH, BorderLayout.CENTER);
 
         // Dòng áp cứng ngày đăng ký (cố định hiển thị ngày đăng ký, không cho sửa)
         txtNgayDangKy = new JTextField();
@@ -88,7 +95,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         UiHelper.themDong(form, 3, "CCCD/CMND", txtCccd);
         UiHelper.themDong(form, 4, "Địa chỉ", txtDiaChi);
         UiHelper.themDong(form, 5, "Email", txtEmail);
-        UiHelper.themDong(form, 6, "Nhóm KH", cboNhomKH);
+        UiHelper.themDong(form, 6, "Nhóm KH", pnlNhomKH);
         UiHelper.themDong(form, 7, "Ngày đăng ký", txtNgayDangKy);
 
         // Hàng nút chức năng: Thêm, Sửa, Xóa, Làm mới
@@ -139,6 +146,9 @@ public class QuanLyKhachHang_UI extends JPanel {
 
     private void napBang() {
         model.setRowCount(0);
+        // Tự động đồng bộ chuẩn hóa nhóm khách hàng trong SQL Server
+        khachHangDAO.dongBoNhomTatCaKhachHang();
+
         // Đồng bộ danh sách từ CSDL SQL Server qua KhachHang_DAO
         java.util.ArrayList<KhachHang> ds = khachHangDAO.layTatCaKhachHang();
         if (ds.isEmpty()) {
@@ -148,10 +158,7 @@ public class QuanLyKhachHang_UI extends JPanel {
         }
 
         for (KhachHang kh : ds) {
-            String nhomKH = kh.getGhiChu();
-            if (nhomKH == null || nhomKH.trim().isEmpty()) {
-                nhomKH = "Khách mới";
-            }
+            String nhomKH = KhachHang.chuanHoaNhom(kh.getGhiChu());
             model.addRow(new Object[]{kh.getMaKH(), kh.getHoTen(), kh.getSdt(), kh.getCccd(),
                     kh.getDiaChi(), kh.getEmail(), nhomKH, kh.getNgayDangKyHienThi()});
         }
@@ -161,7 +168,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         if (!kiemTraForm(true)) return;
 
         LocalDate ngayDangKy = LocalDate.now();
-        String nhomKH = cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : "Khách mới";
+        String nhomKH = cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : KhachHang.NHOM_MOI;
+        nhomKH = KhachHang.chuanHoaNhom(nhomKH);
 
         KhachHang kh = new KhachHang(
                 txtMa.getText().trim(), txtTen.getText().trim(), txtSdt.getText().trim(),
@@ -194,7 +202,17 @@ public class QuanLyKhachHang_UI extends JPanel {
         kh.setCccd(txtCccd.getText().trim());
         kh.setDiaChi(txtDiaChi.getText().trim());
         kh.setEmail(txtEmail.getText().trim());
-        kh.setGhiChu(cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : "Khách mới");
+
+        // Kiểm tra số lần sửa chữa để tự động áp dụng quy tắc nhóm KH
+        int soLanSua = khachHangDAO.laySoLanSuaChua(ma);
+        String nhomKH;
+        if (soLanSua >= 2) {
+            nhomKH = KhachHang.NHOM_THAN_THIET;
+        } else {
+            nhomKH = cboNhomKH.getSelectedItem() != null ? cboNhomKH.getSelectedItem().toString() : KhachHang.NHOM_MOI;
+            nhomKH = KhachHang.chuanHoaNhom(nhomKH);
+        }
+        kh.setGhiChu(nhomKH);
 
         boolean ok = kho.capNhatKhachHang(kh);
         napBang();
@@ -234,7 +252,8 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtCccd.setText("");
         txtDiaChi.setText("");
         txtEmail.setText("");
-        cboNhomKH.setSelectedIndex(0); // Mặc định là "Khách mới"
+        cboNhomKH.setSelectedItem(KhachHang.NHOM_MOI); // Mặc định là "Khách mới"
+        lblGiaiThichNhomKH.setText("<html><i style='color:#64748B;'>Tự động lên 'Thân thiết' khi sửa từ 2 lần</i></html>");
         txtNgayDangKy.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))); // Áp cứng ngày hôm nay
         table.clearSelection();
         txtTen.requestFocus();
@@ -243,7 +262,8 @@ public class QuanLyKhachHang_UI extends JPanel {
     private void hienLenForm() {
         int dong = table.getSelectedRow();
         if (dong < 0) return;
-        txtMa.setText(model.getValueAt(dong, 0) != null ? model.getValueAt(dong, 0).toString() : "");
+        String ma = model.getValueAt(dong, 0) != null ? model.getValueAt(dong, 0).toString() : "";
+        txtMa.setText(ma);
         txtTen.setText(model.getValueAt(dong, 1) != null ? model.getValueAt(dong, 1).toString() : "");
         txtSdt.setText(model.getValueAt(dong, 2) != null ? model.getValueAt(dong, 2).toString() : "");
         txtCccd.setText(model.getValueAt(dong, 3) != null ? model.getValueAt(dong, 3).toString() : "");
@@ -251,18 +271,17 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtEmail.setText(model.getValueAt(dong, 5) != null ? model.getValueAt(dong, 5).toString() : "");
 
         String nhomKH = model.getValueAt(dong, 6) != null ? model.getValueAt(dong, 6).toString().trim() : "";
-        cboNhomKH.setSelectedItem(nhomKH);
-        if (cboNhomKH.getSelectedIndex() < 0) {
-            String lower = nhomKH.toLowerCase();
-            if (lower.contains("vip")) {
-                cboNhomKH.setSelectedItem("Khách VIP");
-            } else if (lower.contains("than thiet") || lower.contains("thân thiết")) {
-                cboNhomKH.setSelectedItem("Khách thân thiết");
-            } else if (lower.contains("sua") || lower.contains("sửa")) {
-                cboNhomKH.setSelectedItem("Khách đã sửa chữa");
-            } else {
-                cboNhomKH.setSelectedItem("Khách mới");
-            }
+        String nhomChuan = KhachHang.chuanHoaNhom(nhomKH);
+
+        // Kiểm tra số lần sửa chữa để hiển thị gợi ý và chọn nhóm tương ứng
+        int soLanSua = khachHangDAO.laySoLanSuaChua(ma);
+        if (soLanSua >= 2) {
+            nhomChuan = KhachHang.NHOM_THAN_THIET;
+            cboNhomKH.setSelectedItem(KhachHang.NHOM_THAN_THIET);
+            lblGiaiThichNhomKH.setText("<html><b style='color:#16A34A;'>Đã sửa chữa " + soLanSua + " lần (Đạt chuẩn Thân thiết)</b></html>");
+        } else {
+            cboNhomKH.setSelectedItem(nhomChuan);
+            lblGiaiThichNhomKH.setText("<html><i style='color:#64748B;'>Đã sửa chữa " + soLanSua + " lần (Đủ 2 lần sẽ tự động lên Thân thiết)</i></html>");
         }
 
         txtNgayDangKy.setText(model.getValueAt(dong, 7) != null ? model.getValueAt(dong, 7).toString() : LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));

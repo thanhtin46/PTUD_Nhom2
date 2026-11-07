@@ -59,7 +59,7 @@ public class TraCuuKhachHang_DAO {
      * Tra cứu danh sách khách hàng trực tiếp từ SQL Server theo từ khóa, tiêu chí và bộ lọc nhanh
      * @param tuKhoa Từ khóa tìm kiếm (có thể rỗng)
      * @param tieuChi 0: Tất cả, 1: Họ tên, 2: SĐT, 3: Biển số xe, 4: CCCD, 5: Mã KH
-     * @param boLocNhanh "TAT_CA", "VIP", "DANG_SUA", "MOI"
+     * @param boLocNhanh "TAT_CA", "THAN_THIET", "DANG_SUA", "MOI"
      */
     public ArrayList<KhachHang> traCuuKhachHang(String tuKhoa, int tieuChi, String boLocNhanh) {
         ArrayList<KhachHang> list = new ArrayList<>();
@@ -99,8 +99,8 @@ public class TraCuuKhachHang_DAO {
         }
 
         // 2. Áp dụng bộ lọc nhanh
-        if ("VIP".equalsIgnoreCase(boLocNhanh)) {
-            sql.append("AND LOWER(kh.ghiChu) LIKE '%vip%' ");
+        if ("THAN_THIET".equalsIgnoreCase(boLocNhanh) || "VIP".equalsIgnoreCase(boLocNhanh)) {
+            sql.append("AND (LOWER(kh.ghiChu) LIKE N'%thân thiết%' OR LOWER(kh.ghiChu) LIKE '%than thiet%' OR LOWER(kh.ghiChu) LIKE '%vip%') ");
         } else if ("DANG_SUA".equalsIgnoreCase(boLocNhanh)) {
             sql.append("AND kh.maKH IN (")
                .append("  SELECT tn.maKH FROM PhieuTiepNhan tn ")
@@ -109,7 +109,7 @@ public class TraCuuKhachHang_DAO {
                .append("    AND LOWER(ISNULL(tn.trangThaiXe, '')) NOT LIKE N'%hủy%' ")
                .append(") ");
         } else if ("MOI".equalsIgnoreCase(boLocNhanh)) {
-            sql.append("AND (LOWER(kh.ghiChu) LIKE N'%mới%' OR kh.ngayDangKy LIKE '%2026%' OR kh.ngayDangKy LIKE '%2025%') ");
+            sql.append("AND (LOWER(kh.ghiChu) LIKE N'%mới%' OR LOWER(kh.ghiChu) LIKE '%moi%' OR kh.ghiChu IS NULL OR LTRIM(RTRIM(kh.ghiChu)) = '' OR kh.ghiChu NOT LIKE N'%thân thiết%') ");
         }
 
         sql.append("ORDER BY kh.maKH ASC");
@@ -143,7 +143,7 @@ public class TraCuuKhachHang_DAO {
                     String cccd = rs.getString("chungMinh");
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
-                    String ghiChu = rs.getString("ghiChu");
+                    String ghiChu = KhachHang.chuanHoaNhom(rs.getString("ghiChu"));
                     Date dDangKy = rs.getDate("ngayDangKy");
                     LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
@@ -287,7 +287,7 @@ public class TraCuuKhachHang_DAO {
     }
 
     /**
-     * Thống kê số lượng phục vụ hiển thị: [Tổng số khách, Khách VIP, Khách có xe đang sửa]
+     * Thống kê số lượng phục vụ hiển thị: [Tổng số khách, Khách hàng thân thiết, Khách có xe đang sửa]
      */
     public int[] layThongKeKhachHang() {
         int[] result = new int[]{0, 0, 0};
@@ -301,8 +301,8 @@ public class TraCuuKhachHang_DAO {
                 if (rs.next()) result[0] = rs.getInt(1);
             }
 
-            // 2. Số khách VIP
-            try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM KhachHang WHERE LOWER(ghiChu) LIKE '%vip%'");
+            // 2. Số khách hàng thân thiết
+            try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM KhachHang WHERE LOWER(ghiChu) LIKE N'%thân thiết%' OR LOWER(ghiChu) LIKE '%vip%'");
                  ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) result[1] = rs.getInt(1);
             }

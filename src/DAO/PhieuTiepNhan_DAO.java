@@ -147,6 +147,10 @@ public class PhieuTiepNhan_DAO {
                 stmt.executeUpdate();
             }
 
+            try {
+                new KhachHang_DAO().tuDongCapNhatNhomKhachHang(maKH);
+            } catch (Exception ignored) {}
+
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi PhieuTiepNhan_DAO.themPhieuTiepNhan: " + e.getMessage());

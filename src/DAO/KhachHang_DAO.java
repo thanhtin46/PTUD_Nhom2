@@ -14,10 +14,103 @@ import java.util.ArrayList;
 
 /**
  * Lớp DAO xử lý dữ liệu khách hàng với CSDL SQL Server:
+ * - Phân nhóm khách hàng chuẩn hóa: chỉ gồm "Khách mới" và "Khách hàng thân thiết".
+ * - Tự động nâng hạng lên "Khách hàng thân thiết" khi khách có từ 2 lần sửa chữa ở quán.
  * - CRUD: Lấy danh sách, Tìm kiếm, Thêm mới, Cập nhật, Xóa an toàn dữ liệu liên quan.
  * - Tự động dọn dẹp khóa ngoại cascade khi xóa khách hàng.
  */
 public class KhachHang_DAO {
+
+    /**
+     * Đồng bộ và chuẩn hóa nhóm toàn bộ khách hàng trong CSDL:
+     * - Khách hàng có từ 2 lần sửa chữa / tiếp nhận / hóa đơn tự động chuyển thành "Khách hàng thân thiết".
+     * - Khách hàng còn lại nếu chứa giá trị cũ (Bảo dưỡng định kỳ, Khách VIP, v.v.) chuẩn hóa về "Khách mới".
+     */
+    public void dongBoNhomTatCaKhachHang() {
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return;
+
+        try (java.sql.Statement stmt = con.createStatement()) {
+            // 1. Tự động chuyển về "Khách hàng thân thiết" khi có >= 2 lần sửa chữa
+            stmt.executeUpdate(
+                "UPDATE KhachHang SET ghiChu = N'" + KhachHang.NHOM_THAN_THIET + "' " +
+                "WHERE maKH IN (" +
+                "  SELECT maKH FROM (" +
+                "    SELECT maKH, COUNT(DISTINCT maPTN) as cnt FROM PhieuTiepNhan GROUP BY maKH HAVING COUNT(DISTINCT maPTN) >= 2 " +
+                "    UNION " +
+                "    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 " +
+                "    UNION " +
+                "    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM HoaDon GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 " +
+                "  ) t " +
+                ")"
+            );
+
+            // 2. Chuẩn hóa tất cả các giá trị ghi chú rỗng hoặc giá trị cũ về "Khách mới"
+            stmt.executeUpdate(
+                "UPDATE KhachHang SET ghiChu = N'" + KhachHang.NHOM_MOI + "' " +
+                "WHERE ghiChu IS NULL OR LTRIM(RTRIM(ghiChu)) = '' " +
+                "   OR (ghiChu <> N'" + KhachHang.NHOM_THAN_THIET + "' AND ghiChu <> N'" + KhachHang.NHOM_MOI + "')"
+            );
+        } catch (SQLException e) {
+            System.err.println("Lỗi KhachHang_DAO.dongBoNhomTatCaKhachHang: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lấy số lần sửa chữa / tiếp nhận / hóa đơn của khách hàng tại gara
+     */
+    public int laySoLanSuaChua(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) return 0;
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return 0;
+
+        String sql = "SELECT " +
+                     "  (SELECT COUNT(DISTINCT maPTN) FROM PhieuTiepNhan WHERE maKH = ?) AS soPTN, " +
+                     "  (SELECT COUNT(DISTINCT maPSC) FROM PhieuSuaChua WHERE maKH = ?) AS soPSC, " +
+                     "  (SELECT COUNT(DISTINCT maHD) FROM HoaDon WHERE maKH = ?) AS soHD";
+
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, maKH.trim());
+            stmt.setString(2, maKH.trim());
+            stmt.setString(3, maKH.trim());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int ptn = rs.getInt("soPTN");
+                    int psc = rs.getInt("soPSC");
+                    int hd = rs.getInt("soHD");
+                    return Math.max(ptn, Math.max(psc, hd));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi KhachHang_DAO.laySoLanSuaChua: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Tự động kiểm tra và chuyển nhóm khách hàng:
+     * Nhóm "Khách mới" sẽ tự động chuyển về "Khách hàng thân thiết" khi có từ 2 lần sửa chữa ở quán.
+     * @return true nếu nhóm khách hàng được nâng hạng thành công
+     */
+    public boolean tuDongCapNhatNhomKhachHang(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) return false;
+        int soLan = laySoLanSuaChua(maKH);
+        if (soLan < 2) return false;
+
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con == null) return false;
+
+        String sql = "UPDATE KhachHang SET ghiChu = ? WHERE maKH = ? AND (ghiChu IS NULL OR ghiChu <> ?)";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, KhachHang.NHOM_THAN_THIET);
+            stmt.setString(2, maKH.trim());
+            stmt.setString(3, KhachHang.NHOM_THAN_THIET);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi KhachHang_DAO.tuDongCapNhatNhomKhachHang: " + e.getMessage());
+        }
+        return false;
+    }
 
     /**
      * Lấy toàn bộ danh sách khách hàng từ SQL Server sắp xếp theo mã tăng dần
@@ -26,6 +119,9 @@ public class KhachHang_DAO {
         ArrayList<KhachHang> list = new ArrayList<>();
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return list;
+
+        // Tự động đồng bộ chuẩn hóa nhóm khách hàng
+        dongBoNhomTatCaKhachHang();
 
         String sql = "SELECT maKH, hoTen, soDT, chungMinh, " +
                      "ISNULL(diaChi, '') AS diaChi, " +
@@ -44,7 +140,7 @@ public class KhachHang_DAO {
                 String cccd = rs.getString("chungMinh");
                 String diaChi = rs.getString("diaChi");
                 String email = rs.getString("email");
-                String ghiChu = rs.getString("ghiChu");
+                String ghiChu = KhachHang.chuanHoaNhom(rs.getString("ghiChu"));
                 Date dDangKy = rs.getDate("ngayDangKy");
                 LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
@@ -81,7 +177,7 @@ public class KhachHang_DAO {
                     String cccd = rs.getString("chungMinh");
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
-                    String ghiChu = rs.getString("ghiChu");
+                    String ghiChu = KhachHang.chuanHoaNhom(rs.getString("ghiChu"));
                     Date dDangKy = rs.getDate("ngayDangKy");
                     LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
@@ -121,7 +217,7 @@ public class KhachHang_DAO {
                     String cccd = rs.getString("chungMinh");
                     String diaChi = rs.getString("diaChi");
                     String email = rs.getString("email");
-                    String ghiChu = rs.getString("ghiChu");
+                    String ghiChu = KhachHang.chuanHoaNhom(rs.getString("ghiChu"));
                     Date dDangKy = rs.getDate("ngayDangKy");
                     LocalDate ngayDangKy = dDangKy != null ? dDangKy.toLocalDate() : null;
 
@@ -159,7 +255,7 @@ public class KhachHang_DAO {
 
             stmt.setString(5, kh.getDiaChi() != null ? kh.getDiaChi().trim() : "");
             stmt.setString(6, kh.getEmail() != null ? kh.getEmail().trim() : "");
-            stmt.setString(7, kh.getGhiChu() != null ? kh.getGhiChu().trim() : "");
+            stmt.setString(7, KhachHang.chuanHoaNhom(kh.getGhiChu()));
             stmt.setDate(8, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
 
             return stmt.executeUpdate() > 0;
@@ -177,6 +273,12 @@ public class KhachHang_DAO {
         Connection con = ConnectDB.getInstance().getConnection();
         if (con == null) return false;
 
+        // Quy tắc: Nếu khách hàng đã có từ 2 lần sửa chữa, tự động chuyển/giữ ở "Khách hàng thân thiết"
+        String nhomKH = KhachHang.chuanHoaNhom(kh.getGhiChu());
+        if (laySoLanSuaChua(kh.getMaKH()) >= 2) {
+            nhomKH = KhachHang.NHOM_THAN_THIET;
+        }
+
         String sql = "UPDATE KhachHang SET hoTen = ?, soDT = ?, chungMinh = ?, diaChi = ?, email = ?, ghiChu = ?, ngayDangKy = ? " +
                      "WHERE maKH = ?";
 
@@ -193,7 +295,7 @@ public class KhachHang_DAO {
 
             stmt.setString(4, kh.getDiaChi() != null ? kh.getDiaChi().trim() : "");
             stmt.setString(5, kh.getEmail() != null ? kh.getEmail().trim() : "");
-            stmt.setString(6, kh.getGhiChu() != null ? kh.getGhiChu().trim() : "");
+            stmt.setString(6, nhomKH);
             stmt.setDate(7, kh.getNgayDangKy() != null ? Date.valueOf(kh.getNgayDangKy()) : null);
             stmt.setString(8, kh.getMaKH().trim());
 
