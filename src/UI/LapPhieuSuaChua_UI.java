@@ -10,6 +10,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.sql.*;
+import java.util.Set;
+import java.util.HashSet;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -1027,11 +1029,52 @@ public class LapPhieuSuaChua_UI extends JPanel {
     // ===============================================================
     // CÁC HÀM XỬ LÝ DỮ LIỆU
     // ===============================================================
+    /** Lấy tập hợp mã phiếu tiếp nhận đã có phiếu sửa chữa để lọc */
+    private Set<String> layDanhSachPTNDaLapPSC() {
+        Set<String> set = new HashSet<>();
+        Connection con = ConnectDB.getInstance().getConnection();
+        if (con != null) {
+            String sql = "SELECT DISTINCT maPTN FROM PhieuSuaChua WHERE maPTN IS NOT NULL AND maPTN <> '' " +
+                         "UNION " +
+                         "SELECT DISTINCT ('TN' + SUBSTRING(maPSC, 3, 20)) FROM PhieuSuaChua WHERE maPSC LIKE 'SC%'";
+            try (Statement s = con.createStatement();
+                 ResultSet rs = s.executeQuery(sql)) {
+                while (rs.next()) {
+                    String ptn = rs.getString(1);
+                    if (ptn != null && !ptn.isBlank()) {
+                        set.add(ptn.trim().toUpperCase());
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi lấy danh sách PTN đã lập PSC: " + e.getMessage());
+            }
+        }
+        return set;
+    }
+
     private void napDuLieuTiepNhan() {
+        napDuLieuTiepNhan(null);
+    }
+
+    private void napDuLieuTiepNhan(String maPTNDangMo) {
         cboPhieuTN.removeAllItems();
         cboPhieuTN.addItem("-- Chọn phiếu tiếp nhận sửa chữa --");
+
+        Set<String> dsDaLapPSC = layDanhSachPTNDaLapPSC();
+
         for (PhieuTiepNhan p : kho.getPhieuTiepNhans()) {
             if (!BaoVeQuyen.phieu(p.getSoPhieu())) continue;
+
+            String maTN = p.getSoPhieu() != null ? p.getSoPhieu().trim().toUpperCase() : "";
+
+            // Những phiếu tiếp nhận đã được lập phiếu sửa chữa sẽ không hiện ở phần chọn
+            // (trừ khi đang mở đúng phiếu đó để xem hoặc sửa)
+            if (dsDaLapPSC.contains(maTN)) {
+                if (maPTNDangMo == null || !maPTNDangMo.trim().equalsIgnoreCase(maTN)) {
+                    continue;
+                }
+            }
+
             cboPhieuTN.addItem(p.getSoPhieu() + " - " + p.getHoTen() + " (" + p.getBienSo() + ")");
         }
     }
@@ -1066,13 +1109,21 @@ public class LapPhieuSuaChua_UI extends JPanel {
     }
 
     public void chonPhieuTiepNhan(String soPhieu) {
-        if (soPhieu == null) return;
+        if (soPhieu == null || soPhieu.isBlank()) return;
+        soPhieu = soPhieu.trim();
         for (int i = 0; i < cboPhieuTN.getItemCount(); i++) {
             String item = cboPhieuTN.getItemAt(i);
             if (item != null && item.startsWith(soPhieu)) {
                 cboPhieuTN.setSelectedIndex(i);
-                break;
+                return;
             }
+        }
+        // Nếu phiếu này đã lập PSC và bị ẩn khỏi danh sách tạo mới, nạp thêm vào combo để hiển thị khi xem lại
+        PhieuTiepNhan p = kho.timPhieuTiepNhan(soPhieu);
+        if (p != null) {
+            String itemMoi = p.getSoPhieu() + " - " + p.getHoTen() + " (" + p.getBienSo() + ")";
+            cboPhieuTN.addItem(itemMoi);
+            cboPhieuTN.setSelectedItem(itemMoi);
         }
     }
 
@@ -1551,6 +1602,11 @@ public class LapPhieuSuaChua_UI extends JPanel {
         txtSoLuongPT.setText("1");
         modelCongViec.setRowCount(0);
         modelPhuTung.setRowCount(0);
+        kho.dongBoTuSQLServer();
+        napDuLieuTiepNhan();
+        if (cboPhieuTN != null && cboPhieuTN.getItemCount() > 0) {
+            cboPhieuTN.setSelectedIndex(0);
+        }
         tinhToanTaiChinh();
         xuLyThayDoiTrangThai();
         JOptionPane.showMessageDialog(this, "Đã làm mới form sửa chữa phương tiện!");
