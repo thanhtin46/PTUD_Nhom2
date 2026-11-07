@@ -14,6 +14,8 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,16 +33,16 @@ import java.util.Map;
  */
 public class QuanLyPhuongTien_UI extends JPanel {
     private static final String[] DS_HANG_XE = {
-        "Toyota", "Honda", "Hyundai", "Kia", "Mazda", "Ford", "Mitsubishi", 
-        "Vinfast", "Mercedes", "Audi", "Lexus", "Porsche", 
-        "Volkswagen", "Volvo", "Land Rover", "Peugeot", "Suzuki", "Subaru", 
-        "Isuzu", "Nissan", "Chevrolet", "Jeep", "Tesla", "Skoda", 
-        "Haval", "Geely", "Chery", "Wuling", "Ferrari", "Lamborghini", 
-        "Rolls Royce", "Bentley", "Aston Martin", "Maserati", "Jaguar", 
-        "Bugatti", "Mclaren", "Genesis", "Infiniti", "Acura", "Cadillac", 
-        "Lincoln", "Mini", "Alfa Romeo", "Chrysler", "Dodge", "Ram", 
-        "Fiat", "Renault", "Citroen", "Seat", "Cupra", "Smart", "Lotus", 
-        "Daihatsu", "Ssangyong"
+        "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "Bugatti", 
+        "Cadillac", "Chery", "Chevrolet", "Chrysler", "Citroen", "Cupra", 
+        "Daihatsu", "Dodge", "Ferrari", "Fiat", "Ford", "Geely", 
+        "Genesis", "Haval", "Honda", "Hyundai", "Infiniti", "Isuzu", 
+        "Jaguar", "Jeep", "Kia", "Lamborghini", "Land Rover", "Lexus", 
+        "Lincoln", "Lotus", "Maserati", "Mazda", "Mclaren", "Mercedes", 
+        "Mini", "Mitsubishi", "Nissan", "Peugeot", "Porsche", "Ram", 
+        "Renault", "Rolls Royce", "Seat", "Skoda", "Smart", "Ssangyong", 
+        "Subaru", "Suzuki", "Tesla", "Toyota", "Vinfast", "Volkswagen", 
+        "Volvo", "Wuling"
     };
 
     private static final Map<String, String[]> MAP_DONG_XE = new LinkedHashMap<>();
@@ -108,6 +110,7 @@ public class QuanLyPhuongTien_UI extends JPanel {
     private DefaultTableModel model;
 
     private boolean dangCapNhatDongXe = false;
+    private final List<String> dsHangXeGoc = new ArrayList<>(Arrays.asList(DS_HANG_XE));
 
     private final PhuongTien_DAO phuongTienDAO = new PhuongTien_DAO();
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -151,19 +154,20 @@ public class QuanLyPhuongTien_UI extends JPanel {
         cboChuXe = new JComboBox<>();
         napComboChuXe();
 
-        // Đồng bộ danh sách dòng xe theo hãng xe ban đầu (Toyota)
+        // Tích hợp ô ComboBox hỗ trợ gõ chữ tìm kiếm & lọc (Searchable ComboBox) cho phần nhập hãng xe
+        UiHelper.ganLocTimKiemChoComboBox(cboHangXe, dsHangXeGoc, () -> {
+            if (dangCapNhatDongXe) return;
+            Object sel = cboHangXe.getEditor() != null ? cboHangXe.getEditor().getItem() : cboHangXe.getSelectedItem();
+            String hang = sel != null ? sel.toString().trim() : "";
+            if (hang.startsWith("-- Không tìm thấy")) return;
+            capNhatDanhSachDongXe(hang, null);
+        });
+
+        // Đồng bộ danh sách dòng xe theo hãng xe ban đầu
         if (cboHangXe.getItemCount() > 0) {
             cboHangXe.setSelectedIndex(0);
             capNhatDanhSachDongXe(cboHangXe.getItemAt(0), null);
         }
-
-        // Bắt sự kiện khi chọn hoặc thay đổi hãng xe thì tự động cập nhật danh sách dòng xe tương ứng
-        cboHangXe.addActionListener(e -> {
-            if (dangCapNhatDongXe) return;
-            Object sel = cboHangXe.getSelectedItem();
-            String hang = sel != null ? sel.toString().trim() : "";
-            capNhatDanhSachDongXe(hang, null);
-        });
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -201,7 +205,13 @@ public class QuanLyPhuongTien_UI extends JPanel {
 
     private void napComboChuXe() {
         cboChuXe.removeAllItems();
-        for (KhachHang kh : kho.getKhachHangs()) {
+        List<KhachHang> dsKH = new ArrayList<>(kho.getKhachHangs());
+        dsKH.sort((a, b) -> {
+            String maA = a.getMaKH() != null ? a.getMaKH() : "";
+            String maB = b.getMaKH() != null ? b.getMaKH() : "";
+            return UiHelper.soSanhTuNhien(maA, maB);
+        });
+        for (KhachHang kh : dsKH) {
             cboChuXe.addItem(kh.getMaKH() + " - " + kh.getHoTen());
         }
     }
@@ -232,7 +242,9 @@ public class QuanLyPhuongTien_UI extends JPanel {
             }
 
             if (dsDong != null) {
-                for (String d : dsDong) {
+                List<String> listDong = new ArrayList<>(Arrays.asList(dsDong));
+                listDong.sort(String.CASE_INSENSITIVE_ORDER); // Sắp xếp theo bảng chữ cái
+                for (String d : listDong) {
                     cboDongXe.addItem(d);
                 }
             }
@@ -262,14 +274,22 @@ public class QuanLyPhuongTien_UI extends JPanel {
     private void dongBoHangXe(String hangXe) {
         if (hangXe == null || hangXe.trim().isEmpty()) return;
         String hangChuan = hangXe.trim();
-        for (int i = 0; i < cboHangXe.getItemCount(); i++) {
-            if (cboHangXe.getItemAt(i).equalsIgnoreCase(hangChuan)) {
-                cboHangXe.setSelectedIndex(i);
-                return;
+        dangCapNhatDongXe = true;
+        try {
+            cboHangXe.setModel(new DefaultComboBoxModel<>(dsHangXeGoc.toArray(new String[0])));
+            for (int i = 0; i < cboHangXe.getItemCount(); i++) {
+                if (cboHangXe.getItemAt(i).equalsIgnoreCase(hangChuan)) {
+                    cboHangXe.setSelectedIndex(i);
+                    return;
+                }
             }
+            dsHangXeGoc.add(hangChuan);
+            dsHangXeGoc.sort(String.CASE_INSENSITIVE_ORDER);
+            cboHangXe.setModel(new DefaultComboBoxModel<>(dsHangXeGoc.toArray(new String[0])));
+            cboHangXe.setSelectedItem(hangChuan);
+        } finally {
+            dangCapNhatDongXe = false;
         }
-        cboHangXe.addItem(hangChuan);
-        cboHangXe.setSelectedItem(hangChuan);
     }
 
     private JPanel taoBang() {
@@ -367,6 +387,13 @@ public class QuanLyPhuongTien_UI extends JPanel {
             dsXe = kho.getPhuongTiens();
         }
 
+        // Sắp xếp danh sách phương tiện theo thứ tự biển số
+        dsXe.sort((a, b) -> {
+            String bsA = a.getBienSo() != null ? a.getBienSo() : "";
+            String bsB = b.getBienSo() != null ? b.getBienSo() : "";
+            return bsA.compareToIgnoreCase(bsB);
+        });
+
         for (PhuongTien xe : dsXe) {
             KhachHang chu = xe.getKhachHang() != null ? xe.getKhachHang() : kho.timKhachHangTheoMa(xe.getMaChuXe());
             String ten = chu != null ? chu.getHoTen() : "";
@@ -386,11 +413,11 @@ public class QuanLyPhuongTien_UI extends JPanel {
             return;
         }
 
-        Object itemHang = cboHangXe.getSelectedItem();
+        Object itemHang = cboHangXe.getEditor() != null ? cboHangXe.getEditor().getItem() : cboHangXe.getSelectedItem();
         String hangXe = itemHang != null ? itemHang.toString().trim() : "";
         dongBoHangXe(hangXe);
 
-        Object itemDong = cboDongXe.getSelectedItem();
+        Object itemDong = cboDongXe.getEditor() != null ? cboDongXe.getEditor().getItem() : cboDongXe.getSelectedItem();
         String dongXe = itemDong != null ? itemDong.toString().trim() : "";
 
         LocalDate ngayHomNay = LocalDate.now();
@@ -459,11 +486,11 @@ public class QuanLyPhuongTien_UI extends JPanel {
         }
         if (xe == null) return;
 
-        Object itemHang = cboHangXe.getSelectedItem();
+        Object itemHang = cboHangXe.getEditor() != null ? cboHangXe.getEditor().getItem() : cboHangXe.getSelectedItem();
         String hangXe = itemHang != null ? itemHang.toString().trim() : "";
         dongBoHangXe(hangXe);
 
-        Object itemDong = cboDongXe.getSelectedItem();
+        Object itemDong = cboDongXe.getEditor() != null ? cboDongXe.getEditor().getItem() : cboDongXe.getSelectedItem();
         String dongXe = itemDong != null ? itemDong.toString().trim() : "";
 
         xe.setHangXe(hangXe);
@@ -484,8 +511,16 @@ public class QuanLyPhuongTien_UI extends JPanel {
 
     private void lamMoi() {
         txtBienSo.setText("");
+        dangCapNhatDongXe = true;
+        try {
+            cboHangXe.setModel(new DefaultComboBoxModel<>(dsHangXeGoc.toArray(new String[0])));
+            if (cboHangXe.getItemCount() > 0) {
+                cboHangXe.setSelectedIndex(0);
+            }
+        } finally {
+            dangCapNhatDongXe = false;
+        }
         if (cboHangXe.getItemCount() > 0) {
-            cboHangXe.setSelectedIndex(0);
             capNhatDanhSachDongXe(cboHangXe.getItemAt(0), null);
         }
         txtSoKhung.setText("");
@@ -561,11 +596,17 @@ public class QuanLyPhuongTien_UI extends JPanel {
         String bienSo = txtBienSo.getText().trim().toUpperCase();
         txtBienSo.setText(bienSo);
 
-        Object itemHang = cboHangXe.getSelectedItem();
+        Object itemHang = cboHangXe.getEditor() != null ? cboHangXe.getEditor().getItem() : cboHangXe.getSelectedItem();
         String hangXe = itemHang != null ? itemHang.toString().trim() : "";
+        if (hangXe.startsWith("-- Không tìm thấy")) {
+            hangXe = "";
+        }
 
-        Object itemDong = cboDongXe.getSelectedItem();
+        Object itemDong = cboDongXe.getEditor() != null ? cboDongXe.getEditor().getItem() : cboDongXe.getSelectedItem();
         String dongXe = itemDong != null ? itemDong.toString().trim() : "";
+        if (dongXe.startsWith("-- Không tìm thấy")) {
+            dongXe = "";
+        }
 
         String soKhung = txtSoKhung.getText().trim().toUpperCase();
         txtSoKhung.setText(soKhung);

@@ -372,6 +372,21 @@ public final class UiHelper {
      * @param dsGoc Danh sách mục gốc đầy đủ
      * @param onSelect Callback khi người dùng chọn hoặc nhấn Enter (có thể null)
      */
+    /**
+     * So sánh theo số mã tự nhiên (ví dụ KH001 < KH002 < KH010 < KH101).
+     */
+    public static int soSanhTuNhien(String ma1, String ma2) {
+        if (ma1 == null) return ma2 == null ? 0 : -1;
+        if (ma2 == null) return 1;
+        try {
+            long num1 = Long.parseLong(ma1.replaceAll("[^0-9]", ""));
+            long num2 = Long.parseLong(ma2.replaceAll("[^0-9]", ""));
+            return Long.compare(num1, num2);
+        } catch (Exception e) {
+            return ma1.compareToIgnoreCase(ma2);
+        }
+    }
+
     public static void ganLocTimKiemChoComboBox(JComboBox<String> cbo, java.util.List<String> dsGoc, Runnable onSelect) {
         if (cbo == null || dsGoc == null) return;
         cbo.setEditable(true);
@@ -392,6 +407,28 @@ public final class UiHelper {
                 if (code == java.awt.event.KeyEvent.VK_ENTER) {
                     if (cbo.isPopupVisible()) {
                         cbo.hidePopup();
+                    }
+                    String text = editor.getText().trim();
+                    String matched = null;
+                    if (!text.isEmpty()) {
+                        for (String item : dsGoc) {
+                            if (item.equalsIgnoreCase(text)) {
+                                matched = item;
+                                break;
+                            }
+                        }
+                        if (matched == null && cbo.getModel().getSize() > 0) {
+                            String top = cbo.getModel().getElementAt(0);
+                            if (top != null && !top.startsWith("-- Không tìm thấy")) {
+                                matched = top;
+                            }
+                        }
+                    }
+                    if (matched != null) {
+                        isAdjusting[0] = true;
+                        cbo.setSelectedItem(matched);
+                        editor.setText(matched);
+                        isAdjusting[0] = false;
                     }
                     if (onSelect != null) {
                         onSelect.run();
@@ -431,6 +468,62 @@ public final class UiHelper {
                     } catch (Exception ignored) {}
                 }
             }
+        });
+
+        editor.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (isAdjusting[0]) return;
+                String text = editor.getText().trim();
+                String matched = null;
+                if (!text.isEmpty()) {
+                    for (String item : dsGoc) {
+                        if (item.equalsIgnoreCase(text)) {
+                            matched = item;
+                            break;
+                        }
+                    }
+                    if (matched == null && cbo.getModel().getSize() == 1) {
+                        String top = cbo.getModel().getElementAt(0);
+                        if (top != null && !top.startsWith("-- Không tìm thấy")) {
+                            matched = top;
+                        }
+                    }
+                }
+                if (matched != null) {
+                    isAdjusting[0] = true;
+                    cbo.setSelectedItem(matched);
+                    editor.setText(matched);
+                    isAdjusting[0] = false;
+                }
+                if (onSelect != null) {
+                    onSelect.run();
+                }
+            }
+        });
+
+        cbo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
+                if (isAdjusting[0]) return;
+                if (cbo.getItemCount() < dsGoc.size() && !editor.hasFocus()) {
+                    String selected = editor.getText().trim();
+                    isAdjusting[0] = true;
+                    cbo.setModel(new DefaultComboBoxModel<>(dsGoc.toArray(new String[0])));
+                    if (!selected.isEmpty()) {
+                        for (String item : dsGoc) {
+                            if (item.equalsIgnoreCase(selected)) {
+                                cbo.setSelectedItem(item);
+                                editor.setText(item);
+                                break;
+                            }
+                        }
+                    }
+                    isAdjusting[0] = false;
+                }
+            }
+            @Override public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {}
+            @Override public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {}
         });
 
         cbo.addActionListener(e -> {
