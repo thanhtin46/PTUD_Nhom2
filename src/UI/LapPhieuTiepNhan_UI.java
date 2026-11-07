@@ -390,7 +390,8 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         if (xe == null) {
             String hangXe = hang.isEmpty() ? "Khác" : hang;
             String dongXe = loai.isEmpty() ? "Xe con" : loai;
-            String vin = "VIN-" + bienSo.replaceAll("[^a-zA-Z0-9]", "");
+            String cleanBs = bienSo.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+            String vin = ("VN" + cleanBs + "00000000000000000").substring(0, 17);
             xe = new PhuongTien(bienSo, hangXe, dongXe, vin, "", "Mặc định",
                     String.valueOf(LocalDate.now().getYear()), "0", maKH, ngayTN);
             kho.themPhuongTien(xe);
