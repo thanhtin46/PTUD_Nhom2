@@ -40,16 +40,23 @@ public class KhachHang_DAO {
                 "    UNION " +
                 "    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 " +
                 "    UNION " +
-                "    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM HoaDon GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 " +
+                "    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM HoaDon WHERE trangThai <> 'DA_HUY' GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 " +
                 "  ) t " +
                 ")"
             );
 
-            // 2. Chuẩn hóa tất cả các giá trị ghi chú rỗng hoặc giá trị cũ về "Khách mới"
+            // 2. Chuyển về "Khách mới" cho tất cả khách hàng chưa đủ 2 lần
             stmt.executeUpdate(
                 "UPDATE KhachHang SET ghiChu = N'" + KhachHang.NHOM_MOI + "' " +
-                "WHERE ghiChu IS NULL OR LTRIM(RTRIM(ghiChu)) = '' " +
-                "   OR (ghiChu <> N'" + KhachHang.NHOM_THAN_THIET + "' AND ghiChu <> N'" + KhachHang.NHOM_MOI + "')"
+                "WHERE maKH NOT IN (" +
+                "  SELECT maKH FROM (" +
+                "    SELECT maKH, COUNT(DISTINCT maPTN) as cnt FROM PhieuTiepNhan GROUP BY maKH HAVING COUNT(DISTINCT maPTN) >= 2 " +
+                "    UNION " +
+                "    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 " +
+                "    UNION " +
+                "    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM HoaDon WHERE trangThai <> 'DA_HUY' GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 " +
+                "  ) t " +
+                ")"
             );
         } catch (SQLException e) {
             System.err.println("Lỗi KhachHang_DAO.dongBoNhomTatCaKhachHang: " + e.getMessage());

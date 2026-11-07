@@ -61,6 +61,7 @@ public class BaoCaoDoanhThu_UI extends JPanel {
     private JLabel lblValDichVu;
     private JLabel lblValPhuTung;
     private JLabel lblValHoaDon;
+    private JLabel lblMoTaTong;
 
     private JLabel lblTieuDeBieuDo;
     private BieuDoPanel bieuDo;
@@ -304,16 +305,17 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         lblValDichVu = new JLabel("0 đ");
         lblValPhuTung = new JLabel("0 đ");
         lblValHoaDon = new JLabel("0 lượt");
+        lblMoTaTong = new JLabel("Dữ liệu thực tế hệ thống");
 
-        grid.add(taoTheCardKpi("TỔNG DOANH THU", lblValTong, "+16.8% so với năm trước", new Color(37, 99, 235), new Color(239, 246, 255), "VNĐ"));
-        grid.add(taoTheCardKpi("DOANH THU DỊCH VỤ", lblValDichVu, "Tiền công thợ sửa chữa", new Color(14, 165, 233), new Color(240, 249, 255), "D/V"));
-        grid.add(taoTheCardKpi("DOANH THU PHỤ TÙNG", lblValPhuTung, "Linh kiện & Phụ tùng", new Color(16, 185, 129), new Color(236, 253, 245), "P/T"));
-        grid.add(taoTheCardKpi("SỐ HÓA ĐƠN ĐÃ THU", lblValHoaDon, "Đã quyết toán hoàn tất", new Color(245, 158, 11), new Color(254, 243, 199), "H/Đ"));
+        grid.add(taoTheCardKpi("TỔNG DOANH THU", lblValTong, lblMoTaTong, new Color(37, 99, 235), new Color(239, 246, 255), "VNĐ"));
+        grid.add(taoTheCardKpi("DOANH THU DỊCH VỤ", lblValDichVu, new JLabel("Tiền công thợ sửa chữa"), new Color(14, 165, 233), new Color(240, 249, 255), "D/V"));
+        grid.add(taoTheCardKpi("DOANH THU PHỤ TÙNG", lblValPhuTung, new JLabel("Linh kiện & Phụ tùng"), new Color(16, 185, 129), new Color(236, 253, 245), "P/T"));
+        grid.add(taoTheCardKpi("SỐ HÓA ĐƠN ĐÃ THU", lblValHoaDon, new JLabel("Đã quyết toán hoàn tất"), new Color(245, 158, 11), new Color(254, 243, 199), "H/Đ"));
 
         return grid;
     }
 
-    private JPanel taoTheCardKpi(String tieuDe, JLabel lblVal, String moTa, Color mauChuDao, Color mauNenNhe, String badgeText) {
+    private JPanel taoTheCardKpi(String tieuDe, JLabel lblVal, JLabel lblDesc, Color mauChuDao, Color mauNenNhe, String badgeText) {
         JPanel card = new JPanel(new BorderLayout(10, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -340,9 +342,16 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         lblVal.setFont(new Font("Segoe UI", Font.BOLD, 17));
         lblVal.setForeground(mauChuDao);
 
-        JLabel lblDesc = new JLabel(moTa);
         lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblDesc.setForeground(new Color(148, 163, 184));
+        if (lblDesc != lblMoTaTong) {
+            lblDesc.setForeground(new Color(148, 163, 184));
+        }
+
+        pnlLeft.add(lblTitle);
+        pnlLeft.add(Box.createVerticalStrut(3));
+        pnlLeft.add(lblVal);
+        pnlLeft.add(Box.createVerticalStrut(2));
+        pnlLeft.add(lblDesc);
 
         pnlLeft.add(lblTitle);
         pnlLeft.add(Box.createVerticalStrut(3));
@@ -459,8 +468,8 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         card.setOpaque(false);
         card.setBorder(new EmptyBorder(16, 20, 16, 20));
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
-        card.setPreferredSize(new Dimension(0, 485));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 540));
+        card.setPreferredSize(new Dimension(0, 525));
 
         JPanel pnlTop = new JPanel(new BorderLayout());
         pnlTop.setOpaque(false);
@@ -544,24 +553,31 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         tongPhuTungNam = 0;
         tongHoaDonNam = 0;
 
-        long[] dvGoc = {62000000L, 45000000L, 58000000L, 72000000L, 88000000L, 95000000L,
-                       84000000L, 68000000L, 79000000L, 92000000L, 105000000L, 120000000L};
-        long[] ptGoc = {51000000L, 38000000L, 46000000L, 61000000L, 74000000L, 82000000L,
-                       70000000L, 55000000L, 64000000L, 78000000L, 89000000L, 98000000L};
-        int[] hdGoc = {32, 24, 30, 36, 44, 48, 41, 35, 39, 45, 52, 60};
+        long[] dvThang = new long[12];
+        long[] ptThang = new long[12];
+        int[] hdThang = new int[12];
 
-        double heSo = (namChon == 2026) ? 1.0 : (namChon == 2025 ? 0.85 : 0.72);
+        long tongDoanhThuNamTruoc = 0;
 
-        // Cộng dồn hóa đơn thực tế trong hệ thống nếu có
-        for (HoaDon hd : kho.getHoaDons()) {
+        // Lấy danh sách hóa đơn từ KhoDuLieu (đồng bộ từ SQL Server)
+        List<HoaDon> dsHoaDon = kho.getHoaDons();
+        if (dsHoaDon == null || dsHoaDon.isEmpty()) {
+            dsHoaDon = new DAO.DuLieu_DAO().layTatCaHoaDon();
+        }
+
+        for (HoaDon hd : dsHoaDon) {
             if (HoaDon.DA_HUY.equalsIgnoreCase(hd.getTrangThai())) continue;
             LocalDate date = hd.getNgayLap();
-            if (date != null && date.getYear() == namChon) {
-                int thang = date.getMonthValue();
-                if (thang >= 1 && thang <= 12) {
-                    dvGoc[thang - 1] += hd.getTienDichVu();
-                    ptGoc[thang - 1] += hd.getTienPhuTung();
-                    hdGoc[thang - 1] += 1;
+            if (date != null) {
+                if (date.getYear() == namChon) {
+                    int thang = date.getMonthValue();
+                    if (thang >= 1 && thang <= 12) {
+                        dvThang[thang - 1] += hd.getTienDichVu();
+                        ptThang[thang - 1] += hd.getTienPhuTung();
+                        hdThang[thang - 1] += 1;
+                    }
+                } else if (date.getYear() == namChon - 1) {
+                    tongDoanhThuNamTruoc += hd.getTongTien();
                 }
             }
         }
@@ -569,9 +585,9 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         for (int i = 0; i < 12; i++) {
             String th = String.format("T%02d", i + 1);
             String ten = String.format("Tháng %02d/%d", i + 1, namChon);
-            long dv = (long) (dvGoc[i] * heSo);
-            long pt = (long) (ptGoc[i] * heSo);
-            int hd = Math.max(1, (int) (hdGoc[i] * heSo));
+            long dv = dvThang[i];
+            long pt = ptThang[i];
+            int hd = hdThang[i];
 
             ThangDoanhThu t = new ThangDoanhThu(th, ten, hd, dv, pt);
             dsThang.add(t);
@@ -585,7 +601,13 @@ public class BaoCaoDoanhThu_UI extends JPanel {
                 t.tangTruong = 0.0;
             } else {
                 long truoc = dsThang.get(i - 1).tongDoanhThu;
-                t.tangTruong = truoc > 0 ? ((double) (t.tongDoanhThu - truoc) / truoc) * 100.0 : 0.0;
+                if (truoc > 0) {
+                    t.tangTruong = ((double) (t.tongDoanhThu - truoc) / truoc) * 100.0;
+                } else if (t.tongDoanhThu > 0) {
+                    t.tangTruong = 100.0;
+                } else {
+                    t.tangTruong = 0.0;
+                }
             }
         }
 
@@ -594,6 +616,15 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         lblValDichVu.setText(UiHelper.tien(tongDichVuNam) + " đ");
         lblValPhuTung.setText(UiHelper.tien(tongPhuTungNam) + " đ");
         lblValHoaDon.setText(tongHoaDonNam + " lượt HĐ");
+
+        if (tongDoanhThuNamTruoc > 0) {
+            double ptNam = ((double) (tongDoanhThuNam - tongDoanhThuNamTruoc) / tongDoanhThuNamTruoc) * 100.0;
+            lblMoTaTong.setText(String.format("%s%.1f%% so với năm %d", (ptNam >= 0 ? "+" : ""), ptNam, namChon - 1));
+            lblMoTaTong.setForeground(ptNam >= 0 ? new Color(22, 163, 74) : new Color(225, 29, 72));
+        } else {
+            lblMoTaTong.setText("Dữ liệu thực tế năm " + namChon);
+            lblMoTaTong.setForeground(new Color(148, 163, 184));
+        }
 
         lblTieuDeBieuDo.setText("BIỂU ĐỒ TỔNG DOANH THU 12 THÁNG NĂM " + namChon);
 
@@ -605,8 +636,16 @@ public class BaoCaoDoanhThu_UI extends JPanel {
         int stt = 1;
         for (ThangDoanhThu t : dsThang) {
             double tyTrong = tongDoanhThuNam > 0 ? ((double) t.tongDoanhThu / tongDoanhThuNam) * 100.0 : 0.0;
-            String ttStr = (t.tangTruong > 0 ? "+" : "") + String.format("%.1f%%", t.tangTruong);
-            if (stt == 1) ttStr = "—";
+            String ttStr;
+            if (stt == 1) {
+                ttStr = "—";
+            } else if (t.tongDoanhThu == 0) {
+                ttStr = "—";
+            } else if (dsThang.get(stt - 2).tongDoanhThu == 0) {
+                ttStr = "+100.0%";
+            } else {
+                ttStr = (t.tangTruong > 0 ? "+" : "") + String.format("%.1f%%", t.tangTruong);
+            }
 
             modelBang.addRow(new Object[]{
                     String.format("%02d", stt++),
@@ -620,6 +659,14 @@ public class BaoCaoDoanhThu_UI extends JPanel {
             });
         }
         // Hàng tổng cộng
+        String tongKetTangTruong;
+        if (tongDoanhThuNamTruoc > 0) {
+            double ptNam = ((double) (tongDoanhThuNam - tongDoanhThuNamTruoc) / tongDoanhThuNamTruoc) * 100.0;
+            tongKetTangTruong = String.format("%s%.1f%% (So với %d)", (ptNam >= 0 ? "+" : ""), ptNam, namChon - 1);
+        } else {
+            tongKetTangTruong = "Tổng kết năm " + namChon;
+        }
+
         modelBang.addRow(new Object[]{
                 "★",
                 "TỔNG CỘNG (" + namChon + ")",
@@ -628,7 +675,7 @@ public class BaoCaoDoanhThu_UI extends JPanel {
                 UiHelper.tien(tongPhuTungNam) + " đ",
                 UiHelper.tien(tongDoanhThuNam) + " đ",
                 "100.0%",
-                "+16.8% (Cả năm)"
+                tongKetTangTruong
         });
     }
 

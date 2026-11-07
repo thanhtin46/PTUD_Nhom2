@@ -1233,5 +1233,601 @@ IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD='HD203' AND maPT='PT109')
 
 GO
 
+-- ============================================================
+-- PHẦN IV: DỮ LIỆU HÓA ĐƠN THỰC TẾ & ĐỒNG BỘ DOANH THU HỆ THỐNG
+-- Dữ liệu hóa đơn, sửa chữa và tiếp nhận cho 12 tháng năm 2026 và năm 2025
+-- Giúp thống kê doanh thu gara dựa 100% trên dữ liệu thực tế hệ thống
+-- ============================================================
+
+USE QuanLySuaChuaXe;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN301')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN301', 'NV01', 'KH001', 'VIN001', '2026-01-10T08:00:00', N'Bảo dưỡng 40.000km và thay ắc quy', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC301')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC301', 'TN301', 'NV02', 'KH001', 'VIN001', '2026-01-10T09:00:00', '2026-01-10', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD301')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD301', 'KH001', 'NV05', '2026-01-10', 'CHUYEN_KHOAN', 1800000, 4650000, 0, 6450000, N'Bảo dưỡng 40.000km và thay ắc quy', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD301')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD301', 1, N'Bảo dưỡng 40.000km và thay ắc quy', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD301')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD301', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng 40.000km và thay ắc quy)', N'Bộ', 1, 4650000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN302')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN302', 'NV01', 'KH101', 'VINDEMO101', '2026-01-18T08:00:00', N'Đại tu hệ thống gầm và thay lốp', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC302')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC302', 'TN302', 'NV101', 'KH101', 'VINDEMO101', '2026-01-18T09:00:00', '2026-01-18', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD302')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD302', 'KH101', 'NV05', '2026-01-18', 'TIEN_MAT', 2500000, 7450000, 0, 9950000, N'Đại tu hệ thống gầm và thay lốp', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD302')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD302', 1, N'Đại tu hệ thống gầm và thay lốp', N'Gói', 1, 2500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD302')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD302', 'PT101', N'Vật tư linh kiện thay thế (Đại tu hệ thống gầm và thay lốp)', N'Bộ', 1, 7450000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN303')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN303', 'NV01', 'KH102', 'VINDEMO102', '2026-01-25T08:00:00', N'Bảo dưỡng định kỳ cấp 2', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC303')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC303', 'TN303', 'NV102', 'KH102', 'VINDEMO102', '2026-01-25T09:00:00', '2026-01-25', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD303')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD303', 'KH102', 'NV05', '2026-01-25', 'THE_POS', 800000, 2300000, 0, 3100000, N'Bảo dưỡng định kỳ cấp 2', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD303')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD303', 1, N'Bảo dưỡng định kỳ cấp 2', N'Gói', 1, 800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD303')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD303', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ cấp 2)', N'Bộ', 1, 2300000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN304')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN304', 'NV01', 'KH002', 'VIN002', '2026-02-12T08:00:00', N'Bảo dưỡng phanh và thay má phanh', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC304')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC304', 'TN304', 'NV02', 'KH002', 'VIN002', '2026-02-12T09:00:00', '2026-02-12', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD304')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD304', 'KH002', 'NV05', '2026-02-12', 'TIEN_MAT', 1200000, 3850000, 0, 5050000, N'Bảo dưỡng phanh và thay má phanh', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD304')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD304', 1, N'Bảo dưỡng phanh và thay má phanh', N'Gói', 1, 1200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD304')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD304', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh và thay má phanh)', N'Bộ', 1, 3850000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN305')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN305', 'NV01', 'KH107', 'VINDEMO107', '2026-02-20T08:00:00', N'Bảo dưỡng lớn hệ thống điều hòa và làm mát', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC305')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC305', 'TN305', 'NV101', 'KH107', 'VINDEMO107', '2026-02-20T09:00:00', '2026-02-20', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD305')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD305', 'KH107', 'NV05', '2026-02-20', 'CHUYEN_KHOAN', 2400000, 6250000, 0, 8650000, N'Bảo dưỡng lớn hệ thống điều hòa và làm mát', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD305')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD305', 1, N'Bảo dưỡng lớn hệ thống điều hòa và làm mát', N'Gói', 1, 2400000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD305')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD305', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng lớn hệ thống điều hòa và làm mát)', N'Bộ', 1, 6250000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN306')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN306', 'NV01', 'KH103', 'VINDEMO103', '2026-02-26T08:00:00', N'Thay lọc nhớt, vệ sinh buồng đốt', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC306')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC306', 'TN306', 'NV102', 'KH103', 'VINDEMO103', '2026-02-26T09:00:00', '2026-02-26', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD306')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD306', 'KH103', 'NV05', '2026-02-26', 'CHUYEN_KHOAN', 1500000, 2000000, 0, 3500000, N'Thay lọc nhớt, vệ sinh buồng đốt', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD306')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD306', 1, N'Thay lọc nhớt, vệ sinh buồng đốt', N'Gói', 1, 1500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD306')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD306', 'PT101', N'Vật tư linh kiện thay thế (Thay lọc nhớt, vệ sinh buồng đốt)', N'Bộ', 1, 2000000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN307')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN307', 'NV01', 'KH112', 'VINDEMO112', '2026-03-15T08:00:00', N'Thay giảm xóc và cân chỉnh góc đặt bánh xe', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC307')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC307', 'TN307', 'NV101', 'KH112', 'VINDEMO112', '2026-03-15T09:00:00', '2026-03-15', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD307')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD307', 'KH112', 'NV05', '2026-03-15', 'THE_POS', 2800000, 8400000, 0, 11200000, N'Thay giảm xóc và cân chỉnh góc đặt bánh xe', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD307')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD307', 1, N'Thay giảm xóc và cân chỉnh góc đặt bánh xe', N'Gói', 1, 2800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD307')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD307', 'PT101', N'Vật tư linh kiện thay thế (Thay giảm xóc và cân chỉnh góc đặt bánh xe)', N'Bộ', 1, 8400000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN308')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN308', 'NV01', 'KH120', 'VINDEMO120', '2026-03-24T08:00:00', N'Bảo dưỡng cấp lớn 80.000km', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC308')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC308', 'TN308', 'NV102', 'KH120', 'VINDEMO120', '2026-03-24T09:00:00', '2026-03-24', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD308')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD308', 'KH120', 'NV05', '2026-03-24', 'CHUYEN_KHOAN', 3200000, 8150000, 0, 11350000, N'Bảo dưỡng cấp lớn 80.000km', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD308')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD308', 1, N'Bảo dưỡng cấp lớn 80.000km', N'Gói', 1, 3200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD308')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD308', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng cấp lớn 80.000km)', N'Bộ', 1, 8150000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN309')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN309', 'NV01', 'KH101', 'VINDEMO101', '2026-04-08T08:00:00', N'Bảo dưỡng tổng thể đón hè', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC309')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC309', 'TN309', 'NV02', 'KH101', 'VINDEMO101', '2026-04-08T09:00:00', '2026-04-08', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD309')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD309', 'KH101', 'NV05', '2026-04-08', 'TIEN_MAT', 1900000, 4800000, 0, 6700000, N'Bảo dưỡng tổng thể đón hè', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD309')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD309', 1, N'Bảo dưỡng tổng thể đón hè', N'Gói', 1, 1900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD309')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD309', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng tổng thể đón hè)', N'Bộ', 1, 4800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN310')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN310', 'NV01', 'KH104', 'VINDEMO104', '2026-04-14T08:00:00', N'Kiểm tra điện lạnh và thay lốc điều hòa', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC310')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC310', 'TN310', 'NV101', 'KH104', 'VINDEMO104', '2026-04-14T09:00:00', '2026-04-14', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD310')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD310', 'KH104', 'NV05', '2026-04-14', 'CHUYEN_KHOAN', 2100000, 5200000, 0, 7300000, N'Kiểm tra điện lạnh và thay lốc điều hòa', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD310')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD310', 1, N'Kiểm tra điện lạnh và thay lốc điều hòa', N'Gói', 1, 2100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD310')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD310', 'PT101', N'Vật tư linh kiện thay thế (Kiểm tra điện lạnh và thay lốc điều hòa)', N'Bộ', 1, 5200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN311')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN311', 'NV01', 'KH105', 'VINDEMO105', '2026-04-20T08:00:00', N'Bảo dưỡng phanh và thay dầu phanh', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC311')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC311', 'TN311', 'NV102', 'KH105', 'VINDEMO105', '2026-04-20T09:00:00', '2026-04-20', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD311')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD311', 'KH105', 'NV05', '2026-04-20', 'THE_POS', 1600000, 3900000, 0, 5500000, N'Bảo dưỡng phanh và thay dầu phanh', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD311')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD311', 1, N'Bảo dưỡng phanh và thay dầu phanh', N'Gói', 1, 1600000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD311')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD311', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh và thay dầu phanh)', N'Bộ', 1, 3900000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN312')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN312', 'NV01', 'KH106', 'VINDEMO106', '2026-04-28T08:00:00', N'Bảo dưỡng gầm và kiểm tra thước lái', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC312')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC312', 'TN312', 'NV02', 'KH106', 'VINDEMO106', '2026-04-28T09:00:00', '2026-04-28', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD312')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD312', 'KH106', 'NV05', '2026-04-28', 'TIEN_MAT', 2200000, 5100000, 0, 7300000, N'Bảo dưỡng gầm và kiểm tra thước lái', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD312')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD312', 1, N'Bảo dưỡng gầm và kiểm tra thước lái', N'Gói', 1, 2200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD312')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD312', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng gầm và kiểm tra thước lái)', N'Bộ', 1, 5100000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN313')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN313', 'NV01', 'KH107', 'VINDEMO107', '2026-05-06T08:00:00', N'Bảo dưỡng động cơ và vệ sinh kim phun', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC313')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC313', 'TN313', 'NV101', 'KH107', 'VINDEMO107', '2026-05-06T09:00:00', '2026-05-06', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD313')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD313', 'KH107', 'NV05', '2026-05-06', 'CHUYEN_KHOAN', 2500000, 6200000, 0, 8700000, N'Bảo dưỡng động cơ và vệ sinh kim phun', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD313')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD313', 1, N'Bảo dưỡng động cơ và vệ sinh kim phun', N'Gói', 1, 2500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD313')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD313', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng động cơ và vệ sinh kim phun)', N'Bộ', 1, 6200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN314')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN314', 'NV01', 'KH108', 'VINDEMO108', '2026-05-12T08:00:00', N'Bảo dưỡng định kỳ 20.000km', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC314')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC314', 'TN314', 'NV102', 'KH108', 'VINDEMO108', '2026-05-12T09:00:00', '2026-05-12', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD314')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD314', 'KH108', 'NV05', '2026-05-12', 'TIEN_MAT', 1800000, 4200000, 0, 6000000, N'Bảo dưỡng định kỳ 20.000km', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD314')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD314', 1, N'Bảo dưỡng định kỳ 20.000km', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD314')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD314', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ 20.000km)', N'Bộ', 1, 4200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN315')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN315', 'NV01', 'KH109', 'VINDEMO109', '2026-05-19T08:00:00', N'Thay dầu máy và lọc gió', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC315')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC315', 'TN315', 'NV02', 'KH109', 'VINDEMO109', '2026-05-19T09:00:00', '2026-05-19', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD315')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD315', 'KH109', 'NV05', '2026-05-19', 'THE_POS', 1400000, 3600000, 0, 5000000, N'Thay dầu máy và lọc gió', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD315')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD315', 1, N'Thay dầu máy và lọc gió', N'Gói', 1, 1400000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD315')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD315', 'PT101', N'Vật tư linh kiện thay thế (Thay dầu máy và lọc gió)', N'Bộ', 1, 3600000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN316')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN316', 'NV01', 'KH110', 'VINDEMO110', '2026-05-27T08:00:00', N'Thay má phanh trước sau và láng đĩa phanh', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC316')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC316', 'TN316', 'NV101', 'KH110', 'VINDEMO110', '2026-05-27T09:00:00', '2026-05-27', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD316')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD316', 'KH110', 'NV05', '2026-05-27', 'CHUYEN_KHOAN', 2600000, 6200000, 0, 8800000, N'Thay má phanh trước sau và láng đĩa phanh', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD316')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD316', 1, N'Thay má phanh trước sau và láng đĩa phanh', N'Gói', 1, 2600000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD316')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD316', 'PT101', N'Vật tư linh kiện thay thế (Thay má phanh trước sau và láng đĩa phanh)', N'Bộ', 1, 6200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN317')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN317', 'NV01', 'KH111', 'VINDEMO111', '2026-06-05T08:00:00', N'Bảo dưỡng định kỳ và thay bugi', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC317')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC317', 'TN317', 'NV102', 'KH111', 'VINDEMO111', '2026-06-05T09:00:00', '2026-06-05', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD317')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD317', 'KH111', 'NV05', '2026-06-05', 'TIEN_MAT', 2100000, 4800000, 0, 6900000, N'Bảo dưỡng định kỳ và thay bugi', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD317')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD317', 1, N'Bảo dưỡng định kỳ và thay bugi', N'Gói', 1, 2100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD317')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD317', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ và thay bugi)', N'Bộ', 1, 4800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN318')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN318', 'NV01', 'KH112', 'VINDEMO112', '2026-06-11T08:00:00', N'Bảo dưỡng hệ thống làm mát động cơ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC318')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC318', 'TN318', 'NV02', 'KH112', 'VINDEMO112', '2026-06-11T09:00:00', '2026-06-11', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD318')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD318', 'KH112', 'NV05', '2026-06-11', 'CHUYEN_KHOAN', 2700000, 6500000, 0, 9200000, N'Bảo dưỡng hệ thống làm mát động cơ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD318')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD318', 1, N'Bảo dưỡng hệ thống làm mát động cơ', N'Gói', 1, 2700000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD318')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD318', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng hệ thống làm mát động cơ)', N'Bộ', 1, 6500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN319')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN319', 'NV01', 'KH113', 'VINDEMO113', '2026-06-17T08:00:00', N'Bảo dưỡng hệ thống nạp khí và cảm biến', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC319')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC319', 'TN319', 'NV101', 'KH113', 'VINDEMO113', '2026-06-17T09:00:00', '2026-06-17', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD319')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD319', 'KH113', 'NV05', '2026-06-17', 'THE_POS', 1500000, 3800000, 0, 5300000, N'Bảo dưỡng hệ thống nạp khí và cảm biến', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD319')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD319', 1, N'Bảo dưỡng hệ thống nạp khí và cảm biến', N'Gói', 1, 1500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD319')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD319', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng hệ thống nạp khí và cảm biến)', N'Bộ', 1, 3800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN320')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN320', 'NV01', 'KH114', 'VINDEMO114', '2026-06-22T08:00:00', N'Bảo dưỡng cấp 3 định kỳ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC320')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC320', 'TN320', 'NV102', 'KH114', 'VINDEMO114', '2026-06-22T09:00:00', '2026-06-22', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD320')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD320', 'KH114', 'NV05', '2026-06-22', 'TIEN_MAT', 1800000, 4200000, 0, 6000000, N'Bảo dưỡng cấp 3 định kỳ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD320')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD320', 1, N'Bảo dưỡng cấp 3 định kỳ', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD320')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD320', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng cấp 3 định kỳ)', N'Bộ', 1, 4200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN321')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN321', 'NV01', 'KH115', 'VINDEMO115', '2026-06-28T08:00:00', N'Thay lọc nhiên liệu và vệ sinh họng hút', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC321')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC321', 'TN321', 'NV02', 'KH115', 'VINDEMO115', '2026-06-28T09:00:00', '2026-06-28', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD321')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD321', 'KH115', 'NV05', '2026-06-28', 'CHUYEN_KHOAN', 1400000, 3600000, 0, 5000000, N'Thay lọc nhiên liệu và vệ sinh họng hút', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD321')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD321', 1, N'Thay lọc nhiên liệu và vệ sinh họng hút', N'Gói', 1, 1400000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD321')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD321', 'PT101', N'Vật tư linh kiện thay thế (Thay lọc nhiên liệu và vệ sinh họng hút)', N'Bộ', 1, 3600000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN322')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN322', 'NV01', 'KH116', 'VINDEMO116', '2026-07-06T08:00:00', N'Bảo dưỡng điều hòa ô tô mùa nóng', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC322')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC322', 'TN322', 'NV101', 'KH116', 'VINDEMO116', '2026-07-06T09:00:00', '2026-07-06', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD322')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD322', 'KH116', 'NV05', '2026-07-06', 'TIEN_MAT', 2000000, 4900000, 0, 6900000, N'Bảo dưỡng điều hòa ô tô mùa nóng', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD322')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD322', 1, N'Bảo dưỡng điều hòa ô tô mùa nóng', N'Gói', 1, 2000000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD322')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD322', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng điều hòa ô tô mùa nóng)', N'Bộ', 1, 4900000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN323')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN323', 'NV01', 'KH117', 'VINDEMO117', '2026-07-14T08:00:00', N'Bảo dưỡng phanh và cân mâm bấm chì', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC323')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC323', 'TN323', 'NV102', 'KH117', 'VINDEMO117', '2026-07-14T09:00:00', '2026-07-14', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD323')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD323', 'KH117', 'NV05', '2026-07-14', 'CHUYEN_KHOAN', 1900000, 4800000, 0, 6700000, N'Bảo dưỡng phanh và cân mâm bấm chì', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD323')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD323', 1, N'Bảo dưỡng phanh và cân mâm bấm chì', N'Gói', 1, 1900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD323')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD323', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh và cân mâm bấm chì)', N'Bộ', 1, 4800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN324')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN324', 'NV01', 'KH118', 'VINDEMO118', '2026-07-20T08:00:00', N'Bảo dưỡng gầm và thay rotuyn cân bằng', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC324')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC324', 'TN324', 'NV02', 'KH118', 'VINDEMO118', '2026-07-20T09:00:00', '2026-07-20', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD324')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD324', 'KH118', 'NV05', '2026-07-20', 'THE_POS', 2100000, 5300000, 0, 7400000, N'Bảo dưỡng gầm và thay rotuyn cân bằng', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD324')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD324', 1, N'Bảo dưỡng gầm và thay rotuyn cân bằng', N'Gói', 1, 2100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD324')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD324', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng gầm và thay rotuyn cân bằng)', N'Bộ', 1, 5300000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN325')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN325', 'NV01', 'KH119', 'VINDEMO119', '2026-07-28T08:00:00', N'Bảo dưỡng định kỳ động cơ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC325')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC325', 'TN325', 'NV101', 'KH119', 'VINDEMO119', '2026-07-28T09:00:00', '2026-07-28', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD325')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD325', 'KH119', 'NV05', '2026-07-28', 'TIEN_MAT', 1800000, 4800000, 0, 6600000, N'Bảo dưỡng định kỳ động cơ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD325')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD325', 1, N'Bảo dưỡng định kỳ động cơ', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD325')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD325', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ động cơ)', N'Bộ', 1, 4800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN326')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN326', 'NV01', 'KH120', 'VINDEMO120', '2026-08-04T08:00:00', N'Kiểm tra hệ thống treo và thước lái', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC326')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC326', 'TN326', 'NV102', 'KH120', 'VINDEMO120', '2026-08-04T09:00:00', '2026-08-04', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD326')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD326', 'KH120', 'NV05', '2026-08-04', 'CHUYEN_KHOAN', 2200000, 5100000, 0, 7300000, N'Kiểm tra hệ thống treo và thước lái', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD326')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD326', 1, N'Kiểm tra hệ thống treo và thước lái', N'Gói', 1, 2200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD326')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD326', 'PT101', N'Vật tư linh kiện thay thế (Kiểm tra hệ thống treo và thước lái)', N'Bộ', 1, 5100000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN327')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN327', 'NV01', 'KH101', 'VINDEMO101', '2026-08-11T08:00:00', N'Thay dầu tổng hợp và kiểm tra xe định kỳ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC327')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC327', 'TN327', 'NV02', 'KH101', 'VINDEMO101', '2026-08-11T09:00:00', '2026-08-11', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD327')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD327', 'KH101', 'NV05', '2026-08-11', 'TIEN_MAT', 1800000, 4300000, 0, 6100000, N'Thay dầu tổng hợp và kiểm tra xe định kỳ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD327')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD327', 1, N'Thay dầu tổng hợp và kiểm tra xe định kỳ', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD327')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD327', 'PT101', N'Vật tư linh kiện thay thế (Thay dầu tổng hợp và kiểm tra xe định kỳ)', N'Bộ', 1, 4300000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN328')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN328', 'NV01', 'KH102', 'VINDEMO102', '2026-08-17T08:00:00', N'Bảo dưỡng phanh ABS và thay má phanh', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC328')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC328', 'TN328', 'NV101', 'KH102', 'VINDEMO102', '2026-08-17T09:00:00', '2026-08-17', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD328')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD328', 'KH102', 'NV05', '2026-08-17', 'THE_POS', 1900000, 4500000, 0, 6400000, N'Bảo dưỡng phanh ABS và thay má phanh', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD328')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD328', 1, N'Bảo dưỡng phanh ABS và thay má phanh', N'Gói', 1, 1900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD328')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD328', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh ABS và thay má phanh)', N'Bộ', 1, 4500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN329')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN329', 'NV01', 'KH103', 'VINDEMO103', '2026-08-23T08:00:00', N'Bảo dưỡng định kỳ 50.000km', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC329')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC329', 'TN329', 'NV102', 'KH103', 'VINDEMO103', '2026-08-23T09:00:00', '2026-08-23', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD329')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD329', 'KH103', 'NV05', '2026-08-23', 'CHUYEN_KHOAN', 2100000, 4900000, 0, 7000000, N'Bảo dưỡng định kỳ 50.000km', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD329')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD329', 1, N'Bảo dưỡng định kỳ 50.000km', N'Gói', 1, 2100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD329')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD329', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ 50.000km)', N'Bộ', 1, 4900000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN330')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN330', 'NV01', 'KH001', 'VIN001', '2026-08-29T08:00:00', N'Vệ sinh buồng đốt và thay nước làm mát', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC330')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC330', 'TN330', 'NV02', 'KH001', 'VIN001', '2026-08-29T09:00:00', '2026-08-29', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD330')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD330', 'KH001', 'NV05', '2026-08-29', 'TIEN_MAT', 1400000, 3300000, 0, 4700000, N'Vệ sinh buồng đốt và thay nước làm mát', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD330')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD330', 1, N'Vệ sinh buồng đốt và thay nước làm mát', N'Gói', 1, 1400000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD330')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD330', 'PT101', N'Vật tư linh kiện thay thế (Vệ sinh buồng đốt và thay nước làm mát)', N'Bộ', 1, 3300000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN331')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN331', 'NV01', 'KH002', 'VIN002', '2026-09-03T08:00:00', N'Bảo dưỡng hộp số và gầm xe', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC331')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC331', 'TN331', 'NV101', 'KH002', 'VIN002', '2026-09-03T09:00:00', '2026-09-03', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD331')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD331', 'KH002', 'NV05', '2026-09-03', 'CHUYEN_KHOAN', 2400000, 5600000, 0, 8000000, N'Bảo dưỡng hộp số và gầm xe', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD331')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD331', 1, N'Bảo dưỡng hộp số và gầm xe', N'Gói', 1, 2400000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD331')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD331', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng hộp số và gầm xe)', N'Bộ', 1, 5600000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN332')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN332', 'NV01', 'KH104', 'VINDEMO104', '2026-09-10T08:00:00', N'Bảo dưỡng định kỳ cấp 2', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC332')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC332', 'TN332', 'NV102', 'KH104', 'VINDEMO104', '2026-09-10T09:00:00', '2026-09-10', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD332')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD332', 'KH104', 'NV05', '2026-09-10', 'TIEN_MAT', 2100000, 4900000, 0, 7000000, N'Bảo dưỡng định kỳ cấp 2', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD332')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD332', 1, N'Bảo dưỡng định kỳ cấp 2', N'Gói', 1, 2100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD332')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD332', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ cấp 2)', N'Bộ', 1, 4900000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN333')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN333', 'NV01', 'KH105', 'VINDEMO105', '2026-09-16T08:00:00', N'Bảo dưỡng điều hòa và khử mùi ozon', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC333')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC333', 'TN333', 'NV02', 'KH105', 'VINDEMO105', '2026-09-16T09:00:00', '2026-09-16', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD333')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD333', 'KH105', 'NV05', '2026-09-16', 'THE_POS', 1800000, 4200000, 0, 6000000, N'Bảo dưỡng điều hòa và khử mùi ozon', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD333')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD333', 1, N'Bảo dưỡng điều hòa và khử mùi ozon', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD333')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD333', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng điều hòa và khử mùi ozon)', N'Bộ', 1, 4200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN334')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN334', 'NV01', 'KH106', 'VINDEMO106', '2026-09-22T08:00:00', N'Thay ắc quy và kiểm tra củ đề', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC334')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC334', 'TN334', 'NV101', 'KH106', 'VINDEMO106', '2026-09-22T09:00:00', '2026-09-22', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD334')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD334', 'KH106', 'NV05', '2026-09-22', 'TIEN_MAT', 2000000, 4700000, 0, 6700000, N'Thay ắc quy và kiểm tra củ đề', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD334')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD334', 1, N'Thay ắc quy và kiểm tra củ đề', N'Gói', 1, 2000000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD334')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD334', 'PT101', N'Vật tư linh kiện thay thế (Thay ắc quy và kiểm tra củ đề)', N'Bộ', 1, 4700000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN335')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN335', 'NV01', 'KH107', 'VINDEMO107', '2026-09-28T08:00:00', N'Bảo dưỡng phanh và gầm', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC335')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC335', 'TN335', 'NV102', 'KH107', 'VINDEMO107', '2026-09-28T09:00:00', '2026-09-28', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD335')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD335', 'KH107', 'NV05', '2026-09-28', 'CHUYEN_KHOAN', 1900000, 4600000, 0, 6500000, N'Bảo dưỡng phanh và gầm', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD335')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD335', 1, N'Bảo dưỡng phanh và gầm', N'Gói', 1, 1900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD335')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD335', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh và gầm)', N'Bộ', 1, 4600000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN336')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN336', 'NV01', 'KH112', 'VINDEMO112', '2026-10-05T08:00:00', N'Bảo dưỡng định kỳ 60.000km', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC336')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC336', 'TN336', 'NV02', 'KH112', 'VINDEMO112', '2026-10-05T09:00:00', '2026-10-05', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD336')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD336', 'KH112', 'NV05', '2026-10-05', 'THE_POS', 3000000, 7500000, 0, 10500000, N'Bảo dưỡng định kỳ 60.000km', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD336')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD336', 1, N'Bảo dưỡng định kỳ 60.000km', N'Gói', 1, 3000000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD336')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD336', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ 60.000km)', N'Bộ', 1, 7500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN337')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN337', 'NV01', 'KH120', 'VINDEMO120', '2026-10-10T08:00:00', N'Thay lốp và cân mâm', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC337')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC337', 'TN337', 'NV101', 'KH120', 'VINDEMO120', '2026-10-10T09:00:00', '2026-10-10', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD337')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD337', 'KH120', 'NV05', '2026-10-10', 'CHUYEN_KHOAN', 2500000, 6000000, 0, 8500000, N'Thay lốp và cân mâm', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD337')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD337', 1, N'Thay lốp và cân mâm', N'Gói', 1, 2500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD337')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD337', 'PT101', N'Vật tư linh kiện thay thế (Thay lốp và cân mâm)', N'Bộ', 1, 6000000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN338')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN338', 'NV01', 'KH101', 'VINDEMO101', '2026-11-02T08:00:00', N'Bảo dưỡng đầu đông', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC338')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC338', 'TN338', 'NV102', 'KH101', 'VINDEMO101', '2026-11-02T09:00:00', '2026-11-02', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD338')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD338', 'KH101', 'NV05', '2026-11-02', 'TIEN_MAT', 2200000, 5400000, 0, 7600000, N'Bảo dưỡng đầu đông', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD338')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD338', 1, N'Bảo dưỡng đầu đông', N'Gói', 1, 2200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD338')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD338', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng đầu đông)', N'Bộ', 1, 5400000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN339')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN339', 'NV01', 'KH102', 'VINDEMO102', '2026-11-05T08:00:00', N'Bảo dưỡng định kỳ và thay lọc nhớt', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC339')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC339', 'TN339', 'NV02', 'KH102', 'VINDEMO102', '2026-11-05T09:00:00', '2026-11-05', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD339')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD339', 'KH102', 'NV05', '2026-11-05', 'CHUYEN_KHOAN', 1800000, 4200000, 0, 6000000, N'Bảo dưỡng định kỳ và thay lọc nhớt', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD339')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD339', 1, N'Bảo dưỡng định kỳ và thay lọc nhớt', N'Gói', 1, 1800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD339')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD339', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ và thay lọc nhớt)', N'Bộ', 1, 4200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2501')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2501', 'NV01', 'KH001', 'VIN001', '2025-01-15T08:00:00', N'Bảo dưỡng định kỳ 2025', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2501')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2501', 'TN2501', 'NV02', 'KH001', 'VIN001', '2025-01-15T09:00:00', '2025-01-15', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2501')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2501', 'KH001', 'NV05', '2025-01-15', 'TIEN_MAT', 4500000, 12500000, 0, 17000000, N'Bảo dưỡng định kỳ 2025', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2501')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2501', 1, N'Bảo dưỡng định kỳ 2025', N'Gói', 1, 4500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2501')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2501', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng định kỳ 2025)', N'Bộ', 1, 12500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2502')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2502', 'NV01', 'KH002', 'VIN002', '2025-02-18T08:00:00', N'Bảo dưỡng hệ thống phanh', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2502')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2502', 'TN2502', 'NV02', 'KH002', 'VIN002', '2025-02-18T09:00:00', '2025-02-18', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2502')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2502', 'KH002', 'NV05', '2025-02-18', 'CHUYEN_KHOAN', 3800000, 11200000, 0, 15000000, N'Bảo dưỡng hệ thống phanh', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2502')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2502', 1, N'Bảo dưỡng hệ thống phanh', N'Gói', 1, 3800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2502')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2502', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng hệ thống phanh)', N'Bộ', 1, 11200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2503')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2503', 'NV01', 'KH101', 'VINDEMO101', '2025-03-20T08:00:00', N'Thay giảm xóc và lốp', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2503')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2503', 'TN2503', 'NV101', 'KH101', 'VINDEMO101', '2025-03-20T09:00:00', '2025-03-20', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2503')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2503', 'KH101', 'NV05', '2025-03-20', 'TIEN_MAT', 5200000, 14800000, 0, 20000000, N'Thay giảm xóc và lốp', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2503')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2503', 1, N'Thay giảm xóc và lốp', N'Gói', 1, 5200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2503')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2503', 'PT101', N'Vật tư linh kiện thay thế (Thay giảm xóc và lốp)', N'Bộ', 1, 14800000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2504')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2504', 'NV01', 'KH102', 'VINDEMO102', '2025-04-12T08:00:00', N'Bảo dưỡng tổng thể đón hè 2025', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2504')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2504', 'TN2504', 'NV102', 'KH102', 'VINDEMO102', '2025-04-12T09:00:00', '2025-04-12', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2504')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2504', 'KH102', 'NV05', '2025-04-12', 'THE_POS', 6100000, 16200000, 0, 22300000, N'Bảo dưỡng tổng thể đón hè 2025', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2504')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2504', 1, N'Bảo dưỡng tổng thể đón hè 2025', N'Gói', 1, 6100000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2504')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2504', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng tổng thể đón hè 2025)', N'Bộ', 1, 16200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2505')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2505', 'NV01', 'KH103', 'VINDEMO103', '2025-05-15T08:00:00', N'Đại tu điều hòa và làm mát', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2505')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2505', 'TN2505', 'NV02', 'KH103', 'VINDEMO103', '2025-05-15T09:00:00', '2025-05-15', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2505')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2505', 'KH103', 'NV05', '2025-05-15', 'CHUYEN_KHOAN', 7200000, 18500000, 0, 25700000, N'Đại tu điều hòa và làm mát', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2505')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2505', 1, N'Đại tu điều hòa và làm mát', N'Gói', 1, 7200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2505')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2505', 'PT101', N'Vật tư linh kiện thay thế (Đại tu điều hòa và làm mát)', N'Bộ', 1, 18500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2506')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2506', 'NV01', 'KH104', 'VINDEMO104', '2025-06-18T08:00:00', N'Bảo dưỡng gầm xe', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2506')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2506', 'TN2506', 'NV101', 'KH104', 'VINDEMO104', '2025-06-18T09:00:00', '2025-06-18', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2506')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2506', 'KH104', 'NV05', '2025-06-18', 'TIEN_MAT', 7900000, 20100000, 0, 28000000, N'Bảo dưỡng gầm xe', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2506')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2506', 1, N'Bảo dưỡng gầm xe', N'Gói', 1, 7900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2506')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2506', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng gầm xe)', N'Bộ', 1, 20100000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2507')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2507', 'NV01', 'KH105', 'VINDEMO105', '2025-07-22T08:00:00', N'Bảo dưỡng cấp 3', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2507')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2507', 'TN2507', 'NV102', 'KH105', 'VINDEMO105', '2025-07-22T09:00:00', '2025-07-22', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2507')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2507', 'KH105', 'NV05', '2025-07-22', 'THE_POS', 6800000, 17200000, 0, 24000000, N'Bảo dưỡng cấp 3', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2507')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2507', 1, N'Bảo dưỡng cấp 3', N'Gói', 1, 6800000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2507')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2507', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng cấp 3)', N'Bộ', 1, 17200000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2508')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2508', 'NV01', 'KH106', 'VINDEMO106', '2025-08-19T08:00:00', N'Thay ắc quy và bảo dưỡng điện', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2508')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2508', 'TN2508', 'NV02', 'KH106', 'VINDEMO106', '2025-08-19T09:00:00', '2025-08-19', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2508')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2508', 'KH106', 'NV05', '2025-08-19', 'CHUYEN_KHOAN', 7500000, 19300000, 0, 26800000, N'Thay ắc quy và bảo dưỡng điện', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2508')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2508', 1, N'Thay ắc quy và bảo dưỡng điện', N'Gói', 1, 7500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2508')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2508', 'PT101', N'Vật tư linh kiện thay thế (Thay ắc quy và bảo dưỡng điện)', N'Bộ', 1, 19300000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2509')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2509', 'NV01', 'KH107', 'VINDEMO107', '2025-09-14T08:00:00', N'Bảo dưỡng lớn định kỳ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2509')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2509', 'TN2509', 'NV101', 'KH107', 'VINDEMO107', '2025-09-14T09:00:00', '2025-09-14', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2509')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2509', 'KH107', 'NV05', '2025-09-14', 'TIEN_MAT', 8200000, 21500000, 0, 29700000, N'Bảo dưỡng lớn định kỳ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2509')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2509', 1, N'Bảo dưỡng lớn định kỳ', N'Gói', 1, 8200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2509')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2509', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng lớn định kỳ)', N'Bộ', 1, 21500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2510')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2510', 'NV01', 'KH108', 'VINDEMO108', '2025-10-16T08:00:00', N'Bảo dưỡng phanh và lái', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2510')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2510', 'TN2510', 'NV102', 'KH108', 'VINDEMO108', '2025-10-16T09:00:00', '2025-10-16', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2510')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2510', 'KH108', 'NV05', '2025-10-16', 'CHUYEN_KHOAN', 8900000, 23000000, 0, 31900000, N'Bảo dưỡng phanh và lái', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2510')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2510', 1, N'Bảo dưỡng phanh và lái', N'Gói', 1, 8900000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2510')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2510', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng phanh và lái)', N'Bộ', 1, 23000000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2511')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2511', 'NV01', 'KH109', 'VINDEMO109', '2025-11-20T08:00:00', N'Đại tu động cơ', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2511')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2511', 'TN2511', 'NV02', 'KH109', 'VINDEMO109', '2025-11-20T09:00:00', '2025-11-20', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2511')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2511', 'KH109', 'NV05', '2025-11-20', 'THE_POS', 9500000, 24500000, 0, 34000000, N'Đại tu động cơ', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2511')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2511', 1, N'Đại tu động cơ', N'Gói', 1, 9500000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2511')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2511', 'PT101', N'Vật tư linh kiện thay thế (Đại tu động cơ)', N'Bộ', 1, 24500000);
+
+IF NOT EXISTS (SELECT 1 FROM PhieuTiepNhan WHERE maPTN = 'TN2512')
+  INSERT INTO PhieuTiepNhan (maPTN, maNV, maKH, soVIN, ngayTN, yeuCauSC, trangThaiXe) VALUES ('TN2512', 'NV01', 'KH110', 'VINDEMO110', '2025-12-22T08:00:00', N'Bảo dưỡng đón Tết 2025', N'Hoàn thành');
+IF NOT EXISTS (SELECT 1 FROM PhieuSuaChua WHERE maPSC = 'SC2512')
+  INSERT INTO PhieuSuaChua (maPSC, maPTN, maNV, maKH, soVIN, ngayBD, ngayHoanThanhDuKien, trangThai) VALUES ('SC2512', 'TN2512', 'NV101', 'KH110', 'VINDEMO110', '2025-12-22T09:00:00', '2025-12-22', 'HOAN_THANH');
+IF NOT EXISTS (SELECT 1 FROM HoaDon WHERE maHD = 'HD2512')
+  INSERT INTO HoaDon (maHD, maKH, maNV, ngayLap, hinhThucThanhToan, tienDichVu, tienPhuTung, giamGia, tongTien, ghiChu, trangThai) VALUES ('HD2512', 'KH110', 'NV05', '2025-12-22', 'CHUYEN_KHOAN', 10200000, 26800000, 0, 37000000, N'Bảo dưỡng đón Tết 2025', 'DA_THANH_TOAN');
+IF NOT EXISTS (SELECT 1 FROM ChiTietDichVuHoaDon WHERE maHD = 'HD2512')
+  INSERT INTO ChiTietDichVuHoaDon (maHD, stt, tenDichVu, donViTinh, soLuong, donGia) VALUES ('HD2512', 1, N'Bảo dưỡng đón Tết 2025', N'Gói', 1, 10200000);
+IF NOT EXISTS (SELECT 1 FROM ChiTietHoaDon WHERE maHD = 'HD2512')
+  INSERT INTO ChiTietHoaDon (maHD, maPT, tenPhuTung, donViTinh, soLuong, donGia) VALUES ('HD2512', 'PT101', N'Vật tư linh kiện thay thế (Bảo dưỡng đón Tết 2025)', N'Bộ', 1, 26800000);
+
+
+-- Đồng bộ nhóm khách hàng theo quy tắc: >= 2 lần sửa chữa là Thân thiết, < 2 lần là Khách mới
+UPDATE dbo.KhachHang SET ghiChu = N'Khách hàng thân thiết' 
+WHERE maKH IN (
+  SELECT maKH FROM (
+    SELECT maKH, COUNT(DISTINCT maPTN) as cnt FROM dbo.PhieuTiepNhan GROUP BY maKH HAVING COUNT(DISTINCT maPTN) >= 2 
+    UNION 
+    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM dbo.PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 
+    UNION 
+    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM dbo.HoaDon WHERE trangThai <> 'DA_HUY' GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 
+  ) t 
+);
+
+UPDATE dbo.KhachHang SET ghiChu = N'Khách mới' 
+WHERE maKH NOT IN (
+  SELECT maKH FROM (
+    SELECT maKH, COUNT(DISTINCT maPTN) as cnt FROM dbo.PhieuTiepNhan GROUP BY maKH HAVING COUNT(DISTINCT maPTN) >= 2 
+    UNION 
+    SELECT maKH, COUNT(DISTINCT maPSC) as cnt FROM dbo.PhieuSuaChua GROUP BY maKH HAVING COUNT(DISTINCT maPSC) >= 2 
+    UNION 
+    SELECT maKH, COUNT(DISTINCT maHD) as cnt FROM dbo.HoaDon WHERE trangThai <> 'DA_HUY' GROUP BY maKH HAVING COUNT(DISTINCT maHD) >= 2 
+  ) t 
+);
+GO
+
+
 PRINT N'Hoàn tất nạp CSDL QuanLySuaChuaXe thành công!';
 GO
