@@ -12,24 +12,34 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Màn hình quản lý danh sách phụ tùng trong kho.
  * Hỗ trợ tìm kiếm, lọc theo phân loại, kiểm tra ràng buộc dữ liệu và cập nhật thông tin.
+ * Các combobox hỗ trợ gõ chữ tìm kiếm, danh sách sắp xếp theo bảng chữ cái hoặc số mã.
  */
 public class DanhSachPhuTung_UI extends JPanel {
 
-    // ── Các phân loại cố định ──────────────────────────────────────────────
+    // ── Các phân loại sắp xếp theo bảng chữ cái tiếng Việt ─────────────────
     static final String[] PHAN_LOAI_OPTIONS = {
-            "Lọc & Bảo dưỡng",
             "Dầu nhớt & Dung dịch",
-            "Hệ thống Phanh",
             "Điện & Ắc quy",
-            "Khung gầm & Giảm xóc",
             "Động cơ & Nhiên liệu",
-            "Lốp & Phụ kiện",
-            "Khác"
+            "Hệ thống Phanh",
+            "Khác",
+            "Khung gầm & Giảm xóc",
+            "Lọc & Bảo dưỡng",
+            "Lốp & Phụ kiện"
     };
+
+    private static final List<String> DS_TON_KHO = List.of(
+            "Tất cả mức tồn",
+            "Còn nhiều (> 20)",
+            "Trung bình (10 - 20)",
+            "Sắp hết (< 10)"
+    );
 
     // ── Form nhập liệu bên trái ───────────────────────────────────────────
     private final JTextField        txtMa       = new JTextField();
@@ -59,9 +69,7 @@ public class DanhSachPhuTung_UI extends JPanel {
         }
     };
     private final JComboBox<String> cboLocLoai = new JComboBox<>();
-    private final JComboBox<String> cboTonKho  = new JComboBox<>(new String[]{
-            "Tất cả mức tồn", "Còn nhiều (> 20)", "Trung bình (10 - 20)", "Sắp hết (< 10)"
-    });
+    private final JComboBox<String> cboTonKho  = new JComboBox<>(DS_TON_KHO.toArray(new String[0]));
     private final JLabel lblThongKe = new JLabel("Hiển thị: 0 phụ tùng");
 
     private final KhoDuLieu kho = KhoDuLieu.get();
@@ -80,6 +88,10 @@ public class DanhSachPhuTung_UI extends JPanel {
         UiHelper.chiChoNhapSo(txtGia, 12);
         UiHelper.chiChoNhapSo(txtTon, 8);
 
+        // Gắn tìm kiếm khi gõ chữ cho các combobox
+        UiHelper.ganLocTimKiemChoComboBox(cboLoaiForm, Arrays.asList(PHAN_LOAI_OPTIONS), null);
+        UiHelper.ganLocTimKiemChoComboBox(cboTonKho, DS_TON_KHO, this::napBang);
+
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, taoForm(), taoBang());
         split.setResizeWeight(0.32);
         split.setDividerLocation(390);
@@ -91,12 +103,13 @@ public class DanhSachPhuTung_UI extends JPanel {
         napBang();
     }
 
-    /** Khởi tạo combobox lọc phân loại (gồm "Tất cả" + các loại cố định). */
+    /** Khởi tạo combobox lọc phân loại (gồm "Tất cả" + các loại cố định sắp xếp A-Z). */
     private void napLocLoai() {
-        cboLocLoai.removeAllItems();
-        cboLocLoai.addItem("Tất cả phân loại");
-        for (String s : PHAN_LOAI_OPTIONS) cboLocLoai.addItem(s);
-        cboLocLoai.addActionListener(e -> napBang());
+        List<String> dsLoc = new ArrayList<>();
+        dsLoc.add("Tất cả phân loại");
+        dsLoc.addAll(Arrays.asList(PHAN_LOAI_OPTIONS));
+        cboLocLoai.setModel(new DefaultComboBoxModel<>(dsLoc.toArray(new String[0])));
+        UiHelper.ganLocTimKiemChoComboBox(cboLocLoai, dsLoc, this::napBang);
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -142,13 +155,14 @@ public class DanhSachPhuTung_UI extends JPanel {
     // XÂY DỰNG BẢNG PHẢI
     // ─────────────────────────────────────────────────────────────────────
     private JPanel taoBang() {
-        JPanel bangPanel = UiHelper.panelBang("Danh sách phụ tùng");
+        JPanel bangPanel = UiHelper.panelBang("Danh sách phụ tùng & linh kiện");
 
         bangPanel.add(taoThanhLoc(), BorderLayout.NORTH);
 
         // Cột: Mã PT | Tên phụ tùng | Phân loại | ĐVT | Tồn kho | Đơn giá (đ) (Đã bỏ cột Nhà cung cấp)
         model = UiHelper.model("Mã PT", "Tên phụ tùng", "Phân loại", "ĐVT", "Tồn kho", "Đơn giá (đ)");
         table = UiHelper.bang(model);
+        table.setAutoCreateRowSorter(true); // Hỗ trợ click tiêu đề cột để sắp xếp trực tiếp theo A-Z hoặc số
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(80);   // Mã PT
@@ -231,7 +245,6 @@ public class DanhSachPhuTung_UI extends JPanel {
         gbc.gridx = 2; gbc.weightx = 0.20;
         cboTonKho.setPreferredSize(new Dimension(0, 34));
         cboTonKho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        cboTonKho.addActionListener(e -> napBang());
         row1.add(cboTonKho, gbc);
 
         // Nút Bỏ lọc
@@ -295,12 +308,15 @@ public class DanhSachPhuTung_UI extends JPanel {
 
     private void napBang() {
         String tuKhoa   = txtTimKiem != null ? txtTimKiem.getText().trim().toLowerCase() : "";
-        String loaiChon = cboLocLoai != null ? String.valueOf(cboLocLoai.getSelectedItem()) : "Tất cả phân loại";
-        String tonChon  = cboTonKho  != null ? String.valueOf(cboTonKho.getSelectedItem())  : "Tất cả mức tồn";
+        String tuKhoaKhongDau = UiHelper.boDauTiengViet(tuKhoa);
+        String loaiChon = cboLocLoai != null && cboLocLoai.getSelectedItem() != null ? String.valueOf(cboLocLoai.getSelectedItem()) : "Tất cả phân loại";
+        String tonChon  = cboTonKho  != null && cboTonKho.getSelectedItem() != null  ? String.valueOf(cboTonKho.getSelectedItem())  : "Tất cả mức tồn";
 
         model.setRowCount(0);
         int dem = 0;
         int tong = 0;
+
+        List<PhuTung> listLoc = new ArrayList<>();
 
         for (PhuTung pt : kho.getPhuTungs()) {
             // Bỏ qua các mã dịch vụ bảo hành ảo DVxxx
@@ -313,10 +329,13 @@ public class DanhSachPhuTung_UI extends JPanel {
             if (!tuKhoa.isEmpty()) {
                 String ma  = pt.getMaPT() != null ? pt.getMaPT().toLowerCase() : "";
                 String ten = pt.getTen()  != null ? pt.getTen().toLowerCase()  : "";
-                if (!ma.contains(tuKhoa) && !ten.contains(tuKhoa)) continue;
+                String tenKhongDau = UiHelper.boDauTiengViet(ten);
+                if (!ma.contains(tuKhoa) && !ten.contains(tuKhoa) && !tenKhongDau.contains(tuKhoaKhongDau)) {
+                    continue;
+                }
             }
             // 2. Lọc phân loại
-            if (!"Tất cả phân loại".equals(loaiChon)) {
+            if (!"Tất cả phân loại".equals(loaiChon) && !loaiChon.startsWith("--")) {
                 if (!phanLoaiPhuTung(pt).equalsIgnoreCase(loaiChon)) continue;
             }
             // 3. Lọc mức tồn
@@ -325,6 +344,13 @@ public class DanhSachPhuTung_UI extends JPanel {
                     && (pt.getSoLuongTon() < 10 || pt.getSoLuongTon() > 20))          continue;
             if ("Sắp hết (< 10)".equals(tonChon)         && pt.getSoLuongTon() >= 10) continue;
 
+            listLoc.add(pt);
+        }
+
+        // Sắp xếp danh sách phụ tùng theo số mã tăng dần (PT001, PT002, ..., PT101...)
+        listLoc.sort((a, b) -> BaoCaoTonKho_UI.soSanhMa(a.getMaPT(), b.getMaPT()));
+
+        for (PhuTung pt : listLoc) {
             dem++;
             model.addRow(new Object[]{
                     pt.getMaPT(),
@@ -411,7 +437,8 @@ public class DanhSachPhuTung_UI extends JPanel {
         }
         if (!kiemTra(false)) return;
 
-        String ma = table.getValueAt(dong, 0).toString();
+        int modelRow = table.convertRowIndexToModel(dong);
+        String ma = model.getValueAt(modelRow, 0).toString();
         PhuTung pt = kho.timPhuTung(ma);
         if (pt == null) return;
 
@@ -435,8 +462,9 @@ public class DanhSachPhuTung_UI extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn phụ tùng cần xóa trong danh sách!", "Nhắc nhở", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String ma  = table.getValueAt(dong, 0).toString();
-        String ten = table.getValueAt(dong, 1).toString();
+        int modelRow = table.convertRowIndexToModel(dong);
+        String ma  = model.getValueAt(modelRow, 0).toString();
+        String ten = model.getValueAt(modelRow, 1).toString();
         if (JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc chắn muốn xóa phụ tùng [" + ma + "] " + ten + "?",
                 "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)
@@ -465,17 +493,18 @@ public class DanhSachPhuTung_UI extends JPanel {
         int dong = table.getSelectedRow();
         if (dong < 0) return;
 
-        String ma = table.getValueAt(dong, 0).toString();
+        int modelRow = table.convertRowIndexToModel(dong);
+        String ma = model.getValueAt(modelRow, 0).toString();
 
         txtMa.setText(ma);
-        txtTen.setText(table.getValueAt(dong, 1).toString());
-        txtDonVi.setText(table.getValueAt(dong, 3).toString());
-        txtTon.setText(table.getValueAt(dong, 4).toString());
-        txtGia.setText(table.getValueAt(dong, 5).toString().replaceAll("[^0-9]", ""));
+        txtTen.setText(model.getValueAt(modelRow, 1).toString());
+        txtDonVi.setText(model.getValueAt(modelRow, 3).toString());
+        txtTon.setText(model.getValueAt(modelRow, 4).toString());
+        txtGia.setText(model.getValueAt(modelRow, 5).toString().replaceAll("[^0-9]", ""));
         txtMa.setEditable(false);
 
         // Chọn đúng phân loại trong combo
-        String loai = table.getValueAt(dong, 2).toString();
+        String loai = model.getValueAt(modelRow, 2).toString();
         for (int i = 0; i < cboLoaiForm.getItemCount(); i++) {
             if (loai.equalsIgnoreCase(cboLoaiForm.getItemAt(i))) {
                 cboLoaiForm.setSelectedIndex(i);

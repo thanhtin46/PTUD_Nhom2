@@ -354,6 +354,92 @@ public final class UiHelper {
         chiChoNhapSo(tf, 0);
     }
 
+    /**
+     * Bỏ dấu tiếng Việt để phục vụ tìm kiếm mềm dẻo (không phân biệt có dấu / không dấu).
+     */
+    public static String boDauTiengViet(String s) {
+        if (s == null) return "";
+        String nfd = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return p.matcher(nfd).replaceAll("").replace('đ', 'd').replace('Đ', 'D');
+    }
+
+    /**
+     * Gắn tính năng tự động lọc tìm kiếm danh sách khi người dùng nhập chữ vào JComboBox.
+     * Hỗ trợ tìm kiếm không dấu / có dấu tiếng Việt, hiển thị popup kết quả gợi ý trực tiếp.
+     *
+     * @param cbo JComboBox cần gắn tìm kiếm
+     * @param dsGoc Danh sách mục gốc đầy đủ
+     * @param onSelect Callback khi người dùng chọn hoặc nhấn Enter (có thể null)
+     */
+    public static void ganLocTimKiemChoComboBox(JComboBox<String> cbo, java.util.List<String> dsGoc, Runnable onSelect) {
+        if (cbo == null || dsGoc == null) return;
+        cbo.setEditable(true);
+        Component editorComp = cbo.getEditor().getEditorComponent();
+        if (!(editorComp instanceof JTextField editor)) return;
+
+        trangTriInput(editor);
+        final boolean[] isAdjusting = {false};
+
+        editor.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                int code = e.getKeyCode();
+                if (code == java.awt.event.KeyEvent.VK_UP || code == java.awt.event.KeyEvent.VK_DOWN
+                        || code == java.awt.event.KeyEvent.VK_ESCAPE) {
+                    return;
+                }
+                if (code == java.awt.event.KeyEvent.VK_ENTER) {
+                    if (cbo.isPopupVisible()) {
+                        cbo.hidePopup();
+                    }
+                    if (onSelect != null) {
+                        onSelect.run();
+                    }
+                    return;
+                }
+
+                String text = editor.getText();
+                String textLower = text.trim().toLowerCase();
+                String textKhongDau = boDauTiengViet(textLower);
+
+                java.util.List<String> filtered = new java.util.ArrayList<>();
+                for (String item : dsGoc) {
+                    if (textLower.isEmpty()) {
+                        filtered.add(item);
+                    } else {
+                        String itemLower = item.toLowerCase();
+                        String itemKhongDau = boDauTiengViet(itemLower);
+                        if (itemLower.contains(textLower) || itemKhongDau.contains(textKhongDau)) {
+                            filtered.add(item);
+                        }
+                    }
+                }
+
+                if (filtered.isEmpty()) {
+                    filtered.add("-- Không tìm thấy: \"" + text + "\" --");
+                }
+
+                isAdjusting[0] = true;
+                cbo.setModel(new DefaultComboBoxModel<>(filtered.toArray(new String[0])));
+                editor.setText(text);
+                isAdjusting[0] = false;
+
+                if (!cbo.isPopupVisible() && cbo.getItemCount() > 0 && editor.isFocusOwner()) {
+                    try {
+                        cbo.showPopup();
+                    } catch (Exception ignored) {}
+                }
+            }
+        });
+
+        cbo.addActionListener(e -> {
+            if (!isAdjusting[0] && onSelect != null) {
+                onSelect.run();
+            }
+        });
+    }
+
     public static JButton nut(String text, Color mau, java.awt.event.ActionListener hanhDong) {
         return nut(text, (Icon) null, mau, false, hanhDong);
     }

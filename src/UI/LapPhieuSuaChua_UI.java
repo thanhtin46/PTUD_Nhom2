@@ -1082,9 +1082,21 @@ public class LapPhieuSuaChua_UI extends JPanel {
     private void napDuLieuPhuTung() {
         cboPhuTung.removeAllItems();
         cboPhuTung.addItem("-- Chọn phụ tùng từ kho --");
+        java.util.List<PhuTung> list = new java.util.ArrayList<>();
         for (PhuTung pt : kho.getPhuTungs()) {
-            cboPhuTung.addItem(pt.getMaPT() + " - " + pt.getTen() + " (Tồn " + pt.getSoLuongTon() + " " + pt.getDonVi() + ")");
+            if (pt.getMaPT() != null && pt.getMaPT().startsWith("DV")) continue;
+            list.add(pt);
         }
+        list.sort((a, b) -> BaoCaoTonKho_UI.soSanhMa(a.getMaPT(), b.getMaPT()));
+
+        java.util.List<String> ds = new java.util.ArrayList<>();
+        ds.add("-- Chọn phụ tùng từ kho --");
+        for (PhuTung pt : list) {
+            String item = pt.getMaPT() + " - " + pt.getTen() + " (Tồn " + pt.getSoLuongTon() + " " + pt.getDonVi() + ")";
+            cboPhuTung.addItem(item);
+            ds.add(item);
+        }
+        UiHelper.ganLocTimKiemChoComboBox(cboPhuTung, ds, this::capNhatGiaPhuTungDangChon);
         capNhatGiaPhuTungDangChon();
     }
 

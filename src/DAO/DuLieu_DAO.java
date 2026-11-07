@@ -331,6 +331,7 @@ public class DuLieu_DAO {
                 + "FROM PhuTung pt "
                 + "LEFT JOIN Kho k ON pt.maPT = k.maPT "
                 + "LEFT JOIN NhaCungCap ncc ON pt.maNCC = ncc.maNCC "
+                + "WHERE pt.maPT LIKE 'PT%' "
                 + "ORDER BY pt.maPT ASC";
 
         try (

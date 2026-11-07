@@ -287,20 +287,26 @@ public class NhapKho_UI extends JPanel {
     // =====================================================
 
     private void napComboPt() {
-
         cboPhuTung.removeAllItems();
-
+        java.util.List<PhuTung> list = new java.util.ArrayList<>();
         for (PhuTung pt : kho.getPhuTungs()) {
-
-            cboPhuTung.addItem(
-                    pt.getMaPT()
-                            + " - "
-                            + pt.getTen()
-                            + " (tồn "
-                            + pt.getSoLuongTon()
-                            + ")"
-            );
+            if (pt.getMaPT() != null && pt.getMaPT().startsWith("DV")) continue;
+            list.add(pt);
         }
+        list.sort((a, b) -> BaoCaoTonKho_UI.soSanhMa(a.getMaPT(), b.getMaPT()));
+
+        java.util.List<String> ds = new java.util.ArrayList<>();
+        for (PhuTung pt : list) {
+            String item = pt.getMaPT() + " - " + pt.getTen() + " (tồn " + pt.getSoLuongTon() + ")";
+            cboPhuTung.addItem(item);
+            ds.add(item);
+        }
+        UiHelper.ganLocTimKiemChoComboBox(cboPhuTung, ds, () -> {
+            capNhatGia();
+            if (!xuat) {
+                capNhatNhaCungCap();
+            }
+        });
     }
 
     // =====================================================
@@ -308,12 +314,12 @@ public class NhapKho_UI extends JPanel {
     // =====================================================
 
     private void napComboNcc() {
-
         cboNcc.removeAllItems();
-
-        for (String ncc : kho.layDanhSachNhaCungCap()) {
+        java.util.List<String> ds = new java.util.ArrayList<>(kho.layDanhSachNhaCungCap());
+        for (String ncc : ds) {
             cboNcc.addItem(ncc);
         }
+        UiHelper.ganLocTimKiemChoComboBox(cboNcc, ds, null);
     }
 
     // =====================================================
