@@ -144,6 +144,10 @@ public class QuanLyPhuongTien_UI extends JPanel {
         txtNamSX = new JTextField();
         txtOdo = new JTextField();
 
+        // Ràng buộc chỉ nhập số: Năm sản xuất (tối đa 4 số), Số km hiện tại (tối đa 9 số). Khi gõ chữ sẽ không hiện
+        UiHelper.chiChoNhapSo(txtNamSX, 4);
+        UiHelper.chiChoNhapSo(txtOdo, 9);
+
         cboChuXe = new JComboBox<>();
         napComboChuXe();
 

@@ -292,12 +292,26 @@ public final class UiHelper {
      */
     public static void chiChoNhapSo(JTextField tf, int doDaiToiDa) {
         if (tf == null) return;
+
+        // 1. Chặn ngay tại tầng sự kiện bàn phím khi người dùng gõ chữ
+        tf.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(java.awt.event.KeyEvent e) {
+                char c = e.getKeyChar();
+                // Cho phép phím điều khiển (Backspace, Delete), chặn toàn bộ chữ và ký tự khác
+                if (!Character.isDigit(c) && c != '\b' && c != 127) {
+                    e.consume();
+                }
+            }
+        });
+
+        // 2. Chặn toàn diện tại tầng Document (chặn cả Paste chuột, kéo thả, Ctrl+V)
         javax.swing.text.AbstractDocument doc = (javax.swing.text.AbstractDocument) tf.getDocument();
         doc.setDocumentFilter(new javax.swing.text.DocumentFilter() {
             @Override
             public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr)
                     throws javax.swing.text.BadLocationException {
-                if (string == null) return;
+                if (string == null || string.isEmpty()) return;
                 String filtered = string.replaceAll("[^0-9]", "");
                 if (filtered.isEmpty()) return;
                 int currentLength = fb.getDocument().getLength();
@@ -316,7 +330,15 @@ public final class UiHelper {
                     super.replace(fb, offset, length, null, attrs);
                     return;
                 }
+                if (text.isEmpty()) {
+                    super.replace(fb, offset, length, text, attrs);
+                    return;
+                }
                 String filtered = text.replaceAll("[^0-9]", "");
+                if (filtered.isEmpty()) {
+                    // Chứa toàn ký tự chữ hoặc không hợp lệ -> Bỏ qua, không hiển thị
+                    return;
+                }
                 int currentLength = fb.getDocument().getLength() - length;
                 if (doDaiToiDa > 0 && currentLength + filtered.length() > doDaiToiDa) {
                     int remaining = doDaiToiDa - currentLength;

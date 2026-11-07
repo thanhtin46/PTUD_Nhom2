@@ -60,6 +60,10 @@ public class QuanLyKhachHang_UI extends JPanel {
         txtSdt = new JTextField();
         txtCccd = new JTextField();
 
+        // Ràng buộc chỉ nhập số: Số điện thoại (tối đa 10 số), CCCD (tối đa 12 số). Khi gõ chữ sẽ không hiện
+        UiHelper.chiChoNhapSo(txtSdt, 10);
+        UiHelper.chiChoNhapSo(txtCccd, 12);
+
         // Cho phép nhập chữ bình thường, khi nhấn Thêm/Sửa mới kiểm tra và hiển thị thông báo lỗi
         txtDiaChi = new JTextField();
         txtEmail = new JTextField();
