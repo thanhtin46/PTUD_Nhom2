@@ -11,8 +11,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -52,6 +52,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
     private JLabel lblYeuCauDauVao;
     private JTextField txtNgayLap;
     private JTextField txtNgayHenGiao;
+    private JTextField txtGioHenGiao;
     private JComboBox<String> cboKtvPhuTrach;
     private JComboBox<String> cboTienDo;
     private JTextArea txtGhiChu;
@@ -247,8 +248,37 @@ public class LapPhieuSuaChua_UI extends JPanel {
         txtNgayLap.setEditable(false);
         UiHelper.trangTriInput(txtNgayLap);
 
-        txtNgayHenGiao = new JTextField(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        // Chọn ngày bằng lịch popup, chọn giờ bằng hộp thoại riêng.
+        LocalDateTime henMacDinh = LocalDateTime.now().plusHours(3);
+        txtNgayHenGiao = new JTextField(henMacDinh.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtNgayHenGiao.setEditable(false);
+        txtNgayHenGiao.setFocusable(false);
         UiHelper.trangTriInput(txtNgayHenGiao);
+
+        txtGioHenGiao = new JTextField(henMacDinh.format(DateTimeFormatter.ofPattern("HH:mm")));
+        txtGioHenGiao.setEditable(false);
+        txtGioHenGiao.setFocusable(false);
+        UiHelper.trangTriInput(txtGioHenGiao);
+
+        JButton btnChonNgayHen = UiHelper.nut("Chọn lịch", null, UiHelper.XANH_TRUNG,
+                e -> chonNgayBangLich());
+        JButton btnChonGioHen = UiHelper.nut("Chọn giờ", null, UiHelper.XANH_TRUNG,
+                e -> chonGioHen());
+
+        JPanel pnlNgayHen = new JPanel(new BorderLayout(5, 0));
+        pnlNgayHen.setOpaque(false);
+        pnlNgayHen.add(txtNgayHenGiao, BorderLayout.CENTER);
+        pnlNgayHen.add(btnChonNgayHen, BorderLayout.EAST);
+
+        JPanel pnlGioHen = new JPanel(new BorderLayout(5, 0));
+        pnlGioHen.setOpaque(false);
+        pnlGioHen.add(txtGioHenGiao, BorderLayout.CENTER);
+        pnlGioHen.add(btnChonGioHen, BorderLayout.EAST);
+
+        JPanel pnlHenHoanThanh = new JPanel(new GridLayout(1, 2, 8, 0));
+        pnlHenHoanThanh.setOpaque(false);
+        pnlHenHoanThanh.add(pnlNgayHen);
+        pnlHenHoanThanh.add(pnlGioHen);
 
         UiHelper.themDong(col1, 0, "Mã phiếu sửa chữa", txtMaPSC);
         UiHelper.themDong(col1, 1, "Phiếu tiếp nhận *", cboPhieuTN);
@@ -257,7 +287,7 @@ public class LapPhieuSuaChua_UI extends JPanel {
         UiHelper.themDong(col1, 4, "Khách hàng & SĐT", lblKhachHang);
         UiHelper.themDong(col1, 5, "Yêu cầu ban đầu", lblYeuCauDauVao);
         UiHelper.themDong(col1, 6, "Ngày giờ lập", txtNgayLap);
-        UiHelper.themDong(col1, 7, "Hẹn hoàn thành", txtNgayHenGiao);
+        UiHelper.themDong(col1, 7, "Hẹn hoàn thành", pnlHenHoanThanh);
 
         // CỘT 2: Phân công KTV & Tiến độ
         JPanel col2 = new JPanel(new GridBagLayout());
@@ -342,7 +372,106 @@ public class LapPhieuSuaChua_UI extends JPanel {
         return String.format("SC%03d", soMoi);
     }
 
-    // ===============================================================
+    private LocalDate layNgayHenDangChon() {
+        try {
+            return LocalDate.parse(
+                    txtNgayHenGiao.getText().trim(),
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            );
+        } catch (Exception ex) {
+            return LocalDate.now();
+        }
+    }
+
+    /** Mở lịch tháng để người dùng bấm chọn ngày. */
+    private void chonNgayBangLich() {
+        LocalDate ngayDangChon = layNgayHenDangChon();
+
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),
+                "Chọn ngày hẹn hoàn thành", Dialog.ModalityType.APPLICATION_MODAL);
+        final YearMonth[] thangHienTai = {YearMonth.from(ngayDangChon)};
+        JPanel pnlLich = new JPanel(new BorderLayout(8, 8));
+        pnlLich.setBorder(new EmptyBorder(12, 12, 12, 12));
+        JPanel pnlTieuDe = new JPanel(new BorderLayout(8, 0));
+        JButton btnThangTruoc = new JButton("<");
+        JButton btnThangSau = new JButton(">");
+        JLabel lblThang = new JLabel("", SwingConstants.CENTER);
+        lblThang.setFont(UiHelper.FONT_TIEU_DE_PHU);
+        pnlTieuDe.add(btnThangTruoc, BorderLayout.WEST);
+        pnlTieuDe.add(lblThang, BorderLayout.CENTER);
+        pnlTieuDe.add(btnThangSau, BorderLayout.EAST);
+        JPanel pnlNgay = new JPanel(new GridLayout(0, 7, 4, 4));
+
+        Runnable veLich = () -> {
+            pnlNgay.removeAll();
+            for (String thu : new String[]{"T2", "T3", "T4", "T5", "T6", "T7", "CN"}) {
+                JLabel lbl = new JLabel(thu, SwingConstants.CENTER);
+                lbl.setFont(UiHelper.FONT_BT);
+                pnlNgay.add(lbl);
+            }
+            YearMonth thang = thangHienTai[0];
+            lblThang.setText("Tháng " + thang.getMonthValue() + " / " + thang.getYear());
+            int lech = thang.atDay(1).getDayOfWeek().getValue() - 1;
+            for (int i = 0; i < lech; i++) pnlNgay.add(new JLabel(""));
+            for (int d = 1; d <= thang.lengthOfMonth(); d++) {
+                final LocalDate ngay = thang.atDay(d);
+                JButton btnNgay = new JButton(String.valueOf(d));
+                btnNgay.setFocusPainted(false);
+                if (ngay.equals(ngayDangChon)) {
+                    btnNgay.setBackground(new Color(219, 234, 254));
+                    btnNgay.setForeground(new Color(29, 78, 216));
+                    btnNgay.setFont(btnNgay.getFont().deriveFont(Font.BOLD));
+                }
+                btnNgay.addActionListener(e -> {
+                    txtNgayHenGiao.setText(ngay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    dialog.dispose();
+                });
+                pnlNgay.add(btnNgay);
+            }
+            pnlNgay.revalidate();
+            pnlNgay.repaint();
+        };
+        btnThangTruoc.addActionListener(e -> {
+            thangHienTai[0] = thangHienTai[0].minusMonths(1);
+            veLich.run();
+        });
+        btnThangSau.addActionListener(e -> {
+            thangHienTai[0] = thangHienTai[0].plusMonths(1);
+            veLich.run();
+        });
+        veLich.run();
+        pnlLich.add(pnlTieuDe, BorderLayout.NORTH);
+        pnlLich.add(pnlNgay, BorderLayout.CENTER);
+        dialog.setContentPane(pnlLich);
+        dialog.pack();
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    /** Chọn giờ/phút từ danh sách thả xuống. */
+    private void chonGioHen() {
+        JComboBox<String> cboGio = new JComboBox<>();
+        JComboBox<String> cboPhut = new JComboBox<>();
+        for (int i = 0; i < 24; i++) cboGio.addItem(String.format("%02d", i));
+        for (int i = 0; i < 60; i++) cboPhut.addItem(String.format("%02d", i));
+        String[] hienTai = txtGioHenGiao.getText().split(":");
+        if (hienTai.length == 2) {
+            cboGio.setSelectedItem(hienTai[0]);
+            cboPhut.setSelectedItem(hienTai[1]);
+        }
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 8));
+        pnl.add(new JLabel("Giờ:"));
+        pnl.add(cboGio);
+        pnl.add(new JLabel("Phút:"));
+        pnl.add(cboPhut);
+        int luaChon = JOptionPane.showConfirmDialog(this, pnl, "Chọn giờ hẹn",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (luaChon == JOptionPane.OK_OPTION) {
+            txtGioHenGiao.setText(cboGio.getSelectedItem() + ":" + cboPhut.getSelectedItem());
+        }
+    }
+
     // KHỐI 2: CHI TIẾT CÔNG VIỆC & PHỤ TÙNG XUẤT KHO
     // ===============================================================
     private JPanel taoKhoiChiTietSuaChua() {
@@ -588,9 +717,9 @@ public class LapPhieuSuaChua_UI extends JPanel {
 
             // Đồng bộ trạng thái sang bảng PhieuTiepNhan
             String sqlCapNhatPTN = "UPDATE PhieuTiepNhan SET trangThaiXe = N'Hoàn thành' " +
-                                   "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
-                                   "   OR maPTN = ? " +
-                                   "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
+                    "WHERE maPTN = (SELECT maPTN FROM PhieuSuaChua WHERE maPSC = ?) " +
+                    "   OR maPTN = ? " +
+                    "   OR ('TN' + SUBSTRING(?, 3, 18)) = maPTN";
             try (PreparedStatement psPTN = con.prepareStatement(sqlCapNhatPTN)) {
                 psPTN.setString(1, maPSC);
                 psPTN.setString(2, maPSC);
@@ -691,13 +820,9 @@ public class LapPhieuSuaChua_UI extends JPanel {
                     Date ngayHen = rs.getDate("ngayHoanThanhDuKien");
 
                     if (ngayHen != null) {
-                        txtNgayHenGiao.setText(
-                                ngayHen.toLocalDate()
-                                        .atStartOfDay()
-                                        .format(
-                                                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                                        )
-                        );
+                        txtNgayHenGiao.setText(ngayHen.toLocalDate().format(
+                                DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                        // CSDL hiện lưu ngày kiểu DATE nên giờ cũ không được lưu lại.
                     }
                 }
             }
@@ -1287,26 +1412,26 @@ public class LapPhieuSuaChua_UI extends JPanel {
         if (lichKtv != null) {
             JOptionPane.showMessageDialog(this,
                     "Kỹ thuật viên " + selKTV + " hiện ĐÃ CÓ LỊCH SỬA CHỮA!\n\n" +
-                    "• Đang thực hiện: " + lichKtv + "\n" +
-                    "• Quy định điều phối: Mỗi kỹ thuật viên chỉ nhận 1 xe sửa chữa tại một thời điểm.\n\n" +
-                    "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng].",
+                            "• Đang thực hiện: " + lichKtv + "\n" +
+                            "• Quy định điều phối: Mỗi kỹ thuật viên chỉ nhận 1 xe sửa chữa tại một thời điểm.\n\n" +
+                            "Vui lòng chọn kỹ thuật viên khác đang [Sẵn sàng].",
                     "Kỹ thuật viên đang có lịch",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Chuyển ngày hẹn sang kiểu SQL DATE.
+        // Lấy ngày đã chọn từ bộ chọn ngày.
         Date ngayHen;
         try {
-            LocalDateTime ngayHenDateTime = LocalDateTime.parse(
+            LocalDate ngayHenDaChon = LocalDate.parse(
                     txtNgayHenGiao.getText().trim(),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-            );
-            ngayHen = Date.valueOf(ngayHenDateTime.toLocalDate());
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            ngayHen = Date.valueOf(ngayHenDaChon);
+
+            java.time.LocalTime.parse(txtGioHenGiao.getText().trim(),
+                    DateTimeFormatter.ofPattern("HH:mm"));
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    this, "Ngày hẹn không hợp lệ. Định dạng: dd/MM/yyyy HH:mm"
-            );
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày và giờ hẹn hợp lệ.");
             return;
         }
 
@@ -1383,7 +1508,11 @@ public class LapPhieuSuaChua_UI extends JPanel {
             lblMa.setText("[" + this.maPSC + "]");
         }
         txtNgayLap.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        txtNgayHenGiao.setText(LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        LocalDateTime henMacDinh = LocalDateTime.now().plusHours(3);
+        txtNgayHenGiao.setText(henMacDinh.toLocalDate().format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtGioHenGiao.setText(henMacDinh.toLocalTime().format(
+                DateTimeFormatter.ofPattern("HH:mm")));
         txtTenCongViec.setText("");
         txtTienCong.setText("150000");
         cboCongViecMau.setSelectedIndex(0);
@@ -1396,3 +1525,4 @@ public class LapPhieuSuaChua_UI extends JPanel {
     }
 
 }
+
