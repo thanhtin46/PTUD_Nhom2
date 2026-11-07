@@ -530,8 +530,6 @@ public class Main_UI extends JFrame {
                     -> new LapPhieuSuaChua_UI(nhanVienHienTai);
             case "Tra cứu phiếu sửa chữa", "Cập nhật tiến độ"
                     -> new CapNhatTienDo_UI();
-            case "Điều hành sửa chữa"
-                    -> new DieuHanhSuaChua_UI(nhanVienHienTai, this);
 
             // 5. Hóa đơn (Tích hợp Thanh toán Sửa chữa & Bán lẻ Phụ tùng Shop)
             case "Hóa đơn", "Lập hóa đơn", "Thanh toán hóa đơn"
@@ -679,7 +677,6 @@ public class Main_UI extends JFrame {
         ds.add(MucMenu.nhom("Phiếu sửa chữa", UiIcon.WRENCH, SUA_CHUA)
                 .them(MucMenu.con("Lập phiếu sửa chữa", SUA_CHUA))
                 .them(MucMenu.con("Cập nhật tiến độ", SUA_CHUA))
-                .them(MucMenu.con("Điều hành sửa chữa", QUAN_LY))
                 .them(MucMenu.con("Tra cứu lịch sử sửa chữa", SUA_CHUA + "," + QUAN_LY)));
 
         // 5. Hóa đơn (Tích hợp cả thanh toán sửa chữa xe & bán lẻ phụ tùng shop)

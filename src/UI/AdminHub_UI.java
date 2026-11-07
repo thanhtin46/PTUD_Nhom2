@@ -137,7 +137,6 @@ public class AdminHub_UI extends JPanel {
         gridBox.add(taoTheNhomModule("Tiếp nhận, Sửa chữa & Bảo hành", new Color(22, 163, 74), new String[][]{
                 {"Lập phiếu sửa chữa", "Tiếp nhận xe vào gara, ghi nhận yêu cầu & tạm tính", kho.getPhieuTiepNhans().size() + " phiếu đã tạo"},
                 {"Cập nhật tiến độ", "Cập nhật trạng thái sửa chữa theo thời gian thực", "Theo dõi trực tiếp"},
-                {"Điều hành sửa chữa", "Theo dõi hạn hoàn thành & Khối lượng công việc KTV", "Giám sát & Điều phối"},
                 {"Lập phiếu bảo hành", "Cấp sổ bảo hành định kỳ sau khi xe sửa chữa xong", kho.getPhieuBaoHanhs().size() + " phiếu bảo hành"},
                 {"Tra cứu bảo hành", "Kiểm tra thời hạn bảo hành theo biển số xe", "Tra cứu tức thì"}
         }));
