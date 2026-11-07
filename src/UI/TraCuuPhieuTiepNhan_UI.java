@@ -77,7 +77,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         // Bảng danh sách phiếu tiếp nhận (đã bỏ cột Kỹ thuật viên và Tạm tính)
         model = UiHelper.model(
                 "Số phiếu", "Mã KH", "Khách hàng", "Số ĐT", "Biển số xe",
-                "Hãng xe", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu dịch vụ", "Tiến độ"
+                "Hãng xe", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu dịch vụ"
         );
         table = UiHelper.bang(model);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -90,9 +90,8 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
         dinhDangCot(4, SwingConstants.CENTER, 110); // Biển số xe
         dinhDangCot(5, SwingConstants.LEFT, 110);   // Hãng xe
         dinhDangCot(6, SwingConstants.LEFT, 120);   // Dòng xe
-        dinhDangCot(7, SwingConstants.CENTER, 115); // Ngày tiếp nhận
-        dinhDangCot(8, SwingConstants.LEFT, 200);   // Yêu cầu dịch vụ
-        dinhDangCotTienDo(9, 130);                  // Tiến độ (có màu trạng thái)
+        dinhDangCot(7, SwingConstants.CENTER, 120); // Ngày tiếp nhận
+        dinhDangCot(8, SwingConstants.LEFT, 260);   // Yêu cầu dịch vụ
 
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -456,8 +455,7 @@ public class TraCuuPhieuTiepNhan_UI extends JPanel {
                     hangXe,
                     loaiXe,
                     p.getNgayTiepNhanHienThi(),
-                    p.getYeuCau(),
-                    p.getTienDo()
+                    p.getYeuCau()
             });
         }
 

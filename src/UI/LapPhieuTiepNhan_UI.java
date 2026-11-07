@@ -137,7 +137,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
 
     private JPanel taoBang() {
         JPanel bangPanel = UiHelper.panelBang("Danh sách phiếu tiếp nhận chờ xử lý");
-        model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu", "Tiến độ");
+        model = UiHelper.model("Số phiếu", "SĐT", "Họ tên", "Biển số", "Hãng", "Dòng xe", "Ngày tiếp nhận", "Yêu cầu");
         table = UiHelper.bang(model);
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -148,10 +148,9 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(85);   // Hãng
         table.getColumnModel().getColumn(5).setPreferredWidth(95);   // Dòng xe
         table.getColumnModel().getColumn(6).setPreferredWidth(115);   // Ngày tiếp nhận
-        table.getColumnModel().getColumn(7).setPreferredWidth(180);  // Yêu cầu
-        table.getColumnModel().getColumn(8).setPreferredWidth(110);  // Tiến độ
+        table.getColumnModel().getColumn(7).setPreferredWidth(220);  // Yêu cầu
 
-        UiHelper.canGiua(table, 0, 1, 3, 6, 8);
+        UiHelper.canGiua(table, 0, 1, 3, 6);
         UiHelper.canTrai(table, 2, 4, 5, 7);
 
         // Click vào dòng trên bảng để đổ dữ liệu lên form sửa/xóa
@@ -308,7 +307,7 @@ public class LapPhieuTiepNhan_UI extends JPanel {
         for (PhieuTiepNhan p : ds) {
             model.addRow(new Object[]{
                     p.getSoPhieu(), p.getSdt(), p.getHoTen(), p.getBienSo(), p.getHangXe(),
-                    p.getLoaiXe(), p.getNgayTiepNhanHienThi(), p.getYeuCau(), p.getTienDo()
+                    p.getLoaiXe(), p.getNgayTiepNhanHienThi(), p.getYeuCau()
             });
         }
     }
