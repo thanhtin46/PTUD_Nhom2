@@ -161,6 +161,7 @@ CREATE TABLE PhieuSuaChua (
     soVIN VARCHAR(30) NOT NULL,
     ngayBD DATETIME2 NOT NULL,
     ngayHoanThanhDuKien DATE NULL,
+    ghiChu NVARCHAR(MAX) NULL,
     trangThai NVARCHAR(50) NOT NULL DEFAULT N'CHO_SUA',
     CONSTRAINT CK_PSC_Ngay CHECK (
         ngayHoanThanhDuKien IS NULL

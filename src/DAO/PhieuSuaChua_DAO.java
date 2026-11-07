@@ -45,7 +45,7 @@ public class PhieuSuaChua_DAO {
             ps.setString(1, maPSC);
             try (ResultSet rs = ps.executeQuery()) {
                 boolean tonTai = rs.next();
-                if (maNV != null && (!tonTai || !maNV.equals(rs.getString("maNV"))))
+                if (tonTai && maNV != null && !maNV.equals(rs.getString("maNV")))
                     throw new SQLException("Phiếu không thuộc phạm vi được giao.");
             }
         }
@@ -160,14 +160,9 @@ public class PhieuSuaChua_DAO {
         String tt = d.getTrangThai() != null ? d.getTrangThai() : "CHO_SUA";
         String ttPTN = "CHO_KTV".equalsIgnoreCase(tt) ? "Chờ KTV" : ("CHO_SUA".equalsIgnoreCase(tt) ? "Chờ phụ tùng" : "Đang sửa");
         try (PreparedStatement psPTN = con.prepareStatement(
-                "UPDATE PhieuTiepNhan SET kyThuatVien = ?, trangThaiXe = ? WHERE maPTN = ?")) {
-            if (d.getMaKyThuatVien() == null || d.getMaKyThuatVien().isBlank()) {
-                psPTN.setNull(1, Types.VARCHAR);
-            } else {
-                psPTN.setString(1, d.getMaKyThuatVien());
-            }
-            psPTN.setString(2, ttPTN);
-            psPTN.setString(3, d.getMaTiepNhan());
+                "UPDATE PhieuTiepNhan SET trangThaiXe = ? WHERE maPTN = ?")) {
+            psPTN.setString(1, ttPTN);
+            psPTN.setString(2, d.getMaTiepNhan());
             psPTN.executeUpdate();
         }
     }
